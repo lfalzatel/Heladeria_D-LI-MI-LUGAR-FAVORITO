@@ -258,7 +258,6 @@ export default function Dashboard() {
                      ))}
                   </div>
                </div>
-               </div>
 
                {/* Stock Alerts (Only Admin/Propietario) */}
                {(profile?.role === 'admin' || profile?.role === 'propietario') && (

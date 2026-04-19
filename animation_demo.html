@@ -38,9 +38,9 @@
         }
 
         /* ------------------------------------------------ */
-        /* ESTRUCTURA Y COLORES REALES (Cyan #0891b2)       */
+        /* ESTRUCTURA Y COLORES REALES (Cyan #E91E8C)       */
         /* ------------------------------------------------ */
-        .cyan-theme { --primary: #0891b2; --bg-active: #0891b2; }
+        .cyan-theme { --primary: #E91E8C; --bg-active: #E91E8C; }
 
         .nav-container {
             position: absolute;
@@ -66,7 +66,7 @@
             flex: 1;
             padding: 4px 0;
             position: relative;
-            color: #0891b2; /* cyan-600 */
+            color: #E91E8C; /* cyan-600 */
         }
 
         .nav-inner {
@@ -80,9 +80,9 @@
         }
 
         .nav-item.active .nav-inner {
-            background: #0891b2;
+            background: #E91E8C;
             color: white;
-            box-shadow: 0 8px 16px rgba(8, 145, 178, 0.4);
+            box-shadow: 0 8px 16px rgba(233, 30, 140, 0.4);
         }
 
         .label {
@@ -105,26 +105,26 @@
         
         /* Prop 1: Estilo Discreto */
         .option-1 .nav-item.active .nav-inner {
-            background: rgba(8, 145, 178, 0.1);
-            color: #22d3ee;
+            background: rgba(233, 30, 140, 0.1);
+            color: #FFB6C1;
             transform: scale(1.05);
         }
 
         /* Prop 2: Escalado de Enfoque */
         .option-2 .nav-item.active .nav-inner {
-            background: #0891b2;
+            background: #E91E8C;
             color: white;
             transform: scale(1.25) translateY(-2px);
-            box-shadow: 0 10px 20px rgba(8, 145, 178, 0.4);
+            box-shadow: 0 10px 20px rgba(233, 30, 140, 0.4);
         }
 
         /* Prop 3: Elevación Flotante */
         .option-3 .nav-item.active .nav-inner {
             background: transparent;
-            color: #22d3ee;
+            color: #FFB6C1;
             transform: translateY(-15px);
         }
-        .option-3 .nav-item.active svg { filter: drop-shadow(0 0 8px #0891b2); }
+        .option-3 .nav-item.active svg { filter: drop-shadow(0 0 8px #E91E8C); }
 
         /* Prop 4: Estética de Pastilla (Pill) */
         .option-4 .nav-item.active .nav-inner {
@@ -138,16 +138,33 @@
 
         /* Prop 5: Fusión Premium (App Real) */
         .option-5 .nav-item.active .nav-inner {
-            background: #0891b2;
+            background: #E91E8C;
             color: white;
             border-radius: 1rem;
             padding: 0.4rem 0.8rem;
             transform: scale(1.1) translateY(-8px) rotate(-2deg);
-            box-shadow: 0 5px 15px rgba(8, 145, 178, 0.4);
+            box-shadow: 0 5px 15px rgba(233, 30, 140, 0.4);
             transition-delay: 0.15s;
         }
         .option-5 .nav-item.active svg { animation: micro-bounce 0.4s infinite alternate; }
         @keyframes micro-bounce { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+
+        /* Prop 6: Fusión + Zoom/Pop (Option 6) */
+        .option-6 .nav-item.active .nav-inner {
+            background: #E91E8C;
+            color: white;
+            border-radius: 1rem;
+            padding: 0.4rem 0.8rem;
+            animation: push-and-settle 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 5px 15px rgba(233, 30, 140, 0.4);
+        }
+        @keyframes push-and-settle {
+            0% { transform: scale(1) translateY(0); }
+            40% { transform: scale(0.8) translateY(2px); }
+            70% { transform: scale(1.2) translateY(-10px) rotate(-4deg); }
+            100% { transform: scale(1.1) translateY(-8px) rotate(-2deg); }
+        }
+        .option-6 .nav-item.active svg { animation: micro-bounce 0.4s infinite alternate; animation-delay: 0.45s; }
         
         /* ------------------------------------------------ */
         /* ANIMACIONES DE TARJETAS (NUEVAS)                 */
@@ -166,8 +183,8 @@
             to { opacity: 1; filter: blur(0); transform: translateY(0); }
         }
         @keyframes card-glow-pulse {
-            0% { opacity: 0; box-shadow: 0 0 0px #0891b2; }
-            50% { opacity: 1; box-shadow: 0 0 30px #0891b2; }
+            0% { opacity: 0; box-shadow: 0 0 0px #E91E8C; }
+            50% { opacity: 1; box-shadow: 0 0 30px #E91E8C; }
             100% { opacity: 1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         }
         @keyframes card-3d-flip {
@@ -227,19 +244,19 @@
             font-weight: bold;
             transition: all 0.3s;
         }
-        .btn.active { background: #0891b2; color: white; }
+        .btn.active { background: #E91E8C; color: white; }
         .btn-card { background: #1e293b; border: 1px solid #334155; }
-        .btn-card:hover { border-color: #0891b2; }
+        .btn-card:hover { border-color: #E91E8C; }
 
     </style>
 </head>
 <body class="cyan-theme">
 
-    <h1 class="text-2xl font-black mb-6 tracking-tighter uppercase text-center">Laboratorio PAE - Comparativa</h1>
+    <h1 class="text-2xl font-black mb-6 tracking-tighter uppercase text-center">Heladería D'LI - Nav Animations</h1>
 
     <div class="phone-mockup" id="mockup">
         <div class="screen-content pt-10">
-            <h2 id="demo-title" class="text-xl font-bold text-[#0891b2]">Propuesta 1</h2>
+            <h2 id="demo-title" class="text-xl font-bold text-[#E91E8C]">Propuesta 1</h2>
             <p id="demo-desc" class="text-sm text-gray-400 mt-4 px-6">
                 Atracción sencilla de polos opuestos con colores reales.
             </p>
@@ -285,6 +302,7 @@
         <div class="btn" onclick="switchTheme('option-3', 'Propuesta 3', 'Elevación simple del icono.', this)">Prop 3</div>
         <div class="btn" onclick="switchTheme('option-4', 'Propuesta 4', 'Fusión dinámica (separar y unir).', this)">Prop 4</div>
         <div class="btn" onclick="switchTheme('option-5', 'Propuesta 5', 'Estilos reales de la app + Fusión dinámica.', this)">Prop 5</div>
+        <div class="btn" onclick="switchTheme('option-6', 'Propuesta 6', 'Alejamiento rápido (Push) + Opción 5', this)">Prop 6</div>
     </div>
 
     <div class="mt-8 pt-8 border-t border-slate-700 w-full max-w-md">

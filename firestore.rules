@@ -42,7 +42,7 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.email is string &&
              data.name is string && data.name.size() <= 100 &&
-             data.role in ['admin', 'propietario', 'vendedor'];
+             data.role in ['admin', 'propietario', 'vendedor', 'cliente'];
     }
 
     function isValidSale(data) {

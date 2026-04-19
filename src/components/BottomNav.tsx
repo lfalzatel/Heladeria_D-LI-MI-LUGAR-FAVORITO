@@ -28,36 +28,41 @@ interface NavItemProps {
 const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
   const content = (
     <div className={cn(
-      "flex flex-col items-center justify-center gap-1 transition-all duration-300",
+      "flex flex-col items-center justify-center transition-all duration-300 w-full h-full text-center relative",
       highlight
         ? "text-white"
         : active 
-          ? "text-success" 
+          ? "text-white" 
           : "text-secondary/40 hover:text-secondary"
     )}>
       <div className={cn(
-        "relative flex items-center justify-center transition-all duration-500",
+        "relative flex flex-col items-center justify-center transition-all duration-500",
         highlight
           ? "w-14 h-14 -mt-5 rounded-full bg-primary shadow-xl shadow-primary/40 ring-4 ring-white"
-          : cn("w-10 h-10 rounded-full", active && "bg-success/10 shadow-lg shadow-success/5 border border-success/20")
+          : cn("px-3 py-1 rounded-2xl gap-1", active ? "bg-primary text-white shadow-lg shadow-primary/40 nav-item-active-pop" : "bg-transparent")
       )}>
         {React.cloneElement(icon as React.ReactElement, { 
           className: cn(
             "transition-transform duration-300",
-            highlight ? "w-6 h-6 stroke-[2.5]" : cn("w-5 h-5", active ? "stroke-[2.5] scale-110" : "stroke-[2]")
+            highlight ? "w-6 h-6 stroke-[2.5]" : cn("w-5 h-5", active ? "stroke-[2.5]" : "stroke-[2]")
           ) 
         })}
-        {!highlight && active && (
-          <motion.div 
-            layoutId="activeTab"
-            className="absolute -bottom-1 w-1 h-1 bg-success rounded-full"
-          />
+        
+        {!highlight && (
+          <span className={cn(
+            "text-[9px] sm:text-[10px] uppercase font-black tracking-tight",
+            active ? "opacity-100" : "opacity-80"
+          )}>
+            {label}
+          </span>
         )}
       </div>
-      <span className={cn(
-        "text-[8px] sm:text-[9px] font-black uppercase tracking-tight transition-all",
-        highlight ? "opacity-100 text-primary" : active ? "opacity-100 translate-y-0 text-success" : "opacity-60"
-      )}>{label}</span>
+      
+      {highlight && (
+        <span className="text-[10px] font-black uppercase tracking-tight opacity-100 text-primary mt-1">
+          {label}
+        </span>
+      )}
     </div>
   );
 

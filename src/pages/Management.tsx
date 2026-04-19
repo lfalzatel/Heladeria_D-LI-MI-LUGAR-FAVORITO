@@ -807,7 +807,7 @@ export default function Management() {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="p-8 bg-on-surface text-white relative">
+              <div className="p-8 bg-primary text-white relative">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
                     <Edit3 className="w-7 h-7" />
@@ -845,15 +845,16 @@ export default function Management() {
                     <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Rol en el Sistema</label>
                     <div className="relative">
                        <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary opacity-30" />
-                       <select 
-                         value={editFormData.role}
-                         onChange={e => setEditFormData({ ...editFormData, role: e.target.value as any })}
-                         className="w-full h-14 bg-white rounded-2xl border border-outline/30 pl-12 pr-5 font-bold text-sm focus:border-primary transition-all outline-none appearance-none"
-                       >
-                         <option value="admin">Administrador</option>
-                         <option value="propietario">Propietario</option>
-                         <option value="vendedor">Vendedor</option>
-                       </select>
+                         <select 
+                           value={editFormData.role}
+                           onChange={e => setEditFormData({ ...editFormData, role: e.target.value as any })}
+                           className="w-full h-14 bg-white rounded-2xl border border-outline/30 pl-12 pr-5 font-bold text-sm focus:border-primary transition-all outline-none appearance-none"
+                         >
+                           <option value="admin">Administrador</option>
+                           <option value="propietario">Propietario</option>
+                           <option value="vendedor">Vendedor</option>
+                           <option value="cliente">Cliente</option>
+                         </select>
                     </div>
                   </div>
 
@@ -911,7 +912,7 @@ export default function Management() {
                 <button 
                   onClick={handleUpdateUser}
                   disabled={isSavingUser}
-                  className="flex-1 py-4 rounded-xl bg-on-surface text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-black/10 hover:scale-[1.02] active:scale-98 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-4 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-98 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                 >
                   {isSavingUser ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <Save className="w-4 h-4" />}
                   Actualizar Datos
@@ -940,7 +941,7 @@ export default function Management() {
                className="relative w-full max-w-sm bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col"
              >
                 {/* Modal Header */}
-                <div className="bg-[#007D9A] p-8 pb-12 relative flex flex-col items-center">
+                <div className="bg-primary p-8 pb-12 relative flex flex-col items-center">
                    <div className="absolute top-6 right-6">
                       <button onClick={() => setSelectedUserForHistory(null)} className="text-white opacity-80 hover:opacity-100 transition-opacity">
                          <X className="w-6 h-6" />

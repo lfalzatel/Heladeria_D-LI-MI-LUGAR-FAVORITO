@@ -69,3 +69,24 @@
   50% { transform: translateX(0); }
   100% { transform: translateX(100%); }
 }
+
+@keyframes push-and-settle {
+  0% { transform: scale(1) translateY(0); }
+  40% { transform: scale(0.8) translateY(2px); }
+  70% { transform: scale(1.2) translateY(-10px) rotate(-4deg); }
+  100% { transform: scale(1.1) translateY(-8px) rotate(-2deg); }
+}
+
+@keyframes micro-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}
+
+.nav-item-active-pop {
+  animation: push-and-settle 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.nav-item-active-pop svg {
+  animation: micro-bounce 0.4s infinite alternate; 
+  animation-delay: 0.45s;
+}
