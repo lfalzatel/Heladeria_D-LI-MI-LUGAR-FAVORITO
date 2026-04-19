@@ -168,16 +168,16 @@ export default function ClientCompras() {
 
       <main className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5 pt-2">
         {/* Category filter */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+        <div className="flex gap-1.5 p-1 overflow-x-auto hide-scrollbar bg-surface-container rounded-xl text-[10px] font-black uppercase">
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-xs transition-all whitespace-nowrap flex-shrink-0",
+                "px-4 py-2 sm:py-1.5 rounded-lg transition-all flex items-center gap-2 flex-shrink-0",
                 activeCategory === cat.id
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "bg-white text-secondary border border-outline/20 hover:border-primary/30 hover:text-primary"
+                  ? "bg-on-surface text-white shadow-sm"
+                  : "text-secondary hover:bg-surface"
               )}
             >
               {cat.icon}
@@ -194,9 +194,15 @@ export default function ClientCompras() {
               onClick={() => setSelectedProduct(product)}
               className="bg-white rounded-2xl border border-outline/10 shadow-sm p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group active:scale-[0.98]"
             >
-              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
-                <IceCream className="w-5 h-5 text-primary" />
-              </div>
+              {product.imageUrl ? (
+                <div className="w-24 h-24 mb-3 rounded-xl overflow-hidden self-center mx-auto">
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
+                  <IceCream className="w-5 h-5 text-primary" />
+                </div>
+              )}
               <p className="font-bold text-sm text-on-surface leading-tight mb-1 line-clamp-2">{product.name}</p>
               <p className="text-primary font-black text-sm">
                 {product.variants && product.variants.length > 0
@@ -335,7 +341,7 @@ export default function ClientCompras() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative bg-white w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl"
+              className="relative bg-white w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[85dvh] sm:h-auto sm:max-h-[85vh]"
             >
               <div className="flex justify-center pt-3 pb-1 sm:hidden">
                 <div className="w-10 h-1 bg-outline/30 rounded-full" />
@@ -351,7 +357,7 @@ export default function ClientCompras() {
                 </button>
               </div>
 
-              <div className="px-6 py-4 flex flex-col gap-5 max-h-[75vh] overflow-y-auto hide-scrollbar">
+              <div className="px-6 py-4 flex flex-col gap-5 overflow-y-auto hide-scrollbar flex-1">
                 {/* Total */}
                 <div className="bg-on-surface rounded-2xl px-5 py-4 flex items-center justify-between">
                   <div>

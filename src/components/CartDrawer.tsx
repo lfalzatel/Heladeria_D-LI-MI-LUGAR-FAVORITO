@@ -19,7 +19,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
   const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'card'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta'>('Efectivo');
   
   const cart = carts[activeTable];
   const total = getTotal(activeTable);
@@ -34,9 +34,12 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         total,
         sellerId: profile.uid,
         sellerName: profile.name,
+        soldBy: profile.uid, // Required by Firestore rules
+        status: 'completed', // Required by Firestore rules
         tableId: activeTable,
         tableName: activeTable === 'paraLlevar' ? 'Para Llevar' : `Mesa ${activeTable.replace('mesa', '')}`,
         timestamp: serverTimestamp(),
+        createdAt: serverTimestamp(), // Required by Firestore rules
         paymentMethod,
         date: new Date().toISOString().split('T')[0], // To simplify daily queries
         hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -177,20 +180,20 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
               
               <div className="grid grid-cols-2 gap-3">
                 <button 
-                  onClick={() => setPaymentMethod('cash')}
+                  onClick={() => setPaymentMethod('Efectivo')}
                   className={cn(
                     "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
-                    paymentMethod === 'cash' ? "bg-primary/5 border-primary text-primary shadow-sm" : "bg-surface-container-high/50 border-transparent text-on-surface hover:bg-primary/5"
+                    paymentMethod === 'Efectivo' ? "bg-primary/5 border-primary text-primary shadow-sm" : "bg-surface-container-high/50 border-transparent text-on-surface hover:bg-primary/5"
                   )}
                 >
                   <Banknote className="w-5 h-5" />
                   <span className="text-[10px] font-bold uppercase tracking-widest">Efectivo</span>
                 </button>
                 <button 
-                  onClick={() => setPaymentMethod('transfer')}
+                  onClick={() => setPaymentMethod('Transferencia')}
                   className={cn(
                     "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
-                    paymentMethod === 'transfer' ? "bg-primary/5 border-primary text-primary shadow-sm" : "bg-surface-container-high/50 border-transparent text-on-surface hover:bg-primary/5"
+                    paymentMethod === 'Transferencia' ? "bg-primary/5 border-primary text-primary shadow-sm" : "bg-surface-container-high/50 border-transparent text-on-surface hover:bg-primary/5"
                   )}
                 >
                   <Smartphone className="w-5 h-5" />

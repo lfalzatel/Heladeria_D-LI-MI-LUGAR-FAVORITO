@@ -117,8 +117,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       return;
     }
     
-    if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length < maxScoops) {
-      toast.error(`Selecciona ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
+    if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length === 0) {
+      toast.error('Selecciona al menos un sabor');
       return;
     }
 
@@ -208,65 +208,111 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 md:p-8">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+          className="absolute inset-0 bg-on-surface/50 backdrop-blur-sm"
         />
         
         <motion.div 
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "100%", opacity: 0 }}
+          initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: "100%", opacity: 0, scale: 0.95 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative bg-surface-container-lowest w-full max-w-2xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] sm:h-auto sm:max-h-[85vh]"
+          className="relative bg-surface-container-lowest w-full md:max-w-4xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row overflow-hidden h-[90vh] sm:h-auto sm:max-h-[90vh]"
         >
-          {/* Header */}
-          <header className="pt-4 sm:pt-8 px-5 sm:px-8 pb-3 sm:pb-6 border-b border-surface-container shrink-0">
-            <div className="flex items-center justify-between mb-4 sm:mb-8">
+          {/* 📱 Botón Cerrar (Mobile Only) */}
+          <button 
+            onClick={onClose}
+            className="md:hidden absolute top-4 right-4 z-[110] w-10 h-10 flex items-center justify-center rounded-full bg-white/70 backdrop-blur-md text-on-surface shadow-md"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* ── COLUMNA IZQUIERDA: HERO IMAGE Y DETALLES ── */}
+          <div className="w-full md:w-[45%] h-64 md:h-auto bg-surface-container flex flex-col relative shrink-0">
+            {/* Imagen Principal */}
+            <div className="flex-1 w-full bg-white relative flex items-center justify-center overflow-hidden p-6 shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 z-10" />
+              {product.imageUrl ? (
+                <img 
+                  src={product.imageUrl} 
+                  alt={product.name} 
+                  className="w-full h-full object-contain filter drop-shadow-2xl relative z-0 transition-transform duration-500 hover:scale-105" 
+                />
+              ) : (
+                <IceCream className="w-32 h-32 text-primary/10" />
+              )}
+
+              {/* Botón Cerrar (Desktop Only) */}
               <button 
                 onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-variant transition-colors text-on-surface-variant shadow-sm"
+                className="hidden md:flex absolute top-6 left-6 w-10 h-10 items-center justify-center rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors text-on-surface z-20"
               >
                 <X className="w-5 h-5" />
               </button>
-              <div className="flex flex-col items-center">
-                <span className="font-bold text-lg tracking-tight text-primary font-brand text-xl sm:text-2xl">D'LI</span>
-                <div className="h-0.5 w-6 bg-primary/20 rounded-full mt-0.5" />
-              </div>
-              <div className="w-10" />
             </div>
             
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="flex flex-col">
-                <h1 className="text-lg sm:text-2xl font-bold text-on-surface leading-tight">
-                  {getStepTitle()}
-                </h1>
-                <p className="text-[10px] sm:text-xs font-semibold text-secondary/60 uppercase tracking-wider">{product.name}</p>
-              </div>
-              <div className="flex flex-col items-end shrink-0">
-                <span className="text-[10px] font-black text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-tighter ring-1 ring-primary/10">
-                  {step}/{effectiveTotalSteps}
-                </span>
+            {/* Contexto del producto debajo de la imagen (Solo PC/Tablet o scrolleable visual) */}
+            <div className="hidden md:flex flex-col bg-surface p-8 relative z-20 border-t border-outline/10">
+              <span className="text-xs font-black tracking-widest text-primary uppercase mb-2">
+                {product.category}
+              </span>
+              <h1 className="text-3xl font-bold text-on-surface leading-tight mb-2">
+                {product.name}
+              </h1>
+              <p className="text-secondary/80 text-sm leading-relaxed mb-6">
+                Preparación exquisita de la casa D'LI. Escoge tus ingredientes favoritos y ármala a tu gusto.
+              </p>
+              
+              <div className="mt-auto pt-6 border-t border-outline/10 flex justify-between items-end">
+                <div>
+                  <p className="text-xs text-secondary font-bold tracking-widest uppercase mb-1">Precio Base</p>
+                  <p className="text-3xl font-black text-primary">
+                     {formatCurrency(selectedVariant ? selectedVariant.price : (product.basePrice || 0))}
+                  </p>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-1 bg-surface-container-high rounded-full overflow-hidden flex gap-0.5">
-              {Array.from({ length: effectiveTotalSteps }).map((_, i) => (
-                <div 
-                  key={i}
-                  className={cn(
-                    "h-full flex-1 transition-all duration-500",
-                    i + 1 <= step ? "bg-primary" : "bg-transparent"
-                  )}
-                />
-              ))}
-            </div>
-          </header>
+          {/* ── COLUMNA DERECHA: FLUJO DE CONFIGURACIÓN ── */}
+          <div className="flex-1 flex flex-col bg-surface overflow-hidden relative">
+            <header className="pt-6 sm:pt-8 px-6 sm:px-10 pb-5 border-b border-surface-container shrink-0 bg-white md:bg-transparent">
+              <div className="md:hidden flex flex-col mb-4">
+                 <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">{product.category}</span>
+                 <h1 className="text-2xl font-bold leading-tight">{product.name}</h1>
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col">
+                  <h2 className="text-xl sm:text-2xl font-bold text-on-surface leading-tight">
+                    {getStepTitle()}
+                  </h2>
+                </div>
+                <div className="flex flex-col items-end shrink-0">
+                  <span className="text-xs font-black text-secondary bg-surface-container px-3 py-1 rounded-full uppercase tracking-widest">
+                    {step} / {effectiveTotalSteps}
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden flex gap-1">
+                {Array.from({ length: effectiveTotalSteps }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className={cn(
+                      "h-full flex-1 rounded-full transition-all duration-500",
+                      i + 1 <= step ? "bg-gradient-to-r from-primary to-primary-container shadow-[0_0_8px_rgba(233,30,140,0.5)]" : "bg-transparent"
+                    )}
+                  />
+                ))}
+              </div>
+            </header>
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-10 hide-scrollbar scroll-smooth bg-surface-container-lowest/50">
@@ -423,74 +469,42 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             )}
           </div>
 
-          {/* Footer */}
-          <footer className="p-4 sm:p-8 bg-white border-t border-surface-container shrink-0">
-            <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <div className="flex items-center justify-between sm:justify-start gap-4">
+          {/* Footer Derecho */}
+          <footer className="p-5 sm:p-8 bg-surface-container-lowest border-t border-outline/10 shrink-0">
+            <div className="flex gap-4">
+              {step > 1 && (
                 <button 
-                  onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                  className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-2 border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors shrink-0"
+                  onClick={() => setStep(step - 1)}
+                  className="w-16 h-16 flex shrink-0 items-center justify-center rounded-2xl bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 border border-outline/10"
                 >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-
-                <div className="flex items-center gap-3 bg-surface-container-low px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-outline/10 h-10 sm:h-12">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white shadow-sm text-primary hover:bg-primary hover:text-white transition-all ring-1 ring-primary/5"
-                  >
-                    <span className="text-xl font-bold leading-none">-</span>
-                  </button>
-                  <div className="flex flex-col items-center min-w-[28px] sm:min-w-[32px]">
-                     <span className="text-[8px] font-black text-secondary leading-none uppercase tracking-tighter mb-0.5">Cant</span>
-                     <span className="text-base sm:text-lg font-black text-on-surface leading-none">{quantity}</span>
-                  </div>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white shadow-sm text-primary hover:bg-primary hover:text-white transition-all ring-1 ring-primary/5"
-                  >
-                    <span className="text-xl font-bold leading-none">+</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Hide main "next" button when on sauces step (has its own skip button above) */}
-              {effectiveCurrentStepType !== 'sauces' ? (
-                <button 
-                  onClick={handleNext}
-                  className="flex-1 h-12 sm:h-14 px-6 sm:px-8 rounded-2xl sm:rounded-full bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:shadow-xl transition-all flex items-center justify-between sm:justify-center gap-3"
-                >
-                  <div className="flex flex-col items-start sm:hidden">
-                    <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-0.5 opacity-70">Subtotal</span>
-                    <span className="text-xs font-black leading-none">
-                      {formatCurrency((selectedVariant?.price || product.basePrice || 0) * quantity)}
-                    </span>
-                  </div>
-                  <div className="hidden sm:flex flex-col items-end mr-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest leading-none mb-1 opacity-70">Total del Item</span>
-                    <span className="text-sm font-black leading-none">
-                      {formatCurrency((selectedVariant?.price || product.basePrice || 0) * quantity)}
-                    </span>
-                  </div>
-                  <span className="hidden sm:block h-6 w-px bg-white/20" />
-                  <div className="flex items-center gap-2">
-                    <span className="font-brand uppercase tracking-tight">{step === effectiveTotalSteps ? 'Finalizar' : 'Siguiente'}</span>
-                    <ChevronRight className="w-5 h-5 overflow-hidden" />
-                  </div>
-                </button>
-              ) : (
-                <button 
-                  onClick={handleNext}
-                  className="flex-1 h-12 sm:h-14 px-6 sm:px-8 rounded-2xl sm:rounded-full bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:shadow-xl transition-all flex items-center justify-center gap-3"
-                >
-                  <span className="font-brand uppercase tracking-tight">Finalizar Pedido</span>
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronLeft className="w-6 h-6 stroke-[3]" />
                 </button>
               )}
+              
+              <button 
+                onClick={handleNext}
+                className="flex-1 py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-bold text-lg shadow-[0_8px_20px_rgba(233,30,140,0.3)] hover:shadow-[0_12px_25px_rgba(233,30,140,0.4)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 overflow-hidden relative group"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                {step < effectiveTotalSteps && effectiveCurrentStepType !== 'sauces' ? (
+                  <>
+                    <span className="relative z-10 font-brand tracking-widest uppercase">Siguiente Paso</span>
+                    <ChevronRight className="w-5 h-5 stroke-[3] relative z-10" />
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-6 h-6 stroke-[3] relative z-10" /> 
+                    <span className="relative z-10 font-brand tracking-widest uppercase">
+                      {initialItem ? 'Actualizar' : 'Agregar'} • {formatCurrency((selectedVariant?.price || product.basePrice || 0) * quantity)}
+                    </span>
+                  </>
+                )}
+              </button>
             </div>
           </footer>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  </AnimatePresence>
   );
 }

@@ -58,7 +58,7 @@ interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'admin' | 'vendedor' | 'propietario';
+  role: 'admin' | 'vendedor' | 'propietario' | 'cliente';
   cedula?: string;
   phone?: string;
   address?: string;
@@ -259,12 +259,15 @@ export default function Management() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: '',
-    role: 'vendedor' as 'admin' | 'vendedor' | 'propietario',
+    role: 'vendedor' as 'admin' | 'vendedor' | 'propietario' | 'cliente',
     cedula: '',
     phone: '',
     address: ''
   });
   const [isSavingUser, setIsSavingUser] = useState(false);
+  const [userSales, setUserSales] = useState<any[]>([]);
+  const [selectedSaleDetail, setSelectedSaleDetail] = useState<any | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const handleEditUser = (user: UserProfile) => {
     setSelectedUserForEdit(user);
@@ -294,6 +297,32 @@ export default function Management() {
       setIsSavingUser(false);
     }
   };
+
+  // Fetch User History when modal opens
+  useEffect(() => {
+    if (!selectedUserForHistory) {
+      setUserSales([]);
+      return;
+    }
+
+    setIsLoadingHistory(true);
+    const salesQ = query(
+      collection(db, 'sales'),
+      where('soldBy', '==', selectedUserForHistory.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(salesQ, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUserSales(data);
+      setIsLoadingHistory(false);
+    }, (error) => {
+      console.error("Error fetching user history:", error);
+      setIsLoadingHistory(false);
+    });
+
+    return () => unsubscribe();
+  }, [selectedUserForHistory]);
 
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
@@ -388,6 +417,7 @@ export default function Management() {
                            "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border",
                            user.role === 'admin' ? "bg-red-50 text-red-600 border-red-100" : 
                            user.role === 'propietario' ? "bg-purple-50 text-purple-600 border-purple-100" :
+                           user.role === 'cliente' ? "bg-blue-50 text-blue-600 border-blue-100" :
                            "bg-primary/5 text-primary border-primary/10"
                          )}>
                             {user.role}
@@ -438,17 +468,6 @@ export default function Management() {
                          <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Dashboard de abastecimiento y gastos</p>
                       </div>
                    </div>
-                   <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
-                      {['Hoy', 'Semana', 'Mes'].map(p => (
-                        <button 
-                          key={p} 
-                          onClick={() => setPurchasePeriod(p as any)}
-                          className={cn("px-4 py-1.5 rounded-lg transition-all", purchasePeriod === p ? "bg-on-surface text-white" : "text-secondary hover:bg-surface")}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                   </div>
                 </div>
 
                 {/* Info Cards Grid */}
@@ -477,6 +496,19 @@ export default function Management() {
                      value={formatCurrency(0)} 
                      sub="Costo promedio de abastecimiento"
                    />
+                </div>
+
+                {/* Controls */}
+                <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
+                  {['Hoy', 'Semana', 'Mes'].map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setPurchasePeriod(p as any)}
+                      className={cn("px-4 py-2 sm:py-1.5 rounded-lg transition-all flex-1 sm:flex-none", purchasePeriod === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}
+                    >
+                      {p}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -1007,19 +1039,83 @@ export default function Management() {
 
                    <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-secondary/40 uppercase tracking-widest px-2">Sesiones de registro</h4>
-                      <div className="p-5 rounded-3xl bg-white border border-outline/30 shadow-sm flex items-center justify-between group hover:border-[#00ADC8]/30 transition-all">
-                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-[#00ADC8]/10 rounded-xl flex items-center justify-center text-[#00ADC8]">
-                               <Calendar className="w-5 h-5" />
-                            </div>
-                            <span className="text-sm font-black text-on-surface">17 De Abril</span>
-                         </div>
-                         <div className="px-4 py-2 bg-surface rounded-full">
-                            <span className="text-[10px] font-black text-[#00ADC8] uppercase">2 Grupos</span>
-                         </div>
-                      </div>
+                      {isLoadingHistory ? (
+                        <div className="flex justify-center p-8">
+                          <div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                        </div>
+                      ) : userSales.length === 0 ? (
+                        <div className="text-center py-10 opacity-30">
+                          <p className="text-[10px] font-black uppercase tracking-widest">Sin ventas registradas</p>
+                        </div>
+                      ) : (
+                        userSales.slice(0, 5).map(sale => (
+                          <div 
+                            key={sale.id} 
+                            onClick={() => setSelectedSaleDetail(sale)}
+                            className="p-5 rounded-3xl bg-white border border-outline/30 shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all cursor-pointer"
+                          >
+                             <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                                   <ShoppingCart className="w-5 h-5" />
+                                </div>
+                                <div>
+                                   <span className="text-sm font-black text-on-surface">{sale.tableName || 'Venta'}</span>
+                                   <p className="text-[8px] font-black text-secondary uppercase opacity-60">{sale.hour || 'Reciente'}</p>
+                                </div>
+                             </div>
+                             <div className="text-right">
+                                <span className="text-sm font-black text-primary">{formatCurrency(sale.total)}</span>
+                             </div>
+                          </div>
+                        ))
+                      )}
+                      {userSales.length > 5 && (
+                         <p className="text-[8px] text-center font-black text-secondary uppercase tracking-widest opacity-40 italic">Mostrando las últimas 5 ventas</p>
+                      )}
                    </div>
                 </div>
+
+                {/* Sale Detail Modal Overlay */}
+                <AnimatePresence>
+                  {selectedSaleDetail && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="absolute inset-x-6 bottom-6 bg-white rounded-[2.5rem] shadow-2xl p-6 border border-outline/20 z-[120]"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="font-brand font-black text-primary uppercase text-sm">Detalles de Venta</h4>
+                          <p className="text-[10px] font-bold text-secondary">{selectedSaleDetail.tableName} • {selectedSaleDetail.hour}</p>
+                        </div>
+                        <button 
+                          onClick={() => setSelectedSaleDetail(null)}
+                          className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-3 max-h-48 overflow-y-auto mb-4 hide-scrollbar">
+                        {selectedSaleDetail.items?.map((item: any) => (
+                          <div key={item.id} className="flex justify-between items-center text-xs">
+                             <div className="flex flex-col">
+                                <span className="font-bold text-on-surface">{item.productName} x{item.quantity}</span>
+                                <span className="text-[8px] text-secondary/60 leading-none">{item.variantLabel}</span>
+                             </div>
+                             <span className="font-black text-primary">{formatCurrency(item.subtotal)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="pt-4 border-t border-dashed border-outline/30 flex justify-between items-center">
+                        <span className="text-xs font-black uppercase text-secondary">Total Cobrado</span>
+                        <span className="text-xl font-black text-on-surface">{formatCurrency(selectedSaleDetail.total)}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
              </motion.div>
           </div>
         )}

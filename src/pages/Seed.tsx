@@ -12,50 +12,50 @@ const FLAVORS = [
 ];
 
 const PRODUCTS = [
-  { name: "Cono o Vaso", category: "helados", variants: [
+  { name: "Cono o Vaso", category: "helados", imageUrl: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=800&q=80", variants: [
     {label:"Sencillo",price:3500,scoops:1},
     {label:"Doble",price:5500,scoops:2}
   ], requiresFlavors: true, isActive: true },
 
-  { name: "Cucurucho", category: "helados", variants: [
+  { name: "Cucurucho", category: "helados", imageUrl: "https://images.unsplash.com/photo-1570197781417-0a52375c3171?w=800&q=80", variants: [
     {label:"Sencillo",price:4000,scoops:1},
     {label:"Doble",price:6000,scoops:2},
     {label:"Triple",price:8000,scoops:3}
   ], requiresFlavors: true, isActive: true },
 
-  { name: "Conchita", category: "helados", variants: [
+  { name: "Conchita", category: "helados", imageUrl: "https://images.unsplash.com/photo-1563805042-7684c8e9e5cb?w=800&q=80", variants: [
     {label:"Sencilla",price:4500,scoops:1},
     {label:"Doble",price:6500,scoops:2},
     {label:"Triple",price:8500,scoops:3}
   ], requiresFlavors: true, isActive: true },
 
-  { name: "Ensalada de Frutas", category: "ensaladas", variants: [
+  { name: "Ensalada de Frutas", category: "ensaladas", imageUrl: "https://images.unsplash.com/photo-1490818387583-1baba5e638ce?w=800&q=80", variants: [
     {label:"Mini",price:10000,scoops:1},
     {label:"Pequeña",price:17000,scoops:2},
     {label:"Mediana",price:22000,scoops:2},
     {label:"Grande",price:27000,scoops:2}
   ], requiresFlavors: true, isActive: true },
 
-  { name: "Copa de Salpicón", category: "salpicon", variants: [
+  { name: "Copa de Salpicón", category: "salpicon", imageUrl: "https://images.unsplash.com/photo-1627962483861-5fa58ad200d6?w=800&q=80", variants: [
     {label:"Sabor Mango",price:11000,fruits:["Banano","Papaya","Mango"]},
     {label:"Sabor Fresa",price:11000,fruits:["Banano","Papaya","Fresa"]}
   ], requiresFlavors: true, requiresFruitChoice: true, isActive: true },
 
-  { name: "Vaso de Salpicón con Helado", category: "salpicon", variants: [
+  { name: "Vaso de Salpicón con Helado", category: "salpicon", imageUrl: "https://images.unsplash.com/photo-1550461716-e578fae32231?w=800&q=80", variants: [
     {label:"Pequeño",price:7000},
     {label:"Mediano",price:9000},
     {label:"Grande",price:11000}
   ], requiresFlavors: true, isActive: true },
 
-  { name: "Copa D'LI", category: "copas", basePrice: 13000, requiresFlavors: true, scoops: 3, isActive: true },
-  { name: "Copa Explosión de Sabores", category: "copas", basePrice: 16000, requiresFlavors: true, scoops: 7, isActive: true },
+  { name: "Copa D'LI", category: "copas", basePrice: 13000, imageUrl: "https://images.unsplash.com/photo-1553177595-4de2bb0842b9?w=800&q=80", requiresFlavors: true, scoops: 3, isActive: true },
+  { name: "Copa Explosión de Sabores", category: "copas", basePrice: 16000, imageUrl: "https://images.unsplash.com/photo-1582236371542-f9024f0c9780?w=800&q=80", requiresFlavors: true, scoops: 7, isActive: true },
 
-  { name: "Oblea Tradicional", category: "obleas", variants: [
+  { name: "Oblea Tradicional", category: "obleas", imageUrl: "https://images.unsplash.com/photo-1615801267497-29ef31d0540d?w=800&q=80", variants: [
     {"label":"Arequipe, Crema y Queso","price":6000,"hasFruit":false},
     {"label":"Arequipe, Crema, Queso y Fruta","price":9000,"hasFruit":true}
   ], requiresFruitChoice: true, isActive: true },
 
-  { name: "Oblea Cuchareable", category: "obleas", variants: [
+  { name: "Oblea Cuchareable", category: "obleas", imageUrl: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=800&q=80", variants: [
     {"label":"Sin Helado","price":13000,"hasIceCream":false},
     {"label":"Con Helado","price":15000,"hasIceCream":true}
   ], requiresFruitChoice: true, requiresFlavors: true, isActive: true },

@@ -154,6 +154,20 @@ export default function POS() {
               placeholder="Buscar producto..."
             />
           }
+          rightExtra={
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="hidden sm:flex relative items-center justify-center w-11 h-11 rounded-full bg-surface-container hover:bg-primary/5 transition-colors mr-2 group border border-outline/10"
+              title="Ver carrito"
+            >
+              <ShoppingCart className="w-6 h-6 text-secondary group-hover:text-primary transition-colors" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          }
         />
 
         <main className="flex-1 p-4 sm:p-8 flex flex-col gap-6 sm:gap-10 pb-32">
@@ -364,7 +378,6 @@ function ProductCard({ product, onClick }: { product: Product, onClick: () => vo
         updateQuantity(activeTable, cartItems[0].id, delta);
       }
     } else {
-      // For complex items, we open the cart or modal
       onClick();
     }
   };
@@ -379,87 +392,69 @@ function ProductCard({ product, onClick }: { product: Product, onClick: () => vo
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       onClick={handleMainClick}
       className={cn(
-        "bg-white rounded-[2rem] p-3 sm:p-5 border border-outline/50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group flex sm:flex-col h-full gap-4",
-        totalQuantity > 0 && "ring-2 ring-primary/20 bg-primary/5"
+        "bg-white rounded-[2rem] p-4 flex flex-col items-center text-center gap-2 relative mt-10 pt-12 border hover:shadow-2xl hover:border-primary/20 transition-all cursor-pointer group",
+        totalQuantity > 0 ? "ring-2 ring-primary/40 bg-primary/5 border-primary/40 shadow-md" : "border-outline/10 shadow-sm"
       )}
     >
-      {/* Icon / Avatar */}
-      <div className="w-20 h-20 sm:w-full sm:aspect-square bg-surface-container rounded-2xl flex items-center justify-center group-hover:bg-white transition-colors flex-shrink-0 relative overflow-hidden">
-        <MenuSquare className="w-8 h-8 sm:w-10 sm:h-10 text-secondary/20 group-hover:text-primary/20" />
+      {/* Pop-out Image / Avatar */}
+      <div className="absolute -top-10 w-24 h-24 rounded-full overflow-hidden shadow-xl border-4 border-white bg-surface-container-low flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        ) : (
+          <MenuSquare className="w-10 h-10 text-secondary/30 group-hover:text-primary/40 transition-colors" />
+        )}
+        
         {totalQuantity > 0 && !isComplex && (
-          <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="text-2xl font-black text-primary">{totalQuantity}</span>
+          <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="text-2xl font-black text-primary drop-shadow-md">{totalQuantity}</span>
           </div>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center sm:justify-start">
-        <div className="flex justify-between items-start mb-1">
-          <span className="px-2 py-0.5 rounded-full bg-surface-container text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest translate-y-[-2px]">
-            {product.category}
-          </span>
-          <span className="hidden sm:inline text-sm font-black text-on-surface">
-            {product.basePrice ? formatCurrency(product.basePrice) : '---'}
-          </span>
-        </div>
-        
-        <h4 className="font-headline font-bold text-sm sm:text-base text-on-surface mb-0.5 sm:mb-1 line-clamp-1">
-          {product.name}
-        </h4>
-        
-        <div className="sm:hidden text-xs font-black text-primary mb-3">
-          {product.basePrice ? formatCurrency(product.basePrice) : 'Precio variable'}
-        </div>
+      <div className="flex w-full justify-between items-center mb-1">
+        <span className="px-2 py-0.5 rounded-full bg-surface-container text-[8px] font-black text-secondary uppercase tracking-widest">
+          {product.category}
+        </span>
+        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" title="Disponible" />
+      </div>
 
-        <div className="mt-auto flex items-center justify-between sm:pt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-            <span className="text-[10px] font-bold text-slate-400">Stock: 12</span>
-          </div>
+      <h3 className="font-bold text-on-surface text-lg leading-tight w-full line-clamp-1">{product.name}</h3>
+      
+      <p className="text-primary font-black text-[1.4rem] leading-none mb-2">
+        {product.basePrice ? formatCurrency(product.basePrice) : 'Var. P'}
+      </p>
 
-          <div className="flex-shrink-0">
-            {totalQuantity > 0 && !isComplex ? (
-              <div className="flex items-center bg-primary rounded-xl p-1 gap-3 shadow-lg shadow-primary/20">
-                <button 
-                  onClick={(e) => handleUpdateQty(e, -1)}
-                  className="w-7 h-7 flex items-center justify-center bg-white/20 rounded-lg hover:bg-white/30 text-white"
-                >
-                  <Minus className="w-3.5 h-3.5 stroke-[3]" />
-                </button>
-                <span className="text-xs font-black text-white w-4 text-center">{totalQuantity}</span>
-                <button 
-                  onClick={(e) => handleUpdateQty(e, 1)}
-                  className="w-7 h-7 flex items-center justify-center bg-white/20 rounded-lg hover:bg-white/30 text-white"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                </button>
-              </div>
-            ) : (
-              <button 
-                onClick={handleSimpleAdd}
-                className={cn(
-                  "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all shadow-sm",
-                  totalQuantity > 0 
-                    ? "bg-primary text-white" 
-                    : "bg-surface-container text-secondary/40 group-hover:bg-primary group-hover:text-white"
-                )}
-              >
-                {totalQuantity > 0 && isComplex ? (
-                  <div className="relative">
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="absolute -top-3 -right-3 bg-red-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">{totalQuantity}</span>
-                  </div>
-                ) : (
-                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                )}
-              </button>
-            )}
+      {/* Control Quantity / Add Button */}
+      <div className="w-full mt-auto pt-2 border-t border-outline/10" onClick={(e) => e.stopPropagation()}>
+        {totalQuantity > 0 && !isComplex ? (
+          <div className="flex items-center justify-between bg-primary text-white rounded-full p-1.5 shadow-[0_4px_15px_rgba(179,0,105,0.3)] mt-2">
+            <button 
+              onClick={(e) => handleUpdateQty(e, -1)}
+              className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition-colors active:scale-90"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <span className="font-bold text-base select-none">{totalQuantity}</span>
+            <button 
+              onClick={(e) => handleUpdateQty(e, 1)}
+              className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition-colors active:scale-90"
+            >
+              <Plus className="w-4 h-4 text-white" />
+            </button>
           </div>
-        </div>
+        ) : (
+          <button 
+            onClick={handleMainClick}
+            className="w-full py-2.5 rounded-full mt-2 bg-surface-container-low text-primary font-bold text-sm transition-all flex items-center justify-center gap-1.5 hover:shadow-md hover:bg-gradient-to-r hover:from-primary hover:to-primary-container hover:text-white active:scale-95 group-hover:bg-primary group-hover:text-white"
+          >
+            {isComplex ? <MoreHorizontal className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            {isComplex ? 'Configurar' : 'Agregar'}
+          </button>
+        )}
       </div>
     </motion.div>
   );

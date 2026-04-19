@@ -292,7 +292,7 @@ export default function Supplies() {
             <motion.div
               initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]"
+              className="relative bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[85dvh] sm:h-auto sm:max-h-[85vh]"
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1 sm:hidden">
