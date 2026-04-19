@@ -19,6 +19,8 @@ import { toast } from 'sonner';
 import UserMenu from '../components/UserMenu';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
+import AdminSidebar from '../components/AdminSidebar';
+import AppHeader, { PageTitle } from '../components/AppHeader';
 
 export default function Schedule() {
   const { profile } = useAuthStore();
@@ -43,25 +45,12 @@ export default function Schedule() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest pb-32">
-      {/* Header */}
-      <header className="bg-[#008BB1] text-white sticky top-0 z-30 px-4 sm:px-6 h-20 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center gap-4">
-          <Link to="/admin/dashboard" className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="font-headline font-bold text-lg leading-none">Tablero de Horarios</h1>
-            <p className="text-[10px] uppercase font-bold tracking-widest opacity-80 mt-1">Gestión de Personal D'LI</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-           <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 backdrop-blur-md">
-              <Info className="w-5 h-5" />
-           </button>
-           <UserMenu />
-        </div>
-      </header>
+    <div className="min-h-screen flex bg-surface-container-lowest">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+        <AppHeader backTo="/admin/dashboard" showBell={false} />
+        <PageTitle title="Tablero de Horarios" subtitle="Gestión de Personal D'LI" />
+
 
       <main className="p-4 sm:p-6 max-w-5xl mx-auto flex flex-col gap-6">
         {/* View Selector and Actions */}
@@ -211,6 +200,7 @@ export default function Schedule() {
       </main>
 
       <BottomNav />
+      </div>
     </div>
   );
 }

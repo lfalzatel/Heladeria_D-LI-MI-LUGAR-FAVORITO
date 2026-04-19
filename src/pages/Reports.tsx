@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
+import AdminSidebar from '../components/AdminSidebar';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 type DateFilter = 'hoy' | 'semana' | 'mes' | 'personalizado';
@@ -99,9 +100,11 @@ export default function Reports() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest pb-32">
-      <AppHeader backTo="/admin/dashboard" showBell={false} />
-      <PageTitle title="Reportes & BI" subtitle="Análisis Operativo" />
+    <div className="min-h-screen flex bg-surface-container-lowest">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+        <AppHeader showBell />
+        <PageTitle title="Reportes & BI" subtitle="Análisis Operativo" />
 
       <main className="p-4 sm:p-6 max-w-5xl mx-auto flex flex-col gap-8">
         {/* Date Selector */}
@@ -260,6 +263,7 @@ export default function Reports() {
       </main>
 
       <BottomNav />
+      </div>
     </div>
   );
 }

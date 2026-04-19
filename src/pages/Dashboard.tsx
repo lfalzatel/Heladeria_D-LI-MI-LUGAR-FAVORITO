@@ -136,8 +136,8 @@ export default function Dashboard() {
       <main className="flex-1 flex flex-col min-h-screen">
         <AppHeader showBell />
         <PageTitle
-          title={`Bienvenido, ${profile?.name?.split(' ')[0] || 'Luis'}`}
-          subtitle="Estado de la Boutique hoy"
+          title={`Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`}
+          subtitle={profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Boutique hoy"}
         />
 
         <div className="p-4 sm:p-8 max-w-7xl w-full flex flex-col gap-6 sm:gap-8 pb-32 relative">
@@ -258,37 +258,40 @@ export default function Dashboard() {
                      ))}
                   </div>
                </div>
-
-               {/* Stock Alerts */}
-               <div className="bg-white rounded-[2rem] p-6 border border-primary/10 shadow-sm bg-gradient-to-br from-white to-primary/5">
-                  <div className="flex items-center gap-2 text-primary mb-6">
-                     <AlertCircle className="w-4 h-4" />
-                     <h4 className="font-headline font-bold text-sm text-on-surface">Stock Crítico</h4>
-                  </div>
-                  
-                  <div className="flex flex-col gap-4">
-                     {criticalStock.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between group">
-                           <div>
-                              <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{item.item}</p>
-                              <p className="text-[9px] text-secondary font-medium">Límite: {item.limit}</p>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-xs font-black text-primary">{item.stock}</p>
-                              <div className="w-16 h-1.5 bg-surface-container rounded-full mt-1 overflow-hidden">
-                                 <div className="h-full bg-primary rounded-full w-[30%]" />
-                              </div>
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-
-                  <Link to="/admin/supplies" className="w-full">
-                    <button className="w-full mt-6 py-3 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all">
-                       Gestionar Insumos
-                    </button>
-                  </Link>
                </div>
+
+               {/* Stock Alerts (Only Admin/Propietario) */}
+               {(profile?.role === 'admin' || profile?.role === 'propietario') && (
+                 <div className="bg-white rounded-[2rem] p-6 border border-primary/10 shadow-sm bg-gradient-to-br from-white to-primary/5">
+                    <div className="flex items-center gap-2 text-primary mb-6">
+                       <AlertCircle className="w-4 h-4" />
+                       <h4 className="font-headline font-bold text-sm text-on-surface">Stock Crítico</h4>
+                    </div>
+                    
+                    <div className="flex flex-col gap-4">
+                       {criticalStock.map((item, i) => (
+                          <div key={i} className="flex items-center justify-between group">
+                             <div>
+                                <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{item.item}</p>
+                                <p className="text-[9px] text-secondary font-medium">Límite: {item.limit}</p>
+                             </div>
+                             <div className="text-right">
+                                <p className="text-xs font-black text-primary">{item.stock}</p>
+                                <div className="w-16 h-1.5 bg-surface-container rounded-full mt-1 overflow-hidden">
+                                   <div className="h-full bg-primary rounded-full w-[30%]" />
+                                </div>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+
+                    <Link to="/admin/supplies" className="w-full">
+                      <button className="w-full mt-6 py-3 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all">
+                         Gestionar Insumos
+                      </button>
+                    </Link>
+                 </div>
+               )}
             </div>
           </div>
         </div>

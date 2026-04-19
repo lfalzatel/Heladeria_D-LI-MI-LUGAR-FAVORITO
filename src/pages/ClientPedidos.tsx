@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import AppHeader, { PageTitle } from '../components/AppHeader';
+import AdminSidebar from '../components/AdminSidebar';
 
 interface Pedido {
   id: string;
@@ -125,12 +126,14 @@ export default function ClientPedidos() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-container-lowest to-surface-container/30 pb-32">
-      <AppHeader showBell />
-      <PageTitle
-        title="Tus Pedidos"
-        subtitle="Revisa el estado de tus compras y contáctanos."
-      />
+    <div className="min-h-screen flex bg-gradient-to-br from-surface-container-lowest to-surface-container/30">
+      {profile?.role !== 'cliente' && <AdminSidebar />}
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+        <AppHeader showBell />
+        <PageTitle
+          title="Tus Pedidos"
+          subtitle="Revisa el estado de tus compras y contáctanos."
+        />
 
       <main className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-4">
         {/* Calendar toggle */}
@@ -410,6 +413,7 @@ export default function ClientPedidos() {
       </AnimatePresence>
 
       <BottomNav />
+      </div>
     </div>
   );
 }

@@ -19,8 +19,9 @@ import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import UserMenu from '../components/UserMenu';
 import BottomNav from '../components/BottomNav';
+import AppHeader, { PageTitle } from '../components/AppHeader';
+import AdminSidebar from '../components/AdminSidebar';
 
 import { useAuthStore } from '../stores/useAuthStore';
 
@@ -72,28 +73,11 @@ export default function Inventory() {
   });
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest pb-32">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-outline sticky top-0 z-30 px-4 sm:px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/admin/dashboard" className="p-2 hover:bg-surface rounded-xl transition-colors">
-            <ArrowLeft className="w-5 h-5 text-secondary" />
-          </Link>
-          <div>
-            <h1 className="font-headline font-bold text-lg text-on-surface text-center sm:text-left">Inventario del Menú</h1>
-            <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Catálogo de Venta al Público</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <button className="hidden sm:flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-xs font-bold rounded-xl shadow-lg shadow-primary/20">
-            <MenuSquare className="w-4 h-4" />
-            Nuevo Producto
-          </button>
-          
-          <UserMenu />
-        </div>
-      </header>
+    <div className="min-h-screen flex bg-surface-container-lowest">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+        <AppHeader backTo="/admin/management" showBell={false} />
+        <PageTitle title="Inventario del Menú" subtitle="Catálogo de Venta al Público" />
 
       <main className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-6 sm:gap-8">
         {/* Toolbar */}
@@ -207,6 +191,7 @@ export default function Inventory() {
       </main>
 
       <BottomNav />
+      </div>
     </div>
   );
 }

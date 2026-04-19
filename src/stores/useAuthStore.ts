@@ -59,7 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
                 profile: { 
                   uid: user.uid, 
                   ...data,
-                  role: isAdminHardcoded ? 'admin' : (data.role || 'vendedor')
+                  role: isAdminHardcoded ? 'admin' : (data.role || 'cliente')
                 } as UserProfile,
                 isLoading: false
               });
@@ -94,13 +94,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
             console.error("Profile listener error:", error);
             // Fallback profile if Firestore is inaccessible
             const isAdminEmail = user.email?.includes('admin') || isAdminHardcoded;
-            const fallbackRole = isAdminEmail ? 'admin' : 'vendedor';
+            const fallbackRole = isAdminEmail ? 'admin' : 'cliente';
             set({ 
               profile: { 
                 uid: user.uid, 
                 email: user.email, 
                 role: fallbackRole as UserRole, 
-                name: user.displayName || user.email?.split('@')[0] || 'Usuario'
+                name: user.displayName || user.email?.split('@')[0] || 'Usuario',
+                imageUrl: user.photoURL || ''
               },
               isLoading: false
             });

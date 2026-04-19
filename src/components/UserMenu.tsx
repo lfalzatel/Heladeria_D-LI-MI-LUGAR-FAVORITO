@@ -89,7 +89,7 @@ function MenuItem({
 }
 
 export default function UserMenu() {
-  const { profile } = useAuthStore();
+  const { profile, user } = useAuthStore();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -164,6 +164,7 @@ export default function UserMenu() {
   const roleColor = ROLE_COLORS[profile?.role || ''] || 'text-primary';
   const roleDot = ROLE_DOT[profile?.role || ''] || 'bg-primary';
   const initials = getInitials(profile?.name);
+  const avatarUrl = profile?.imageUrl || user?.photoURL;
 
   const THEMES: { id: Theme; icon: React.ReactNode; label: string }[] = [
     { id: 'light', icon: <Sun className="w-3.5 h-3.5" />, label: 'Claro' },
@@ -176,12 +177,12 @@ export default function UserMenu() {
       {/* Compact trigger — avatar + first name + role dot + chevron */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-primary/40 transition-all shadow-lg active:scale-95 group"
+        className="flex items-center gap-2 pl-1 pr-2 sm:pr-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-primary/40 transition-all shadow-lg active:scale-95 group max-w-[120px] sm:max-w-none"
       >
         {/* Avatar with Google photo */}
-        <div className="relative w-9 h-9 rounded-full border-2 border-primary/20 overflow-hidden bg-primary/10 flex items-center justify-center flex-shrink-0">
-          {profile?.imageUrl ? (
-            <img src={profile.imageUrl} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-primary/20 overflow-hidden bg-primary/10 flex items-center justify-center flex-shrink-0">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <span className="text-xs font-black text-primary">{getInitials(profile?.name)}</span>
           )}
@@ -189,12 +190,12 @@ export default function UserMenu() {
         </div>
 
         {/* First name + role */}
-        <div className="hidden sm:flex flex-col items-start leading-none">
-          <span className="text-xs font-black text-on-surface">{getFirstName(profile?.name)}</span>
-          <span className={cn("text-[9px] font-bold uppercase tracking-wider", roleColor)}>{roleLabel}</span>
+        <div className="flex flex-col items-start leading-none min-w-0">
+          <span className="text-xs font-black text-on-surface truncate w-full max-w-[50px] sm:max-w-[100px]">{getFirstName(profile?.name)}</span>
+          <span className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-wider truncate w-full", roleColor)}>{roleLabel}</span>
         </div>
 
-        <ChevronDown className={cn("w-3.5 h-3.5 text-secondary/50 transition-transform duration-300", isOpen && "rotate-180")} />
+        <ChevronDown className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5 text-secondary/50 transition-transform duration-300 flex-shrink-0", isOpen && "rotate-180")} />
       </button>
 
       {/* Dropdown */}
@@ -211,8 +212,8 @@ export default function UserMenu() {
             <div className="p-4 bg-gradient-to-br from-surface-container/60 to-white border-b border-outline/10">
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-primary/10 flex items-center justify-center border-2 border-primary/20 flex-shrink-0">
-                  {profile?.imageUrl ? (
-                    <img src={profile.imageUrl} alt={initials} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={initials} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <span className="text-base font-black text-primary">{initials}</span>
                   )}

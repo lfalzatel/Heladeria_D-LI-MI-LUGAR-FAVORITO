@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
+import AdminSidebar from '../components/AdminSidebar';
 
 interface Supply {
   id: string;
@@ -160,9 +161,11 @@ export default function Supplies() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-container-lowest to-surface-container/20 pb-32">
-      <AppHeader backTo="/admin/dashboard" showBell={false} />
-      <PageTitle title="Compras" subtitle="Gestión de Insumos" />
+    <div className="min-h-screen flex bg-surface-container-lowest">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+        <AppHeader backTo="/admin/management" showBell={false} />
+        <PageTitle title="Insumos" subtitle="Control de Abastecimiento" />
 
       <main className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5">
         {/* Dashboard stats */}
@@ -172,51 +175,45 @@ export default function Supplies() {
           <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Compras" value={completedInPeriod.toString()} accent="slate" />
         </section>
 
-        {/* Period selector */}
-        <div className="bg-white rounded-2xl border border-outline/10 shadow-sm p-1.5 flex gap-1">
+        {/* Controls */}
+        <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
           {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={cn(
-                "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
-                period === p
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-secondary hover:text-on-surface"
-              )}
+              className={cn("px-4 py-2 sm:py-1.5 rounded-lg transition-all flex-1 sm:flex-none", period === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}
             >
               {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>
 
-        {/* Action toolbar */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-3 rounded-xl border text-xs font-bold transition-all",
-              isCalendarOpen ? "bg-primary/10 border-primary/20 text-primary" : "bg-white border-outline/20 text-secondary hover:border-primary/20"
-            )}
-          >
-            <Calendar className="w-4 h-4" />
-            <span className="hidden sm:inline">Calendario</span>
-          </button>
-          <button
-            onClick={() => toast.info('Exportando informe...')}
-            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-outline/20 text-secondary text-xs font-bold hover:border-primary/20 hover:text-primary transition-all"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Descargar</span>
-          </button>
-          <button
-            onClick={() => setIsPurchaseModalOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.02] active:scale-98 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            Registrar Compra
-          </button>
+        <div className="flex items-center gap-3">
+           <button 
+             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+             className="flex-1 flex items-center justify-between px-6 py-4 bg-white rounded-3xl border border-outline/50 shadow-sm font-bold text-sm text-secondary hover:border-primary/30 transition-all"
+           >
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 opacity-40" />
+                <span>Calendario {isCalendarOpen ? 'Ocultar' : ''}</span>
+              </div>
+              <ChevronDown className={cn("w-4 h-4 opacity-40 transition-transform", isCalendarOpen && "rotate-180")} />
+           </button>
+           <button 
+             onClick={() => toast.info('Exportando informe...')}
+             className="w-14 h-14 bg-on-surface text-white rounded-2xl flex items-center justify-center shadow-xl shadow-black/20 hover:scale-105 active:scale-95 transition-all"
+           >
+              <Download className="w-6 h-6" />
+           </button>
         </div>
+
+        <button 
+          onClick={() => setIsPurchaseModalOpen(true)}
+          className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-98 transition-all"
+        >
+           <Plus className="w-5 h-5 stroke-[3]" />
+           Registrar Compra
+        </button>
 
         {/* Calendar mini – actividad */}
         <AnimatePresence>
@@ -434,6 +431,7 @@ export default function Supplies() {
       </AnimatePresence>
 
       <BottomNav />
+      </div>
     </div>
   );
 }

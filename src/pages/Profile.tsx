@@ -20,6 +20,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import UserMenu from '../components/UserMenu';
 import BottomNav from '../components/BottomNav';
+import AppHeader, { PageTitle } from '../components/AppHeader';
+import AdminSidebar from '../components/AdminSidebar';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 
@@ -57,19 +59,13 @@ export default function Profile() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest pb-32">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-outline sticky top-0 z-30 px-4 sm:px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="p-2 hover:bg-surface rounded-xl transition-colors">
-            <ArrowLeft className="w-5 h-5 text-secondary" />
-          </Link>
-          <div>
-            <h1 className="font-headline font-bold text-lg text-on-surface">Mi Perfil</h1>
-            <p className="text-[10px] text-secondary font-bold uppercase tracking-widest leading-none">Información de Cuenta</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen flex bg-surface-container-lowest">
+      {profile?.role !== 'cliente' && <AdminSidebar />}
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+        <AppHeader backTo="/" showBell={false} />
+        <PageTitle title="Mi Perfil" subtitle="Información de Cuenta" />
+
+        <div className="px-4 sm:px-6 flex justify-end">
           <button 
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-all border border-primary/20"
@@ -77,9 +73,7 @@ export default function Profile() {
             <Edit3 className="w-3.5 h-3.5" />
             Editar
           </button>
-          <UserMenu />
         </div>
-      </header>
 
       <main className="p-4 sm:p-6 max-w-lg mx-auto flex flex-col gap-6">
         {/* Profile Card */}
@@ -256,6 +250,7 @@ export default function Profile() {
       </AnimatePresence>
 
       <BottomNav />
+      </div>
     </div>
   );
 }
