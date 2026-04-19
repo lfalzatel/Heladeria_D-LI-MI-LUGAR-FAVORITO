@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>D'LI POS - Main Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#012200",
+                        "surface-container-high": "#eae7e7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#3e0021",
+                        "secondary": "#874e58",
+                        "on-surface-variant": "#594048",
+                        "surface-bright": "#fcf9f8",
+                        "background": "#fcf9f8",
+                        "inverse-primary": "#ffb0cc",
+                        "outline": "#8d6f79",
+                        "surface-variant": "#e4e2e1",
+                        "on-primary-fixed-variant": "#8d0051",
+                        "on-surface": "#1b1c1c",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-background": "#1b1c1c",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "on-tertiary-fixed-variant": "#035300",
+                        "tertiary": "#046c00",
+                        "surface-dim": "#dcd9d9",
+                        "inverse-surface": "#303030",
+                        "secondary-fixed-dim": "#fcb3be",
+                        "primary": "#b30069",
+                        "surface": "#fcf9f8",
+                        "inverse-on-surface": "#f3f0f0",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#69df54",
+                        "secondary-fixed": "#ffd9de",
+                        "primary-container": "#df0e84",
+                        "secondary-container": "#ffb6c1",
+                        "tertiary-fixed": "#85fd6d",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#ffb0cc",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#b8006c",
+                        "on-secondary-container": "#7b444e",
+                        "on-secondary-fixed-variant": "#6b3741",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0eded",
+                        "surface-container-low": "#f6f3f2",
+                        "on-tertiary-container": "#f8ffef",
+                        "on-secondary-fixed": "#360c17",
+                        "tertiary-container": "#068800",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#e1bdc8",
+                        "primary-fixed": "#ffd9e4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": [
+                            "Plus Jakarta Sans"
+                        ],
+                        "body": [
+                            "Plus Jakarta Sans"
+                        ],
+                        "label": [
+                            "Plus Jakarta Sans"
+                        ]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24 md:pb-0 md:flex">
+<!-- Web Navigation Drawer (hidden on mobile) -->
+<nav class="hidden md:flex flex-col h-screen py-8 h-full w-72 rounded-r-[3rem] bg-[#fcf9f8] dark:bg-neutral-950 shadow-2xl shadow-[#b30069]/5 sticky top-0">
+<div class="px-6 mb-8 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Vendedor D'LI" class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="professional portrait of a smiling retail worker or boutique manager with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmONu53-_Ct3V5XBoxuXUrDEpvf2Wi6KokraF2zpQ65VLT4BoRD85LhycJ7j2yecYvqBTMHl-YSVlPNV5PO5RD5CYeHgVNqWGsImKpx17_pwN7T8UD0NAVVa-hZTRJTaTkAHWR-xLR2enmKvDdIUl_aLFcayR8T_EhSrL-hnEkTIF83DuCL6XD8_y8ko9XqHm8QgtAIkDTLjfj70xhNxn9LApnfVt1Qls2F5GXxJF_ydPzluoouKP8pJgkZX9vJWtEXfemJdPPbUI"/>
+<div>
+<h2 class="font-bold text-[#b30069] text-base leading-tight">Vendedor D'LI</h2>
+<p class="text-secondary text-xs">Shift Active</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 px-2 flex-grow">
+<a class="flex items-center gap-4 bg-gradient-to-r from-[#b30069] to-[#b30069]/80 text-white rounded-full mx-2 my-1 px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" data-weight="fill" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-medium text-sm font-['Plus_Jakarta_Sans']">Catalog</span>
+</a>
+<a class="flex items-center gap-4 text-[#874e58] dark:text-neutral-400 px-4 py-3 mx-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="table_restaurant">table_restaurant</span>
+<span class="font-medium text-sm font-['Plus_Jakarta_Sans']">Tables</span>
+</a>
+<a class="flex items-center gap-4 text-[#874e58] dark:text-neutral-400 px-4 py-3 mx-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-medium text-sm font-['Plus_Jakarta_Sans']">Orders</span>
+</a>
+</div>
+</nav>
+<div class="flex-1 flex flex-col min-h-screen">
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden flex justify-between items-center px-6 py-4 w-full bg-[#fcf9f8]/70 dark:bg-neutral-900/70 backdrop-blur-md docked full-width top-0 z-50 no-border shadow-none bg-surface-container-low flat no shadows">
+<div class="flex items-center gap-3">
+<img alt="Vendedor D'LI" class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="professional portrait of a smiling retail worker or boutique manager with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDojfryvYpvMzLJH1aOSJ6qz31cIhOOLnGqGQzuVIcOw18O8VzKt9aM_HWaSS7SAmeZkmGn0ZUrBz8HrbOv1JE6gaoeDjk4yZ-qR_kAeoRYZVyR3-jL3kbV4bhGyLH75UaJhd8KeGpSa7G4mZe8NyZCpPFwy9laPTjf4YFT9Zjiyu5kvoZ48zDinKyrljiITtqyDJZss94jO6EvxsiMuBzbNBOthKIod74VRidKX0Go9Cvg5FByLVd5RS6JyIaPAtnTC0-_HSMs7q8"/>
+<div>
+<h1 class="font-['Plus_Jakarta_Sans'] font-bold text-lg tracking-tight text-[#b30069] dark:text-[#ff4fb6]">D'LI</h1>
+</div>
+</div>
+<div>
+<button class="text-[#b30069] dark:text-[#ff4fb6] font-['Plus_Jakarta_Sans'] font-bold text-sm bg-primary/10 px-4 py-2 rounded-full">Shift Active</button>
+</div>
+</header>
+<!-- TopAppBar (Web Header) -->
+<header class="hidden md:flex justify-between items-center px-8 py-6 w-full bg-surface">
+<div>
+<h1 class="font-['Plus_Jakarta_Sans'] text-3xl font-black italic text-[#b30069] dark:text-[#ff4fb6]">D'LI <span class="text-on-surface font-light non-italic">POS</span></h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined text-secondary text-3xl">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">3</span>
+</div>
+</div>
+</header>
+<main class="flex-1 px-4 md:px-8 py-6 overflow-y-auto">
+<!-- Table Selector -->
+<section class="mb-8">
+<div class="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
+<!-- Mesa 1 (Occupied) -->
+<button class="snap-start flex-shrink-0 w-32 h-24 rounded-xl bg-surface-container-lowest flex flex-col items-center justify-center gap-2 shadow-[0_4px_20px_rgba(179,0,105,0.04)] relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-full h-1 bg-[#ffb6c1]"></div>
+<span class="material-symbols-outlined text-secondary">table_restaurant</span>
+<span class="font-bold text-on-surface">Mesa 1</span>
+</button>
+<!-- Mesa 2 (Free) -->
+<button class="snap-start flex-shrink-0 w-32 h-24 rounded-xl bg-surface-container-lowest flex flex-col items-center justify-center gap-2 shadow-[0_4px_20px_rgba(179,0,105,0.04)] relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-full h-1 bg-[#85fd6d]"></div>
+<span class="material-symbols-outlined text-secondary">table_restaurant</span>
+<span class="font-bold text-on-surface">Mesa 2</span>
+</button>
+<!-- Mesa 3 (Free) -->
+<button class="snap-start flex-shrink-0 w-32 h-24 rounded-xl bg-surface-container-lowest flex flex-col items-center justify-center gap-2 shadow-[0_4px_20px_rgba(179,0,105,0.04)] relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-full h-1 bg-[#85fd6d]"></div>
+<span class="material-symbols-outlined text-secondary">table_restaurant</span>
+<span class="font-bold text-on-surface">Mesa 3</span>
+</button>
+<!-- Para Llevar (Active Selection) -->
+<button class="snap-start flex-shrink-0 w-32 h-24 rounded-xl bg-primary-container text-on-primary-container flex flex-col items-center justify-center gap-2 shadow-[0_8px_30px_rgba(179,0,105,0.15)] relative overflow-hidden">
+<span class="material-symbols-outlined text-on-primary-container">shopping_bag</span>
+<span class="font-bold">Para Llevar</span>
+</button>
+</div>
+</section>
+<!-- Category Tabs -->
+<section class="mb-8">
+<div class="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">
+<button class="snap-start whitespace-nowrap px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-[0_4px_15px_rgba(179,0,105,0.2)]">Helados</button>
+<button class="snap-start whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-secondary font-medium text-sm hover:bg-surface-container-low transition-colors">Ensaladas</button>
+<button class="snap-start whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-secondary font-medium text-sm hover:bg-surface-container-low transition-colors">Copas</button>
+<button class="snap-start whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-secondary font-medium text-sm hover:bg-surface-container-low transition-colors">Obleas</button>
+<button class="snap-start whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-secondary font-medium text-sm hover:bg-surface-container-low transition-colors">Adiciones</button>
+</div>
+</section>
+<!-- Product Catalog Grid -->
+<section>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+<!-- Product Card 1 -->
+<div class="bg-surface-container-lowest rounded-[2rem] p-4 flex flex-col items-center text-center gap-3 relative mt-8 pt-12 hover:shadow-[0_10px_30px_rgba(179,0,105,0.08)] transition-shadow">
+<div class="absolute -top-10 w-24 h-24 rounded-full overflow-hidden shadow-lg border-4 border-surface-container-lowest bg-surface-container-low">
+<img alt="Cucurucho" class="w-full h-full object-cover" data-alt="close up of a single scoop artisanal pink strawberry gelato in a crispy waffle cone with soft pastel background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQduFQ8CtZ7jopHackOIxSXniMgj0OB_P84NxCRVCzcdXkeLUr7oJAkLrPnJTKjbAxg_HkeEjDWSCzdiroSHIOLSBN4iHCvAGCmK9dpCc3Nuav0aZZIWSmT5pl6q4rHGMqwQ7hYegartIKW97ISFdePQjsjU3VzBE7HxWfnl2U03E-nwO1loWmGV5rZVFfibuiNGX7OsckyxLvJB-6OvJ0GsUJruXbvN2bpzqLvdeNTR2iciAqPnjTd9ZwOPMsb36mY2ZqOQK9yRE"/>
+</div>
+<h3 class="font-bold text-on-surface mt-2 text-lg">Cucurucho</h3>
+<p class="text-primary font-black text-xl">$4.500</p>
+<button class="w-full mt-2 py-2 rounded-full bg-surface-container-low text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Add
+                        </button>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-surface-container-lowest rounded-[2rem] p-4 flex flex-col items-center text-center gap-3 relative mt-8 pt-12 hover:shadow-[0_10px_30px_rgba(179,0,105,0.08)] transition-shadow">
+<div class="absolute -top-10 w-24 h-24 rounded-full overflow-hidden shadow-lg border-4 border-surface-container-lowest bg-surface-container-low">
+<img alt="Conchita" class="w-full h-full object-cover" data-alt="overhead view of a delicate creamy dessert in a clam shell shaped pastry cup on a marble counter" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmjnwhUopVRITrq09EDqtp7WkmrqyP56ArvcmwCtg4u9HhQbTHSL5UlkGyUtAVnfi3hXWeB4cwCv0aDqKGy9thL_Z771aHzPvFKBtKhdTdzEvY3qk3OWRhyAkmlcI8iXocISsH3Ta5l4UMMsKGuO53RRlF9frA16mU_ROyy-t-zy8uGOwIugIg0ro99Lu_FoM2L1d4WI4rq6ZXaGeYijRdje9MX8Jz39AinN9uszJykydMK6JZL_Pl_HDMpAJSCNhC6BIm-GQX3_M"/>
+</div>
+<h3 class="font-bold text-on-surface mt-2 text-lg">Conchita</h3>
+<p class="text-primary font-black text-xl">$5.200</p>
+<button class="w-full mt-2 py-2 rounded-full bg-surface-container-low text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Add
+                        </button>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-surface-container-lowest rounded-[2rem] p-4 flex flex-col items-center text-center gap-3 relative mt-8 pt-12 hover:shadow-[0_10px_30px_rgba(179,0,105,0.08)] transition-shadow">
+<div class="absolute -top-10 w-24 h-24 rounded-full overflow-hidden shadow-lg border-4 border-surface-container-lowest bg-surface-container-low">
+<img alt="Copa Sundae" class="w-full h-full object-cover" data-alt="decadent tall glass sundae with chocolate syrup dripping down layers of vanilla and chocolate ice cream topped with whipped cream" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANnMcXGiJ08rNq3hqVDwbd3MLviN-QJmxya-zR5QMUbmmNI_LA9dKBi2yykkoL33eBaa_iip3zYwfjNZe5MhXKcObldib-ig1pKGikNtplHr3FuNNOpMUhT1AAlnbbRAC2BeZfeN5aVB7tRzhT8dYYbNuKnvoS3hcN6BaSfTFvT0Wp_B9ft6WfQqKE2zS323bfPrM7MxW2VLOrcoIdQp4rnxOcNXLo5zlXjinYObuBZchwx6pwQNAWHBA0OfE7tSJGLRBmO4AUWs8"/>
+</div>
+<h3 class="font-bold text-on-surface mt-2 text-lg">Copa D'LI</h3>
+<p class="text-primary font-black text-xl">$9.800</p>
+<button class="w-full mt-2 py-2 rounded-full bg-surface-container-low text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Add
+                        </button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Mobile Floating Action Button (Carrito) -->
+<div class="md:hidden fixed bottom-28 right-6 z-50">
+<button class="w-14 h-14 rounded-full bg-gradient-to-tr from-primary to-primary-container text-white shadow-[0_10px_25px_rgba(179,0,105,0.4)] flex items-center justify-center relative scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-surface text-primary text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-full border-2 border-primary-container">3</span>
+</button>
+</div>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#fcf9f8] dark:bg-neutral-900 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(179,0,105,0.06)]">
+<a class="flex flex-col items-center justify-center bg-[#b30069] text-white rounded-full px-6 py-2 Active: scale-110 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="menu_book" data-weight="fill" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans'] font-medium text-[11px] mt-1">Catalog</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#874e58] dark:text-neutral-400 opacity-60 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="table_restaurant">table_restaurant</span>
+<span class="font-['Plus_Jakarta_Sans'] font-medium text-[11px] mt-1">Tables</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#874e58] dark:text-neutral-400 opacity-60 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="receipt_long">receipt_long</span>
+<span class="font-['Plus_Jakarta_Sans'] font-medium text-[11px] mt-1">Orders</span>
+</a>
+</nav>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

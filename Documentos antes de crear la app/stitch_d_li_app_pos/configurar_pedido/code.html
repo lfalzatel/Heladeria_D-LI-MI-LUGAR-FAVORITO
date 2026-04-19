@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Configuration - D'LI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#012200",
+                        "surface-container-high": "#eae7e7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#3e0021",
+                        "secondary": "#874e58",
+                        "on-surface-variant": "#594048",
+                        "surface-bright": "#fcf9f8",
+                        "background": "#fcf9f8",
+                        "inverse-primary": "#ffb0cc",
+                        "outline": "#8d6f79",
+                        "surface-variant": "#e4e2e1",
+                        "on-primary-fixed-variant": "#8d0051",
+                        "on-surface": "#1b1c1c",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-background": "#1b1c1c",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "on-tertiary-fixed-variant": "#035300",
+                        "tertiary": "#046c00",
+                        "surface-dim": "#dcd9d9",
+                        "inverse-surface": "#303030",
+                        "secondary-fixed-dim": "#fcb3be",
+                        "primary": "#b30069",
+                        "surface": "#fcf9f8",
+                        "inverse-on-surface": "#f3f0f0",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#69df54",
+                        "secondary-fixed": "#ffd9de",
+                        "primary-container": "#df0e84",
+                        "secondary-container": "#ffb6c1",
+                        "tertiary-fixed": "#85fd6d",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#ffb0cc",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#b8006c",
+                        "on-secondary-container": "#7b444e",
+                        "on-secondary-fixed-variant": "#6b3741",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0eded",
+                        "surface-container-low": "#f6f3f2",
+                        "on-tertiary-container": "#f8ffef",
+                        "on-secondary-fixed": "#360c17",
+                        "tertiary-container": "#068800",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#e1bdc8",
+                        "primary-fixed": "#ffd9e4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"],
+                        "script": ["Playfair Display", "serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-script { font-family: 'Playfair Display', serif; font-style: italic; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex items-center justify-center p-4 antialiased">
+<!-- Modal Backdrop Overlay -->
+<div class="fixed inset-0 bg-inverse-surface/30 backdrop-blur-sm z-40"></div>
+<!-- Modal Container -->
+<main class="relative bg-surface-container-lowest w-full max-w-4xl rounded-xl shadow-[0_40px_80px_rgba(179,0,105,0.06)] overflow-hidden z-50 flex flex-col md:flex-row h-[795px] md:h-auto max-h-[850px]">
+<!-- Left Image Section (Hidden on very small screens) -->
+<div class="hidden md:block md:w-2/5 relative bg-surface-container-low">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent mix-blend-multiply z-10"></div>
+<img alt="Triple scoop ice cream cone with vibrant pink and chocolate flavors, elegant lighting, editorial style" class="absolute inset-0 w-full h-full object-cover" data-alt="Close-up of an artisanal triple-scoop ice cream cone featuring fuchsia strawberry, rich chocolate brownie, and caramel flavors, soft elegant lighting, blurred boutique background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5yGqRURTg-qbi6L_4dlOw7hGKKefTpdqIwv5ALMAcBilQcz5d_s5pwitYg7LZ941uOig32oYnLS-DhPUrfK7c0JQ5h0Iivdo2CTSVRplBeqvrbj-221-wqN_E48a0EFob4KNkWk4SGlH58AgfLJDFO2WqCq9l5uYprcEL68u0usclbEHMVqAlLu7xepQHB2Bcu9r2Kub_QRt7q533UWk3qd25vdXVAkWmIX10SQuQdLG7AKoN7bmk-_F8r3EUZl3TdwY0aWH6TPk"/>
+<!-- Floating Decorative Element -->
+<div class="absolute -left-12 top-1/4 w-32 h-32 bg-primary/10 rounded-full blur-2xl z-0"></div>
+<div class="absolute bottom-8 left-8 right-8 z-20 text-on-surface">
+<h2 class="font-script text-4xl text-white drop-shadow-md mb-2">Cucurucho Triple</h2>
+<p class="text-white/90 text-sm font-medium tracking-wide uppercase drop-shadow-md">Nuestra especialidad</p>
+</div>
+</div>
+<!-- Right Content Section -->
+<div class="w-full md:w-3/5 flex flex-col h-full bg-surface-container-lowest">
+<!-- Header & Progress -->
+<header class="pt-8 px-8 pb-6 bg-surface-container-lowest sticky top-0 z-10 border-b border-surface-container/50">
+<div class="flex items-center justify-between mb-8">
+<button aria-label="Close" class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-variant transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+<span class="font-bold text-lg tracking-tight text-primary">D'LI</span>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</div>
+<div class="flex items-center justify-between mb-4">
+<h1 class="text-2xl font-bold text-on-surface">Selección de Sabores</h1>
+<span class="text-sm font-medium text-secondary bg-secondary-container/30 px-3 py-1 rounded-full">Paso 2 de 3</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full flex items-center gap-2">
+<div class="h-2 flex-1 rounded-full bg-primary"></div>
+<div class="h-2 flex-1 rounded-full bg-primary"></div>
+<div class="h-2 flex-1 rounded-full bg-surface-container-high relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-0 bg-primary transition-all duration-300"></div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-base font-semibold text-on-surface">Selecciona 3 sabores</h3>
+<span class="text-sm text-primary font-medium">3/3 seleccionados</span>
+</div>
+<!-- Flavors Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+<!-- Selected Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-primary text-on-primary transition-all shadow-[0_8px_16px_rgba(179,0,105,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+<span class="material-symbols-outlined mb-2 z-10" style="font-variation-settings: 'FILL' 1;">icecream</span>
+<span class="font-medium text-sm z-10">Fresa</span>
+<div class="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm z-10">
+<span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</button>
+<!-- Selected Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-primary text-on-primary transition-all shadow-[0_8px_16px_rgba(179,0,105,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+<span class="material-symbols-outlined mb-2 z-10" style="font-variation-settings: 'FILL' 1;">icecream</span>
+<span class="font-medium text-sm z-10">Brownie</span>
+<div class="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm z-10">
+<span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</button>
+<!-- Selected Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-primary text-on-primary transition-all shadow-[0_8px_16px_rgba(179,0,105,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+<span class="material-symbols-outlined mb-2 z-10" style="font-variation-settings: 'FILL' 1;">icecream</span>
+<span class="font-medium text-sm z-10">Arequipe</span>
+<div class="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm z-10">
+<span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Vainilla</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Chocolate</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Mantecado</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Pistacho</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Limón</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Mango</span>
+</button>
+<!-- Unavailable Chip -->
+<div class="relative flex flex-col items-center justify-center p-4 rounded-xl bg-surface-container opacity-50 cursor-not-allowed">
+<div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+<div class="w-full h-px bg-outline rotate-12"></div>
+</div>
+<span class="material-symbols-outlined text-outline mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm text-outline line-through decoration-outline">Ron Pasas</span>
+</div>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Mora</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Coco</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Galleta</span>
+</button>
+<!-- Unavailable Chip -->
+<div class="relative flex flex-col items-center justify-center p-4 rounded-xl bg-surface-container opacity-50 cursor-not-allowed">
+<div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+<div class="w-full h-px bg-outline rotate-12"></div>
+</div>
+<span class="material-symbols-outlined text-outline mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm text-outline line-through decoration-outline">Café</span>
+</div>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Almendra</span>
+</button>
+<!-- Available Chip -->
+<button class="group relative flex flex-col items-center justify-center p-4 rounded-xl bg-secondary-container/40 hover:bg-secondary-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-secondary mb-2" style="font-variation-settings: 'FILL' 0;">icecream</span>
+<span class="font-medium text-sm">Oreo</span>
+</button>
+</div>
+<!-- Spacer for bottom padding -->
+<div class="h-8"></div>
+</div>
+<!-- Footer Actions -->
+<footer class="p-6 bg-surface-container-lowest mt-auto flex items-center justify-between sticky bottom-0 z-10 before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-gradient-to-t before:from-surface-container-lowest before:to-transparent before:pointer-events-none">
+<button class="px-6 py-3 rounded-full border-[1.5px] border-primary/30 text-primary font-bold hover:bg-primary/5 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Anterior
+                </button>
+<button class="px-8 py-3 rounded-full bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold shadow-[0_8px_20px_rgba(179,0,105,0.25)] hover:shadow-[0_12px_24px_rgba(179,0,105,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2">
+                    Siguiente
+                    <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</footer>
+</div>
+</main>
+<style>
+        /* Custom scrollbar for the grid area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: var(--tw-colors-surface-variant);
+            border-radius: 20px;
+        }
+    </style>
+</body></html>

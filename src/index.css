@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playball&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-brand: "Playball", cursive;
+
+  --color-primary: #E91E8C;
+  --color-primary-container: #FFB6C1;
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #585858;
+  --color-secondary-container: #FFF0F5;
+  
+  --color-surface: #FFF0F5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #FFF9FB;
+  --color-surface-container: #FCE4EC;
+  --color-surface-container-high: #F8BBD0;
+  --color-surface-container-highest: #F48FB1;
+  
+  --color-on-surface: #2D2D2D;
+  --color-on-surface-variant: #585858;
+  --color-outline: #F06292;
+  
+  --color-sidebar-bg: #2D2D2D;
+  --color-success: #10b981;
+
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply bg-surface text-on-surface font-body selection:bg-primary/20;
+    touch-action: manipulation;
+  }
+}
+
+.font-brand { font-family: 'Playball', cursive; }
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Polished background */
+.bg-organic-blobs {
+  background-color: var(--color-surface);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-container;
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}

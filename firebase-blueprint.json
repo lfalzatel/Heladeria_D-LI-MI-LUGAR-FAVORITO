@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user with role-based access",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "propietario", "vendedor"] },
+        "name": { "type": "string" },
+        "fcmTokens": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "name"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Menu item sold in the POS",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["helados", "ensaladas", "copas", "salpicon", "obleas", "adiciones"] },
+        "basePrice": { "type": "number" },
+        "variants": { "type": "array" },
+        "requiresFlavors": { "type": "boolean" },
+        "requiresFruitChoice": { "type": "boolean" },
+        "scoops": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "category", "isActive"]
+    },
+    "IceCreamFlavor": {
+      "title": "Ice Cream Flavor",
+      "description": "Available ice cream flavors",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "isAvailable"]
+    },
+    "Supply": {
+      "title": "Supply",
+      "description": "Raw materials for inventory management",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "purchaseUnit": { "type": "string" },
+        "lastPurchasePrice": { "type": "number" },
+        "stockQuantity": { "type": "number" },
+        "stockMinimum": { "type": "number" },
+        "yieldPerUnit": { "type": "number" },
+        "consumptionUnit": { "type": "string" },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "category", "purchaseUnit", "stockQuantity"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Record of a completed transaction",
+      "type": "object",
+      "properties": {
+        "tableNumber": { "type": "number" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Efectivo", "Transferencia", "Tarjeta"] },
+        "cashReceived": { "type": "number" },
+        "change": { "type": "number" },
+        "note": { "type": "string" },
+        "soldBy": { "type": "string" },
+        "soldByName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["completed", "cancelled"] }
+      },
+      "required": ["items", "total", "paymentMethod", "soldBy", "status"]
+    },
+    "Table": {
+      "title": "Table",
+      "description": "Status of a physical table",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["free", "occupied", "waiting_payment"] },
+        "openedAt": { "type": "string", "format": "date-time" },
+        "currentCartSnapshot": { "type": "object" }
+      },
+      "required": ["status"]
+    },
+    "SupplyPurchase": {
+      "title": "Supply Purchase",
+      "description": "Record of incoming materials from suppliers",
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string" },
+        "purchaseDate": { "type": "string", "format": "date-time" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Efectivo", "Transferencia", "Crédito"] },
+        "notes": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["provider", "purchaseDate", "items", "total", "paymentMethod"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/products/{productId}": { "schema": "Product", "description": "Menu products" },
+    "/icecreamFlavors/{flavorId}": { "schema": "IceCreamFlavor", "description": "Ice cream flavors" },
+    "/supplies/{supplyId}": { "schema": "Supply", "description": "Raw supplies" },
+    "/sales/{saleId}": { "schema": "Sale", "description": "Sales records" },
+    "/tables/{tableId}": { "schema": "Table", "description": "Table states" },
+    "/supplyPurchases/{purchaseId}": { "schema": "SupplyPurchase", "description": "Supply purchase records" }
+  }
+}

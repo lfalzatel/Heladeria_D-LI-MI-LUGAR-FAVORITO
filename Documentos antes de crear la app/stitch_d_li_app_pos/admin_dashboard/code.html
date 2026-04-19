@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>D'LI Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;family=Playball&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#012200",
+                      "surface-container-high": "#eae7e7",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed": "#3e0021",
+                      "secondary": "#874e58",
+                      "on-surface-variant": "#594048",
+                      "surface-bright": "#fcf9f8",
+                      "background": "#fcf9f8",
+                      "inverse-primary": "#ffb0cc",
+                      "outline": "#8d6f79",
+                      "surface-variant": "#e4e2e1",
+                      "on-primary-fixed-variant": "#8d0051",
+                      "on-surface": "#1b1c1c",
+                      "surface-container-highest": "#e4e2e1",
+                      "on-background": "#1b1c1c",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "on-tertiary-fixed-variant": "#035300",
+                      "tertiary": "#046c00",
+                      "surface-dim": "#dcd9d9",
+                      "inverse-surface": "#303030",
+                      "secondary-fixed-dim": "#fcb3be",
+                      "primary": "#b30069",
+                      "surface": "#fcf9f8",
+                      "inverse-on-surface": "#f3f0f0",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed-dim": "#69df54",
+                      "secondary-fixed": "#ffd9de",
+                      "primary-container": "#df0e84",
+                      "secondary-container": "#ffb6c1",
+                      "tertiary-fixed": "#85fd6d",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#ffb0cc",
+                      "error": "#ba1a1a",
+                      "surface-tint": "#b8006c",
+                      "on-secondary-container": "#7b444e",
+                      "on-secondary-fixed-variant": "#6b3741",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f0eded",
+                      "surface-container-low": "#f6f3f2",
+                      "on-tertiary-container": "#f8ffef",
+                      "on-secondary-fixed": "#360c17",
+                      "tertiary-container": "#068800",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#e1bdc8",
+                      "primary-fixed": "#ffd9e4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "spacing": {},
+              "fontFamily": {
+                      "headline": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "script": [
+                              "Playball"
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body antialiased flex h-screen overflow-hidden">
+<!-- Navigation Drawer -->
+<nav class="bg-[#fcf9f8] dark:bg-neutral-950 h-full w-72 rounded-r-[3rem] shadow-2xl shadow-[#b30069]/5 flex flex-col py-8 z-40 hidden md:flex shrink-0 border-r border-surface-container-high transition-transform duration-300 ease-in-out">
+<!-- Header -->
+<div class="px-6 mb-8">
+<div class="flex items-center gap-4">
+<img alt="Admin User" class="w-12 h-12 rounded-full object-cover border-2 border-primary" data-alt="Professional headshot of a female store manager in a boutique setting, smiling slightly, soft natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfbLIP6YwLyMF1Kj51RXnFYhFYpPdlksWvYYbmLeeBq_NFC99DWFOMByVzetUiUtdpPR0L6L-WLx8j4Nj5M-GYmN-YTo15ZDm0UDf7mZAADBlTSXWtF8PGMB2lX_F_rBY0KBVAxa4XzYw0u2HRLGUjvbDit90UaZ4xnlB8RZLeFbdAzM6qf_CKzKqndzyz_vKVtZLKvLPFf6X21doyZJJ-p70NTRgHS3Mf2Y7aoltNsCioI59JfOaxJ2u1Jc3GO8ApdRwLwSwc49I"/>
+<div>
+<h2 class="font-headline font-bold text-on-background">Store Manager</h2>
+<p class="text-xs text-secondary">D'LI Boutique</p>
+</div>
+</div>
+<p class="text-[10px] uppercase tracking-wider text-primary mt-4 font-bold">Admin Panel</p>
+</div>
+<!-- Links -->
+<ul class="flex-1 space-y-2 overflow-y-auto font-['Plus_Jakarta_Sans'] text-sm">
+<li>
+<a class="bg-gradient-to-r from-[#b30069] to-[#b30069]/80 text-white rounded-full mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-weight="fill">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="text-[#874e58] dark:text-neutral-400 px-4 py-3 mx-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                    Inventory
+                </a>
+</li>
+<li>
+<a class="text-[#874e58] dark:text-neutral-400 px-4 py-3 mx-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">badge</span>
+                    Staff
+                </a>
+</li>
+<li>
+<a class="text-[#874e58] dark:text-neutral-400 px-4 py-3 mx-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                    Reports
+                </a>
+</li>
+<li>
+<a class="text-[#874e58] dark:text-neutral-400 px-4 py-3 mx-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto h-full flex flex-col relative pb-24 md:pb-0">
+<!-- TopAppBar (Mobile & Desktop) -->
+<header class="bg-[#fcf9f8]/70 dark:bg-neutral-900/70 backdrop-blur-md w-full top-0 z-50 flex justify-between items-center px-6 py-4 sticky border-b-0">
+<div class="flex items-center gap-3">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden text-primary p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Leading Avatar for Mobile -->
+<img alt="Boutique owner profile" class="w-10 h-10 rounded-full object-cover md:hidden border-2 border-primary" data-alt="Professional headshot of a female store manager in a boutique setting, smiling slightly, soft natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbV1HYpGcmYDw3dGAr3MOlyEi8ch5aePSj7uGXhwL9613UBMO_8dBHX4bqpIjyeZyXq311BJhkwgV-3iifz1d6tdp2E9fFegv9vyN7zj0-Gawbz0AyPm2sawxeV-oYJF9xLfwyJS8jUr3doiIcbxcPKQ2suxM5PsYoTGFGJbS-uHSeRce-tcVZVCDeDpGIvTfskFqGYvzoIUDsTpkUc4aOY2Esg68ULH_UMxxkdiv3ujj9t3Pd-vt_m7WVlF2xEGUtvRHPTUzf9Ks"/>
+<h1 class="font-['Plus_Jakarta_Sans'] text-2xl font-black italic text-[#b30069] dark:text-[#ff4fb6]">D'LI</h1>
+</div>
+<button class="text-[#b30069] dark:text-[#ff4fb6] font-bold text-sm bg-primary/5 px-4 py-2 rounded-full hover:bg-[#b30069]/10 transition-colors">
+                Shift Active
+            </button>
+</header>
+<div class="p-6 md:p-10 max-w-7xl mx-auto w-full flex-1">
+<!-- Page Title -->
+<div class="mb-10">
+<h2 class="font-headline text-4xl md:text-5xl font-bold text-on-background tracking-tight">Overview</h2>
+<p class="font-script text-2xl text-primary mt-2">Resumen de hoy</p>
+</div>
+<!-- Bento Grid Dashboard -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+<!-- Stats Cards -->
+<div class="col-span-1 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+<!-- Venta del Dia -->
+<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-6 -top-6 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
+<div>
+<p class="text-secondary text-sm font-medium mb-1">Ventas del día</p>
+<h3 class="font-headline text-3xl font-extrabold text-on-background">$350.000</h3>
+</div>
+<div class="mt-4 flex items-center text-tertiary-container text-sm font-semibold gap-1">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+12% vs ayer</span>
+</div>
+</div>
+<!-- Mesa Activa -->
+<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -left-6 -bottom-6 w-32 h-32 bg-secondary-container/20 rounded-full blur-2xl"></div>
+<div>
+<p class="text-secondary text-sm font-medium mb-1">Mesa más activa</p>
+<h3 class="font-headline text-2xl font-bold text-on-background">Mesa 1</h3>
+</div>
+<div class="mt-4 flex items-center text-primary text-sm font-medium gap-2">
+<span class="material-symbols-outlined text-lg" data-weight="fill">table_restaurant</span>
+<span>Ocupada hace 45m</span>
+</div>
+</div>
+<!-- Producto Top -->
+<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden sm:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="z-10">
+<p class="text-secondary text-sm font-medium mb-1">Producto Top</p>
+<h3 class="font-headline text-2xl font-bold text-on-background">Cucurucho</h3>
+<p class="text-sm text-on-surface-variant mt-1">42 unidades vendidas</p>
+</div>
+<div class="w-24 h-24 rounded-full overflow-hidden shrink-0 shadow-lg shadow-primary/10 -mt-2 sm:mt-0 relative z-10 border-4 border-surface-container-lowest">
+<img alt="Cucurucho" class="w-full h-full object-cover" data-alt="Close up of a premium artisan waffle cone ice cream with strawberry swirl, bright lighting, soft pink background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAptBh8C5Ts4imFTSYL3S38a-QKeXf3b3gnyJ1MfHMsyrYAPeL_T_-yWYKSuW--fKT1M9XRsTbbzXL4-vJuHlhyIj3P71HDGArrulC05Iilc9m13HDYAp1d4WnfcQZlwAMUD1LDL1p9yOeh1k6KJjmT7seXq887AFOhYWNO1zYc5M6FTsKSDsAdbDzJra1YYdf9KPJVhqxvJ1f8PUFuveBbmnfd6FUn8VNUwXGo6LgXkRsgk9zimWFsZIAmH7ke1JMfINQUnrG-fr4"/>
+</div>
+<!-- Organic blob background -->
+<div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-primary/10 to-transparent opacity-50 pointer-events-none"></div>
+</div>
+</div>
+<!-- Line Chart: Ventas por día (Mockup) -->
+<div class="col-span-1 lg:col-span-2 bg-surface-container-lowest rounded-xl p-6 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline font-bold text-on-background text-lg">Ventas por día</h3>
+<button class="text-primary p-1 hover:bg-primary/5 rounded-full transition-colors"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div class="flex-1 relative w-full min-h-[200px] flex items-end gap-2 pb-6">
+<!-- Y-axis labels -->
+<div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-secondary pb-6">
+<span>$400k</span>
+<span>$200k</span>
+<span>$0</span>
+</div>
+<!-- Chart Area -->
+<div class="flex-1 h-full ml-10 relative flex items-end justify-between px-2">
+<!-- Grid lines -->
+<div class="absolute w-full border-b border-surface-variant top-0 opacity-50"></div>
+<div class="absolute w-full border-b border-surface-variant top-1/2 opacity-50"></div>
+<div class="absolute w-full border-b border-surface-variant bottom-6 opacity-50"></div>
+<!-- SVG Line Curve Mock -->
+<svg class="absolute inset-0 h-[calc(100%-1.5rem)] w-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 100">
+<!-- Gradient Fill under line -->
+<defs>
+<lineargradient id="chart-gradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#b30069" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#b30069" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,80 Q20,60 40,70 T80,30 T100,10 L100,100 L0,100 Z" fill="url(#chart-gradient)"></path>
+<!-- The Line -->
+<path d="M0,80 Q20,60 40,70 T80,30 T100,10" fill="none" stroke="#b30069" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- Data Points -->
+<circle cx="40" cy="70" fill="#ffffff" r="4" stroke="#b30069" stroke-width="2"></circle>
+<circle cx="80" cy="30" fill="#ffffff" r="4" stroke="#b30069" stroke-width="2"></circle>
+<circle cx="100" cy="10" fill="#b30069" r="5"></circle>
+</svg>
+<!-- X-axis labels -->
+<div class="absolute bottom-0 w-full flex justify-between text-xs text-secondary">
+<span>Lun</span>
+<span>Mar</span>
+<span>Mie</span>
+<span>Jue</span>
+<span>Vie</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Estado de Mesas -->
+<div class="col-span-1 md:col-span-2 lg:col-span-2 bg-surface-container-low rounded-xl p-6">
+<h3 class="font-headline font-bold text-on-background text-lg mb-4">Estado de Mesas</h3>
+<div class="space-y-3">
+<!-- Mesa 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">1</div>
+<div>
+<p class="font-bold text-on-background">Mesa 1</p>
+<p class="text-xs text-secondary">Ocupada</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-on-background">45m</p>
+<p class="text-xs text-primary">$120.000</p>
+</div>
+</div>
+<!-- Mesa 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-bold">2</div>
+<div>
+<p class="font-bold text-on-background">Mesa 2</p>
+<p class="text-xs text-secondary">Libre</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-surface-container text-on-surface-variant text-[10px] px-2 py-1 rounded-full uppercase tracking-wide">Disponible</span>
+</div>
+</div>
+<!-- Mesa 3 -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold">3</div>
+<div>
+<p class="font-bold text-on-background">Mesa 3</p>
+<p class="text-xs text-secondary">Ocupada</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-on-background">15m</p>
+<p class="text-xs text-primary">$45.000</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Alertas de Insumos -->
+<div class="col-span-1 md:col-span-1 lg:col-span-2 bg-surface-container-low rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline font-bold text-on-background text-lg">Alertas de Insumos</h3>
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+<ul class="space-y-4">
+<li class="flex items-center justify-between p-3 bg-error-container/20 rounded-lg border border-error/10">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<div>
+<p class="font-bold text-on-background text-sm">Queso crema</p>
+<p class="text-xs text-error font-medium">Bajo stock</p>
+</div>
+</div>
+<span class="text-sm font-bold text-on-background">1.2 kg</span>
+</li>
+<li class="flex items-center justify-between p-3 bg-error-container/20 rounded-lg border border-error/10">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<div>
+<p class="font-bold text-on-background text-sm">Fresa fresca</p>
+<p class="text-xs text-error font-medium">Bajo stock</p>
+</div>
+</div>
+<span class="text-sm font-bold text-on-background">0.5 kg</span>
+</li>
+<li class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<div>
+<p class="font-bold text-on-background text-sm">Crema de leche</p>
+<p class="text-xs text-secondary">Normal</p>
+</div>
+</div>
+<span class="text-sm font-bold text-on-background">5.0 L</span>
+</li>
+</ul>
+<button class="w-full mt-6 py-3 rounded-full border border-primary/30 text-primary font-bold hover:bg-primary/5 transition-colors text-sm">
+                        Ver Inventario Completo
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-[#fcf9f8] dark:bg-neutral-900 fixed bottom-0 w-full rounded-t-[3rem] shadow-[0_-10px_40px_rgba(179,0,105,0.06)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3">
+<!-- Catalog (Active visually via logic, but technically Dashboard is active in drawer. Mapping to Catalog for mobile nav) -->
+<a class="flex flex-col items-center justify-center bg-[#b30069] text-white rounded-full px-6 py-2 scale-110 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-weight="fill">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans'] font-medium text-[11px] mt-1">Catalog</span>
+</a>
+<!-- Tables -->
+<a class="flex flex-col items-center justify-center text-[#874e58] dark:text-neutral-400 opacity-60 hover:opacity-100" href="#">
+<span class="material-symbols-outlined">table_restaurant</span>
+<span class="font-['Plus_Jakarta_Sans'] font-medium text-[11px] mt-1">Tables</span>
+</a>
+<!-- Orders -->
+<a class="flex flex-col items-center justify-center text-[#874e58] dark:text-neutral-400 opacity-60 hover:opacity-100" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-['Plus_Jakarta_Sans'] font-medium text-[11px] mt-1">Orders</span>
+</a>
+</nav>
+</body></html>
