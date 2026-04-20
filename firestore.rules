@@ -34,6 +34,13 @@ service cloud.firestore {
       );
     }
 
+    function isStaff() {
+      return isSignedIn() && (
+        isAdmin() || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'propietario', 'vendedor']
+      );
+    }
+
     // ==========================================
     // VALIDATION BLUEPRINTS
     // ==========================================
@@ -100,10 +107,10 @@ service cloud.firestore {
 
     // Pedidos: Checkout Cliente (PWA)
     match /pedidos/{pedidoId} {
-      allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isAdmin());
+      allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isStaff());
       allow create: if isSignedIn() && request.resource.data.clienteId == request.auth.uid;
-      allow update: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
+      allow update: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isStaff());
+      allow delete: if isStaff();
     }
 
     // Supplies: Inventory

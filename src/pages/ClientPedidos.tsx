@@ -55,47 +55,39 @@ const formatDate = (ts: any) => {
 export default function ClientPedidos() {
   const { profile } = useAuthStore();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Stats
-  const [stats, setStats] = useState({
-    totalSpent: 0,
-    orderCount: 0,
-    favoriteItem: '---'
-  });
+  const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
+  const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
 
   useEffect(() => {
     if (!profile) return;
-    const q = query(
-      collection(db, 'pedidos'), 
-      where('clienteId', '==', profile.uid), 
-      orderBy('createdAt', 'desc')
-    );
+    
+    // Staff sees everything, Client sees only their own
+    const q = isStaff
+      ? query(collection(db, 'pedidos'), orderBy('createdAt', 'desc'))
+      : query(collection(db, 'pedidos'), where('clienteId', '==', profile.uid), orderBy('createdAt', 'desc'));
+
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
       setPedidos(data);
       
-      // Calculate stats
+      // Calculate stats (Filter stats based on user type if needed, but here we show all they see)
       const total = data.reduce((acc, p) => p.status === 'aceptado' ? acc + p.total : acc, 0);
       setStats({
         totalSpent: total,
         orderCount: data.length,
         favoriteItem: 'Tradicional' 
       });
-
-      if (selectedPedido) {
-        const updated = data.find(p => p.id === selectedPedido.id);
-        if (updated) setSelectedPedido(updated);
-      }
     }, (error) => {
       console.error("Error fetching pedidos:", error);
     });
     return unsub;
-  }, [profile?.uid]);
+  }, [profile?.uid, isStaff]);
 
   const activeDays = Array.from(new Set(
     pedidos.map(p => {

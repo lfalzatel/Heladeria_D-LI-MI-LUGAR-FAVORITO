@@ -26,17 +26,17 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           icons: [
             {
-              src: 'https://picsum.photos/seed/dli-icon-192/192/192',
+              src: '/icon-192.png',
               sizes: '192x192',
               type: 'image/png'
             },
             {
-              src: 'https://picsum.photos/seed/dli-icon-512/512/512',
+              src: '/icon-512.png',
               sizes: '512x512',
               type: 'image/png'
             },
             {
-              src: 'https://picsum.photos/seed/dli-icon-512/512/512',
+              src: '/icon-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable'

@@ -39,10 +39,12 @@ export default function NotificationBell() {
   const { profile } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
 
   const isCliente = profile?.role === 'cliente';
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
@@ -72,11 +74,6 @@ export default function NotificationBell() {
     const unsubscribe = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
       setPedidos(data);
-      // Update selected if open
-      if (selectedPedido) {
-        const updated = data.find(p => p.id === selectedPedido.id);
-        if (updated) setSelectedPedido(updated);
-      }
     }, (err) => {
       console.error('Notification bell listener error:', err);
     });
@@ -167,8 +164,10 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute right-0 top-14 w-[340px] sm:w-[400px] bg-white rounded-[2rem] shadow-2xl border border-outline/30 overflow-hidden z-50"
+            className="fixed left-4 right-4 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[400px] bg-white rounded-[2.5rem] shadow-2xl border border-outline/30 overflow-hidden z-50"
           >
+            {/* Mobile Overlay for better focus */}
+            <div className="sm:hidden fixed inset-0 bg-black/20 backdrop-blur-sm -z-10" onClick={() => setIsOpen(false)} />
             {/* Header */}
             <div className="px-6 py-5 border-b border-outline/20 flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent">
               <div>
@@ -189,7 +188,7 @@ export default function NotificationBell() {
               <div className="flex flex-col max-h-[70vh]">
                 {/* Back */}
                 <button
-                  onClick={() => setSelectedPedido(null)}
+                  onClick={() => setSelectedId(null)}
                   className="flex items-center gap-2 px-6 py-3 text-xs font-bold text-secondary hover:text-primary transition-colors border-b border-outline/10"
                 >
                   ← Volver a notificaciones
@@ -290,7 +289,7 @@ export default function NotificationBell() {
                       return (
                         <button
                           key={pedido.id}
-                          onClick={() => setSelectedPedido(pedido)}
+                          onClick={() => setSelectedId(pedido.id)}
                           className="w-full px-5 py-4 text-left hover:bg-surface-container/50 transition-colors flex items-center gap-4 group"
                         >
                           <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ring-1", config.bg, config.ring, config.color)}>
