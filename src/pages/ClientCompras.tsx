@@ -50,17 +50,23 @@ const PAYMENT_OPTIONS = [
 export default function ClientCompras() {
   const { profile } = useAuthStore();
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('dli_heladeria_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
   const [address, setAddress] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('dli_heladeria_cart', JSON.stringify(cart));
+  }, [cart]);
 
   useEffect(() => {
     const q = query(collection(db, 'products'), where('isActive', '==', true), orderBy('name', 'asc'));
@@ -101,7 +107,10 @@ export default function ClientCompras() {
   };
 
   const getGPS = () => {
-    if (!navigator.geolocation) { toast.error('Tu dispositivo no soporta GPS'); return; }
+    if (!navigator.geolocation) { 
+      toast.error('Tu dispositivo no soporta GPS o requiere conexión segura (HTTPS)'); 
+      return; 
+    }
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -110,12 +119,24 @@ export default function ClientCompras() {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
           const data = await res.json();
           setAddress(data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-        } catch {
+          toast.success('Ubicación detectada');
+        } catch (err) {
+          console.error('GPS Fetch Error:', err);
           setAddress(`Lat: ${pos.coords.latitude.toFixed(5)}, Lon: ${pos.coords.longitude.toFixed(5)}`);
+          toast.warning('Se obtuvo coordenadas pero no la dirección exacta');
+        } finally {
+          setGpsLoading(false);
         }
-        setGpsLoading(false);
       },
-      () => { toast.error('No se pudo obtener la ubicación'); setGpsLoading(false); }
+      (err) => { 
+        console.error('GPS Permission Error:', err);
+        if (err.code === 1) toast.error('Permiso de ubicación denegado');
+        else if (err.code === 2) toast.error('Ubicación no disponible');
+        else if (err.code === 3) toast.error('Tiempo de espera agotado');
+        else toast.error('Error al obtener GPS');
+        setGpsLoading(false); 
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -141,12 +162,12 @@ export default function ClientCompras() {
       toast.success('¡Pedido enviado! Pronto te confirmaremos.');
       setCart([]);
       setShowCheckout(false);
-      setShowCart(false);
       setAddress('');
       setNote('');
       setPaymentMethod('efectivo');
-    } catch (err) {
-      toast.error('Error al enviar el pedido');
+    } catch (err: any) {
+      console.error('Order Submission Error:', err);
+      toast.error(`Error al enviar: ${err.message || 'Error desconocido'}`);
     } finally {
       setPlacing(false);
     }
@@ -312,236 +333,174 @@ export default function ClientCompras() {
         />
       )}
 
-      {/* Cart Drawer */}
-      <AnimatePresence>
-        {showCart && (
-          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowCart(false)}
-              className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative bg-white w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden"
-            >
-              {/* Handle */}
-              <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                <div className="w-10 h-1 bg-outline/30 rounded-full" />
-              </div>
-
-              <div className="px-6 pt-3 pb-4 flex items-center justify-between border-b border-outline/10">
-                <h3 className="font-headline font-bold text-lg">Mi Lista de Compra</h3>
-                <button onClick={() => setShowCart(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Cart header card */}
-              <div className="px-6 py-4">
-                <div className="flex items-center gap-4 bg-primary/5 rounded-2xl p-4">
-                  <div className="relative">
-                    <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
-                      <ShoppingCart className="w-7 h-7 text-primary" />
-                    </div>
-                    {cartCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                        {cartCount}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-black text-on-surface text-base">Mi Carrito</p>
-                    <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Tu selección</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="px-6 flex flex-col gap-3 max-h-[40vh] overflow-y-auto hide-scrollbar">
-                {cart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 opacity-30">
-                    <ShoppingCart className="w-10 h-10 mb-2" />
-                    <p className="text-sm font-bold">Tu carrito está vacío</p>
-                  </div>
-                ) : cart.map(item => (
-                  <div key={item.id} className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-surface-container rounded-xl flex items-center justify-center flex-shrink-0">
-                      <IceCream className="w-6 h-6 text-primary/50" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-on-surface truncate">{item.productName}</p>
-                      <p className="text-primary font-black text-sm">{formatCurrency(item.unitPrice)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-container hover:bg-outline/20 transition-colors">
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="font-black text-sm w-5 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQty(item.id, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-container hover:bg-outline/20 transition-colors">
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Total + actions */}
-              <div className="px-6 py-5 border-t border-outline/10 mt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-xs text-secondary font-bold uppercase tracking-wider">Total Estimado</p>
-                  <p className="text-2xl font-black text-on-surface">{formatCurrency(cartTotal)}</p>
-                </div>
-                <button
-                  onClick={() => { setShowCart(false); setShowCheckout(true); }}
-                  disabled={cart.length === 0}
-                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition-all"
-                >
-                  Hacer Pedido <ChevronRight className="w-5 h-5" />
-                </button>
-                <button onClick={() => setCart([])} className="w-full mt-2 py-2 text-xs text-secondary font-bold hover:text-red-500 transition-colors">
-                  Vaciar Lista
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Checkout Modal */}
+      {/* Unified Checkout Modal (95vh) */}
       <AnimatePresence>
         {showCheckout && (
-          <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center">
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowCheckout(false)}
-              className="absolute inset-0 bg-on-surface/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative bg-white w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[85dvh] sm:h-auto sm:max-h-[85vh]"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative bg-white w-[94%] max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90dvh] sm:h-auto sm:max-h-[85vh] overflow-hidden"
             >
+              {/* Handle mobile */}
               <div className="flex justify-center pt-3 pb-1 sm:hidden">
                 <div className="w-10 h-1 bg-outline/30 rounded-full" />
               </div>
 
+              {/* Header */}
               <div className="px-6 pt-4 pb-3 flex items-start justify-between border-b border-outline/10">
                 <div>
-                  <h3 className="font-bold text-lg text-on-surface">Finalizar Pedido</h3>
-                  <p className="text-[10px] text-secondary font-medium">Confirma los detalles de tu compra</p>
+                  <h3 className="font-headline font-black text-xl text-on-surface">Finalizar Pedido</h3>
+                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mt-0.5">Confirma tu selección y entrega</p>
                 </div>
-                <button onClick={() => setShowCheckout(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface transition-colors">
-                  <X className="w-4 h-4" />
+                <button onClick={() => setShowCheckout(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
+                  <X className="w-5 h-5 text-secondary" />
                 </button>
               </div>
 
-              <div className="px-6 py-4 flex flex-col gap-5 overflow-y-auto hide-scrollbar flex-1">
-                {/* Total */}
-                <div className="bg-on-surface rounded-2xl px-5 py-4 flex items-center justify-between">
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-8 pb-10">
+                
+                {/* 1. Resumen de Productos */}
+                <section>
+                   <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface">Mi Pedido</h4>
+                      <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">{cartCount} items</span>
+                   </div>
+                   <div className="flex flex-col gap-3">
+                      {cart.map(item => (
+                        <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-surface-container-lowest border border-outline/5">
+                           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                              <IceCream className="w-6 h-6 text-primary/40" />
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-on-surface truncate">{item.productName}</p>
+                              {item.variantLabel && <p className="text-[10px] font-bold text-secondary italic mb-0.5">{item.variantLabel}</p>}
+                              <p className="text-primary font-black text-xs">{formatCurrency(item.unitPrice)}</p>
+                           </div>
+                           <div className="flex items-center gap-2.5 bg-surface-container rounded-full p-1 border border-outline/5">
+                              <button 
+                                onClick={() => updateQty(item.id, item.quantity - 1)} 
+                                className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-secondary hover:text-primary shadow-sm active:scale-90 transition-all"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <span className="font-black text-sm w-4 text-center">{item.quantity}</span>
+                              <button 
+                                onClick={() => updateQty(item.id, item.quantity + 1)} 
+                                className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-secondary hover:text-primary shadow-sm active:scale-90 transition-all"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </section>
+
+                {/* 2. Total */}
+                <div className="bg-on-surface rounded-3xl p-6 flex items-center justify-between shadow-xl shadow-on-surface/10">
                   <div>
-                    <p className="text-[9px] text-white/60 font-black uppercase tracking-widest">Total a Pagar</p>
-                    <p className="text-2xl font-black text-white">{formatCurrency(cartTotal)}</p>
+                    <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">Total del Pedido</p>
+                    <p className="text-3xl font-brand font-black text-white">{formatCurrency(cartTotal)}</p>
                   </div>
-                  <Hash className="w-8 h-8 text-white/30" />
-                </div>
-
-                {/* Payment */}
-                <div>
-                  <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-3">¿Cómo deseas pagar?</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {PAYMENT_OPTIONS.map(opt => (
-                      <button
-                        key={opt.id}
-                        onClick={() => setPaymentMethod(opt.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-4 py-3 rounded-xl border-2 text-xs font-bold transition-all",
-                          paymentMethod === opt.id
-                            ? "bg-on-surface border-on-surface text-white"
-                            : "border-outline/20 text-secondary hover:border-secondary/30"
-                        )}
-                      >
-                        {opt.icon}
-                        <span className="uppercase tracking-wide">{opt.label}</span>
-                      </button>
-                    ))}
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center rotate-12">
+                    <ShoppingCart className="w-7 h-7 text-white/30" />
                   </div>
                 </div>
 
-                {/* Address */}
-                <div>
-                  <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-2">
-                    Dirección de Entrega <span className="text-red-400">*</span>
-                  </p>
-                  {address && (
-                    <div className="flex items-start gap-2 bg-success/10 border border-success/20 rounded-xl px-4 py-3 mb-2">
-                      <MapPin className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-success font-medium flex-1 leading-snug">{address}</p>
-                      <button onClick={() => setAddress('')} className="text-success/60 hover:text-success transition-colors">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <div className="flex-1 flex items-center bg-surface-container rounded-xl px-4 py-3 border border-outline/20 gap-2">
-                      <MapPin className="w-4 h-4 text-secondary/40 flex-shrink-0" />
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={e => setAddress(e.target.value)}
-                        placeholder="Ej: Calle 45 #12-30"
-                        className="bg-transparent border-none outline-none text-xs font-medium w-full placeholder:text-secondary/30"
-                      />
-                    </div>
-                    <button
-                      onClick={getGPS}
-                      disabled={gpsLoading}
-                      className="w-12 h-12 flex items-center justify-center rounded-xl bg-success/10 text-success border border-success/20 hover:bg-success hover:text-white transition-all disabled:opacity-50 flex-shrink-0"
-                    >
-                      {gpsLoading ? (
-                        <div className="w-4 h-4 border-2 border-success/40 border-t-success rounded-full animate-spin" />
-                      ) : (
-                        <Navigation className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                {/* 3. Pago */}
+                <section>
+                   <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Forma de Pago</h4>
+                   <div className="grid grid-cols-2 gap-3">
+                     {PAYMENT_OPTIONS.slice(0, 3).map(opt => (
+                       <button
+                         key={opt.id}
+                         onClick={() => setPaymentMethod(opt.id)}
+                         className={cn(
+                           "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all relative overflow-hidden",
+                           paymentMethod === opt.id
+                             ? "bg-primary/5 border-primary text-primary"
+                             : "border-outline/10 text-secondary hover:bg-surface-container"
+                         )}
+                       >
+                         {opt.icon}
+                         <span className="text-[10px] font-black uppercase tracking-wider">{opt.label}</span>
+                         {paymentMethod === opt.id && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />}
+                       </button>
+                     ))}
+                   </div>
+                </section>
 
-                {/* Note */}
-                <div>
-                  <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-2">Nota para el Pedido</p>
-                  <div className="flex items-start bg-surface-container rounded-xl px-4 py-3 border border-outline/20 gap-2">
-                    <span className="text-secondary/40 flex-shrink-0 mt-0.5">💬</span>
-                    <textarea
-                      rows={2}
-                      value={note}
-                      onChange={e => setNote(e.target.value)}
-                      placeholder="Ej: Tocar el timbre fuerte..."
-                      className="bg-transparent border-none outline-none text-xs font-medium w-full placeholder:text-secondary/30 resize-none"
-                    />
-                  </div>
-                </div>
+                {/* 4. Ubicación */}
+                <section>
+                   <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Ubicación de Entrega</h4>
+                   <div className="flex flex-col gap-3">
+                      <div className="relative group">
+                        <div className="absolute top-4 left-4">
+                           <MapPin className="w-5 h-5 text-secondary/40 group-focus-within:text-primary transition-colors" />
+                        </div>
+                        <textarea
+                          value={address}
+                          onChange={e => setAddress(e.target.value)}
+                          placeholder="Calle, Número, Barrio o nombre del Edificio..."
+                          rows={2}
+                          className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-14 text-sm font-bold text-on-surface placeholder:text-secondary/20 transition-all outline-none resize-none"
+                        />
+                        <button
+                          onClick={getGPS}
+                          className="absolute top-3.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                          disabled={gpsLoading}
+                          title="Usar mi ubicación actual"
+                        >
+                           {gpsLoading ? (
+                             <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                           ) : (
+                             <Navigation className="w-4 h-4" />
+                           )}
+                        </button>
+                      </div>
+
+                      <div className="bg-surface-container rounded-2xl p-4 flex gap-3 items-start border border-outline/5">
+                         <span className="text-lg mt-0.5">💬</span>
+                         <textarea
+                           value={note}
+                           onChange={e => setNote(e.target.value)}
+                           placeholder="Indicaciones adicionales (Ej: Tocar timbre fuerte)"
+                           rows={2}
+                           className="flex-1 bg-transparent border-none outline-none text-xs font-bold text-on-surface placeholder:text-secondary/20 resize-none"
+                         />
+                      </div>
+                   </div>
+                </section>
               </div>
 
-              <div className="px-6 py-4 border-t border-outline/10">
+              {/* Action Button */}
+              <div className="px-6 py-6 bg-surface-container-low border-t border-outline/10">
                 <button
                   onClick={handlePlaceOrder}
                   disabled={!address.trim() || cart.length === 0 || placing}
-                  className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-primary/30 hover:opacity-90 transition-all active:scale-[0.98]"
+                  className="w-full py-5 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/30 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-20 flex items-center justify-center gap-3"
                 >
                   {placing ? (
-                    <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <CheckCircle2 className="w-5 h-5" />
-                      Confirmar Pedido
+                      <CheckCircle2 className="w-6 h-6" />
+                      Enviar Mi Pedido
                     </>
                   )}
                 </button>
-                {!address.trim() && (
-                  <p className="text-center text-[10px] text-red-400 font-medium mt-2">
-                    * Debes ingresar una dirección para continuar
+                {!address.trim() && cart.length > 0 && (
+                  <p className="text-center text-[10px] text-primary font-black uppercase tracking-widest mt-3 animate-pulse">
+                     Falta tu dirección de entrega
                   </p>
                 )}
               </div>
@@ -553,7 +512,7 @@ export default function ClientCompras() {
 
       {/* Floating Cart Button for Client */}
       <AnimatePresence>
-        {cart.length > 0 && !showCart && !showCheckout && (
+        {cart.length > 0 && !showCheckout && (
           <motion.button
             initial={{ scale: 0, y: 20 }}
             animate={{ 
@@ -563,7 +522,7 @@ export default function ClientCompras() {
             whileTap={{ scale: 0.9 }}
             whileHover={{ y: -5 }}
             exit={{ scale: 0, y: 20 }}
-            onClick={() => setShowCart(true)}
+            onClick={() => setShowCheckout(true)}
             className="fixed bottom-28 right-6 w-16 h-16 bg-primary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center text-white z-[45] border-4 border-white"
           >
             <motion.div 

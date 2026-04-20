@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy, doc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ShoppingCart, X, Check, XCircle, ChevronRight, MessageCircle, 
-  Calendar, Clock, Package, ChevronDown, ChevronUp 
+  ShoppingCart, X, Check, XCircle, MessageCircle, 
+  Calendar, Clock, Package, ChevronDown, ChevronUp,
+  MapPin, Banknote, Smartphone, CreditCard, Hash,
+  Receipt, Send
 } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import AppHeader, { PageTitle } from '../components/AppHeader';
-import AdminSidebar from '../components/AdminSidebar';
 
 interface Pedido {
   id: string;
@@ -27,19 +28,18 @@ interface Pedido {
 }
 
 const STATUS_CONFIG = {
-  pendiente: { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-50', ring: 'ring-amber-200', dot: 'bg-amber-400', icon: <Clock className="w-4 h-4" /> },
-  aceptado:  { label: 'Aceptado',  color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'ring-emerald-200', dot: 'bg-emerald-500', icon: <Check className="w-4 h-4" /> },
-  rechazado: { label: 'Rechazado', color: 'text-red-500', bg: 'bg-red-50', ring: 'ring-red-200', dot: 'bg-red-400', icon: <XCircle className="w-4 h-4" /> },
+  pendiente: { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-400/10', ring: 'ring-amber-500/20', dot: 'bg-amber-400', icon: <Clock className="w-5 h-5" /> },
+  aceptado:  { label: 'En camino',  color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', dot: 'bg-emerald-500', icon: <Check className="w-5 h-5" /> },
+  rechazado: { label: 'Rechazado', color: 'text-red-500', bg: 'bg-red-400/10', ring: 'ring-red-500/20', dot: 'bg-red-400', icon: <XCircle className="w-5 h-5" /> },
 };
 
-const PAYMENT_LABELS: Record<string, string> = {
-  efectivo: '💵 Efectivo',
-  transferencia: '📲 Transferencia',
-  datafono: '💳 Datáfono',
-  credito: '# A Crédito',
+const PAYMENT_ICONS: Record<string, any> = {
+  efectivo: <Banknote className="w-4 h-4" />,
+  transferencia: <Smartphone className="w-4 h-4" />,
+  datafono: <CreditCard className="w-4 h-4" />,
+  credito: <Hash className="w-4 h-4" />,
 };
 
-// Helper: get a Date object from Firestore Timestamp or string
 const toDate = (ts: any): Date | null => {
   if (!ts) return null;
   if (ts.toDate) return ts.toDate();
@@ -49,13 +49,7 @@ const toDate = (ts: any): Date | null => {
 const formatDate = (ts: any) => {
   const d = toDate(ts);
   if (!d) return '';
-  return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
-
-const formatShortDate = (ts: any) => {
-  const d = toDate(ts);
-  if (!d) return '';
-  return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
 export default function ClientPedidos() {
@@ -66,15 +60,14 @@ export default function ClientPedidos() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const isCliente = profile?.role === 'cliente';
 
   useEffect(() => {
     if (!profile) return;
-
-    const q = isCliente
-      ? query(collection(db, 'pedidos'), where('clienteId', '==', profile.uid), orderBy('createdAt', 'desc'))
-      : query(collection(db, 'pedidos'), orderBy('createdAt', 'desc'));
-
+    const q = query(
+      collection(db, 'pedidos'), 
+      where('clienteId', '==', profile.uid), 
+      orderBy('createdAt', 'desc')
+    );
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
       setPedidos(data);
@@ -83,11 +76,9 @@ export default function ClientPedidos() {
         if (updated) setSelectedPedido(updated);
       }
     });
-
     return unsub;
   }, [profile?.uid]);
 
-  // Get unique days with pedidos
   const activeDays = Array.from(new Set(
     pedidos.map(p => {
       const d = toDate(p.createdAt);
@@ -96,10 +87,7 @@ export default function ClientPedidos() {
   )) as string[];
 
   const filteredPedidos = selectedDay
-    ? pedidos.filter(p => {
-        const d = toDate(p.createdAt);
-        return d && d.toLocaleDateString('es-CO') === selectedDay;
-      })
+    ? pedidos.filter(p => toDate(p.createdAt)?.toLocaleDateString('es-CO') === selectedDay)
     : pedidos;
 
   const handleSendMessage = async () => {
@@ -114,9 +102,7 @@ export default function ClientPedidos() {
         timestamp: new Date().toISOString(),
       };
       const messages = [...(selectedPedido.messages || []), newMsg];
-      await import('firebase/firestore').then(({ updateDoc, doc }) =>
-        updateDoc(doc(db, 'pedidos', selectedPedido.id), { messages })
-      );
+      await updateDoc(doc(db, 'pedidos', selectedPedido.id), { messages });
       setChatMessage('');
     } catch {
       // ignore
@@ -126,293 +112,271 @@ export default function ClientPedidos() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-surface-container-lowest to-surface-container/30">
-      {profile?.role !== 'cliente' && <AdminSidebar />}
-      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+    <div className="min-h-screen bg-surface-container-lowest">
+      <div className="flex flex-col min-h-screen relative pb-32 max-w-lg mx-auto bg-white shadow-2xl shadow-on-surface/5">
         <AppHeader showBell />
-        <PageTitle
-          title="Tus Pedidos"
-          subtitle="Revisa el estado de tus compras y contáctanos."
-        />
-
-      <main className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-4">
-        {/* Calendar toggle */}
-        <div className="bg-white rounded-2xl border border-outline/20 shadow-sm overflow-hidden">
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-container/30 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-primary" />
-              </div>
-              <div className="text-left">
-                <p className="text-xs font-black text-on-surface">
-                  {selectedDay ? `Filtrando: ${selectedDay}` : 'Ver por fecha'}
-                </p>
-                <p className="text-[10px] text-secondary font-medium">{activeDays.length} días con actividad</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedDay && (
-                <button
-                  onClick={e => { e.stopPropagation(); setSelectedDay(null); }}
-                  className="text-[10px] text-secondary font-bold hover:text-primary underline"
-                >
-                  Ver todos
-                </button>
-              )}
-              {showCalendar ? <ChevronUp className="w-4 h-4 text-secondary" /> : <ChevronDown className="w-4 h-4 text-secondary" />}
-            </div>
-          </button>
-
-          <AnimatePresence>
-            {showCalendar && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="border-t border-outline/10 px-5 py-4 flex flex-wrap gap-2 overflow-hidden"
-              >
-                {activeDays.length === 0 ? (
-                  <p className="text-xs text-secondary font-medium py-2">No hay pedidos registrados aún.</p>
-                ) : activeDays.map(day => (
-                  <button
-                    key={day}
-                    onClick={() => { setSelectedDay(day === selectedDay ? null : day); setShowCalendar(false); }}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all",
-                      selectedDay === day
-                        ? "bg-primary text-white border-primary shadow-sm"
-                        : "bg-surface-container text-secondary border-outline/20 hover:border-primary/30 hover:text-primary"
-                    )}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        
+        <div className="px-6 pt-6 pb-2">
+           <PageTitle
+             title="Mi Historial"
+             subtitle="Tus pedidos recientes en D'LI"
+           />
         </div>
 
-        {/* Pedidos list */}
-        {filteredPedidos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 opacity-30">
-            <ShoppingCart className="w-14 h-14 mb-4" />
-            <p className="text-base font-bold">Sin pedidos {selectedDay ? 'este día' : 'aún'}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {filteredPedidos.map(pedido => {
-              const cfg = STATUS_CONFIG[pedido.status];
-              return (
-                <motion.button
-                  key={pedido.id}
-                  layout
-                  onClick={() => setSelectedPedido(pedido)}
-                  className="w-full text-left bg-white rounded-3xl border border-outline/20 shadow-sm p-5 hover:shadow-md hover:border-primary/20 transition-all group"
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Status icon */}
-                    <div className={cn("w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center ring-1", cfg.bg, cfg.ring, cfg.color)}>
-                      {cfg.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] text-secondary font-bold uppercase tracking-[0.15em]">Pedido</p>
-                          <p className="font-black text-on-surface text-lg leading-tight">#{pedido.id.slice(-6).toUpperCase()}</p>
-                        </div>
-                        <p className="font-black text-on-surface text-lg shrink-0">{formatCurrency(pedido.total)}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <Calendar className="w-3 h-3 text-secondary/50" />
-                        <p className="text-[11px] text-secondary font-medium">{formatDate(pedido.createdAt)}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-outline/10 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-secondary font-medium">
-                        {pedido.items?.length || 0} item{(pedido.items?.length || 0) !== 1 ? 's' : ''}
-                      </span>
-                      <span className="text-outline/40">•</span>
-                      <div className="flex items-center gap-1 text-secondary">
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span className="text-[11px] font-medium">Consultas</span>
-                      </div>
-                    </div>
-                    <div className={cn("flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide", cfg.color)}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
-                      {cfg.label}
-                    </div>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        )}
-      </main>
-
-      {/* Order Detail Drawer */}
-      <AnimatePresence>
-        {selectedPedido && (
-          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedPedido(null)}
-              className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative bg-white w-full max-w-2xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]"
+        <main className="px-6 flex flex-col gap-6">
+          {/* Calendar Glass Filter */}
+          <div className="bg-surface-container/50 rounded-[2rem] border border-outline/10 overflow-hidden shadow-sm">
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="w-full flex items-center justify-between px-5 py-4 transition-all active:scale-[0.98]"
             >
-              {/* Drawer handle */}
-              <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                <div className="w-10 h-1 bg-outline/30 rounded-full" />
-              </div>
-
-              {/* Header */}
-              <div className="px-6 pt-4 pb-4 border-b border-outline/10 flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Detalle de Pedido</p>
-                  <h2 className="font-black text-on-surface text-2xl">#{selectedPedido.id.slice(-6).toUpperCase()}</h2>
-                  <p className="text-xs text-secondary mt-1">{formatDate(selectedPedido.createdAt)}</p>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Calendar className="w-5 h-5" />
                 </div>
-                <button
-                  onClick={() => setSelectedPedido(null)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto">
-                {/* Status + info */}
-                <div className="px-6 py-4 flex flex-col gap-3">
-                  {/* Status badge */}
-                  {(() => {
-                    const cfg = STATUS_CONFIG[selectedPedido.status];
-                    return (
-                      <div className={cn("flex items-center gap-2 px-4 py-3 rounded-2xl ring-1", cfg.bg, cfg.ring)}>
-                        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", cfg.color, 'bg-white/60')}>
-                          {cfg.icon}
-                        </div>
-                        <div>
-                          <p className={cn("text-xs font-black uppercase tracking-wider", cfg.color)}>{cfg.label}</p>
-                          <p className="text-[10px] text-secondary font-medium">
-                            {selectedPedido.status === 'pendiente' && 'Estamos revisando tu pedido'}
-                            {selectedPedido.status === 'aceptado' && '¡Tu pedido está en preparación!'}
-                            {selectedPedido.status === 'rechazado' && 'Tu pedido no pudo procesarse'}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Info grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-surface-container/50 rounded-2xl p-4">
-                      <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-1">Pago</p>
-                      <p className="text-sm font-bold text-on-surface">{PAYMENT_LABELS[selectedPedido.paymentMethod] || selectedPedido.paymentMethod}</p>
-                    </div>
-                    <div className="bg-surface-container/50 rounded-2xl p-4">
-                      <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-1">Total</p>
-                      <p className="text-sm font-black text-primary">{formatCurrency(selectedPedido.total)}</p>
-                    </div>
-                    <div className="bg-surface-container/50 rounded-2xl p-4 col-span-2">
-                      <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-1">📍 Dirección</p>
-                      <p className="text-xs font-medium text-on-surface">{selectedPedido.address}</p>
-                    </div>
-                  </div>
-
-                  {/* Items */}
-                  <div>
-                    <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-2">Items del Pedido</p>
-                    <div className="flex flex-col gap-2">
-                      {(selectedPedido.items || []).map((item: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between py-2.5 px-4 bg-surface-container/40 rounded-xl">
-                          <div>
-                            <p className="text-xs font-bold text-on-surface">{item.productName}</p>
-                            {item.variantLabel && <p className="text-[10px] text-secondary">{item.variantLabel}</p>}
-                            {item.flavors?.length > 0 && <p className="text-[10px] text-primary/70">{item.flavors.join(', ')}</p>}
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs font-black text-on-surface">{formatCurrency(item.unitPrice)}</p>
-                            <p className="text-[10px] text-secondary">x{item.quantity}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Note */}
-                  {selectedPedido.note && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                      <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">📝 Nota</p>
-                      <p className="text-xs text-amber-800">{selectedPedido.note}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Chat */}
-                <div className="border-t border-outline/10 px-6 py-4">
-                  <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <MessageCircle className="w-3.5 h-3.5" /> Conversación
+                <div className="text-left font-headline">
+                  <p className="text-xs font-black text-on-surface uppercase tracking-wider">
+                    {selectedDay ? selectedDay : 'Filtrar por fecha'}
                   </p>
-                  <div className="flex flex-col gap-2 min-h-[80px]">
-                    {(selectedPedido.messages || []).length === 0 ? (
-                      <div className="flex items-center justify-center py-6 opacity-30">
-                        <p className="text-xs font-bold text-secondary">Sin mensajes aún. Escríbeles aquí.</p>
-                      </div>
-                    ) : (
-                      (selectedPedido.messages || []).map((msg: any, i: number) => {
-                        const isMe = msg.from === profile?.uid;
-                        return (
-                          <div key={i} className={cn("flex flex-col gap-0.5 max-w-[75%]", isMe ? "self-end items-end" : "self-start")}>
-                            <span className="text-[9px] font-bold text-secondary px-1">{msg.fromName}</span>
-                            <div className={cn("px-3 py-2 rounded-2xl text-xs font-medium shadow-sm",
-                              isMe ? "bg-primary text-white rounded-br-sm" : "bg-surface-container text-on-surface rounded-bl-sm"
-                            )}>
-                              {msg.text}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
+                  <p className="text-[10px] text-secondary font-bold uppercase mt-0.5">{activeDays.length} días activos</p>
                 </div>
               </div>
-
-              {/* Chat input */}
-              <div className="px-5 py-4 border-t border-outline/10 flex items-center gap-3 bg-white rounded-b-[2.5rem]">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={e => setChatMessage(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                  placeholder="Escribe un mensaje al equipo D'LI..."
-                  className="flex-1 bg-surface-container rounded-full px-5 py-3 text-xs font-medium outline-none border border-outline/20 focus:border-primary transition-all"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!chatMessage.trim() || sending}
-                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-40 hover:scale-110 active:scale-95 transition-all shadow-md shadow-primary/30"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </button>
+              <div className="flex items-center gap-3">
+                {selectedDay && (
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedDay(null); }} className="text-[10px] font-black text-primary uppercase tracking-tighter">Limpiar</button>
+                )}
+                {showCalendar ? <ChevronUp className="w-5 h-5 text-secondary" /> : <ChevronDown className="w-5 h-5 text-secondary" />}
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </button>
 
-      <BottomNav />
+            <AnimatePresence>
+              {showCalendar && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                  className="px-5 pb-5 flex flex-wrap gap-2 border-t border-outline/5 pt-4"
+                >
+                  {activeDays.map(day => (
+                    <button
+                      key={day}
+                      onClick={() => { setSelectedDay(day === selectedDay ? null : day); setShowCalendar(false); }}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                        selectedDay === day ? "bg-primary text-white shadow-lg" : "bg-white text-secondary border border-outline/10"
+                      )}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Pedidos List - Dashboard Style */}
+          <div className="flex flex-col gap-4">
+             {filteredPedidos.length === 0 ? (
+               <div className="py-20 flex flex-col items-center opacity-30">
+                  <Receipt className="w-16 h-16 mb-4" />
+                  <p className="font-headline font-black text-on-surface uppercase tracking-widest text-sm">Sin pedidos aún</p>
+               </div>
+             ) : (
+               filteredPedidos.map(pedido => {
+                  const cfg = STATUS_CONFIG[pedido.status];
+                  return (
+                    <motion.button
+                      layout
+                      key={pedido.id}
+                      onClick={() => setSelectedPedido(pedido)}
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                      className="w-full text-left bg-white rounded-[2.5rem] p-6 border border-outline/10 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group relative overflow-hidden"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                         <div className="flex items-center gap-4">
+                            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", cfg.bg, cfg.color)}>
+                               {cfg.icon}
+                            </div>
+                            <div>
+                               <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Pedido</p>
+                               <h4 className="font-headline font-black text-on-surface text-lg leading-none">#{pedido.id.slice(-6).toUpperCase()}</h4>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <p className="font-headline font-black text-primary text-xl leading-none">{formatCurrency(pedido.total)}</p>
+                            <p className="text-[10px] text-secondary font-bold uppercase mt-1 tracking-tighter">{formatDate(pedido.createdAt)}</p>
+                         </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-outline/5 mt-2">
+                         <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-full ring-1 ring-outline/5">
+                               {PAYMENT_ICONS[pedido.paymentMethod] || <Hash className="w-3.5 h-3.5" />}
+                               <span className="text-[9px] font-black text-secondary uppercase tracking-tight">
+                                  {pedido.paymentMethod}
+                               </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-secondary/40 uppercase">
+                               {pedido.items.length} items
+                            </span>
+                         </div>
+                         <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-2", cfg.ring, cfg.bg)}>
+                            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", cfg.dot)} />
+                            <span className={cn("text-[10px] font-black uppercase tracking-widest", cfg.color)}>{cfg.label}</span>
+                         </div>
+                      </div>
+                    </motion.button>
+                  );
+               })
+             )}
+          </div>
+        </main>
+
+        {/* Premium Centered Detail Modal (90vh) */}
+        <AnimatePresence>
+          {selectedPedido && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setSelectedPedido(null)}
+                className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+                animate={{ scale: 1, opacity: 1, y: 0 }} 
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90dvh] overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="px-6 pt-5 pb-4 border-b border-outline/10 flex items-center justify-between bg-white sticky top-0 z-10">
+                  <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
+                        <Receipt className="w-6 h-6 text-primary" />
+                     </div>
+                     <div>
+                        <h3 className="font-headline font-black text-xl text-on-surface leading-none">Detalles del Pedido</h3>
+                        <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-1">Ref: #{selectedPedido.id.slice(-6).toUpperCase()}</p>
+                     </div>
+                  </div>
+                  <button onClick={() => setSelectedPedido(null)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
+                    <X className="w-5 h-5 text-secondary" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-6">
+                   {/* Status Card */}
+                   {(() => {
+                      const cfg = STATUS_CONFIG[selectedPedido.status];
+                      return (
+                        <div className={cn("rounded-3xl p-5 flex items-center gap-5 ring-2 shadow-sm", cfg.ring, cfg.bg)}>
+                           <div className={cn("w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center", cfg.color)}>
+                              {cfg.icon}
+                           </div>
+                           <div className="flex-1">
+                              <p className={cn("text-[10px] font-black uppercase tracking-[0.2em] mb-0.5", cfg.color)}>{cfg.label}</p>
+                              <h4 className="font-headline font-black text-on-surface text-lg leading-tight uppercase tracking-tight">
+                                 {selectedPedido.status === 'pendiente' ? '¡Estamos revisando!' : selectedPedido.status === 'aceptado' ? '¡Está en camino!' : 'Hubo un problema'}
+                              </h4>
+                           </div>
+                        </div>
+                      );
+                   })()}
+
+                   {/* Info Grid */}
+                   <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
+                         <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
+                         <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-primary mt-0.5" />
+                            <p className="text-xs font-bold text-on-surface leading-normal">{selectedPedido.address}</p>
+                         </div>
+                      </div>
+                      <div className="bg-primary rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-primary/20">
+                         <p className="text-[10px] text-white/50 font-black uppercase tracking-widest">Total Pagado</p>
+                         <p className="text-xl font-headline font-black text-white">{formatCurrency(selectedPedido.total)}</p>
+                      </div>
+                   </div>
+
+                   {/* Summary Section */}
+                   <section>
+                      <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Productos</h4>
+                      <div className="flex flex-col gap-2">
+                         {selectedPedido.items.map((item, i) => (
+                           <div key={i} className="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl border border-outline/5">
+                              <div className="flex-1 min-w-0 pr-4">
+                                 <p className="text-xs font-black text-on-surface truncate">{item.productName}</p>
+                                 <p className="text-[10px] font-bold text-secondary uppercase mt-0.5">{item.variantLabel || 'Porción Estándar'}</p>
+                                 {item.flavors?.length > 0 && <p className="text-[10px] text-primary font-bold italic mt-0.5">S: {item.flavors.join(' · ')}</p>}
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                 <p className="text-xs font-black text-on-surface">{formatCurrency(item.unitPrice)}</p>
+                                 <p className="text-[10px] font-black text-secondary italic">x{item.quantity}</p>
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                   </section>
+
+                   {/* Chat Bubble Experience */}
+                   <section className="bg-surface-container/40 rounded-[2rem] p-5 border border-outline/10 h-[300px] flex flex-col shadow-inner">
+                      <div className="flex items-center gap-2 text-secondary mb-4">
+                         <MessageCircle className="w-5 h-5 opacity-40" />
+                         <span className="text-[10px] font-black uppercase tracking-widest">Soporte D'LI</span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto flex flex-col gap-3 custom-scrollbar pr-1">
+                         {(selectedPedido.messages || []).length === 0 ? (
+                           <div className="h-full flex flex-col items-center justify-center text-center opacity-30 px-4">
+                              <MessageCircle className="w-8 h-8 mb-2" />
+                              <p className="text-[10px] font-bold">¿Deseas pedir algún sabor extra? Escríbenos aquí.</p>
+                           </div>
+                         ) : (
+                           selectedPedido.messages.map((msg: any, i: number) => {
+                             const isMe = msg.from === profile?.uid;
+                             return (
+                               <div key={i} className={cn("flex flex-col gap-1 max-w-[85%]", isMe ? "self-end items-end" : "self-start")}>
+                                  <div className={cn("px-4 py-2.5 rounded-2xl text-[11px] font-bold shadow-sm leading-relaxed", 
+                                    isMe ? "bg-primary text-white rounded-br-none" : "bg-white text-on-surface border border-outline/10 rounded-bl-none"
+                                  )}>
+                                     {msg.text}
+                                  </div>
+                                  <div className="px-2 flex items-center gap-1 opacity-40">
+                                     <span className="text-[8px] font-black uppercase tracking-tighter">{msg.fromName === profile?.name ? 'Tú' : 'D´LI'}</span>
+                                     <span className="text-[8px]">•</span>
+                                     <span className="text-[8px] font-medium">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                  </div>
+                               </div>
+                             );
+                           })
+                         )}
+                      </div>
+                   </section>
+                </div>
+
+                {/* Sticky Modal Input Footer */}
+                <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-3">
+                   <div className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl flex items-center px-4 py-2 group focus-within:ring-2 ring-primary/20 transition-all">
+                      <input
+                        type="text"
+                        value={chatMessage}
+                        onChange={e => setChatMessage(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                        placeholder="Escribe tu mensaje..."
+                        className="flex-1 bg-transparent text-xs font-bold py-2 outline-none placeholder:text-secondary/30"
+                      />
+                   </div>
+                   <button 
+                     onClick={handleSendMessage}
+                     disabled={!chatMessage.trim() || sending}
+                     className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-all disabled:opacity-30"
+                   >
+                     <Send className="w-5 h-5 mx-auto" />
+                   </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        <BottomNav />
       </div>
     </div>
   );
