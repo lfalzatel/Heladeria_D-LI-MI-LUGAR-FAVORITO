@@ -172,7 +172,7 @@ export default function App() {
         } />
         <Route path="/cliente/historial" element={
           user && profile && profile.role === 'cliente'
-            ? <ClientCompras />
+            ? <ClientPedidos />
             : (authLoading ? null : <Navigate to="/login" />)
         } />
 
