@@ -26,7 +26,6 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
     }
 
-    // Admin check based on trusted list
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'lfalzatel@gmail.com' || 
@@ -50,7 +49,7 @@ service cloud.firestore {
              data.total is number && data.total >= 0 &&
              data.paymentMethod in ['Efectivo', 'Transferencia', 'Tarjeta'] &&
              data.status in ['completed', 'cancelled'] &&
-             data.soldBy == request.auth.uid;
+             (data.soldBy == request.auth.uid || data.sellerId == request.auth.uid);
     }
 
     // ==========================================
@@ -68,11 +67,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().role == 'vendedor'; 
-      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (
-        // Only admin can change roles
-        (isAdmin() && incoming().diff(existing()).affectedKeys().hasAny(['role'])) ||
-        (!isAdmin() && !incoming().diff(existing()).affectedKeys().hasAny(['role']))
+      allow create: if isSignedIn() && isValidUser(incoming()); 
+      allow update: if (isOwner(userId) || isAdmin()) && (
+        isAdmin() || !incoming().diff(existing()).affectedKeys().hasAny(['role'])
       );
     }
 
@@ -90,15 +87,23 @@ service cloud.firestore {
     // Tables: Live states
     match /tables/{tableId} {
       allow read: if isSignedIn();
-      allow update: if isSignedIn() && isValidId(tableId);
+      allow update: if isSignedIn();
     }
 
-    // Sales: Transaction records
+    // Sales: Transaction records (Institucionales/Mesa)
     match /sales/{saleId} {
-      allow get: if isSignedIn() && (isOwner(existing().soldBy) || isAdmin());
-      allow list: if isSignedIn() && (resource.data.soldBy == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidSale(incoming()) && incoming().createdAt == request.time;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidSale(incoming());
       allow update, delete: if isAdmin();
+    }
+
+    // Pedidos: Checkout Cliente (PWA)
+    match /pedidos/{pedidoId} {
+      allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.clienteId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
 
     // Supplies: Inventory
@@ -110,14 +115,6 @@ service cloud.firestore {
     match /supplyPurchases/{id} {
       allow read: if isAdmin();
       allow write: if isAdmin();
-    }
-
-    // Pedidos (Checkout)
-    match /pedidos/{pedidoId} {
-      allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && request.resource.data.clienteId == request.auth.uid;
-      allow update: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
     }
   }
 }
