@@ -19,7 +19,8 @@ import {
   Search,
   Receipt,
   Home,
-  Calendar
+  Calendar,
+  X
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -49,6 +50,7 @@ export default function Dashboard() {
   const { profile } = useAuthStore();
   const { carts, initialize } = useTableCartStore();
   const [recentSales, setRecentSales] = useState<SaleRecord[]>([]);
+  const [selectedSale, setSelectedSale] = useState<SaleRecord | null>(null);
   
   useEffect(() => {
     const unsubscribe = initialize();
@@ -189,7 +191,8 @@ export default function Dashboard() {
                       key={sale.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low/50 hover:bg-white border border-transparent hover:border-primary/10 transition-all group"
+                      onClick={() => setSelectedSale(sale)}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low/50 hover:bg-white border border-transparent hover:border-primary/10 transition-all group cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
@@ -295,6 +298,137 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      <BottomNav />
+
+      {/* ── MODAL DE DETALLE DE VENTA ── */}
+      <AnimatePresence>
+        {selectedSale && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedSale(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]"
+            >
+              {/* Header del Modal */}
+              <div className="p-6 sm:p-8 bg-surface-container-low/50 border-b border-outline/10 flex justify-between items-start">
+                <div className="flex gap-4">
+                   <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                      <Receipt className="w-6 h-6" />
+                   </div>
+                   <div>
+                      <h3 className="font-headline font-black text-xl text-on-surface">Detalle de Venta</h3>
+                      <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mt-1">ID: {selectedSale.id.slice(-8).toUpperCase()}</p>
+                   </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedSale(null)}
+                  className="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-all active:scale-90"
+                >
+                  <X className="w-5 h-5 text-secondary" />
+                </button>
+              </div>
+
+              {/* Contenido (Scrollable) */}
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+                {/* Info de la Venta */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
+                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Mesa / Lugar</span>
+                      <p className="font-bold text-on-surface flex items-center gap-2">
+                        <TableIcon className="w-3.5 h-3.5 text-primary" />
+                        {selectedSale.tableName}
+                      </p>
+                   </div>
+                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
+                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Fecha y Hora</span>
+                      <p className="font-bold text-on-surface flex items-center gap-2 text-sm">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        {selectedSale.hour}
+                      </p>
+                   </div>
+                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
+                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Vendedor</span>
+                      <p className="font-bold text-on-surface flex items-center gap-2 text-sm">
+                        <UserIcon className="w-3.5 h-3.5 text-primary" />
+                        {selectedSale.sellerName}
+                      </p>
+                   </div>
+                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
+                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Pago</span>
+                      <p className="font-bold text-on-surface flex items-center gap-2 text-sm">
+                        <DollarSign className="w-3.5 h-3.5 text-primary" />
+                        {selectedSale.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}
+                      </p>
+                   </div>
+                </div>
+
+                <h4 className="font-headline font-bold text-sm text-on-surface mb-4 uppercase tracking-widest">Productos</h4>
+                
+                <div className="flex flex-col gap-3">
+                  {selectedSale.items.map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-2xl border border-outline/5 bg-surface-container-lowest/50">
+                       <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded-md mb-1 inline-block">x{item.quantity}</span>
+                            <p className="font-black text-on-surface text-base">{item.productName}</p>
+                            {item.variantLabel && <p className="text-[10px] font-bold text-secondary uppercase italic">{item.variantLabel}</p>}
+                          </div>
+                          <p className="font-brand font-black text-lg text-primary">{formatCurrency(item.subtotal)}</p>
+                       </div>
+                       
+                       {/* Detalles de configuración */}
+                       <div className="flex flex-wrap gap-2 mt-3">
+                          {item.flavors?.map((f: string) => (
+                            <span key={f} className="text-[9px] font-bold bg-white px-2 py-1 rounded-lg border border-outline/5 shadow-sm text-secondary">
+                              🍧 {f}
+                            </span>
+                          ))}
+                          {item.fruitChoices?.map((f: string) => (
+                            <span key={f} className="text-[9px] font-bold bg-white px-2 py-1 rounded-lg border border-outline/5 shadow-sm text-success">
+                              🍓 {f}
+                            </span>
+                          ))}
+                          {item.additions?.map((a: string) => (
+                            <span key={a} className="text-[9px] font-bold bg-white px-2 py-1 rounded-lg border border-outline/5 shadow-sm text-primary">
+                              ✨ {a}
+                            </span>
+                          ))}
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer del Modal */}
+              <div className="p-6 sm:p-8 bg-surface-container-low border-t border-outline/10">
+                <div className="flex justify-between items-end">
+                   <div>
+                      <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-1">TOTAL VENTA</p>
+                      <h3 className="text-4xl font-brand font-black text-on-surface tracking-tight leading-none">
+                        {formatCurrency(selectedSale.total)}
+                      </h3>
+                   </div>
+                   <button 
+                     onClick={() => setSelectedSale(null)}
+                     className="px-8 py-3 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                   >
+                     Cerrar
+                   </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <BottomNav />
     </div>
