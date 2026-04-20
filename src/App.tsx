@@ -171,7 +171,7 @@ export default function App() {
             : (authLoading ? null : <Navigate to="/login" />)
         } />
         <Route path="/cliente/historial" element={
-          user && profile && profile.role === 'cliente'
+          user && profile && (profile.role === 'cliente' || ['admin', 'propietario', 'vendedor'].includes(profile.role))
             ? <ClientPedidos />
             : (authLoading ? null : <Navigate to="/login" />)
         } />

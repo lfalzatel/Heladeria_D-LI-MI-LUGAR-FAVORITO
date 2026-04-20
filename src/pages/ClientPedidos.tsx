@@ -61,6 +61,13 @@ export default function ClientPedidos() {
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
 
+  // Stats
+  const [stats, setStats] = useState({
+    totalSpent: 0,
+    orderCount: 0,
+    favoriteItem: '---'
+  });
+
   const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
 
@@ -85,6 +92,11 @@ export default function ClientPedidos() {
       });
     }, (error) => {
       console.error("Error fetching pedidos:", error);
+      if (error.code === 'failed-precondition') {
+        toast.error("Falta crear el Índice en Firebase para esta consulta.");
+      } else {
+        toast.error("Error al cargar pedidos.");
+      }
     });
     return unsub;
   }, [profile?.uid, isStaff]);
