@@ -13,6 +13,7 @@ import {
   Plus, 
   Minus,
   ShoppingCart,
+  IceCream,
   Menu,
   Database,
   Search,
@@ -343,7 +344,7 @@ function ProductCard({ product, onClick }: { product: Product, onClick: () => vo
   const cartItems = carts[activeTable]?.items.filter(item => item.productId === product.id) || [];
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   
-  const isComplex = product.variants && product.variants.length > 0 || product.requiresFlavors || product.requiresFruitChoice;
+  const isComplex = (product.variants && product.variants.length > 0) || product.requiresFlavors || product.requiresFruitChoice;
 
   const handleSimpleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -396,64 +397,58 @@ function ProductCard({ product, onClick }: { product: Product, onClick: () => vo
       animate={{ opacity: 1, scale: 1 }}
       onClick={handleMainClick}
       className={cn(
-        "bg-white rounded-[2rem] p-4 flex flex-col items-center text-center gap-2 relative mt-10 pt-12 border hover:shadow-2xl hover:border-primary/20 transition-all cursor-pointer group",
+        "bg-white rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
         totalQuantity > 0 ? "ring-2 ring-primary/40 bg-primary/5 border-primary/40 shadow-md" : "border-outline/10 shadow-sm"
       )}
     >
-      {/* Pop-out Image / Avatar */}
-      <div className="absolute -top-10 w-24 h-24 rounded-full overflow-hidden shadow-xl border-4 border-white bg-surface-container-low flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
+      {/* Integrated Image inside card */}
+      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300">
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
         ) : (
-          <MenuSquare className="w-10 h-10 text-secondary/30 group-hover:text-primary/40 transition-colors" />
+          <IceCream className="w-8 h-8 text-secondary/30 absolute inset-0 m-auto group-hover:text-primary transition-colors" />
         )}
         
         {totalQuantity > 0 && !isComplex && (
           <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="text-2xl font-black text-primary drop-shadow-md">{totalQuantity}</span>
+            <span className="text-xl font-black text-primary drop-shadow-md">{totalQuantity}</span>
           </div>
         )}
       </div>
 
-      <div className="flex w-full justify-between items-center mb-1">
-        <span className="px-2 py-0.5 rounded-full bg-surface-container text-[8px] font-black text-secondary uppercase tracking-widest">
-          {product.category}
-        </span>
-        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" title="Disponible" />
-      </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex w-full justify-between items-center mb-0.5">
+          <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-[7px] font-black text-secondary uppercase tracking-widest truncate max-w-[60px]">
+            {product.category}
+          </span>
+          {totalQuantity > 0 && (
+             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          )}
+        </div>
 
-      <h3 className="font-bold text-on-surface text-lg leading-tight w-full line-clamp-1">{product.name}</h3>
-      
-      <p className="text-primary font-black text-[1.4rem] leading-none mb-2">
-        {product.basePrice ? formatCurrency(product.basePrice) : 'Var. P'}
-      </p>
+        <h3 className="font-bold text-on-surface text-sm sm:text-base leading-tight w-full line-clamp-2 mb-1">{product.name}</h3>
+        
+        <p className="text-primary font-black text-base sm:text-lg leading-none">
+          {product.basePrice ? formatCurrency(product.basePrice) : 'Var. P'}
+        </p>
 
-      {/* Control Quantity / Add Button */}
-      <div className="w-full mt-auto pt-2 border-t border-outline/10" onClick={(e) => e.stopPropagation()}>
-        {totalQuantity > 0 && !isComplex ? (
-          <div className="flex items-center justify-between bg-primary text-white rounded-full p-1.5 shadow-[0_4px_15px_rgba(179,0,105,0.3)] mt-2">
+        {/* Control Quantity (Only for simple items) */}
+        {!isComplex && totalQuantity > 0 && (
+          <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
             <button 
               onClick={(e) => handleUpdateQty(e, -1)}
-              className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition-colors active:scale-90"
+              className="w-6 h-6 flex items-center justify-center bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-3 h-3" />
             </button>
-            <span className="font-bold text-base select-none">{totalQuantity}</span>
+            <span className="font-bold text-xs">{totalQuantity}</span>
             <button 
               onClick={(e) => handleUpdateQty(e, 1)}
-              className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition-colors active:scale-90"
+              className="w-6 h-6 flex items-center justify-center bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
             >
-              <Plus className="w-4 h-4 text-white" />
+              <Plus className="w-3 h-3" />
             </button>
           </div>
-        ) : (
-          <button 
-            onClick={handleMainClick}
-            className="w-full py-2.5 rounded-full mt-2 bg-surface-container-low text-primary font-bold text-sm transition-all flex items-center justify-center gap-1.5 hover:shadow-md hover:bg-gradient-to-r hover:from-primary hover:to-primary-container hover:text-white active:scale-95 group-hover:bg-primary group-hover:text-white"
-          >
-            {isComplex ? <MoreHorizontal className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-            {isComplex ? 'Configurar' : 'Agregar'}
-          </button>
         )}
       </div>
     </motion.div>

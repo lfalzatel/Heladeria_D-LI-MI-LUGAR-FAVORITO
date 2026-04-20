@@ -62,7 +62,7 @@ const PRODUCTS = [
 
   { name: "Adición Queso", category: "adiciones", basePrice: 4000, isActive: true },
   { name: "Adición Fruta", category: "adiciones", basePrice: 3500, isActive: true },
-  { name: "Adición Helado", category: "adiciones", basePrice: 3000, isActive: true },
+  { name: "Adición Helado", category: "adiciones", basePrice: 3000, requiresFlavors: true, requiresSauces: true, isActive: true },
   { name: "Adición Chantilly", category: "adiciones", basePrice: 4000, isActive: true },
   { name: "Adición Chips de Chocolate", category: "adiciones", basePrice: 3000, isActive: true },
   { name: "Adición Salsa", category: "adiciones", basePrice: 1000, isActive: true },

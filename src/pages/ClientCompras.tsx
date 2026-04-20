@@ -192,24 +192,33 @@ export default function ClientCompras() {
             <button
               key={product.id}
               onClick={() => setSelectedProduct(product)}
-              className="bg-white rounded-2xl border border-outline/10 shadow-sm p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group active:scale-[0.98]"
+              className="bg-white rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all group active:scale-[0.98] text-left border-outline/10 shadow-sm"
             >
-              {product.imageUrl ? (
-                <div className="w-24 h-24 mb-3 rounded-xl overflow-hidden self-center mx-auto">
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+              {/* Integrated Image inside card */}
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300">
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <IceCream className="w-8 h-8 text-secondary/30 absolute inset-0 m-auto group-hover:text-primary transition-colors" />
+                )}
+              </div>
+
+              <div className="flex-1 flex flex-col min-w-0">
+                <div className="flex w-full justify-between items-center mb-0.5">
+                  <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-[7px] font-black text-secondary uppercase tracking-widest truncate max-w-[60px]">
+                    {product.category}
+                  </span>
                 </div>
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
-                  <IceCream className="w-5 h-5 text-primary" />
-                </div>
-              )}
-              <p className="font-bold text-sm text-on-surface leading-tight mb-1 line-clamp-2">{product.name}</p>
-              <p className="text-primary font-black text-sm">
-                {product.variants && product.variants.length > 0
-                  ? `Desde ${formatCurrency(Math.min(...product.variants.map(v => v.price)))}`
-                  : formatCurrency(product.basePrice || 0)
-                }
-              </p>
+
+                <h3 className="font-bold text-on-surface text-sm leading-tight w-full line-clamp-2 mb-1">{product.name}</h3>
+                
+                <p className="text-primary font-black text-sm leading-none">
+                  {product.variants && product.variants.length > 0
+                    ? `Desde ${formatCurrency(Math.min(...product.variants.map(v => v.price)))}`
+                    : formatCurrency(product.basePrice || 0)
+                  }
+                </p>
+              </div>
             </button>
           ))}
         </div>
@@ -469,6 +478,28 @@ export default function ClientCompras() {
           </div>
         )}
       </AnimatePresence>
+
+
+      {/* Floating Cart Button for Client */}
+      {cart.length > 0 && !showCart && !showCheckout && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-24 right-6 z-[45] w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center group"
+        >
+          <div className="relative">
+            <ShoppingCart className="w-7 h-7" />
+            <span className="absolute -top-3 -right-3 bg-on-surface text-white text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-primary shadow-lg">
+              {cartCount}
+            </span>
+          </div>
+          
+          {/* Pulsing effect */}
+          <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20 pointer-events-none" />
+        </motion.button>
+      )}
 
       <BottomNav />
     </div>

@@ -89,8 +89,14 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
             <NavItem 
               to="/cliente/compras"
               icon={<ShoppingBag />}
-              label="Mis Compras"
+              label="Comprar"
               active={location.pathname === '/cliente/compras'}
+            />
+            <NavItem 
+              to="/cliente/pedidos"
+              icon={<ShoppingCart />}
+              label="Pedidos"
+              active={location.pathname === '/cliente/pedidos'}
             />
             <NavItem 
               to="/cliente/historial"
@@ -98,24 +104,10 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               label="Historial"
               active={location.pathname === '/cliente/historial'}
             />
-            {/* Centro destacado - Pedidos */}
-            <NavItem 
-              to="/cliente/pedidos"
-              icon={<ShoppingCart />}
-              label="Pedidos"
-              active={location.pathname === '/cliente/pedidos'}
-              highlight
-            />
-            <NavItem 
-              to="/cliente/chat"
-              icon={<MessageSquare />}
-              label="Mensajes"
-              active={location.pathname === '/cliente/chat'}
-            />
             <NavItem 
               to="/profile"
-              icon={<QrCode />}
-              label="Mi Código"
+              icon={<Users />}
+              label="Perfil"
               active={location.pathname === '/profile'}
             />
           </>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus } from 'lucide-react';
 import { Product, ProductVariant, CartItem } from '../types';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
+
+const SALSAS = ['Chocolate', 'Mora', 'Arequipe', 'Fresa', 'Leche Condensada', 'Miel'];
 
 interface OrderConfigModalProps {
   product: Product;
@@ -14,11 +16,11 @@ interface OrderConfigModalProps {
   initialItem?: CartItem | null;
 }
 
-// Salsas disponibles para helados
-const SALSAS = ["Arequipe", "Mora", "Chocolate", "Lecherita", "Maní", "Bolitas de Colores"];
-
 // Frutas por defecto (salpicón, ensalada genérica, etc.)
 const FRUTAS_DEFAULT = ['Banano', 'Fresa', 'Mango', 'Papaya', 'Uva', 'Kiwi'];
+
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function OrderConfigModal({ product, isOpen, onClose, onAdd, initialItem }: OrderConfigModalProps) {
   const { availableFlavors: allFlavors } = useFlavorsStore();
@@ -27,6 +29,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedFrutas, setSelectedFrutas] = useState<string[]>([]);
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
+  const [selectedAdditions, setSelectedAdditions] = useState<{name: string, price: number}[]>([]);
+  const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [quantity, setQuantity] = useState(1);
   
   // Dynamic step calculation
@@ -38,6 +42,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   if (product.requiresFlavors) steps.push('flavors');
   // Sauces: only for helados and copas
   if (product.requiresSauces) steps.push('sauces');
+  // Additions step
+  steps.push('additions');
   
   const totalSteps = steps.length;
   const currentStepType = steps[step - 1];
@@ -75,6 +81,21 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     ? product.fruitOptions
     : FRUTAS_DEFAULT;
 
+  // Fetch additions
+  useEffect(() => {
+    const fetchAdditions = async () => {
+      try {
+        const q = query(collection(db, 'products'), where('category', '==', 'adiciones'), where('isActive', '==', true));
+        const snap = await getDocs(q);
+        const adds = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        setAvailableAdditions(adds);
+      } catch (err) {
+        console.error("Error fetching additions:", err);
+      }
+    };
+    fetchAdditions();
+  }, []);
+
   // Reset or pre-fill state when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -89,6 +110,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         // Parse sauces from additions
         const sauceAdditions = (initialItem.additions || []).filter(a => SALSAS.includes(a));
         setSelectedSauces(sauceAdditions);
+        
+        // Parse actual additions (ignoring sauces for simplicity in this reconstruction)
+        const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a));
+        // We'd need prices here... for now just names
+        setSelectedAdditions(otherAdds.map(name => ({name, price: 0})));
+
         setQuantity(initialItem.quantity);
         setStep(1);
       } else {
@@ -97,6 +124,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedFlavors([]);
         setSelectedFrutas([]);
         setSelectedSauces([]);
+        setSelectedAdditions([]);
         setQuantity(1);
       }
     }
@@ -136,34 +164,35 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     } else {
       // Build cart item
       const variantLabel = selectedVariant?.label || '';
-      const unitPrice = selectedVariant?.price || product.basePrice || 0;
+      const additionPrices = selectedAdditions.reduce((sum, a) => sum + a.price, 0);
+      const unitPrice = (selectedVariant?.price || product.basePrice || 0) + additionPrices;
       
-      // Combine non-sauce additions + selected sauces
-      const nonSauceAdditions = (initialItem?.additions || []).filter(a => !SALSAS.includes(a));
-      const allAdditions = [...nonSauceAdditions, ...selectedSauces];
+      // Combine additions names
+      const allAdditionsNames = [
+        ...selectedSauces,
+        ...selectedAdditions.map(a => a.name)
+      ];
 
       const configParts = [
         variantLabel,
         selectedFlavors.join(', '),
         selectedFrutas.length > 0 ? `Fruta: ${selectedFrutas.join(', ')}` : '',
-        selectedSauces.length > 0 ? `Salsas: ${selectedSauces.join(', ')}` : '',
+        allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
       ].filter(Boolean);
 
-      const item: CartItem = {
+      onAdd({
         id: initialItem?.id || Math.random().toString(36).substr(2, 9),
         productId: product.id,
         productName: product.name,
         variantLabel,
-        description: configParts.join(' — '),
+        description: configParts.join(' | '),
         flavors: selectedFlavors,
         fruitChoices: selectedFrutas,
-        additions: allAdditions,
-        quantity: quantity,
-        unitPrice: unitPrice,
+        additions: allAdditionsNames,
+        quantity,
+        unitPrice,
         subtotal: unitPrice * quantity,
-      };
-      
-      onAdd(item);
+      });
       onClose();
     }
   };
@@ -194,317 +223,323 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     }
   };
 
+  const toggleAddition = (add: Product) => {
+    setSelectedAdditions(prev => {
+      const exists = prev.find(a => a.name === add.name);
+      if (exists) return prev.filter(a => a.name !== add.name);
+      return [...prev, { name: add.name, price: add.basePrice || 0 }];
+    });
+  };
+
   const getStepTitle = () => {
     switch (effectiveCurrentStepType) {
       case 'variants': return 'Presentación';
       case 'flavors': return `Selecciona ${maxScoops === 1 ? 'el Sabor' : 'los Sabores'}`;
       case 'fruits': return 'Elige la Fruta';
       case 'sauces': return 'Salsas (Opcional)';
+      case 'additions': return 'Adiciones';
       default: return '';
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 md:p-8">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-on-surface/50 backdrop-blur-sm"
-        />
-        
-        <motion.div 
-          initial={{ y: "100%", opacity: 0, scale: 0.95 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: "100%", opacity: 0, scale: 0.95 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative bg-surface-container-lowest w-full md:max-w-4xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row overflow-hidden h-[90vh] sm:h-auto sm:max-h-[90vh]"
-        >
-          {/* 📱 Botón Cerrar (Mobile Only) */}
-          <button 
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="md:hidden absolute top-4 right-4 z-[110] w-10 h-10 flex items-center justify-center rounded-full bg-white/70 backdrop-blur-md text-on-surface shadow-md"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative w-full max-w-lg bg-surface flex flex-col h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl border border-white/20"
           >
-            <X className="w-5 h-5" />
-          </button>
+            {/* ── SECCIÓN SUPERIOR: HERO IMAGE + OVERLAY ── */}
+            <div className="relative h-[25%] sm:h-[28%] flex-shrink-0 bg-surface-container-low group">
+               {product.imageUrl ? (
+                 <img 
+                   src={product.imageUrl} 
+                   alt={product.name} 
+                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                 />
+               ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-surface-container opacity-20">
+                     <IceCream className="w-16 h-16 text-primary" />
+                  </div>
+               )}
+               
+               {/* Overlay Gradiente Premium */}
+               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-          {/* ── COLUMNA IZQUIERDA: HERO IMAGE Y DETALLES ── */}
-          <div className="w-full md:w-[45%] h-64 md:h-auto bg-surface-container flex flex-col relative shrink-0">
-            {/* Imagen Principal */}
-            <div className="flex-1 w-full bg-white relative flex items-center justify-center overflow-hidden p-6 shadow-sm">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 z-10" />
-              {product.imageUrl ? (
-                <img 
-                  src={product.imageUrl} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain filter drop-shadow-2xl relative z-0 transition-transform duration-500 hover:scale-105" 
-                />
-              ) : (
-                <IceCream className="w-32 h-32 text-primary/10" />
-              )}
+               {/* Información sobre la Imagen */}
+               <div className="absolute bottom-4 left-6 right-6">
+                 <motion.div
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   className="flex flex-col gap-0.5"
+                 >
+                   <span className="inline-flex px-2 py-0.5 rounded-full bg-primary/90 text-white text-[8px] font-black uppercase tracking-[0.2em] w-fit shadow-lg backdrop-blur-md">
+                     {product.category}
+                   </span>
+                   <h2 className="font-brand font-black text-2xl sm:text-3xl text-white leading-tight drop-shadow-2xl">
+                     {product.name}
+                   </h2>
+                 </motion.div>
+               </div>
 
-              {/* Botón Cerrar (Desktop Only) */}
-              <button 
-                onClick={onClose}
-                className="hidden md:flex absolute top-6 left-6 w-10 h-10 items-center justify-center rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors text-on-surface z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
+               {/* Botón Cerrar Flotante */}
+               <button 
+                 onClick={onClose}
+                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center text-white hover:bg-white/40 transition-all shadow-lg active:scale-90 border border-white/30"
+               >
+                 <X className="w-5 h-5" />
+               </button>
             </div>
-            
-            {/* Contexto del producto debajo de la imagen (Solo PC/Tablet o scrolleable visual) */}
-            <div className="hidden md:flex flex-col bg-surface p-8 relative z-20 border-t border-outline/10">
-              <span className="text-xs font-black tracking-widest text-primary uppercase mb-2">
-                {product.category}
-              </span>
-              <h1 className="text-3xl font-bold text-on-surface leading-tight mb-2">
-                {product.name}
-              </h1>
-              <p className="text-secondary/80 text-sm leading-relaxed mb-6">
-                Preparación exquisita de la casa D'LI. Escoge tus ingredientes favoritos y ármala a tu gusto.
-              </p>
-              
-              <div className="mt-auto pt-6 border-t border-outline/10 flex justify-between items-end">
-                <div>
-                  <p className="text-xs text-secondary font-bold tracking-widest uppercase mb-1">Precio Base</p>
-                  <p className="text-3xl font-black text-primary">
-                     {formatCurrency(selectedVariant ? selectedVariant.price : (product.basePrice || 0))}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* ── COLUMNA DERECHA: FLUJO DE CONFIGURACIÓN ── */}
-          <div className="flex-1 flex flex-col bg-surface overflow-hidden relative">
-            <header className="pt-6 sm:pt-8 px-6 sm:px-10 pb-5 border-b border-surface-container shrink-0 bg-white md:bg-transparent">
-              <div className="md:hidden flex flex-col mb-4">
-                 <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">{product.category}</span>
-                 <h1 className="text-2xl font-bold leading-tight">{product.name}</h1>
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex flex-col">
-                  <h2 className="text-xl sm:text-2xl font-bold text-on-surface leading-tight">
-                    {getStepTitle()}
-                  </h2>
-                </div>
-                <div className="flex flex-col items-end shrink-0">
-                  <span className="text-xs font-black text-secondary bg-surface-container px-3 py-1 rounded-full uppercase tracking-widest">
-                    {step} / {effectiveTotalSteps}
-                  </span>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden flex gap-1">
-                {Array.from({ length: effectiveTotalSteps }).map((_, i) => (
-                  <div 
-                    key={i}
-                    className={cn(
-                      "h-full flex-1 rounded-full transition-all duration-500",
-                      i + 1 <= step ? "bg-gradient-to-r from-primary to-primary-container shadow-[0_0_8px_rgba(233,30,140,0.5)]" : "bg-transparent"
-                    )}
-                  />
-                ))}
-              </div>
-            </header>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-5 sm:p-10 hide-scrollbar scroll-smooth bg-surface-container-lowest/50">
-            {/* PASO: VARIANTES */}
-            {effectiveCurrentStepType === 'variants' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {(product.variants || []).map((v, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedVariant(v)}
-                    className={cn(
-                      "p-4 sm:p-6 rounded-3xl border-2 transition-all text-left flex flex-col gap-1 sm:gap-2 relative",
-                      selectedVariant?.label === v.label 
-                        ? "border-primary bg-primary/5 shadow-sm" 
-                        : "border-surface-container-high hover:border-primary/30"
-                    )}
-                  >
-                    <div className="flex justify-between items-start">
-                      <span className="font-bold text-base sm:text-lg text-on-surface">{v.label}</span>
-                      {selectedVariant?.label === v.label && <Check className="w-5 h-5 text-primary stroke-[3]" />}
-                    </div>
-                    <span className="text-primary font-black text-xl sm:text-2xl tracking-tighter">{formatCurrency(v.price)}</span>
-                    {v.scoops && <span className="text-[10px] text-secondary font-black uppercase tracking-wider">{v.scoops} Bola{v.scoops > 1 ? 's' : ''}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* PASO: SABORES */}
-            {effectiveCurrentStepType === 'flavors' && (
-              <div className="flex flex-col gap-4 sm:gap-6">
-                <div className="flex justify-between items-center px-1">
-                  <div>
-                    <h3 className="font-bold text-on-surface text-base sm:text-lg">Selecciona Sabores</h3>
-                    <p className="text-[10px] sm:text-xs text-secondary font-medium uppercase tracking-wider">Límite: {maxScoops} {maxScoops === 1 ? 'sabor' : 'sabores'}</p>
+            {/* ── SECCIÓN CENTRAL: CONFIGURACIÓN (SCROLLABLE) ── */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar bg-surface-container-lowest/30">
+              <div className="mb-6">
+                <div className="flex justify-between items-end mb-3 px-1">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-secondary uppercase tracking-[0.2em] mb-0.5">Paso {step} de {effectiveTotalSteps}</span>
+                    <h3 className="font-bold text-on-surface text-lg sm:text-xl">{getStepTitle()}</h3>
                   </div>
-                  <div className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-black ring-1 transition-all",
-                    selectedFlavors.length === maxScoops 
-                    ? "bg-success/10 text-success ring-success/20" 
-                    : "bg-primary/5 text-primary ring-primary/20"
-                  )}>
-                    {selectedFlavors.length}/{maxScoops}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  {allFlavors.map(flavor => (
-                    <button
-                      key={flavor.id}
-                      onClick={() => toggleFlavor(flavor.name)}
-                      disabled={!flavor.isAvailable}
-                      className={cn(
-                        "relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl transition-all border-2",
-                        selectedFlavors.includes(flavor.name)
-                          ? "bg-primary border-primary text-white shadow-md scale-[1.02]"
-                          : flavor.isAvailable 
-                            ? "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                            : "opacity-30 cursor-not-allowed border-transparent grayscale"
-                      )}
-                    >
-                      <IceCream className={cn("w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2", selectedFlavors.includes(flavor.name) ? "text-white" : "text-primary")} />
-                      <span className="text-[10px] sm:text-xs font-bold text-center leading-tight line-clamp-1">{flavor.name}</span>
-                      {selectedFlavors.includes(flavor.name) && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-primary stroke-[4]" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* PASO: FRUTAS */}
-            {effectiveCurrentStepType === 'fruits' && (
-              <div className="flex flex-col gap-4 sm:gap-6">
-                <div className="flex justify-between items-center px-1">
-                  <div>
-                    <h3 className="font-bold text-on-surface text-base sm:text-lg">Elige la Fruta</h3>
-                    <p className="text-[10px] sm:text-xs text-secondary font-medium uppercase tracking-wider">Selecciona una opción</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  {fruitOptions.map(fruta => (
-                    <button
-                      key={fruta}
-                      onClick={() => toggleFruta(fruta)}
-                      className={cn(
-                        "relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl transition-all border-2 text-center",
-                        selectedFrutas.includes(fruta)
-                          ? "bg-success border-success text-white shadow-md scale-[1.02]"
-                          : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                      )}
-                    >
-                      <span className="text-2xl mb-1">
-                        {fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Mixta' ? '🍇' : '🍑'}
-                      </span>
-                      <span className="text-[10px] sm:text-xs font-bold leading-tight">{fruta}</span>
-                      {selectedFrutas.includes(fruta) && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-success stroke-[4]" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* PASO: SALSAS */}
-            {effectiveCurrentStepType === 'sauces' && (
-              <div className="flex flex-col gap-4 sm:gap-6">
-                <div className="flex justify-between items-center px-1">
-                  <div>
-                    <h3 className="font-bold text-on-surface text-base sm:text-lg">Salsas</h3>
-                    <p className="text-[10px] sm:text-xs text-secondary font-medium uppercase tracking-wider">Opcional — Puedes elegir varias</p>
-                  </div>
-                  {selectedSauces.length > 0 && (
-                    <div className="px-3 py-1.5 rounded-full text-xs font-black bg-primary/10 text-primary ring-1 ring-primary/20">
-                      {selectedSauces.length} elegida{selectedSauces.length !== 1 ? 's' : ''}
+                  {effectiveCurrentStepType === 'flavors' && (
+                    <div className={cn(
+                      "px-3 py-1.5 rounded-xl text-[10px] font-black ring-1 transition-all shadow-sm",
+                      selectedFlavors.length === maxScoops 
+                      ? "bg-success/10 text-success ring-success/20" 
+                      : "bg-primary text-white ring-primary shadow-primary/20"
+                    )}>
+                      {selectedFlavors.length} / {maxScoops}
                     </div>
                   )}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  {SALSAS.map(sauce => (
-                    <button
-                      key={sauce}
-                      onClick={() => toggleSauce(sauce)}
-                      className={cn(
-                        "relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl transition-all border-2",
-                        selectedSauces.includes(sauce)
-                          ? "bg-primary border-primary text-white shadow-md scale-[1.02]"
-                          : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                      )}
-                    >
-                      <Droplets className={cn("w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2", selectedSauces.includes(sauce) ? "text-white" : "text-primary")} />
-                      <span className="text-[10px] sm:text-xs font-bold text-center leading-tight">{sauce}</span>
-                      {selectedSauces.includes(sauce) && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-primary stroke-[4]" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+                
+                {/* Progress Bar Minimalista */}
+                <div className="w-full h-1 bg-surface-container rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(step / effectiveTotalSteps) * 100}%` }}
+                    className="h-full bg-gradient-to-r from-primary to-primary-container shadow-[0_0_8px_rgba(233,30_140,0.4)]"
+                  />
                 </div>
-                {/* Skip option */}
-                <button
-                  onClick={() => { setSelectedSauces([]); handleNext(); }}
-                  className="mt-2 py-3 rounded-2xl border-2 border-dashed border-outline/30 text-secondary text-xs font-bold hover:border-secondary/30 transition-all"
+              </div>
+
+              {/* CONTENIDO SEGÚN EL PASO */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={effectiveCurrentStepType}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Sin salsas — Continuar
+                  {effectiveCurrentStepType === 'variants' && (
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {product.variants?.map(variant => (
+                        <button
+                          key={variant.label}
+                          onClick={() => setSelectedVariant(variant)}
+                          className={cn(
+                            "relative flex items-center justify-between p-4 rounded-[1.5rem] transition-all border-2 text-left group",
+                            selectedVariant?.label === variant.label
+                              ? "bg-primary/5 border-primary shadow-sm scale-[1.01]"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                             <div className={cn(
+                               "w-11 h-11 rounded-xl flex items-center justify-center transition-all",
+                               selectedVariant?.label === variant.label ? "bg-primary text-white rotate-3" : "bg-surface-container text-secondary"
+                             )}>
+                               <IceCream className="w-6 h-6" />
+                             </div>
+                             <div>
+                                <p className="font-black text-base tracking-tight">{variant.label}</p>
+                                {variant.scoops && <p className="text-[9px] font-bold text-secondary uppercase tracking-widest">{variant.scoops} {variant.scoops === 1 ? 'bola' : 'bolas'}</p>}
+                             </div>
+                          </div>
+                          <div className="text-right pr-1">
+                            <p className="font-brand font-black text-xl text-primary">{formatCurrency(variant.price)}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'flavors' && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {allFlavors.filter(f => f.isAvailable).map(flavor => (
+                        <button
+                          key={flavor.id}
+                          onClick={() => toggleFlavor(flavor.name)}
+                          className={cn(
+                            "relative flex flex-col items-center justify-center p-4 rounded-2xl transition-all border-2 aspect-square group",
+                            selectedFlavors.includes(flavor.name)
+                              ? "bg-primary border-primary text-white shadow-md scale-105 z-10"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <IceCream className={cn("w-6 h-6 mb-1.5 transition-transform group-hover:scale-110", selectedFlavors.includes(flavor.name) ? "text-white" : "text-primary")} />
+                          <span className="text-[10px] font-black text-center leading-tight line-clamp-2 px-1">{flavor.name}</span>
+                          {selectedFlavors.includes(flavor.name) && (
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+                              <Check className="w-3.5 h-3.5 text-primary stroke-[4]" />
+                            </motion.div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'fruits' && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {fruitOptions.map(fruta => (
+                        <button
+                          key={fruta}
+                          onClick={() => toggleFruta(fruta)}
+                          className={cn(
+                            "relative flex flex-col items-center justify-center p-4 rounded-2xl transition-all border-2 aspect-square",
+                            selectedFrutas.includes(fruta)
+                              ? "bg-success border-success text-white shadow-md scale-105 z-10"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <span className="text-2xl mb-1.5">
+                            {fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Mixta' ? '🍇' : '🍍'}
+                          </span>
+                          <span className="text-[10px] font-black leading-tight">{fruta}</span>
+                          {selectedFrutas.includes(fruta) && (
+                            <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+                              <Check className="w-3.5 h-3.5 text-success stroke-[4]" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'sauces' && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {SALSAS.map(sauce => (
+                        <button
+                          key={sauce}
+                          onClick={() => toggleSauce(sauce)}
+                          className={cn(
+                            "relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all border-2 gap-1.5",
+                            selectedSauces.includes(sauce)
+                              ? "bg-primary border-primary text-white shadow-md"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <div className={cn("w-1.5 h-1.5 rounded-full", selectedSauces.includes(sauce) ? "bg-white" : "bg-primary")} />
+                          <span className="text-[10px] font-black leading-tight text-center">{sauce}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'additions' && (
+                    <div className="flex flex-col gap-2.5">
+                      {availableAdditions.map(add => (
+                        <button
+                          key={add.id}
+                          onClick={() => toggleAddition(add)}
+                          className={cn(
+                            "relative flex items-center p-4 rounded-[1.5rem] transition-all border-2 gap-4",
+                            selectedAdditions.find(a => a.name === add.name)
+                              ? "bg-success/5 border-success shadow-sm"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                            selectedAdditions.find(a => a.name === add.name) ? "bg-success text-white scale-110" : "bg-surface-container text-secondary"
+                          )}>
+                             <Plus className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="font-black text-sm tracking-tight">{add.name}</p>
+                            <p className={cn("text-[11px] font-black", selectedAdditions.find(a => a.name === add.name) ? "text-success" : "text-primary")}>
+                              +{formatCurrency(add.basePrice || 0)}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* ── FOOTER: BOTONES DE ACCIÓN (MÁS COMPACTO) ── */}
+            <footer className="p-5 sm:p-6 bg-surface border-t border-outline/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] flex flex-col gap-4">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-4 bg-surface-container/50 p-1.5 rounded-2xl border border-outline/5">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-white text-on-surface hover:bg-surface-container-high transition-all active:scale-90 border border-outline/10 shadow-sm"
+                  >
+                    <span className="text-xl font-bold leading-none">−</span>
+                  </button>
+                  <span className="text-2xl font-brand font-black text-primary w-6 text-center">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary text-white hover:bg-primary-container transition-all active:scale-90 shadow-lg shadow-primary/20"
+                  >
+                    <Plus className="w-5 h-5 stroke-[3]" />
+                  </button>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[8px] font-black text-secondary uppercase tracking-[0.2em] block mb-0.5">Precio Total</span>
+                  <p className="text-2xl font-brand font-black text-on-surface leading-tight">
+                    {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + selectedAdditions.reduce((s, a) => s + a.price, 0)) * quantity)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                {step > 1 && (
+                  <button 
+                    onClick={() => setStep(step - 1)}
+                    className="w-14 h-14 flex shrink-0 items-center justify-center rounded-2xl bg-surface-container text-on-surface hover:bg-surface-container-high transition-all active:scale-90 border border-outline/10"
+                  >
+                    <ChevronLeft className="w-6 h-6 stroke-[3]" />
+                  </button>
+                )}
+                
+                <button 
+                  onClick={handleNext}
+                  className="flex-1 h-14 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3 overflow-hidden relative group"
+                >
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  
+                  {step < effectiveTotalSteps ? (
+                    <>
+                      <span className="relative z-10 font-brand tracking-widest uppercase text-xs">Siguiente Paso</span>
+                      <ChevronRight className="w-5 h-5 stroke-[3] relative z-10" />
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-6 h-6 stroke-[4] relative z-10" /> 
+                      <span className="relative z-10 font-brand tracking-widest uppercase text-xs">
+                        {initialItem ? 'Actualizar Pedido' : 'Confirmar y Agregar'}
+                      </span>
+                    </>
+                  )}
                 </button>
               </div>
-            )}
-          </div>
-
-          {/* Footer Derecho */}
-          <footer className="p-5 sm:p-8 bg-surface-container-lowest border-t border-outline/10 shrink-0">
-            <div className="flex gap-4">
-              {step > 1 && (
-                <button 
-                  onClick={() => setStep(step - 1)}
-                  className="w-16 h-16 flex shrink-0 items-center justify-center rounded-2xl bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 border border-outline/10"
-                >
-                  <ChevronLeft className="w-6 h-6 stroke-[3]" />
-                </button>
-              )}
-              
-              <button 
-                onClick={handleNext}
-                className="flex-1 py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-bold text-lg shadow-[0_8px_20px_rgba(233,30,140,0.3)] hover:shadow-[0_12px_25px_rgba(233,30,140,0.4)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 overflow-hidden relative group"
-              >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                {step < effectiveTotalSteps && effectiveCurrentStepType !== 'sauces' ? (
-                  <>
-                    <span className="relative z-10 font-brand tracking-widest uppercase">Siguiente Paso</span>
-                    <ChevronRight className="w-5 h-5 stroke-[3] relative z-10" />
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-6 h-6 stroke-[3] relative z-10" /> 
-                    <span className="relative z-10 font-brand tracking-widest uppercase">
-                      {initialItem ? 'Actualizar' : 'Agregar'} • {formatCurrency((selectedVariant?.price || product.basePrice || 0) * quantity)}
-                    </span>
-                  </>
-                )}
-              </button>
-            </div>
-          </footer>
+            </footer>
+          </motion.div>
         </div>
-      </motion.div>
-    </div>
-  </AnimatePresence>
+      )}
+    </AnimatePresence>
   );
 }

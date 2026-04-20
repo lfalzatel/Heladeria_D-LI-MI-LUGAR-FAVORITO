@@ -62,7 +62,7 @@ export default function Profile() {
     <div className="min-h-screen flex bg-surface-container-lowest">
       {profile?.role !== 'cliente' && <AdminSidebar />}
       <div className="flex-1 flex flex-col min-h-screen relative pb-32">
-        <AppHeader backTo="/" showBell={false} />
+        <AppHeader showBell={false} />
         <PageTitle title="Mi Perfil" subtitle="Información de Cuenta" />
 
         <div className="px-4 sm:px-6 flex justify-end">
