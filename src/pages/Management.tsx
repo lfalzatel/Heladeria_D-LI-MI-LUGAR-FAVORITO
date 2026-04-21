@@ -1347,9 +1347,32 @@ export default function Management() {
                                     </div>
                                     <div className="flex flex-col min-w-0 pr-2">
                                        <span className="font-bold text-sm text-on-surface leading-snug">{item.productName}</span>
-                                       {item.variantLabel && (
-                                         <span className="text-[9px] font-bold text-secondary leading-tight">{item.variantLabel}</span>
-                                       )}
+                                       
+                                       <div className="flex flex-wrap gap-1 mt-1">
+                                          {item.variantLabel && (
+                                            <span className="px-1.5 py-0.5 rounded-md bg-surface-container text-secondary text-[8px] font-black uppercase tracking-wider">
+                                              {item.variantLabel}
+                                            </span>
+                                          )}
+                                          
+                                          {item.flavors?.map((f: string, i: number) => (
+                                            <span key={i} className="px-1.5 py-0.5 rounded-md bg-primary/5 text-primary text-[8px] font-bold">
+                                              {f}
+                                            </span>
+                                          ))}
+
+                                          {item.fruitChoices?.map((f: string, i: number) => (
+                                            <span key={i} className="px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 text-[8px] font-bold">
+                                              {f}
+                                            </span>
+                                          ))}
+
+                                          {item.additions?.map((a: string, i: number) => (
+                                            <span key={i} className="px-1.5 py-0.5 rounded-md bg-success/5 text-success text-[8px] font-bold">
+                                              +{a}
+                                            </span>
+                                          ))}
+                                       </div>
                                     </div>
                                  </div>
                                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
