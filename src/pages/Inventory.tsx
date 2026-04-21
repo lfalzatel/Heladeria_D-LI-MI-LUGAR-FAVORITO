@@ -97,19 +97,19 @@ export default function Inventory() {
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-h-screen relative pb-32">
-        <AppHeader backTo="/admin/management" showBell={false} />
+        <AppHeader left={<div className="font-bold text-primary truncate hidden sm:block">Gestión</div>} />
         <PageTitle title="Inventario del Menú" subtitle="Catálogo de Venta al Público" />
 
-      <main className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-6 sm:gap-8">
+      <main className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-6 sm:gap-8 w-full overflow-x-hidden">
         {/* Floating Add Product Button */}
         <button 
           onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
-          className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all"
+          className="w-full py-4 sm:py-5 bg-on-surface text-white rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all px-4"
         >
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <span className="text-xl leading-none font-light">+</span>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <span className="text-lg sm:text-xl leading-none font-light">+</span>
           </div>
-          Añadir Nuevo Producto
+          <span className="truncate">Añadir Nuevo Producto</span>
         </button>
 
         {/* Toolbar */}

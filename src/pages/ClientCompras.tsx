@@ -57,6 +57,7 @@ export default function ClientCompras() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [detailsProduct, setDetailsProduct] = useState<Product | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
   const [address, setAddress] = useState('');
@@ -214,29 +215,28 @@ export default function ClientCompras() {
             const totalQuantity = productInCart.reduce((sum, i) => sum + i.quantity, 0);
             const isComplex = (product.variants && product.variants.length > 0) || product.requiresFlavors || product.requiresFruitChoice;
 
-            const handleSimpleAdd = (e: React.MouseEvent) => {
-              e.stopPropagation();
+            const handleCardClick = () => {
               if (isComplex) {
                 setSelectedProduct(product);
-                return;
+              } else {
+                if (totalQuantity === 0) {
+                  const item = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    productId: product.id,
+                    productName: product.name,
+                    quantity: 1,
+                    unitPrice: product.basePrice || 0,
+                    subtotal: product.basePrice || 0,
+                  };
+                  addToCart(item);
+                }
               }
-              const item = {
-                id: Math.random().toString(36).substr(2, 9),
-                productId: product.id,
-                productName: product.name,
-                quantity: 1,
-                unitPrice: product.basePrice || 0,
-                subtotal: product.basePrice || 0,
-              };
-              addToCart(item);
             };
 
             const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
               e.stopPropagation();
-              if (productInCart.length === 1 && !isComplex) {
+              if (productInCart.length > 0 && !isComplex) {
                 updateQty(productInCart[0].id, productInCart[0].quantity + delta);
-              } else {
-                setSelectedProduct(product);
               }
             };
 
@@ -245,14 +245,20 @@ export default function ClientCompras() {
                 key={product.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                onClick={() => setSelectedProduct(product)}
+                onClick={handleCardClick}
                 className={cn(
                   "bg-white rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-                  totalQuantity > 0 ? "ring-2 ring-primary/40 bg-primary/5 border-primary/40 shadow-md" : "border-outline/10 shadow-sm"
+                  totalQuantity > 0 ? "ring-2 ring-primary/40 bg-primary/5 border-primary/40 shadow-sm" : "border-outline/10 shadow-sm"
                 )}
               >
-                {/* Integrated Image inside card */}
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300">
+                {/* Zone 1: Image -> Opens Details manually via a soon-to-be-added Details Modal if they click here */}
+                <div 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setDetailsProduct(product); 
+                  }}
+                  className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300"
+                >
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
@@ -266,49 +272,47 @@ export default function ClientCompras() {
                   )}
                 </div>
 
+                {/* Zone 2: Rest of Card */}
                 <div className="flex-1 flex flex-col min-w-0">
                   <div className="flex w-full justify-between items-center mb-0.5">
                     <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-[7px] font-black text-secondary uppercase tracking-widest truncate max-w-[60px]">
                       {product.category}
                     </span>
                     {totalQuantity > 0 && (
-                       <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                       <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     )}
                   </div>
 
                   <h3 className="font-bold text-on-surface text-sm sm:text-base leading-tight w-full line-clamp-2 mb-1">{product.name}</h3>
                   
-                  <p className="text-primary font-black text-base sm:text-lg leading-none">
-                    {product.basePrice ? formatCurrency(product.basePrice) : 'Var. P'}
-                  </p>
+                  <div className="flex justify-between items-end mt-1">
+                    <p className="text-primary font-black text-base sm:text-lg leading-none">
+                      {product.basePrice ? formatCurrency(product.basePrice) : 'Var. P'}
+                    </p>
 
-                  {/* Control Quantity (Only for simple items) */}
-                  {!isComplex && totalQuantity > 0 && (
-                    <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        onClick={(e) => handleUpdateQty(e, -1)}
-                        className="w-6 h-6 flex items-center justify-center bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="font-bold text-xs">{totalQuantity}</span>
-                      <button 
-                        onClick={(e) => handleUpdateQty(e, 1)}
-                        className="w-6 h-6 flex items-center justify-center bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                  
-                  {!isComplex && totalQuantity === 0 && (
-                    <button 
-                      onClick={handleSimpleAdd}
-                      className="mt-2 w-full py-1.5 rounded-lg bg-surface-container hover:bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider transition-colors"
-                    >
-                      Añadir
-                    </button>
-                  )}
+                    {/* Quantity Controls inside logic */}
+                    {!isComplex && totalQuantity > 0 ? (
+                      <div className="flex items-center gap-3 bg-surface-container rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          onClick={(e) => handleUpdateQty(e, -1)}
+                          className="w-7 h-7 flex items-center justify-center bg-white shadow-sm hover:text-primary text-secondary rounded-md transition-colors"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="font-black text-sm w-4 text-center">{totalQuantity}</span>
+                        <button 
+                          onClick={(e) => handleUpdateQty(e, 1)}
+                          className="w-7 h-7 flex items-center justify-center bg-white shadow-sm hover:text-primary text-secondary rounded-md transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : !isComplex && totalQuantity === 0 ? (
+                      <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </motion.div>
             );
@@ -332,6 +336,62 @@ export default function ClientCompras() {
           onAdd={addToCart}
         />
       )}
+
+      {/* Product Details Modal (Image & Info) */}
+      <AnimatePresence>
+        {detailsProduct && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDetailsProduct(null)}
+              className="absolute inset-0 bg-on-surface/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-[2.5rem] overflow-hidden shadow-2xl"
+            >
+              <div className="relative w-full aspect-square bg-surface-container-low">
+                {detailsProduct.imageUrl ? (
+                  <img src={detailsProduct.imageUrl} alt={detailsProduct.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-secondary/30">
+                    <IceCream className="w-24 h-24" />
+                  </div>
+                )}
+                <button
+                  onClick={() => setDetailsProduct(null)}
+                  className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-2 py-1 bg-surface-container rounded-lg text-[9px] font-black uppercase tracking-widest text-secondary">
+                    {detailsProduct.category}
+                  </span>
+                </div>
+                <h3 className="text-2xl font-headline font-black text-on-surface leading-tight mb-2">
+                  {detailsProduct.name}
+                </h3>
+                <p className="text-sm text-secondary font-medium leading-relaxed mb-6">
+                  {detailsProduct.description || "Deliciosa opción preparada con ingredientes de la más alta calidad en D'LI."}
+                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Precio Base</p>
+                  <p className="text-xl font-black text-primary">
+                    {detailsProduct.basePrice ? formatCurrency(detailsProduct.basePrice) : 'Var. P'}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Unified Checkout Modal (95vh) */}
       <AnimatePresence>
