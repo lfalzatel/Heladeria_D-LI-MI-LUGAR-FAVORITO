@@ -1352,9 +1352,16 @@ export default function Management() {
                                        )}
                                     </div>
                                  </div>
-                                 <span className="font-black text-primary flex-shrink-0">
-                                    {formatCurrency(item.subtotal || 0)}
-                                  </span>
+                                 <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                                   <span className="font-black text-primary">
+                                      {formatCurrency(item.subtotal || 0)}
+                                   </span>
+                                   {item.quantity > 1 && (
+                                     <span className="text-[9px] font-bold text-secondary italic opacity-60">
+                                       {formatCurrency(item.unitPrice || 0)} c/u
+                                     </span>
+                                   )}
+                                 </div>
                               </div>
                             ))}
                           </div>

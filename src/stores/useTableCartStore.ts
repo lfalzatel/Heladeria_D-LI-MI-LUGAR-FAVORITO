@@ -87,7 +87,8 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
       i.productId === item.productId && 
       i.variantLabel === item.variantLabel && 
       JSON.stringify(i.flavors) === JSON.stringify(item.flavors) &&
-      JSON.stringify(i.fruitChoices) === JSON.stringify(item.fruitChoices)
+      JSON.stringify(i.fruitChoices) === JSON.stringify(item.fruitChoices) &&
+      JSON.stringify(i.additions) === JSON.stringify(item.additions)
     );
 
     let newItems;
