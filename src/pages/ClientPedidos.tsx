@@ -11,8 +11,10 @@ import {
   MapPin, Banknote, Smartphone, CreditCard, Hash,
   Receipt, Send, DollarSign, Target
 } from 'lucide-react';
-import BottomNav from '../components/BottomNav';
 import AppHeader, { PageTitle } from '../components/AppHeader';
+import HistoryMovementCard from '../components/HistoryMovementCard';
+import MovementDetailModal from '../components/MovementDetailModal';
+import BottomNav from '../components/BottomNav';
 
 interface Pedido {
   id: string;
@@ -32,13 +34,6 @@ const STATUS_CONFIG = {
   pendiente: { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-400/10', ring: 'ring-amber-500/20', dot: 'bg-amber-400', icon: <Clock className="w-5 h-5" /> },
   aceptado:  { label: 'Aceptado',  color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', dot: 'bg-emerald-500', icon: <Check className="w-5 h-5" /> },
   rechazado: { label: 'Rechazado', color: 'text-red-500', bg: 'bg-red-400/10', ring: 'ring-red-500/20', dot: 'bg-red-400', icon: <XCircle className="w-5 h-5" /> },
-};
-
-const PAYMENT_ICONS: Record<string, any> = {
-  efectivo: <Banknote className="w-4 h-4" />,
-  transferencia: <Smartphone className="w-4 h-4" />,
-  datafono: <CreditCard className="w-4 h-4" />,
-  credito: <Hash className="w-4 h-4" />,
 };
 
 const toDate = (ts: any): Date | null => {
@@ -84,8 +79,7 @@ export default function ClientPedidos() {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
       setPedidos(data);
       
-      // Calculate stats (Filter stats based on user type if needed, but here we show all they see)
-      const total = data.reduce((acc, p) => p.status === 'aceptado' ? acc + p.total : acc, 0);
+      const total = data.reduce((acc, p) => p.status === 'aceptado' ? acc + (p.total || 0) : acc, 0);
       setStats({
         totalSpent: total,
         orderCount: data.length,
@@ -152,7 +146,6 @@ export default function ClientPedidos() {
         </div>
 
         <main className="px-6 flex flex-col gap-8">
-          {/* Dashboard Stats Section */}
           <section className="grid grid-cols-2 gap-4">
              {metrics.map((m, i) => (
                 <motion.div
@@ -174,7 +167,6 @@ export default function ClientPedidos() {
              ))}
           </section>
 
-          {/* Calendar Glass Filter */}
           <div className="bg-surface-container/50 rounded-[2.5rem] border border-outline/10 overflow-hidden shadow-sm">
             <button
               onClick={() => setShowCalendar(!showCalendar)}
@@ -225,7 +217,6 @@ export default function ClientPedidos() {
             </AnimatePresence>
           </div>
 
-          {/* Pedidos List - Dashboard Style */}
           <div className="flex flex-col gap-4">
              <div className="flex items-center justify-between px-1">
                 <h4 className="font-headline font-black text-sm text-on-surface uppercase tracking-widest">Compras Recientes</h4>
@@ -241,201 +232,32 @@ export default function ClientPedidos() {
                   <p className="text-[10px] text-secondary font-bold mt-1">Tus pedidos aparecerán aquí</p>
                </div>
              ) : (
-               filteredPedidos.map(pedido => {
-                  const cfg = STATUS_CONFIG[pedido.status];
-                  return (
-                    <motion.button
-                      layout
-                      key={pedido.id}
-                      onClick={() => setSelectedId(pedido.id)}
-                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      className="w-full text-left bg-white rounded-[2.5rem] p-6 border border-outline/10 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group relative overflow-hidden"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                         <div className="flex items-center gap-4">
-                            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", cfg.bg, cfg.color)}>
-                               {cfg.icon}
-                            </div>
-                            <div>
-                               <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Orden</p>
-                               <h4 className="font-headline font-black text-on-surface text-lg leading-none">#{pedido.id.slice(-6).toUpperCase()}</h4>
-                            </div>
-                         </div>
-                         <div className="text-right">
-                            <p className="font-headline font-black text-primary text-xl leading-none">{formatCurrency(pedido.total)}</p>
-                            <p className="text-[10px] text-secondary font-bold uppercase mt-1 tracking-tighter">{formatDate(pedido.createdAt)}</p>
-                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-outline/5 mt-2">
-                         <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-full ring-1 ring-outline/5 font-headline">
-                               {PAYMENT_ICONS[pedido.paymentMethod] || <Hash className="w-3.5 h-3.5" />}
-                               <span className="text-[9px] font-black text-secondary uppercase tracking-tighter">
-                                  {pedido.paymentMethod}
-                               </span>
-                            </div>
-                            <span className="text-[10px] font-bold text-secondary/40 uppercase">
-                               {pedido.items.length} items
-                            </span>
-                         </div>
-                         <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-2 shadow-sm font-headline", cfg.ring, cfg.bg)}>
-                            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", cfg.dot)} />
-                            <span className={cn("text-[9px] font-black uppercase tracking-widest", cfg.color)}>{cfg.label}</span>
-                         </div>
-                      </div>
-                    </motion.button>
-                  );
-               })
+               filteredPedidos.map((pedido, idx) => (
+                 <HistoryMovementCard 
+                   key={pedido.id || `pedido-${idx}`}
+                   id={pedido.id}
+                   total={pedido.total || 0}
+                   date={formatDate(pedido.createdAt)}
+                   paymentMethod={pedido.paymentMethod || 'Efectivo'}
+                   status={pedido.status || 'pendiente'}
+                   itemCount={pedido.items?.length || 0}
+                   onClick={() => setSelectedId(pedido.id)}
+                 />
+               ))
              )}
           </div>
         </main>
 
-        {/* Premium Centered Detail Modal (90vh) */}
-        <AnimatePresence>
-          {selectedPedido && (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={() => setSelectedId(null)}
-                className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
-              />
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }} 
-                animate={{ scale: 1, opacity: 1, y: 0 }} 
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90dvh] overflow-hidden"
-              >
-                {/* Modal Header */}
-                <div className="px-6 pt-5 pb-4 border-b border-outline/10 flex items-center justify-between bg-white sticky top-0 z-10">
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
-                        <Receipt className="w-6 h-6 text-primary" />
-                     </div>
-                     <div>
-                        <h3 className="font-headline font-black text-xl text-on-surface leading-none">Detalle de Compra</h3>
-                        <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-1">Ref: #{selectedPedido.id.slice(-6).toUpperCase()}</p>
-                     </div>
-                  </div>
-                  <button onClick={() => setSelectedId(null)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
-                    <X className="w-5 h-5 text-secondary" />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-6">
-                   {/* Status Card */}
-                   {(() => {
-                      const cfg = STATUS_CONFIG[selectedPedido.status];
-                      return (
-                        <div className={cn("rounded-3xl p-5 flex items-center gap-5 ring-2 shadow-sm font-headline", cfg.ring, cfg.bg)}>
-                           <div className={cn("w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center", cfg.color)}>
-                              {cfg.icon}
-                           </div>
-                           <div className="flex-1">
-                              <p className={cn("text-[10px] font-black uppercase tracking-[0.2em] mb-0.5", cfg.color)}>{cfg.label}</p>
-                              <h4 className="font-headline font-black text-on-surface text-lg leading-tight uppercase tracking-tight">
-                                 {selectedPedido.status === 'pendiente' ? '¡Estamos revisando!' : selectedPedido.status === 'aceptado' ? '¡Está en camino!' : 'Hubo un problema'}
-                              </h4>
-                           </div>
-                        </div>
-                      );
-                   })()}
-
-                   {/* Info Grid */}
-                   <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
-                         <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
-                         <div className="flex items-start gap-2">
-                            <MapPin className="w-4 h-4 text-primary mt-0.5" />
-                            <p className="text-xs font-bold text-on-surface leading-normal">{selectedPedido.address}</p>
-                         </div>
-                      </div>
-                      <div className="bg-primary rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-primary/20">
-                         <p className="text-[10px] text-white/50 font-black uppercase tracking-widest">Total Pagado</p>
-                         <p className="text-xl font-headline font-black text-white">{formatCurrency(selectedPedido.total)}</p>
-                      </div>
-                   </div>
-
-                   {/* Summary Section */}
-                   <section>
-                      <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Productos</h4>
-                      <div className="flex flex-col gap-2">
-                         {selectedPedido.items.map((item, i) => (
-                           <div key={i} className="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl border border-outline/5">
-                              <div className="flex-1 min-w-0 pr-4">
-                                 <p className="text-xs font-black text-on-surface truncate">{item.productName}</p>
-                                 <p className="text-[10px] font-bold text-secondary uppercase mt-0.5">{item.variantLabel || 'Porción Estándar'}</p>
-                                 {item.flavors?.length > 0 && <p className="text-[10px] text-primary font-bold italic mt-0.5">S: {item.flavors.join(' · ')}</p>}
-                              </div>
-                              <div className="text-right flex-shrink-0 font-headline">
-                                 <p className="text-xs font-black text-on-surface">{formatCurrency(item.unitPrice)}</p>
-                                 <p className="text-[10px] font-black text-secondary italic">x{item.quantity}</p>
-                              </div>
-                           </div>
-                         ))}
-                      </div>
-                   </section>
-
-                   {/* Chat Bubble Experience */}
-                   <section className="bg-surface-container/40 rounded-[2rem] p-5 border border-outline/10 h-[300px] flex flex-col shadow-inner">
-                      <div className="flex items-center gap-2 text-secondary mb-4">
-                         <MessageCircle className="w-5 h-5 opacity-40" />
-                         <span className="text-[10px] font-black uppercase tracking-widest">Soporte D'LI</span>
-                      </div>
-                      <div className="flex-1 overflow-y-auto flex flex-col gap-3 custom-scrollbar pr-1">
-                         {(selectedPedido.messages || []).length === 0 ? (
-                           <div className="h-full flex flex-col items-center justify-center text-center opacity-30 px-4">
-                              <MessageCircle className="w-8 h-8 mb-2" />
-                              <p className="text-[10px] font-bold">¿Deseas pedir algún sabor extra? Escríbenos aquí.</p>
-                           </div>
-                         ) : (
-                           selectedPedido.messages!.map((msg: any, i: number) => {
-                             const isMe = msg.from === profile?.uid;
-                             return (
-                               <div key={i} className={cn("flex flex-col gap-1 max-w-[85%]", isMe ? "self-end items-end" : "self-start")}>
-                                  <div className={cn("px-4 py-2.5 rounded-2xl text-[11px] font-bold shadow-sm leading-relaxed", 
-                                    isMe ? "bg-primary text-white rounded-br-none" : "bg-white text-on-surface border border-outline/10 rounded-bl-none"
-                                  )}>
-                                     {msg.text}
-                                  </div>
-                                  <div className="px-2 flex items-center gap-1 opacity-40">
-                                     <span className="text-[8px] font-black uppercase tracking-tighter">{msg.fromName === profile?.name ? 'Tú' : 'D´LI'}</span>
-                                     <span className="text-[8px]">•</span>
-                                     <span className="text-[8px] font-medium">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                  </div>
-                               </div>
-                             );
-                           })
-                         )}
-                      </div>
-                   </section>
-                </div>
-
-                {/* Sticky Modal Input Footer */}
-                <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-3">
-                   <div className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl flex items-center px-4 py-2 group focus-within:ring-2 ring-primary/20 transition-all font-headline">
-                      <input
-                        type="text"
-                        value={chatMessage}
-                        onChange={e => setChatMessage(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Escribe tu mensaje..."
-                        className="flex-1 bg-transparent text-xs font-bold py-2 outline-none placeholder:text-secondary/30"
-                      />
-                   </div>
-                   <button 
-                     onClick={handleSendMessage}
-                     disabled={!chatMessage.trim() || sending}
-                     className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-all disabled:opacity-30"
-                   >
-                     <Send className="w-5 h-5 mx-auto" />
-                   </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        <MovementDetailModal 
+          isOpen={!!selectedPedido}
+          onClose={() => setSelectedId(null)}
+          data={selectedPedido}
+          profile={profile}
+          chatMessage={chatMessage}
+          setChatMessage={setChatMessage}
+          onSendMessage={handleSendMessage}
+          isSending={sending}
+        />
 
         <BottomNav />
       </div>
