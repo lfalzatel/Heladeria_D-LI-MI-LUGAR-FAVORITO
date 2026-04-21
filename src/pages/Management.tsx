@@ -1280,13 +1280,21 @@ export default function Management() {
                 {/* Sale Detail Modal Overlay */}
                 <AnimatePresence>
                   {selectedSaleDetail && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 100 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 100 }}
-                      className="absolute inset-x-4 sm:inset-x-6 bottom-4 top-4 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgb(0,0,0,0.3)] p-6 z-[120] flex flex-col max-h-[90vh] my-auto"
-                    >
-                      <div className="flex-1 overflow-y-auto hide-scrollbar pb-4">
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedSaleDetail(null)}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto"
+                      />
+                      <motion.div 
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 100 }}
+                        className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgb(0,0,0,0.3)] p-6 flex flex-col h-[95vh] pointer-events-auto overflow-hidden"
+                      >
+                        <div className="flex-1 overflow-y-auto hide-scrollbar pb-4">
                         {/* Header UI */}
                         <div className="flex items-start gap-4 mb-6">
                           <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center flex-shrink-0 mt-1">
@@ -1338,9 +1346,9 @@ export default function Management() {
                                        {item.quantity}
                                     </div>
                                     <div className="flex flex-col min-w-0 pr-2">
-                                       <span className="font-bold text-sm text-on-surface truncate">{item.productName}</span>
+                                       <span className="font-bold text-sm text-on-surface leading-snug">{item.productName}</span>
                                        {item.variantLabel && (
-                                         <span className="text-[9px] font-bold text-secondary truncate">{item.variantLabel}</span>
+                                         <span className="text-[9px] font-bold text-secondary leading-tight">{item.variantLabel}</span>
                                        )}
                                     </div>
                                  </div>
@@ -1367,7 +1375,8 @@ export default function Management() {
                          </button>
                       </div>
                     </motion.div>
-                  )}
+                  </div>
+                )}
                 </AnimatePresence>
              </motion.div>
           </div>
