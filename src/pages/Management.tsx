@@ -630,10 +630,10 @@ export default function Management() {
                       ) : userSales.length === 0 ? (
                         <div className="text-center py-10 opacity-30 italic text-[10px] uppercase font-black">Sin actividad registrada</div>
                       ) : (
-                        userSales.slice(0, 10).map((sale) => (
+                        userSales.slice(0, 10).map((sale, index) => (
                            <HistoryMovementCard 
-                             key={sale.id}
-                             id={sale.id}
+                             key={sale.id ? `sale-${sale.id}` : `idx-${index}`}
+                             id={sale.id || `temp-${index}`}
                              title={sale.title}
                              total={sale.total || 0}
                              date={sale.hour}

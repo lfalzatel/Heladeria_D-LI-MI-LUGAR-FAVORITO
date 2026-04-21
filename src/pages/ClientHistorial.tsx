@@ -202,10 +202,10 @@ export default function ClientHistorial() {
                    <p className="uppercase font-black text-[10px] tracking-widest">No tienes pedidos en tu historial aún</p>
                 </div>
               ) : (
-                userSales.map((sale) => (
+                userSales.map((sale, index) => (
                   <HistoryMovementCard 
-                    key={sale.id}
-                    id={sale.id}
+                    key={sale.id ? `sale-${sale.id}` : `idx-${index}`}
+                    id={sale.id || `temp-${index}`}
                     title={sale.title}
                     total={sale.total || 0}
                     date={sale.hour}
