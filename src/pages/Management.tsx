@@ -324,9 +324,14 @@ export default function Management() {
     }
 
     setIsLoadingHistory(true);
+    
+    // Determine which field to query based on user role
+    // Clients filter by 'clienteId' (or 'userId'), Staff filter by 'soldBy'
+    const queryField = selectedUserForHistory.role === 'cliente' ? 'clienteId' : 'soldBy';
+    
     const salesQ = query(
       collection(db, 'sales'),
-      where('soldBy', '==', selectedUserForHistory.uid),
+      where(queryField, '==', selectedUserForHistory.uid),
       orderBy('timestamp', 'desc')
     );
 
@@ -1117,10 +1122,10 @@ export default function Management() {
                initial={{ scale: 0.9, opacity: 0, y: 20 }}
                animate={{ scale: 1, opacity: 1, y: 0 }}
                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-               className="relative w-full max-w-sm bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col"
+               className="relative w-full max-w-sm bg-white rounded-[3rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
              >
                 {/* Modal Header */}
-                <div className="bg-primary p-8 pb-12 relative flex flex-col items-center">
+                <div className="bg-primary p-8 pb-12 relative flex flex-col items-center flex-shrink-0">
                    <div className="absolute top-6 right-6">
                       <button onClick={() => setSelectedUserForHistory(null)} className="text-white opacity-80 hover:opacity-100 transition-opacity">
                          <X className="w-6 h-6" />
@@ -1146,8 +1151,8 @@ export default function Management() {
                    </div>
                 </div>
 
-                {/* Calendar Content */}
-                <div className="bg-surface-container-lowest flex-1 px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+                {/* Calendar Content - Scrollable area */}
+                <div className="bg-surface-container-lowest flex-1 px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)] overflow-y-auto custom-scrollbar">
                    <div className="flex items-center justify-between mb-8 px-2">
                       <div className="flex items-center gap-2">
                          <Calendar className="w-4 h-4 text-[#007D9A]" />
@@ -1211,7 +1216,7 @@ export default function Management() {
                                 </div>
                              </div>
                              <div className="text-right">
-                                <span className="text-sm font-black text-primary">{formatCurrency(sale.total)}</span>
+                                <span className="text-sm font-black text-primary">{formatCurrency(sale.total || 0)}</span>
                              </div>
                           </div>
                         ))
@@ -1226,39 +1231,90 @@ export default function Management() {
                 <AnimatePresence>
                   {selectedSaleDetail && (
                     <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute inset-x-6 bottom-6 bg-white rounded-[2.5rem] shadow-2xl p-6 border border-outline/20 z-[120]"
+                      initial={{ opacity: 0, y: 100 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 100 }}
+                      className="absolute inset-x-4 sm:inset-x-6 bottom-4 top-4 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgb(0,0,0,0.3)] p-6 z-[120] flex flex-col max-h-[90vh] my-auto"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="font-brand font-black text-primary uppercase text-sm">Detalles de Venta</h4>
-                          <p className="text-[10px] font-bold text-secondary">{selectedSaleDetail.tableName} • {selectedSaleDetail.hour}</p>
-                        </div>
-                        <button 
-                          onClick={() => setSelectedSaleDetail(null)}
-                          className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      
-                      <div className="space-y-3 max-h-48 overflow-y-auto mb-4 hide-scrollbar">
-                        {selectedSaleDetail.items?.map((item: any) => (
-                          <div key={item.id} className="flex justify-between items-center text-xs">
-                             <div className="flex flex-col">
-                                <span className="font-bold text-on-surface">{item.productName} x{item.quantity}</span>
-                                <span className="text-[8px] text-secondary/60 leading-none">{item.variantLabel}</span>
-                             </div>
-                             <span className="font-black text-primary">{formatCurrency(item.subtotal)}</span>
+                      <div className="flex-1 overflow-y-auto hide-scrollbar pb-4">
+                        {/* Header UI */}
+                        <div className="flex items-start gap-4 mb-6">
+                          <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center flex-shrink-0 mt-1">
+                            <ShoppingCart className="w-6 h-6 text-on-surface" />
                           </div>
-                        ))}
+                          <div className="flex-1">
+                             <h4 className="font-black text-xl text-on-surface leading-tight">Detalle del<br/>Movimiento</h4>
+                             <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-secondary/60">COMPRA REALIZADA</span>
+                                <span className="px-2 py-0.5 rounded-md bg-surface-container text-secondary text-[8px] font-black">
+                                  #{selectedSaleDetail?.id?.slice(0,6).toUpperCase() || 'REF-N/A'}
+                                </span>
+                             </div>
+                          </div>
+                          <button 
+                            onClick={() => setSelectedSaleDetail(null)}
+                            className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary hover:bg-surface-container-high transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Info Widgets */}
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                           <div className="bg-surface-container-lowest rounded-2xl p-4 flex flex-col justify-center border border-outline/10">
+                              <span className="text-[8px] font-black uppercase tracking-widest text-secondary/60 mb-1">Fecha</span>
+                              <span className="text-xs font-black text-on-surface leading-tight">
+                                 {selectedSaleDetail?.hour || 'Reciente'}
+                              </span>
+                           </div>
+                           <div className="bg-surface-container-lowest rounded-2xl p-4 flex flex-col justify-center border border-outline/10">
+                              <span className="text-[8px] font-black uppercase tracking-widest text-secondary/60 mb-1">Método</span>
+                              <span className="text-xs font-black text-on-surface leading-tight capitalize">
+                                 {selectedSaleDetail?.paymentMethod || 'Efectivo'}
+                              </span>
+                           </div>
+                        </div>
+                        
+                        {/* Products List */}
+                        <div className="mb-4">
+                          <h5 className="text-[9px] font-black text-secondary/60 uppercase tracking-[0.2em] mb-3">
+                             PRODUCTOS ({selectedSaleDetail?.items?.length || 0})
+                          </h5>
+                          <div className="space-y-2">
+                            {selectedSaleDetail?.items?.map((item: any, idx: number) => (
+                              <div key={item.id || idx} className="flex justify-between items-center p-3 sm:p-4 rounded-2xl border border-outline/20 bg-white shadow-sm">
+                                 <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center font-black text-xs flex-shrink-0">
+                                       {item.quantity}
+                                    </div>
+                                    <div className="flex flex-col min-w-0 pr-2">
+                                       <span className="font-bold text-sm text-on-surface truncate">{item.productName}</span>
+                                       {item.variantLabel && (
+                                         <span className="text-[9px] font-bold text-secondary truncate">{item.variantLabel}</span>
+                                       )}
+                                    </div>
+                                 </div>
+                                 <span className="font-black text-primary flex-shrink-0">
+                                    {formatCurrency(item.subtotal || 0)}
+                                  </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="pt-4 border-t border-dashed border-outline/30 flex justify-between items-center">
-                        <span className="text-xs font-black uppercase text-secondary">Total Cobrado</span>
-                        <span className="text-xl font-black text-on-surface">{formatCurrency(selectedSaleDetail.total)}</span>
+                      {/* Total and Close */}
+                      <div className="bg-surface-container-high rounded-[2rem] p-5 pt-6 pb-6 relative mt-auto border border-outline/10 flex-shrink-0">
+                         <div className="flex justify-between items-center mb-5">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-secondary">Monto Total</span>
+                            <span className="text-2xl font-black text-primary">{formatCurrency(selectedSaleDetail?.total || 0)}</span>
+                         </div>
+                         <button 
+                           onClick={() => setSelectedSaleDetail(null)}
+                           className="w-full py-4 rounded-xl bg-on-surface text-white hover:bg-on-surface/90 transition-all font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] shadow-xl"
+                         >
+                           Cerrar Detalle
+                         </button>
                       </div>
                     </motion.div>
                   )}
