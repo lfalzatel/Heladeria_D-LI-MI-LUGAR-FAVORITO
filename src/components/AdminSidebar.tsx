@@ -60,6 +60,7 @@ export default function AdminSidebar() {
     { to: '/admin/dashboard', icon: <Home className="w-5 h-5" />, label: isVendedor ? 'Mi Actividad' : 'Inicio', show: isAdmin || isVendedor },
     { to: '/pos',             icon: <MenuSquare className="w-5 h-5" />, label: 'Vender', show: isAdmin || isVendedor },
     { to: '/admin/management',icon: <Users className="w-5 h-5" />, label: 'Gestión', show: isAdmin },
+    { to: '/admin/inventory', icon: <ShoppingCart className="w-5 h-5" />, label: 'Menú & Stock', show: isAdmin },
     { to: '/admin/reports',   icon: <BarChart3 className="w-5 h-5" />, label: 'Reportes', show: isAdmin },
     { to: '/cliente/pedidos', icon: <ShoppingCart className="w-5 h-5" />, label: 'Pedidos', show: isAdmin || isVendedor },
   ].filter(item => item.show);

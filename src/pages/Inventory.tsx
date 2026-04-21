@@ -158,10 +158,14 @@ export default function Inventory() {
               <div>
                 <div className="flex justify-between items-start mb-4">
                    <div className={cn(
-                     "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                     "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors overflow-hidden",
                      product.isActive ? "bg-primary/5 text-primary" : "bg-surface-container text-secondary/40"
                    )}>
-                      <IceCream className="w-6 h-6" />
+                      {product.imageUrl ? (
+                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                      ) : (
+                         <IceCream className="w-6 h-6" />
+                      )}
                    </div>
                    <div className="flex gap-2">
                       <button 

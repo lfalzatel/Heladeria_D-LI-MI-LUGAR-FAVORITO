@@ -5,7 +5,7 @@ import { auth } from '../lib/firebase';
 import { 
   LogOut, User, ChevronDown, Share2, Download, 
   Sun, Moon, Monitor, HelpCircle, Bell, BellOff,
-  Settings, ChevronRight
+  Settings, ChevronRight, Package
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -271,12 +271,20 @@ export default function UserMenu() {
                 </div>
               </button>
               {(profile?.role === 'admin' || profile?.role === 'propietario') && (
-                <MenuItem
-                  icon={<Settings className="w-4 h-4" />}
-                  label="Configuración"
-                  sublabel="Ajustes del sistema"
-                  onClick={() => { setIsOpen(false); toast.info('Configuración del sistema próximamente'); }}
-                />
+                <>
+                  <MenuItem
+                    icon={<Package className="w-4 h-4" />}
+                    label="Catálogo e Inventario"
+                    sublabel="Gestionar menú y productos"
+                    onClick={() => { setIsOpen(false); navigate('/admin/inventory'); }}
+                  />
+                  <MenuItem
+                    icon={<Settings className="w-4 h-4" />}
+                    label="Configuración"
+                    sublabel="Ajustes del sistema"
+                    onClick={() => { setIsOpen(false); toast.info('Configuración del sistema próximamente'); }}
+                  />
+                </>
               )}
             </div>
 
