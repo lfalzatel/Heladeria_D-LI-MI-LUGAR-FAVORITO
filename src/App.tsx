@@ -18,9 +18,7 @@ import Profile from './pages/Profile';
 import ClientCompras from './pages/ClientCompras';
 import ClientPedidos from './pages/ClientPedidos';
 
-import { collection, getDocs, limit, query } from 'firebase/firestore';
-import { db } from './lib/firebase';
-import { seedDatabase } from './services/seedService';
+
 
 export default function App() {
   const { initialize, user, profile, isLoading: authLoading } = useAuthStore();
@@ -38,26 +36,7 @@ export default function App() {
     }
   }, [user, initFlavors]);
 
-  // Automatic seeding if database is empty - Triggered after auth
-  useEffect(() => {
-    const checkAndSeed = async () => {
-      // Only attempt if user is signed in and we are NOT loading auth anymore
-      if (!authLoading && user) {
-        try {
-          const q = query(collection(db, 'products'), limit(1));
-          const snapshot = await getDocs(q);
-          if (snapshot.empty) {
-            console.log("Database empty, seeding real data from documents...");
-            await seedDatabase();
-          }
-        } catch (error) {
-          console.error("Auto-seed error:", error);
-        }
-      }
-    };
-    
-    checkAndSeed();
-  }, [authLoading, user]);
+
 
   // Handle splash completion
   useEffect(() => {

@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import BottomNav from '../components/BottomNav';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import AdminSidebar from '../components/AdminSidebar';
-
+import ProductFormModal from '../components/ProductFormModal';
 import { useAuthStore } from '../stores/useAuthStore';
 
 export default function Inventory() {
@@ -30,6 +30,8 @@ export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -58,6 +60,25 @@ export default function Inventory() {
     }
   };
 
+  const handleSaveProduct = async (productData: Partial<Product>) => {
+    if (productToEdit) {
+      await updateDoc(doc(db, 'products', productToEdit.id), {
+        ...productData,
+        updatedAt: new Date() // using client date to avoid need for serverTimestamp import clash if not imported
+      });
+      toast.success('Producto actualizado exitosamente');
+    } else {
+      await import('firebase/firestore').then(({ addDoc, serverTimestamp }) => {
+        addDoc(collection(db, 'products'), {
+          ...productData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+      toast.success('Producto creado y añadido al catálogo');
+    }
+  };
+
   const categories = [
     { id: 'all', label: 'Todos', icon: <MenuSquare className="w-4 h-4" /> },
     { id: 'helados', label: 'Helados', icon: <IceCream className="w-4 h-4" /> },
@@ -80,6 +101,17 @@ export default function Inventory() {
         <PageTitle title="Inventario del Menú" subtitle="Catálogo de Venta al Público" />
 
       <main className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-6 sm:gap-8">
+        {/* Floating Add Product Button */}
+        <button 
+          onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
+          className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all"
+        >
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <span className="text-xl leading-none font-light">+</span>
+          </div>
+          Añadir Nuevo Producto
+        </button>
+
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-4 rounded-[2rem] border border-outline/50 shadow-sm">
            <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar">
@@ -170,10 +202,13 @@ export default function Inventory() {
                  <div className="flex flex-col">
                     <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado</span>
                     <span className={cn("text-[10px] font-bold", product.isActive ? "text-success" : "text-slate-500")}>
-                       {product.isActive ? '• Visible en POS' : '• Oculto'}
+                       {product.isActive ? '• Visible' : '• Oculto'}
                     </span>
                  </div>
-                 <button className="flex items-center gap-2 px-5 py-2.5 bg-surface-container-high rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+                 <button 
+                    onClick={() => { setProductToEdit(product); setIsProductModalOpen(true); }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-surface-container-high rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all cursor-pointer"
+                 >
                     <Edit3 className="w-3.5 h-3.5" />
                     Editar
                  </button>
@@ -189,6 +224,15 @@ export default function Inventory() {
           </div>
         )}
       </main>
+
+      {isProductModalOpen && (
+        <ProductFormModal 
+          isOpen={isProductModalOpen} 
+          onClose={() => setIsProductModalOpen(false)} 
+          productToEdit={productToEdit}
+          onSave={handleSaveProduct}
+        />
+      )}
 
       <BottomNav />
       </div>

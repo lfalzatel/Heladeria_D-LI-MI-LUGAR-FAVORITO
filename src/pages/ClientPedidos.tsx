@@ -4,6 +4,7 @@ import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { 
   ShoppingCart, X, Check, XCircle, MessageCircle, 
   Calendar, Clock, Package, ChevronDown, ChevronUp,
@@ -246,7 +247,7 @@ export default function ClientPedidos() {
                     <motion.button
                       layout
                       key={pedido.id}
-                      onClick={() => setSelectedPedido(pedido)}
+                      onClick={() => setSelectedId(pedido.id)}
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                       className="w-full text-left bg-white rounded-[2.5rem] p-6 border border-outline/10 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group relative overflow-hidden"
                     >
@@ -296,7 +297,7 @@ export default function ClientPedidos() {
             <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={() => setSelectedPedido(null)}
+                onClick={() => setSelectedId(null)}
                 className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
               />
               <motion.div
@@ -317,7 +318,7 @@ export default function ClientPedidos() {
                         <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-1">Ref: #{selectedPedido.id.slice(-6).toUpperCase()}</p>
                      </div>
                   </div>
-                  <button onClick={() => setSelectedPedido(null)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
+                  <button onClick={() => setSelectedId(null)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
                     <X className="w-5 h-5 text-secondary" />
                   </button>
                 </div>
@@ -389,7 +390,7 @@ export default function ClientPedidos() {
                               <p className="text-[10px] font-bold">¿Deseas pedir algún sabor extra? Escríbenos aquí.</p>
                            </div>
                          ) : (
-                           selectedPedido.messages.map((msg: any, i: number) => {
+                           selectedPedido.messages!.map((msg: any, i: number) => {
                              const isMe = msg.from === profile?.uid;
                              return (
                                <div key={i} className={cn("flex flex-col gap-1 max-w-[85%]", isMe ? "self-end items-end" : "self-start")}>

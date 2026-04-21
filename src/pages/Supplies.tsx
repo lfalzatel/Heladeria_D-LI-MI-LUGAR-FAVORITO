@@ -13,6 +13,8 @@ import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
+import SupplyFormModal from '../components/SupplyFormModal';
+import { Edit3, Layers } from 'lucide-react';
 
 interface Supply {
   id: string;
@@ -83,6 +85,10 @@ export default function Supplies() {
   const [selectedProvider, setSelectedProvider] = useState('');
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
   const [supplySearch, setSupplySearch] = useState('');
+  
+  const [activeTab, setActiveTab] = useState<'compras' | 'catalogo'>('compras');
+  const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
+  const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -150,6 +156,16 @@ export default function Supplies() {
     }
   };
 
+  const handleSaveSupply = async (data: Partial<Supply>) => {
+    if (supplyToEdit) {
+      await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
+      toast.success('Insumo actualizado exitosamente');
+    } else {
+      await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      toast.success('Nuevo insumo registrado en el catálogo base');
+    }
+  };
+
   const formatDate = (ts: any) => {
     const d = toDate(ts);
     if (!d) return '';
@@ -168,8 +184,27 @@ export default function Supplies() {
         <PageTitle title="Insumos" subtitle="Control de Abastecimiento" />
 
       <main className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5">
-        {/* Dashboard stats */}
-        <section className="grid grid-cols-3 gap-3">
+        
+        {/* Tab Switcher */}
+        <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner">
+           <button 
+             onClick={() => setActiveTab('compras')}
+             className={cn("flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'compras' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
+           >
+             Compras & Historial
+           </button>
+           <button 
+             onClick={() => setActiveTab('catalogo')}
+             className={cn("flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'catalogo' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
+           >
+             Catálogo Base
+           </button>
+        </div>
+
+        {activeTab === 'compras' ? (
+          <>
+            {/* Dashboard stats */}
+            <section className="grid grid-cols-3 gap-3">
           <StatCard icon={<Package className="w-5 h-5 text-primary" />} label="Insumos" value={totalSupplies.toString()} accent="primary" />
           <StatCard icon={<AlertTriangle className="w-5 h-5 text-orange-500" />} label="Bajo Stock" value={lowStockCount.toString()} accent="orange" />
           <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Compras" value={completedInPeriod.toString()} accent="slate" />
@@ -278,7 +313,67 @@ export default function Supplies() {
             </div>
           ))}
         </div>
+        </>) : (
+          <>
+            <button 
+              onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+              className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all mb-4"
+            >
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <span className="text-xl leading-none font-light">+</span>
+              </div>
+              Añadir Insumo Base
+            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {supplies.map((s) => {
+                 const isLow = s.currentStock <= s.minLimit;
+                 return (
+                   <div key={s.id} className="bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-colors hover:border-primary/30">
+                      <div className="flex justify-between items-start mb-3">
+                         <div className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
+                            {s.category || 'Varios'}
+                         </div>
+                         <button 
+                            onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                            className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all"
+                         >
+                            <Edit3 className="w-4 h-4" />
+                         </button>
+                      </div>
+                      <h4 className="font-bold text-lg text-on-surface leading-tight mb-4">{s.name}</h4>
+                      <div className="flex border-t border-outline/10 pt-4">
+                         <div className="flex-1">
+                            <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                            <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>
+                               {s.currentStock} <span className="text-sm font-bold opacity-60 ml-0.5">{s.unit || s.purchaseUnit}</span>
+                            </p>
+                         </div>
+                         <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                            <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                            <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? s.stockMinimum ?? 0} {s.unit}</p>
+                         </div>
+                      </div>
+                   </div>
+                 );
+               })}
+            </div>
+            {supplies.length === 0 && (
+              <div className="py-20 flex flex-col items-center opacity-30 text-center">
+                 <Layers className="w-16 h-16 mb-4" />
+                 <p className="font-bold">No hay insumos base creados.</p>
+              </div>
+            )}
+          </>
+        )}
       </main>
+
+      <SupplyFormModal
+        isOpen={isSupplyModalOpen}
+        onClose={() => setIsSupplyModalOpen(false)}
+        supplyToEdit={supplyToEdit}
+        onSave={handleSaveSupply}
+      />
 
       {/* Purchase Modal — Rediseñado */}
       <AnimatePresence>

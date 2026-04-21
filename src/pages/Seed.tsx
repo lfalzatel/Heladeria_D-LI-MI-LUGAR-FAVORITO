@@ -67,7 +67,7 @@ const PRODUCTS = [
   { name: "Adición Chips de Chocolate", category: "adiciones", basePrice: 3000, isActive: true },
   { name: "Adición Salsa", category: "adiciones", basePrice: 1000, isActive: true },
   { name: "Adición Barquillo", category: "adiciones", basePrice: 500, isActive: true },
-  { name: "Adición Cono/Cucurucho", category: "adiciones", basePrice: 1000, isActive: true }
+  { name: "Adición Cono o Cucurucho", category: "adiciones", basePrice: 1000, isActive: true }
 ];
 
 const SUPPLIES = [

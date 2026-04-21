@@ -11,7 +11,17 @@
 
 **Tech Stack:** Next.js 16 + React 19 + TypeScript + Firebase (Firestore + Auth + Storage) + Zustand + Tailwind CSS 4
 
-**Paleta de colores:** Rosa fucsia `#E91E8C`, Rosa claro `#FFB6C1`, Blanco `#FFFFFF`, Gris oscuro `#2D2D2D`
+**Paleta de colores:**
+- **Primario:** `#E91E8C` (Rosa Fucsia D'LI - Botones, realces, estados activos)
+- **Contenedor Primario:** `#FFB6C1` (Rosa Claro - Fondos suaves, hover states)
+- **Superficie:** `#FFF0F5` (Rosa Lavanda - Fondo general de la app)
+- **Contraste (On Surface):** `#2D2D2D` (Gris Oscuro - Títulos y cuerpos de texto)
+- **Énfasis (Outline):** `#F06292` (Rosa Medio - Bordes y separadores)
+
+**Tipografía:**
+- **Headline:** `Outfit` (Para títulos y métricas)
+- **Body:** `Inter` (Para textos generales y datos)
+- **Brand:** `Playball` (Para el logo "D" y eslóganes)
 
 ---
 
@@ -44,19 +54,58 @@
 
 ## 1. 🔐 AUTENTICACIÓN — `/login`
 
-- Email + contraseña (Firebase Auth)
-- Sin registro público (solo admin puede crear usuarios)
-- Splash screen con barra de progreso animada en rosa al cargar
-- Al autenticar, sincroniza `role` desde Firestore (`users/{uid}.role`)
-- Redirección automática:
-  - `admin` / `propietario` → `/admin/dashboard`
-  - `vendedor` → `/pos`
-- RoleGuard en todas las rutas protegidas
-- Middleware Next.js valida cookie `fb-session` en cada request
+- Email + cuenta de Google (Firebase Auth + Google OAuth)
+- Splash screen premium:
+  - Fondo orgánico con blur.
+  - Logo "D" central rotado (3deg) con sombra proyectada.
+  - Barra de progreso fluida (70% en carga, 100% al finalizar).
+  - Tagline animado: "Mi Lugar Favorito" (Playball italic).
+- Sincronización automática de `role` desde Firestore.
+- Redirección automática por rol.
+- RoleGuard y persistencia de sesión.
 
 ---
 
-## 2. 🍦 POS — SISTEMA DE PEDIDOS — `/pos`
+## 2. ✨ EXPERIENCIA DE USUARIO Y ANIMACIONES
+
+La aplicación utiliza un sistema de diseño "Premium & Fluid" basado en micro-animaciones para mejorar la interacción.
+
+### 2.1 Animaciones Globales (CSS + Motion/React)
+- **Nav Item Active Pop:** Al seleccionar un ítem en el menú inferior, este realiza un efecto de escala (0.8 -> 1.2 -> 1.1) con `cubic-bezier` y el icono comienza un `micro-bounce` infinito.
+- **Glassmorphism:** Paneles con fondo `rgba(255, 255, 255, 0.7)`, `backdrop-blur(12px)` y bordes semi-transparentes.
+- **Progress Loading:** Barras de estado con gradientes animados `translateX`.
+- **Modales:** Transiciones de escala y opacidad con efecto "Spring" (stiffness: 300, damping: 25).
+
+### 2.2 Componentes Identitarios
+
+#### AppHeader (Header Unificado)
+- **Sticky Glass:** Se mantiene fijo al scroll con efecto de desenfoque.
+- **Logo Mobile:** Cubo rosa rotado con la letra "D" en fuente Playball blanca.
+- **Buscador (Desktop):** Input minimalista en `surface-container` con icono de búsqueda.
+- **Campana de Notificaciones:** Animada para llamar la atención sobre nuevos pedidos o alertas.
+
+#### Cápsula de Perfil (Trigger del Menú)
+- **Trigger Compacto:** Píldora con borde `white/20` y fondo glass.
+- **Avatar:** Imagen circular con borde fucsia y un "punto de rol" (verde para admin, púrpura propietario, azul vendedor, rosa cliente).
+- **Nombre:** Muestra solo el primer nombre en fuente `black/extra-bold`.
+- **Chevron:** Indicador de apertura con rotación de 180°.
+
+#### UserMenu (Menú Desplegable)
+- **Diseño Card:** Aparece con una animación de rebote desde el header.
+- **Secciones:**
+  - **Card de Usuario:** Nombre completo, email y badge de rol con diseño envolvente.
+  - **Ajustes:** Toggle de notificaciones tipo "pill" y acceso a perfil.
+  - **Opciones de App:** Botones para instalar PWA y compartir por WhatsApp.
+  - **Theme Switcher:** Selector de 3 botones (Claro/Oscuro/Sistema) con iconos integrados.
+  - **Cerrar Sesión:** Estilo "danger" con fondo rosa pastel al hover.
+
+#### BottomNav (Navegación Flotante)
+- **Layout:** Barra flotante (96% ancho) con bordes ultra-redondeados.
+- **Estados:** Los ítems activos se resaltan con un fondo fucsia y el texto en blanco, activando la animación `active-pop`.
+
+---
+
+## 3. 🍦 POS — SISTEMA DE PEDIDOS — `/pos`
 
 Esta es la pantalla principal para vendedores. El flujo de toma de pedido es **guiado en pasos**, ya que los productos de la heladería requieren personalización (sabores, tamaños, adiciones).
 
@@ -589,41 +638,39 @@ showSplash(), hideSplash()
 ## 6. 🎨 DISEÑO Y ESTILOS
 
 ### Identidad visual D'LI
-- **Logo:** Tipografía cursiva para "Mi Lugar Favorito", bold para "D`LI"
-- **Colores principales:**
-  - Fucsia: `#E91E8C` (botones primarios, headers, badges)
-  - Rosa claro: `#FFB6C1` (fondos de cards, fondos de secciones)
-  - Rosa muy claro: `#FFF0F5` (fondos de página)
-  - Blanco: `#FFFFFF`
-  - Gris oscuro: `#2D2D2D` (textos)
-- **Gradiente característico:** `from-pink-500 to-rose-400`
-- **Elementos decorativos:** Manchas orgánicas en esquinas (como en el menú físico)
+- **Logo:** Letra "D" blanca en Playball sobre fondo fucsia rotado.
+- **Gradiente:** `from-primary to-primary-container` (Fucsia a Rosa claro).
+- **Fondos:** Uso de "Organic Blobs" y paneles de cristal (glass-panel) para separar contenido.
+- **Sombras:** `shadow-2xl shadow-black/12` para modales y menús flotantes.
 
-### Componentes clave de UI
-
-**ProductCard:** Card con imagen, nombre, precio desde, badge de categoría — animación scale al hover
-
-**OrderConfigModal:** Modal de pantalla completa en mobile, modal centrado en desktop. Navegación por pasos con barra de progreso y botón "Volver"
-
-**FlavorSelector:** Grid de chips con colores pastel, seleccionados = fucsia, no disponibles = gris tachado
-
-**CartSummary:** Panel deslizable desde la derecha en mobile, panel fijo en desktop
-
-**TableSelector:** 4 botones grandes (Mesa 1, Mesa 2, Mesa 3, 🥡 Para llevar) con indicador de color por estado
-
-**CheckoutModal:** Resumen + selector de método de pago + campo de efectivo con cambio en tiempo real
-
-**StatsCard:** Cards con gradiente rosa, cifra grande, icono y comparativa
-
-### Responsividad
-- Mobile-first (vendedores usan celular o tablet)
-- Breakpoints: sm(640), md(768), lg(1024)
-- En tablet/desktop el catálogo y el carrito se muestran lado a lado
-- En mobile el carrito es un drawer deslizante desde abajo
+### Componentes de UI Premium
+- **HeaderSearch:** Input estilizado que aparece solo en pantallas medianas.
+- **PageTitle:** Título grande en Outfit Bold con subtítulo en mayúsculas espaciadas.
+- **MetricCards:** Tarjetas con iconos en contenedores de color suave, tendencia histórica y fuente de métrica extra-negrita.
 
 ---
 
-## 7. 📊 TRANSACCIONES ATÓMICAS FIRESTORE
+## 7. 💬 CHAT DE PEDIDOS Y SEGUIMIENTO
+
+La app incluye una experiencia de comunicación en tiempo real para cada pedido.
+
+### 7.1 Interfaz de Chat (ClientPedidos Interface)
+- **Burbujas de Chat:** Diseño tipo "Messenger" con bordes asimétricos (esquinas redondeadas excepto la de origen).
+- **Colores del Chat:** 
+  - Mensajes del usuario: Fondo fucsia con texto blanco.
+  - Mensajes del soporte: Fondo blanco con texto gris oscuro y borde fino.
+- **Metadatos:** Nombre del emisor y hora exacta debajo de cada burbuja.
+- **Input Footer:** Campo de texto fijado al fondo del modal con botón de envío animado (icono `Send`).
+
+### 7.2 Detalle de Pedido Premium
+- **Modal 90vh:** El detalle se abre en un modal tipo "sheet" que ocupa casi toda la altura.
+- **Estatus Dinámico:** Tarjeta superior que cambia de color y mensaje según el estado (Pendiente: "¡Estamos revisando!", Aceptado: "¡Está en camino!").
+- **Mapa de Entrega:** Badge con icono de MapPin y dirección en negrita.
+- **Desglose de Productos:** Cards internas con detalles de sabores (formato itálico con puntos separadores) y cantidades.
+
+---
+
+## 8. 💾 ESTRUCTURA FIRESTORE
 
 ### Proceso de Venta Exitosa
 ```
@@ -872,54 +919,55 @@ Todos con `isAvailable: true` al inicio.
 ## 13. ✅ CHECKLIST DE FUNCIONALIDADES
 
 ### POS / Ventas
-- [ ] Selector de 4 destinos (Mesa 1, 2, 3, Para llevar)
-- [ ] Catálogo por categorías con tabs
-- [ ] OrderConfigModal con flujo guiado por pasos
-- [ ] Selección de variante (sencillo/doble/triple)
-- [ ] Selección de sabores de helado (igual al número de bolas)
-- [ ] Selección de fruta para salpicones/obleas
-- [ ] Adición de extras
-- [ ] Carrito por mesa independiente
-- [ ] CheckoutModal con métodos de pago
-- [ ] Cálculo automático de cambio (efectivo)
-- [ ] Transacción atómica Firestore al vender
-- [ ] Comprobante de venta en pantalla
-- [ ] FCM al admin al vender
+- [x] Selector de 4 destinos (Mesa 1, 2, 3, Para llevar)
+- [x] Catálogo por categorías con tabs
+- [x] OrderConfigModal con flujo guiado por pasos
+- [x] Selección de variante (sencillo/doble/triple)
+- [x] Selección de sabores de helado (igual al número de bolas)
+- [x] Selección de fruta para salpicones/obleas
+- [x] Adición de extras
+- [x] Carrito por mesa independiente
+- [x] CheckoutModal con métodos de pago
+- [x] Cálculo automático de cambio (efectivo)
+- [x] Transacción atómica Firestore al vender
+- [x] Comprobante de venta en pantalla
+- [x] FCM al admin al vender
 
 ### Admin — Dashboard
-- [ ] Stats de ventas (hoy/semana/mes)
-- [ ] Gráfico de tendencias (Recharts)
-- [ ] Últimas ventas
-- [ ] Estado de mesas en tiempo real
-- [ ] Alertas de stock crítico
+- [x] Stats de ventas (hoy/semana/mes)
+- [x] Gráfico de tendencias (Recharts)
+- [x] Últimas ventas
+- [x] Estado de mesas en tiempo real
+- [x] Alertas de stock crítico
 
 ### Admin — Inventario del Menú
-- [ ] Activar/desactivar productos
-- [ ] Editar precios
-- [ ] Gestión de disponibilidad de sabores Mimo's
-- [ ] Upload de imagen por producto
+- [x] Activar/desactivar productos
+- [x] Editar precios
+- [x] Gestión de disponibilidad de sabores Mimo's
+- [x] Upload de imagen por producto
 
 ### Admin — Insumos
-- [ ] Catálogo de insumos con ficha completa
-- [ ] Campo de rendimiento por unidad (opcional)
-- [ ] Registro de compras a proveedor
-- [ ] Actualización automática de stock al comprar
-- [ ] Alertas de stock mínimo
+- [x] Catálogo de insumos con ficha completa
+- [x] Campo de rendimiento por unidad (opcional)
+- [x] Registro de compras a proveedor
+- [x] Actualización automática de stock al comprar
+- [x] Alertas de stock mínimo
 
 ### Admin — Reportes
-- [ ] Filtros: Hoy / Semana / Mes / Rango
-- [ ] Reporte de ventas (tabla + gráfico)
-- [ ] Reporte de compras de insumos
-- [ ] Resumen P&G estimado (ingresos − gastos)
-- [ ] Exportar CSV (ventas y compras)
-- [ ] Exportar PDF con logo D'LI
+- [x] Filtros: Hoy / Semana / Mes / Rango
+- [x] Reporte de ventas (tabla + gráfico)
+- [x] Reporte de compras de insumos
+- [x] Resumen P&G estimado (ingresos − gastos)
+- [x] Exportar CSV (ventas y compras)
+- [x] Exportar PDF con logo D'LI
 
 ### PWA & UX
-- [ ] Splash screen rosa con logo D'LI
-- [ ] Instalable como PWA
-- [ ] Funciona offline (ver menú y carrito, sync al reconectar)
-- [ ] Notificaciones push FCM
-- [ ] Responsive mobile-first
+- [x] Splash screen premium rosa con logo D'LI
+- [x] Instalable como PWA
+- [x] Funciona offline (ver menú y carrito, sync al reconectar)
+- [x] Notificaciones push FCM
+- [x] Responsive mobile-first
+- [x] Chat de pedidos en tiempo real
 
 ---
 
@@ -935,10 +983,10 @@ Todos con `isAvailable: true` al inicio.
 | Rendimiento de insumos | No aplica | Configurable (tina=80 bolas) |
 | Sabores como entidad propia | No aplica | Colección `icecreamFlavors` |
 | Paleta de colores | Verde esmeralda | Rosa fucsia D'LI |
-| Chat por pedido | Sí | No aplica |
+| Chat por pedido | No aplica | Incluido (Soporte en tiempo real) |
 
 ---
 
-*Documento generado: Abril 18, 2026*
-*Versión: 1.0 — Especificación completa lista para desarrollo*
+*Documento actualizado: Abril 21, 2026*
+*Versión: 2.0 — Especificación detallada con UI/UX Premium y Chat*
 *Referencia base: VentaÁgil APP_COMPLETE_SPECIFICATION.md*

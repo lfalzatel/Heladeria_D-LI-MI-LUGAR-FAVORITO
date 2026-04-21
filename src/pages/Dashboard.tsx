@@ -287,7 +287,7 @@ export default function Dashboard() {
                        ))}
                     </div>
 
-                    <Link to="/admin/supplies" className="w-full">
+                    <Link to="/admin/management?tab=insumos" className="w-full">
                       <button className="w-full mt-6 py-3 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all">
                          Gestionar Insumos
                       </button>

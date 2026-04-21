@@ -41,6 +41,7 @@ import {
   Download,
   Save,
   Edit3,
+  Layers,
   CreditCard,
   Phone,
   MapPin
@@ -53,6 +54,7 @@ import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
+import SupplyFormModal from '../components/SupplyFormModal';
 
 interface UserProfile {
   uid: string;
@@ -89,7 +91,7 @@ export default function Management() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
-  const initialTab = (queryParams.get('tab') as 'personas' | 'insumos') || 'personas';
+  const initialTab = (queryParams.get('tab') as 'personas' | 'insumos') || 'insumos';
   
   const [activeTab, setActiveTab] = useState<'personas' | 'insumos'>(initialTab);
   const { profile: currentUser } = useAuthStore();
@@ -102,9 +104,14 @@ export default function Management() {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [supplySearch, setSupplySearch] = useState('');
   const [selectedForPurchase, setSelectedForPurchase] = useState<string[]>([]);
+  const [isSupplySelectionModalOpen, setIsSupplySelectionModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
   const [purchasePeriod, setPurchasePeriod] = useState<'Hoy' | 'Semana' | 'Mes'>('Hoy');
+
+  const [insumosSubTab, setInsumosSubTab] = useState<'compras' | 'catalogo'>('compras');
+  const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
+  const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
 
   // Update URL when tab changes
   useEffect(() => {
@@ -170,6 +177,7 @@ export default function Management() {
     });
 
     setPurchaseItems(selectedItems);
+    setIsSupplySelectionModalOpen(false);
     setIsPurchaseModalOpen(true);
   };
 
@@ -249,6 +257,16 @@ export default function Management() {
     } catch (error) {
       console.error(error);
       toast.error('Error al registrar la compra');
+    }
+  };
+
+  const handleSaveSupply = async (data: Partial<Supply>) => {
+    if (supplyToEdit) {
+      await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
+      toast.success('Insumo actualizado exitosamente');
+    } else {
+      await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      toast.success('Nuevo insumo registrado en el catálogo base');
     }
   };
 
@@ -335,16 +353,6 @@ export default function Management() {
         {/* Modern Tabs */}
         <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-md mx-auto shadow-inner border border-outline/30">
           <button
-            onClick={() => setActiveTab('personas')}
-            className={cn(
-              "flex-1 py-3 px-4 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2",
-              activeTab === 'personas' ? "bg-white text-primary shadow-md" : "text-secondary hover:text-on-surface"
-            )}
-          >
-            <UsersIcon className="w-4 h-4" />
-            Personas
-          </button>
-          <button
             onClick={() => setActiveTab('insumos')}
             className={cn(
               "flex-1 py-3 px-4 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2",
@@ -353,6 +361,16 @@ export default function Management() {
           >
             <Package className="w-4 h-4" />
             Compras
+          </button>
+          <button
+            onClick={() => setActiveTab('personas')}
+            className={cn(
+              "flex-1 py-3 px-4 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2",
+              activeTab === 'personas' ? "bg-white text-primary shadow-md" : "text-secondary hover:text-on-surface"
+            )}
+          >
+            <UsersIcon className="w-4 h-4" />
+            Personas
           </button>
         </div>
 
@@ -456,8 +474,26 @@ export default function Management() {
               exit={{ opacity: 0, x: -10 }}
               className="flex flex-col gap-8 pb-10"
             >
+              {/* Insert the subtab switcher right here */}
+              <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner max-w-sm mx-auto w-full mb-2">
+                 <button 
+                   onClick={() => setInsumosSubTab('compras')}
+                   className={cn("flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", insumosSubTab === 'compras' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
+                 >
+                   Compras & Historial
+                 </button>
+                 <button 
+                   onClick={() => setInsumosSubTab('catalogo')}
+                   className={cn("flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", insumosSubTab === 'catalogo' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
+                 >
+                   Catálogo Base
+                 </button>
+              </div>
+
+              {insumosSubTab === 'compras' ? (
+                 <>
               {/* Header section with Stats */}
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -470,8 +506,42 @@ export default function Management() {
                    </div>
                 </div>
 
+                {/* Controls */}
+                <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
+                  {['Hoy', 'Semana', 'Mes'].map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setPurchasePeriod(p as any)}
+                      className={cn("px-4 py-3 sm:py-1.5 rounded-lg transition-all flex-1 sm:flex-none font-bold", purchasePeriod === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-3">
+                   <button className="flex-1 flex items-center justify-between px-6 py-4 bg-white rounded-3xl border border-outline/50 shadow-sm font-bold text-sm text-secondary">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 opacity-40" />
+                        <span>Calendario</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 opacity-40" />
+                   </button>
+                   <button className="w-14 h-14 bg-on-surface text-white rounded-2xl flex items-center justify-center shadow-xl shadow-black/20 hover:scale-105 active:scale-95 transition-all">
+                      <Download className="w-6 h-6" />
+                   </button>
+                </div>
+
+                <button 
+                  onClick={() => setIsSupplySelectionModalOpen(true)}
+                  className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-98 transition-all"
+                >
+                   <Plus className="w-5 h-5 stroke-[3]" />
+                   Registrar Compra
+                </button>
+
                 {/* Info Cards Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                    <InfoCard 
                      icon={<Wallet className="w-5 h-5 text-emerald-500" />} 
                      label="Inversión Hoy" 
@@ -497,40 +567,6 @@ export default function Management() {
                      sub="Costo promedio de abastecimiento"
                    />
                 </div>
-
-                {/* Controls */}
-                <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
-                  {['Hoy', 'Semana', 'Mes'].map(p => (
-                    <button
-                      key={p}
-                      onClick={() => setPurchasePeriod(p as any)}
-                      className={cn("px-4 py-2 sm:py-1.5 rounded-lg transition-all flex-1 sm:flex-none", purchasePeriod === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-3">
-                   <button className="flex-1 flex items-center justify-between px-6 py-4 bg-white rounded-3xl border border-outline/50 shadow-sm font-bold text-sm text-secondary">
-                      <div className="flex items-center gap-3">
-                        <Calendar className="w-5 h-5 opacity-40" />
-                        <span>Calendario</span>
-                      </div>
-                      <ChevronDown className="w-4 h-4 opacity-40" />
-                   </button>
-                   <button className="w-14 h-14 bg-on-surface text-white rounded-2xl flex items-center justify-center shadow-xl shadow-black/20 hover:scale-105 active:scale-95 transition-all">
-                      <Download className="w-6 h-6" />
-                   </button>
-                </div>
-
-                <button 
-                  onClick={handleOpenPurchaseModal}
-                  className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-98 transition-all"
-                >
-                   <Plus className="w-5 h-5 stroke-[3]" />
-                   Registrar Compra
-                </button>
               </div>
 
               {/* Trend Chart Mockup */}
@@ -560,79 +596,190 @@ export default function Management() {
                  </div>
               </div>
 
-              {/* Suggested Purchases */}
-              <div className="flex flex-col gap-4">
-                 <div className="flex items-center justify-between px-2">
-                    <h3 className="font-bold text-on-surface uppercase tracking-tight text-lg">Insumos sugeridos</h3>
-                    <div className="flex items-center gap-2 text-primary font-bold text-xs">
-                       <TrendingDown className="w-4 h-4" />
-                       Bajo Stock (&lt;3)
+                 </>
+              ) : (
+                 <>
+                    <button 
+                      onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                      className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all mb-4"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                        <span className="text-xl leading-none font-light">+</span>
+                      </div>
+                      Añadir Insumo Base
+                    </button>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                       {supplies.map((s) => {
+                         const isLow = s.currentStock <= s.minLimit;
+                         return (
+                           <div key={s.id} className="bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-colors hover:border-primary/30">
+                              <div className="flex justify-between items-start mb-3">
+                                 <div className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
+                                    {s.category || 'Varios'}
+                                 </div>
+                                 <button 
+                                    onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                                    className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all"
+                                 >
+                                    <Edit3 className="w-4 h-4" />
+                                 </button>
+                              </div>
+                              <h4 className="font-bold text-lg text-on-surface leading-tight mb-4">{s.name}</h4>
+                              <div className="flex border-t border-outline/10 pt-4">
+                                 <div className="flex-1">
+                                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                                    <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>
+                                       {s.currentStock} <span className="text-sm font-bold opacity-60 ml-0.5">{s.unit || s.purchaseUnit}</span>
+                                    </p>
+                                 </div>
+                                 <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                                    <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                                    <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? s.stockMinimum ?? 0} {s.unit}</p>
+                                 </div>
+                              </div>
+                           </div>
+                         );
+                       })}
                     </div>
+                    {supplies.length === 0 && (
+                      <div className="py-20 flex flex-col items-center opacity-30 text-center">
+                         <Layers className="w-16 h-16 mb-4" />
+                         <p className="font-bold">No hay insumos base creados.</p>
+                      </div>
+                    )}
+                 </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <SupplyFormModal
+        isOpen={isSupplyModalOpen}
+        onClose={() => setIsSupplyModalOpen(false)}
+        supplyToEdit={supplyToEdit}
+        onSave={handleSaveSupply}
+      />
+
+      {/* Select Supplies Modal */}
+      <AnimatePresence>
+         {isSupplySelectionModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-8 pointer-events-none">
+               <motion.div 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 exit={{ opacity: 0 }}
+                 className="absolute inset-0 bg-black/60 backdrop-blur-md pointer-events-auto"
+                 onClick={() => setIsSupplySelectionModalOpen(false)}
+               />
+               
+               <motion.div 
+                 initial={{ y: "100%", opacity: 0 }}
+                 animate={{ y: 0, opacity: 1 }}
+                 exit={{ y: "100%", opacity: 0 }}
+                 className="relative w-full max-w-lg bg-surface-container-lowest rounded-[3rem] shadow-2xl flex flex-col pointer-events-auto max-h-full overflow-hidden"
+               >
+                 <div className="p-8 bg-white border-b border-outline/10 text-on-surface relative">
+                    <h2 className="text-2xl font-black tracking-tight">Seleccionar Insumos</h2>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                       Añada insumos del catálogo base a esta compra
+                    </p>
+                    <button 
+                      onClick={() => setIsSupplySelectionModalOpen(false)}
+                      className="absolute top-8 right-8 w-10 h-10 bg-surface-container rounded-full flex items-center justify-center hover:bg-surface-container-high transition-all"
+                    >
+                       <X className="w-5 h-5 text-secondary" />
+                    </button>
                  </div>
 
-                 <div className="flex flex-col gap-3">
-                    {supplies.sort((a,b) => a.currentStock - b.currentStock).map(supply => {
-                       const isCritical = supply.currentStock < 3;
-                       const isSelected = selectedForPurchase.includes(supply.id);
-                       
-                       return (
-                          <div 
-                            key={supply.id} 
-                            onClick={() => {
-                               if (isSelected) {
-                                  setSelectedForPurchase(selectedForPurchase.filter(id => id !== supply.id));
-                               } else {
-                                  setSelectedForPurchase([...selectedForPurchase, supply.id]);
-                               }
-                            }}
-                            className={cn(
-                               "p-5 rounded-[2.2rem] border-2 transition-all flex items-center gap-4 cursor-pointer",
-                               isSelected 
-                                 ? "bg-primary border-primary text-white shadow-xl shadow-primary/20 scale-[1.02]" 
-                                 : isCritical 
-                                   ? "bg-white border-primary/20" 
-                                   : "bg-surface-container-low border-transparent opacity-60 hover:opacity-100"
-                            )}>
-                             <div className={cn(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
-                                isSelected ? "bg-white/20" : "bg-surface-container-high"
-                             )}>
-                                <Package className={cn("w-7 h-7", isSelected ? "text-white" : "text-on-surface-variant")} />
-                             </div>
-                             
-                             <div className="flex-1">
-                                <p className={cn("font-bold text-base leading-tight uppercase tracking-tight", isSelected ? "text-white" : "text-on-surface")}>
-                                   {supply.name}
-                                </p>
-                                <div className="flex items-center gap-3 mt-1">
-                                   <p className={cn("text-[10px] font-black uppercase tracking-widest", isSelected ? "text-white/80" : isCritical ? "text-primary" : "text-secondary")}>
-                                      STOCK: {supply.currentStock} {supply.unit}
-                                   </p>
-                                   {isCritical && !isSelected && (
-                                      <span className="px-2 py-0.5 rounded-full bg-primary text-white text-[8px] font-black uppercase tracking-widest">
-                                         Crítico
-                                      </span>
-                                   )}
-                                </div>
-                             </div>
-
-                             <div className="relative">
+                 <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+                    <div className="flex flex-col gap-3">
+                       {supplies.sort((a,b) => a.currentStock - b.currentStock).map(supply => {
+                          const isCritical = supply.currentStock < 3;
+                          const isSelected = selectedForPurchase.includes(supply.id);
+                          
+                          return (
+                             <div 
+                               key={supply.id} 
+                               onClick={() => {
+                                  if (isSelected) {
+                                     setSelectedForPurchase(selectedForPurchase.filter(id => id !== supply.id));
+                                  } else {
+                                     setSelectedForPurchase([...selectedForPurchase, supply.id]);
+                                  }
+                               }}
+                               className={cn(
+                                  "p-4 sm:p-5 rounded-[2rem] border-2 transition-all flex items-center gap-4 cursor-pointer",
+                                  isSelected 
+                                    ? "bg-primary border-primary text-white shadow-xl shadow-primary/20 scale-[1.01]" 
+                                    : isCritical 
+                                      ? "bg-white border-primary/20 hover:border-primary/50" 
+                                      : "bg-surface-container-low border-transparent hover:bg-surface-container-high"
+                               )}>
                                 <div className={cn(
-                                   "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
+                                   "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
+                                   isSelected ? "bg-white/20" : "bg-surface-container-high"
+                                )}>
+                                   <Package className={cn("w-6 h-6", isSelected ? "text-white" : "text-secondary")} />
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                   <p className={cn("font-bold text-[15px] leading-tight uppercase tracking-tight truncate w-full", isSelected ? "text-white" : "text-on-surface")}>
+                                      {supply.name}
+                                   </p>
+                                   <div className="flex items-center gap-2 mt-1">
+                                      <p className={cn("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/80" : isCritical ? "text-primary" : "text-secondary")}>
+                                         STOCK: {supply.currentStock} {supply.unit}
+                                      </p>
+                                      {isCritical && !isSelected && (
+                                         <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest">
+                                            Crítico
+                                         </span>
+                                      )}
+                                   </div>
+                                </div>
+
+                                <div className={cn(
+                                   "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
                                    isSelected ? "bg-white border-white" : "border-outline/50 bg-surface-container"
                                 )}>
                                    {isSelected && <Check className="w-5 h-5 text-primary stroke-[4]" />}
                                 </div>
                              </div>
+                          )
+                       })}
+                       {supplies.length === 0 && (
+                          <div className="py-10 text-center text-secondary">
+                             No hay insumos en el catálogo
                           </div>
-                       )
-                    })}
+                       )}
+                    </div>
                  </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+
+                 <div className="p-6 bg-white border-t border-outline/10 shadow-inner">
+                    <button 
+                      onClick={() => handleOpenPurchaseModal()}
+                      className={cn(
+                        "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center shadow-2xl",
+                        selectedForPurchase.length > 0 
+                          ? "bg-on-surface text-white hover:scale-[1.01] active:scale-[0.98]" 
+                          : "bg-surface-container-high text-secondary border border-outline/20"
+                      )}
+                    >
+                      {selectedForPurchase.length > 0 
+                        ? `Continuar (${selectedForPurchase.length} seleccionados)` 
+                        : "Continuar a Registro Manual"
+                      }
+                    </button>
+                    <p className="text-[10px] text-center font-bold text-secondary mt-3 uppercase tracking-widest opacity-60">
+                      También podrás añadir insumos manualmente después
+                    </p>
+                 </div>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
 
       {/* Purchase Modal - "Revisar Compra" */}
       <AnimatePresence>
