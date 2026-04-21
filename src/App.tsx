@@ -17,6 +17,7 @@ import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import ClientCompras from './pages/ClientCompras';
 import ClientPedidos from './pages/ClientPedidos';
+import ClientHistorial from './pages/ClientHistorial';
 
 
 
@@ -151,7 +152,7 @@ export default function App() {
         } />
         <Route path="/cliente/historial" element={
           user && profile && (profile.role === 'cliente' || ['admin', 'propietario', 'vendedor'].includes(profile.role))
-            ? <ClientPedidos />
+            ? <ClientHistorial />
             : (authLoading ? null : <Navigate to="/login" />)
         } />
 

@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { useAuthStore } from '../stores/useAuthStore';
-import { formatCurrency, cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
-import { toast } from 'sonner';
 import { 
-  ShoppingCart, X, Check, XCircle, MessageCircle, 
-  Calendar, Clock, Package, ChevronDown, ChevronUp,
-  MapPin, Banknote, Smartphone, CreditCard, Hash,
-  Receipt, Send, DollarSign, Target
+  collection, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  where,
+  doc,
+  updateDoc
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { 
+  Package, 
+  Clock, 
+  CheckCircle2, 
+  Trash2,
+  ChevronRight,
+  MessageCircle,
+  Smartphone,
+  CreditCard,
+  Banknote,
+  Hash
 } from 'lucide-react';
+import { cn, formatCurrency } from '../lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
 import AppHeader, { PageTitle } from '../components/AppHeader';
-import HistoryMovementCard from '../components/HistoryMovementCard';
-import MovementDetailModal from '../components/MovementDetailModal';
+import { useAuthStore } from '../stores/useAuthStore';
 import BottomNav from '../components/BottomNav';
+import { toast } from 'sonner';
+import MovementDetailModal from '../components/MovementDetailModal';
 
 interface Pedido {
   id: string;
@@ -22,97 +35,48 @@ interface Pedido {
   clienteName: string;
   items: any[];
   total: number;
-  paymentMethod: string;
-  address: string;
-  status: 'pendiente' | 'aceptado' | 'rechazado';
-  note?: string;
+  status: 'pendiente' | 'aceptado' | 'celebrado' | 'entregado' | 'rechazado';
   createdAt: any;
+  paymentMethod: string;
   messages?: any[];
 }
-
-const STATUS_CONFIG = {
-  pendiente: { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-400/10', ring: 'ring-amber-500/20', dot: 'bg-amber-400', icon: <Clock className="w-5 h-5" /> },
-  aceptado:  { label: 'Aceptado',  color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', dot: 'bg-emerald-500', icon: <Check className="w-5 h-5" /> },
-  rechazado: { label: 'Rechazado', color: 'text-red-500', bg: 'bg-red-400/10', ring: 'ring-red-500/20', dot: 'bg-red-400', icon: <XCircle className="w-5 h-5" /> },
-};
-
-const toDate = (ts: any): Date | null => {
-  if (!ts) return null;
-  if (ts.toDate) return ts.toDate();
-  return new Date(ts);
-};
-
-const formatDate = (ts: any) => {
-  const d = toDate(ts);
-  if (!d) return '';
-  return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-};
 
 export default function ClientPedidos() {
   const { profile } = useAuthStore();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Stats
-  const [stats, setStats] = useState({
-    totalSpent: 0,
-    orderCount: 0,
-    favoriteItem: '---'
-  });
-
-  const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
 
   useEffect(() => {
     if (!profile) return;
     
-    // Staff sees everything, Client sees only their own
+    // Fetch base query
     const q = isStaff
       ? query(collection(db, 'pedidos'), orderBy('createdAt', 'desc'))
       : query(collection(db, 'pedidos'), where('clienteId', '==', profile.uid), orderBy('createdAt', 'desc'));
 
     const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
-      setPedidos(data);
-      
-      const total = data.reduce((acc, p) => p.status === 'aceptado' ? acc + (p.total || 0) : acc, 0);
-      setStats({
-        totalSpent: total,
-        orderCount: data.length,
-        favoriteItem: 'Tradicional' 
-      });
+      const allData = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
+      // FILTRO: Solo pedidos ACTIVOS (Pendiente o Aceptado)
+      const actives = allData.filter(p => p.status === 'pendiente' || p.status === 'aceptado');
+      setPedidos(actives);
     }, (error) => {
       console.error("Error fetching pedidos:", error);
-      if (error.code === 'failed-precondition') {
-        toast.error("Falta crear el Índice en Firebase para esta consulta.");
-      } else {
-        toast.error("Error al cargar pedidos.");
-      }
     });
     return unsub;
   }, [profile?.uid, isStaff]);
 
-  const activeDays = Array.from(new Set(
-    pedidos.map(p => {
-      const d = toDate(p.createdAt);
-      return d ? d.toLocaleDateString('es-CO') : null;
-    }).filter(Boolean)
-  )) as string[];
-
-  const filteredPedidos = selectedDay
-    ? pedidos.filter(p => toDate(p.createdAt)?.toLocaleDateString('es-CO') === selectedDay)
-    : pedidos;
+  const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
 
   const handleSendMessage = async () => {
     if (!chatMessage.trim() || !selectedPedido || !profile) return;
     setSending(true);
     try {
       const newMsg = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 9),
         from: profile.uid,
         fromName: profile.name,
         text: chatMessage.trim(),
@@ -121,146 +85,109 @@ export default function ClientPedidos() {
       const messages = [...(selectedPedido.messages || []), newMsg];
       await updateDoc(doc(db, 'pedidos', selectedPedido.id), { messages });
       setChatMessage('');
-    } catch {
-      // ignore
+    } catch (error) {
+      toast.error("Error al enviar mensaje");
     } finally {
       setSending(false);
     }
   };
 
-  const metrics = [
-    { label: 'Total Gastado', value: formatCurrency(stats.totalSpent), trend: 'Histórico', icon: <DollarSign className="w-5 h-5 text-emerald-500" />, bg: 'bg-emerald-400/10' },
-    { label: 'Mis Pedidos', value: stats.orderCount.toString(), trend: 'En tiempo real', icon: <Package className="w-5 h-5 text-primary" />, bg: 'bg-primary/10' },
-  ];
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'pendiente': return { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-50', icon: <Clock className="w-4 h-4" /> };
+      case 'aceptado': return { label: 'En Preparación', color: 'text-blue-500', bg: 'bg-blue-50', icon: <Package className="w-4 h-4" /> };
+      default: return { label: status, color: 'text-secondary', bg: 'bg-surface-container', icon: <Package className="w-4 h-4" /> };
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest">
-      <div className="flex flex-col min-h-screen relative pb-32 max-w-lg mx-auto bg-white shadow-2xl shadow-on-surface/5">
-        <AppHeader showBell />
-        
-        <div className="px-6 pt-6 pb-2">
-           <PageTitle
-             title={`Hola, ${profile?.name?.split(' ')[0] || 'Cliente'}!`}
-             subtitle="Aquí tienes el resumen de tus compras"
-           />
+    <div className="min-h-screen bg-surface-container-lowest pb-32">
+      <AppHeader showBell />
+      <PageTitle 
+        title="Mis Pedidos" 
+        subtitle="Seguimiento en tiempo real"
+      />
+
+      <main className="p-4 sm:p-6 max-w-md mx-auto flex flex-col gap-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Pedidos Activos</h3>
+            <span className="px-2.5 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] font-black">
+              {pedidos.length}
+            </span>
+          </div>
+
+          <AnimatePresence mode="popLayout">
+            {pedidos.length === 0 ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-[2.5rem] p-12 text-center border-2 border-dashed border-outline/20"
+              >
+                <div className="w-16 h-16 bg-surface-container rounded-3xl flex items-center justify-center mx-auto mb-4 text-secondary/30">
+                  <Package className="w-8 h-8" />
+                </div>
+                <p className="text-secondary font-bold text-sm">No tienes pedidos activos</p>
+                <p className="text-[10px] uppercase font-black tracking-widest text-secondary/40 mt-1">¡Haz uno en la sección de compras!</p>
+              </motion.div>
+            ) : (
+              pedidos.map((pedido) => {
+                const cfg = getStatusConfig(pedido.status);
+                return (
+                  <motion.div
+                    key={pedido.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={() => setSelectedId(pedido.id)}
+                    className="bg-white rounded-[2rem] p-5 sm:p-6 border border-outline/10 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", cfg.bg, cfg.color)}>
+                          {cfg.icon}
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest leading-none mb-1">Orden</p>
+                          <h4 className="font-brand font-black text-on-surface text-lg leading-none uppercase">#{pedido.id.slice(-6).toUpperCase()}</h4>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-brand font-black text-primary text-xl leading-none">{formatCurrency(pedido.total)}</p>
+                        <p className="text-[10px] text-secondary font-bold uppercase mt-1">Pendiente</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-outline/5 mt-2">
+                       <div className="flex items-center gap-2">
+                          <div className={cn("px-3 py-1.5 rounded-full flex items-center gap-1.5 ring-2", cfg.bg, "ring-outline/5")}>
+                             <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", cfg.color.replace('text', 'bg'))} />
+                             <span className={cn("text-[9px] font-black uppercase tracking-widest", cfg.color)}>{cfg.label}</span>
+                          </div>
+                       </div>
+                       <ChevronRight className="w-5 h-5 text-secondary/20 group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </AnimatePresence>
         </div>
+      </main>
 
-        <main className="px-6 flex flex-col gap-8">
-          <section className="grid grid-cols-2 gap-4">
-             {metrics.map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-white rounded-[2rem] p-5 border border-outline/10 shadow-sm flex flex-col gap-3"
-                >
-                   <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center", m.bg)}>
-                      {m.icon}
-                   </div>
-                   <div>
-                      <p className="text-[9px] font-black text-secondary uppercase tracking-[0.2em] mb-1">{m.label}</p>
-                      <h3 className="text-xl font-headline font-black text-on-surface leading-none">{m.value}</h3>
-                   </div>
-                   <p className="text-[8px] font-bold text-secondary/40 uppercase tracking-tighter">{m.trend}</p>
-                </motion.div>
-             ))}
-          </section>
+      <MovementDetailModal 
+        isOpen={!!selectedId}
+        onClose={() => setSelectedId(null)}
+        data={selectedPedido}
+        profile={profile}
+        chatMessage={chatMessage}
+        setChatMessage={setChatMessage}
+        onSendMessage={handleSendMessage}
+        isSending={sending}
+      />
 
-          <div className="bg-surface-container/50 rounded-[2.5rem] border border-outline/10 overflow-hidden shadow-sm">
-            <button
-              onClick={() => setShowCalendar(!showCalendar)}
-              className="w-full flex items-center justify-between px-5 py-4 transition-all active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 rounded-xl bg-on-surface text-white flex items-center justify-center">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[10px] font-black text-on-surface uppercase tracking-widest">
-                    {selectedDay ? selectedDay : 'Filtrar Historial'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {selectedDay && (
-                  <button onClick={(e) => { e.stopPropagation(); setSelectedDay(null); }} className="text-[10px] font-black text-primary uppercase">Limpiar</button>
-                )}
-                {showCalendar ? <ChevronUp className="w-5 h-5 text-secondary" /> : <ChevronDown className="w-5 h-5 text-secondary" />}
-              </div>
-            </button>
-
-            <AnimatePresence>
-              {showCalendar && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                  className="px-5 pb-5 flex flex-wrap gap-2 border-t border-outline/5 pt-4"
-                >
-                  {activeDays.length === 0 ? (
-                    <p className="text-[10px] text-secondary/40 font-bold italic py-2">No hay fechas registradas</p>
-                  ) : (
-                    activeDays.map(day => (
-                      <button
-                        key={day}
-                        onClick={() => { setSelectedDay(day === selectedDay ? null : day); setShowCalendar(false); }}
-                        className={cn(
-                          "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                          selectedDay === day ? "bg-primary text-white shadow-lg" : "bg-white text-secondary border border-outline/10"
-                        )}
-                      >
-                        {day}
-                      </button>
-                    ))
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="flex flex-col gap-4">
-             <div className="flex items-center justify-between px-1">
-                <h4 className="font-headline font-black text-sm text-on-surface uppercase tracking-widest">Compras Recientes</h4>
-                <Receipt className="w-4 h-4 text-secondary/30" />
-             </div>
-             
-             {filteredPedidos.length === 0 ? (
-               <div className="py-20 flex flex-col items-center opacity-30">
-                  <div className="w-20 h-20 bg-surface-container rounded-[2.5rem] flex items-center justify-center mb-4">
-                    <Package className="w-10 h-10" />
-                  </div>
-                  <p className="font-headline font-black text-on-surface uppercase tracking-widest text-xs">Sin actividad</p>
-                  <p className="text-[10px] text-secondary font-bold mt-1">Tus pedidos aparecerán aquí</p>
-               </div>
-             ) : (
-               filteredPedidos.map((pedido, idx) => (
-                 <HistoryMovementCard 
-                   key={pedido.id || `pedido-${idx}`}
-                   id={pedido.id}
-                   total={pedido.total || 0}
-                   date={formatDate(pedido.createdAt)}
-                   paymentMethod={pedido.paymentMethod || 'Efectivo'}
-                   status={pedido.status || 'pendiente'}
-                   itemCount={pedido.items?.length || 0}
-                   onClick={() => setSelectedId(pedido.id)}
-                 />
-               ))
-             )}
-          </div>
-        </main>
-
-        <MovementDetailModal 
-          isOpen={!!selectedPedido}
-          onClose={() => setSelectedId(null)}
-          data={selectedPedido}
-          profile={profile}
-          chatMessage={chatMessage}
-          setChatMessage={setChatMessage}
-          onSendMessage={handleSendMessage}
-          isSending={sending}
-        />
-
-        <BottomNav />
-      </div>
+      <BottomNav />
     </div>
   );
 }
