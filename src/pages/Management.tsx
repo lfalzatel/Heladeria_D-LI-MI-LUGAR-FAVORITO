@@ -325,18 +325,39 @@ export default function Management() {
 
     setIsLoadingHistory(true);
     
-    // Determine which field to query based on user role
-    // Clients filter by 'clienteId' (or 'userId'), Staff filter by 'soldBy'
-    const queryField = selectedUserForHistory.role === 'cliente' ? 'clienteId' : 'soldBy';
+    // Determine target collection and field based on user role
+    const isClient = selectedUserForHistory.role === 'cliente';
+    const colName = isClient ? 'pedidos' : 'sales';
+    const idField = isClient ? 'clienteId' : 'soldBy';
+    const orderByField = isClient ? 'createdAt' : 'timestamp';
     
     const salesQ = query(
-      collection(db, 'sales'),
-      where(queryField, '==', selectedUserForHistory.uid),
-      orderBy('timestamp', 'desc')
+      collection(db, colName),
+      where(idField, '==', selectedUserForHistory.uid),
+      orderBy(orderByField, 'desc')
     );
 
     const unsubscribe = onSnapshot(salesQ, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => {
+        const item = doc.data();
+        let hourStr = item.hour;
+        
+        // Normalize time representation if missing (common in 'pedidos')
+        if (!hourStr) {
+          const ts = item.createdAt || item.timestamp;
+          if (ts) {
+            const dateObj = ts.toDate ? ts.toDate() : new Date(ts);
+            hourStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+          }
+        }
+
+        return { 
+          id: doc.id, 
+          ...item, 
+          hour: hourStr || 'Reciente',
+          tableName: item.tableName || (isClient ? 'Pedido Online' : 'Venta Directa')
+        };
+      });
       setUserSales(data);
       setIsLoadingHistory(false);
     }, (error) => {
@@ -1151,43 +1172,72 @@ export default function Management() {
                    </div>
                 </div>
 
-                {/* Calendar Content - Scrollable area */}
-                <div className="bg-surface-container-lowest flex-1 px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)] overflow-y-auto custom-scrollbar">
-                   <div className="flex items-center justify-between mb-8 px-2">
-                      <div className="flex items-center gap-2">
-                         <Calendar className="w-4 h-4 text-[#007D9A]" />
-                         <span className="text-[10px] font-black uppercase tracking-widest text-[#007D9A]">Mapa de productividad</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                         <ChevronLeft className="w-4 h-4 text-secondary/30" />
-                         <span className="text-[10px] font-black uppercase tracking-widest text-secondary">Abril de 2026</span>
-                         <ChevronRight className="w-4 h-4 text-secondary/30" />
-                      </div>
-                   </div>
+                 {/* Calendar Content - Scrollable area */}
+                 <div className="bg-surface-container-lowest flex-1 px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)] overflow-y-auto custom-scrollbar">
+                   {/* Calendar Logic */}
+                   {(() => {
+                     const now = new Date();
+                     const currentMonth = now.getMonth();
+                     const currentYear = now.getFullYear();
+                     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                     const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
-                   {/* Mock Calendar Grid */}
-                   <div className="grid grid-cols-7 gap-y-4 gap-x-1 mb-10">
-                      {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
-                        <div key={d} className="text-[8px] font-black text-secondary/40 text-center uppercase tracking-widest">{d}</div>
-                      ))}
-                      {/* Empty slots for start of month */}
-                      {Array.from({ length: 2 }).map((_, i) => <div key={`empty-${i}`} />)}
-                      {/* Days with activity */}
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(day => {
-                        const hasActivity = [2, 3, 4, 10, 12, 17, 18, 19, 24, 25, 26, 27].includes(day);
-                        return (
-                          <div key={day} className="flex flex-col items-center justify-center">
-                            <div className={cn(
-                              "w-8 h-8 rounded-full flex flex-col items-center justify-center transition-all",
-                              hasActivity ? "bg-[#00ADC8] text-white shadow-lg shadow-[#00ADC8]/30" : "text-secondary/20"
-                            )}>
-                               <span className="text-[10px] font-black">{day}</span>
-                               {hasActivity && <span className="text-[6px] font-bold opacity-60">31</span>}
+                     const activityMap: Record<number, number> = {};
+                     userSales.forEach(sale => {
+                       const ts = sale.timestamp || sale.createdAt;
+                       if (!ts) return;
+                       const date = ts.toDate ? ts.toDate() : new Date(ts);
+                       if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                         const day = date.getDate();
+                         activityMap[day] = (activityMap[day] || 0) + 1;
+                       }
+                     });
+
+                     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+                     return (
+                       <>
+                         <div className="flex items-center justify-between mb-8 px-2">
+                            <div className="flex items-center gap-2">
+                               <Calendar className="w-4 h-4 text-[#007D9A]" />
+                               <span className="text-[10px] font-black uppercase tracking-widest text-[#007D9A]">Mapa de productividad</span>
                             </div>
-                          </div>
-                        );
-                      })}
-                   </div>
+                            <div className="flex items-center gap-4">
+                               <ChevronLeft className="w-4 h-4 text-secondary/30" />
+                               <span className="text-[10px] font-black uppercase tracking-widest text-secondary">{monthNames[currentMonth]} de {currentYear}</span>
+                               <ChevronRight className="w-4 h-4 text-secondary/30" />
+                            </div>
+                         </div>
+
+                         {/* Dynamic Calendar Grid */}
+                         <div className="grid grid-cols-7 gap-y-4 gap-x-1 mb-10">
+                            {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
+                              <div key={d} className="text-[8px] font-black text-secondary/40 text-center uppercase tracking-widest">{d}</div>
+                            ))}
+                            {/* Empty slots for start of month */}
+                            {Array.from({ length: firstDayAdjusted }).map((_, i) => <div key={`empty-${i}`} />)}
+                            {/* Days of the month */}
+                            {Array.from({ length: daysInMonth }).map((_, i) => {
+                              const day = i + 1;
+                              const count = activityMap[day] || 0;
+                              const hasActivity = count > 0;
+                              return (
+                                <div key={day} className="flex flex-col items-center justify-center">
+                                  <div className={cn(
+                                    "w-8 h-8 rounded-full flex flex-col items-center justify-center transition-all",
+                                    hasActivity ? "bg-[#00ADC8] text-white shadow-lg shadow-[#00ADC8]/30" : "text-secondary/20"
+                                  )}>
+                                     <span className="text-[10px] font-black">{day}</span>
+                                     {hasActivity && <span className="text-[6px] font-bold opacity-60 leading-none">{count}</span>}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                         </div>
+                       </>
+                     );
+                   })()}
 
                    <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-secondary/40 uppercase tracking-widest px-2">Sesiones de registro</h4>

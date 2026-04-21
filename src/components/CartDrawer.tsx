@@ -41,7 +41,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         timestamp: serverTimestamp(),
         createdAt: serverTimestamp(), // Required by Firestore rules
         paymentMethod,
-        date: new Date().toISOString().split('T')[0], // To simplify daily queries
+        date: new Date().toLocaleDateString('en-CA'), // Simplified local YYYY-MM-DD
         hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
       };
 
