@@ -1,7 +1,25 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Receipt, MapPin, MessageCircle, Send } from 'lucide-react';
+import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
+
+function formatDateTime(ts: any) {
+  if (!ts) return { date: 'Reciente', time: '—' };
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  return {
+    date: `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`,
+    time: d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+  };
+}
+
+function PaymentIcon({ method }: { method: string }) {
+  const m = (method || '').toLowerCase();
+  if (m.includes('efectivo') || m.includes('cash')) return <Banknote className="w-4 h-4" />;
+  if (m.includes('nequi') || m.includes('daviplata') || m.includes('pse')) return <Smartphone className="w-4 h-4" />;
+  return <CreditCard className="w-4 h-4" />;
+}
 
 interface MovementDetailModalProps {
   isOpen: boolean;
@@ -12,12 +30,15 @@ interface MovementDetailModalProps {
   setChatMessage?: (msg: string) => void;
   onSendMessage?: () => void;
   isSending?: boolean;
+  onUpdateStatus?: (id: string, status: string, e?: React.MouseEvent) => void;
 }
 
 const STATUS_CONFIG: Record<string, any> = {
-  pendiente: { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-400/10', ring: 'ring-amber-500/20', icon: <Receipt className="w-5 h-5" /> },
-  aceptado:  { label: 'Aceptado',  color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', icon: <Receipt className="w-5 h-5" /> },
-  rechazado: { label: 'Rechazado', color: 'text-red-500', bg: 'bg-red-400/10', ring: 'ring-red-500/20', icon: <Receipt className="w-5 h-5" /> },
+  pendiente: { label: 'Pendiente de aceptar', color: 'text-amber-500', bg: 'bg-amber-400/10', ring: 'ring-amber-500/20' },
+  aceptado:  { label: 'En Preparación',       color: 'text-blue-500',  bg: 'bg-blue-400/10',  ring: 'ring-blue-500/20'  },
+  celebrado: { label: 'Listo para entregar',  color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20' },
+  entregado: { label: 'Entregado',            color: 'text-emerald-600', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20' },
+  rechazado: { label: 'Rechazado',            color: 'text-red-500',   bg: 'bg-red-400/10',   ring: 'ring-red-500/20'   },
 };
 
 export default function MovementDetailModal({
@@ -28,7 +49,8 @@ export default function MovementDetailModal({
   chatMessage = '',
   setChatMessage,
   onSendMessage,
-  isSending = false
+  isSending = false,
+  onUpdateStatus
 }: MovementDetailModalProps) {
   if (!data) return null;
 
@@ -71,18 +93,39 @@ export default function MovementDetailModal({
 
             <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-6">
                {/* Status & Info */}
-               <div className="grid grid-cols-2 gap-3">
-                  <div className={cn("rounded-3xl p-4 flex flex-col gap-1 ring-1 border shadow-sm", cfg.ring, cfg.bg)}>
-                     <p className={cn("text-[9px] font-black uppercase tracking-[0.2em]", cfg.color)}>{cfg.label}</p>
-                     <p className="font-headline font-black text-on-surface text-sm uppercase">
-                        {data.hour || 'Reciente'}
-                     </p>
-                  </div>
-                  <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
-                     <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Método</p>
-                     <p className="font-headline font-bold text-on-surface text-sm capitalize">{data.paymentMethod}</p>
-                  </div>
-               </div>
+               {(() => {
+                 const { date, time } = formatDateTime(data.createdAt);
+                 return (
+                   <div className="grid grid-cols-2 gap-3">
+                     {/* Estado */}
+                     <div className={cn("rounded-3xl p-4 flex flex-col gap-1 ring-1 border shadow-sm col-span-2", cfg.ring, cfg.bg)}>
+                       <p className={cn("text-[9px] font-black uppercase tracking-[0.2em]", cfg.color)}>Estado</p>
+                       <p className={cn("font-headline font-black text-base", cfg.color)}>{cfg.label}</p>
+                     </div>
+                     {/* Cliente (solo si hay clienteName) */}
+                     {data.clienteName && (
+                       <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-2">
+                         <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Cliente</p>
+                         <p className="font-headline font-bold text-on-surface text-sm">{data.clienteName}</p>
+                       </div>
+                     )}
+                     {/* Fecha y hora */}
+                     <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
+                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
+                       <p className="font-headline font-bold text-on-surface text-sm">{date}</p>
+                       <p className="text-[10px] text-secondary flex items-center gap-1"><Clock className="w-3 h-3" />{time}</p>
+                     </div>
+                     {/* Método de pago */}
+                     <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
+                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Pago</p>
+                       <div className="flex items-center gap-1.5 mt-0.5">
+                         <PaymentIcon method={data.paymentMethod} />
+                         <p className="font-headline font-bold text-on-surface text-sm capitalize">{data.paymentMethod || 'Efectivo'}</p>
+                       </div>
+                     </div>
+                   </div>
+                 );
+               })()}
 
                {/* Products List */}
                <section>
@@ -183,7 +226,29 @@ export default function MovementDetailModal({
                )}
             </div>
 
-            {/* Chat Footer (Optional) */}
+            {/* Action buttons for staff inside modal */}
+            {onUpdateStatus && data && (
+              <div className="p-4 bg-white border-t border-outline/10 flex gap-2">
+                {data.status === 'pendiente' && (
+                  <button
+                    onClick={(e) => { onUpdateStatus(data.id, 'aceptado', e); onClose(); }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-blue-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-blue-600 transition-all active:scale-95 shadow-md"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" /> Aceptar Pedido
+                  </button>
+                )}
+                {(data.status === 'aceptado' || data.status === 'celebrado') && (
+                  <button
+                    onClick={(e) => { onUpdateStatus(data.id, 'entregado', e); onClose(); }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                  >
+                    <Truck className="w-4 h-4" /> Marcar Entregado
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Chat footer */}
             {isOnlinePedido && setChatMessage && onSendMessage && (
               <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-3">
                  <div className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl flex items-center px-4 py-2 group focus-within:ring-2 ring-primary/20 transition-all">

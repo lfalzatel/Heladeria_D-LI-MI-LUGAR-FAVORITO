@@ -35,7 +35,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   
   // Dynamic step calculation
   const steps: string[] = [];
-  if (product.variants && product.variants.length > 0) steps.push('variants');
+  // Only show variant step if there are 2+ variants to choose from
+  if (product.variants && product.variants.length > 1) steps.push('variants');
   // For Oblea Tradicional, fruit choice comes first (only for hasFruit variant)
   if (product.requiresFruitChoice) steps.push('fruits');
   // Flavors: only show if product requires it (and for Oblea Cuchareable, only when hasIceCream variant)
@@ -102,7 +103,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       if (initialItem) {
         const variant = product.variants?.find(v => 
           v.label.toLowerCase().trim() === (initialItem.variantLabel || '').toLowerCase().trim()
-        ) || null;
+        ) || product.variants?.[0] || null;
         
         setSelectedVariant(variant);
         setSelectedFlavors(initialItem.flavors || []);
@@ -120,7 +121,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setStep(1);
       } else {
         setStep(1);
-        setSelectedVariant(null);
+        // Auto-select if only 1 variant
+        setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
         setSelectedFrutas([]);
         setSelectedSauces([]);

@@ -372,7 +372,7 @@ export default function Management() {
       <main className="p-4 sm:p-6 max-w-5xl mx-auto flex flex-col gap-6">
         <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-md mx-auto shadow-inner border border-outline/30">
           <button
-            onClick={() => setActiveTab('insumos')}
+            onClick={() => navigate('/admin/supplies')}
             className={cn(
               "flex-1 py-3 px-4 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2",
               activeTab === 'insumos' ? "bg-white text-primary shadow-md" : "text-secondary hover:text-on-surface"

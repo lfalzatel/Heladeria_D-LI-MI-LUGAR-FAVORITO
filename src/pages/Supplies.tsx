@@ -1,549 +1,294 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { 
-  Box, Plus, Minus, Package, Truck, Calendar, 
-  AlertTriangle, CheckCircle2, Trash2, X, Download,
-  ChevronDown, ChevronUp, BarChart3, ShoppingCart
-} from 'lucide-react';
+import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
 import SupplyFormModal from '../components/SupplyFormModal';
-import { Edit3, Layers } from 'lucide-react';
-
-interface Supply {
-  id: string;
-  name: string;
-  currentStock: number;
-  unit: string;
-  minLimit: number;
-  category: string;
-}
-
-interface PurchaseItem {
-  supplyId: string;
-  name: string;
-  unit: string;
-  quantity: number;
-  cost: number;
-}
-
-interface PurchaseRecord {
-  id: string;
-  provider: string;
-  items: PurchaseItem[];
-  total: number;
-  createdAt: any;
-}
+import { PurchaseModal, PurchaseDetailModal, Supply, PurchaseItem, PurchaseRecord } from '../components/PurchaseModals';
 
 type PeriodFilter = 'today' | 'week' | 'month';
+const PERIOD_LABELS: Record<PeriodFilter, string> = { today: 'Hoy', week: 'Semana', month: 'Mes' };
 
-const PERIOD_LABELS: Record<PeriodFilter, string> = {
-  today: 'Hoy',
-  week: 'Semana',
-  month: 'Mes'
-};
-
-const PROVIDERS = ['Colacteos', 'Frubana', 'DPA', 'Distribuidora El Heladero', 'Otro'];
-
-const toDate = (ts: any): Date | null => {
-  if (!ts) return null;
-  if (ts.toDate) return ts.toDate();
-  return new Date(ts);
-};
-
+const toDate = (ts: any): Date | null => { if (!ts) return null; if (ts.toDate) return ts.toDate(); return new Date(ts); };
 const isInPeriod = (ts: any, period: PeriodFilter): boolean => {
-  const d = toDate(ts);
-  if (!d) return false;
+  const d = toDate(ts); if (!d) return false;
   const now = new Date();
-  if (period === 'today') {
-    return d.toDateString() === now.toDateString();
-  }
-  if (period === 'week') {
-    const start = new Date(now);
-    start.setDate(now.getDate() - 7);
-    return d >= start;
-  }
-  if (period === 'month') {
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }
-  return true;
+  if (period === 'today') return d.toDateString() === now.toDateString();
+  if (period === 'week') { const s = new Date(now); s.setDate(now.getDate() - 7); return d >= s; }
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 };
 
+/* ─── SVG TREND CHART ─── */
+function TrendChart({ purchases, period }: { purchases: PurchaseRecord[], period: PeriodFilter }) {
+  const W = 320, H = 100, PAD = 10;
+  if (purchases.length === 0) return (
+    <div className="h-24 flex items-center justify-center opacity-20">
+      <BarChart3 className="w-8 h-8" />
+    </div>
+  );
+
+  // Group by day
+  const byDay: Record<string, number> = {};
+  purchases.forEach(p => {
+    const d = toDate(p.createdAt);
+    if (d) { const k = d.toLocaleDateString('es-CO'); byDay[k] = (byDay[k] || 0) + p.total; }
+  });
+  const entries = Object.entries(byDay).slice(-14);
+  const max = Math.max(...entries.map(e => e[1]), 1);
+  const barW = Math.min(28, (W - PAD * 2) / Math.max(entries.length, 1) - 4);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24">
+      {entries.map(([day, val], i) => {
+        const bh = Math.max(4, ((val / max) * (H - PAD * 2 - 16)));
+        const x = PAD + i * ((W - PAD * 2) / entries.length) + (W - PAD * 2) / entries.length / 2 - barW / 2;
+        const y = H - PAD - bh - 16;
+        return (
+          <g key={day}>
+            <rect x={x} y={y} width={barW} height={bh} rx={barW / 3} fill="url(#barGrad)" opacity="0.85" />
+          </g>
+        );
+      })}
+      <defs>
+        <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#b30069" />
+          <stop offset="100%" stopColor="#b30069" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/* ─── STAT CARD ─── */
+function StatCard({ icon, label, value, sub, accent }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' }) {
+  const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100' };
+  return (
+    <div className={cn("bg-white rounded-3xl p-4 border flex flex-col gap-2 shadow-sm", map[accent])}>
+      <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">{icon}</div>
+      <p className="text-lg font-black text-on-surface leading-none">{value}</p>
+      <div>
+        <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
+        {sub && <p className="text-[9px] text-secondary/60 font-medium mt-0.5 leading-tight">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── PURCHASE HISTORY CARD ─── */
+function PurchaseCard({ purchase, onClick }: { purchase: PurchaseRecord, onClick: () => void }) {
+  const d = toDate(purchase.createdAt);
+  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
+
+  return (
+    <button onClick={onClick} className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group">
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <p className="font-black text-sm text-on-surface">{purchase.provider}</p>
+          <p className="text-[10px] text-secondary font-bold mt-0.5">{dateStr}</p>
+        </div>
+        <p className="font-black text-primary text-base">{formatCurrency(purchase.total)}</p>
+      </div>
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        {purchase.items?.slice(0, 4).map((item, i) => (
+          <span key={i} className="px-2 py-0.5 bg-surface-container text-secondary text-[9px] font-bold rounded-lg border border-outline/10">{item.name} ×{item.quantity}</span>
+        ))}
+        {(purchase.items?.length || 0) > 4 && (
+          <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} más</span>
+        )}
+      </div>
+    </button>
+  );
+}
+
+/* ─── MAIN PAGE ─── */
 export default function Supplies() {
   const { profile } = useAuthStore();
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [period, setPeriod] = useState<PeriodFilter>('today');
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState('');
-  const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
-  const [supplySearch, setSupplySearch] = useState('');
-  
   const [activeTab, setActiveTab] = useState<'compras' | 'catalogo'>('compras');
+  const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
+  const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
 
   useEffect(() => {
     if (!profile) return;
-
-    const qSupplies = query(collection(db, 'supplies'), orderBy('name', 'asc'));
-    const unsubS = onSnapshot(qSupplies, snap => {
-      setSupplies(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Supply[]);
-    });
-
-    const qPurchases = query(collection(db, 'supplyPurchases'), orderBy('createdAt', 'desc'));
-    const unsubP = onSnapshot(qPurchases, snap => {
-      setPurchases(snap.docs.map(d => ({ id: d.id, ...d.data() })) as PurchaseRecord[]);
-    });
-
-    return () => { unsubS(); unsubP(); };
+    const u1 = onSnapshot(query(collection(db, 'supplies'), orderBy('name', 'asc')), snap => setSupplies(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Supply[]));
+    const u2 = onSnapshot(query(collection(db, 'supplyPurchases'), orderBy('createdAt', 'desc')), snap => setPurchases(snap.docs.map(d => ({ id: d.id, ...d.data() })) as PurchaseRecord[]));
+    return () => { u1(); u2(); };
   }, [profile]);
 
-  const filteredPurchases = purchases.filter(p => isInPeriod(p.createdAt, period));
-  const periodTotal = filteredPurchases.reduce((acc, p) => acc + (p.total || 0), 0);
+  const filtered = purchases.filter(p => isInPeriod(p.createdAt, period));
+  const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
+  const totalUnits = filtered.reduce((a, p) => a + (p.items?.reduce((b, i) => b + (i.quantity || 0), 0) || 0), 0);
+  const activeDays = new Set(filtered.map(p => toDate(p.createdAt)?.toDateString()).filter(Boolean)).size;
+  const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
+  const lowStock = supplies.filter(s => s.currentStock <= s.minLimit).length;
 
-  // Dashboard stats
-  const totalSupplies = supplies.length;
-  const lowStockCount = supplies.filter(s => s.currentStock <= s.minLimit).length;
-  const completedInPeriod = filteredPurchases.length;
-
-  // Purchase modal helpers
-  const addItem = (supply: Supply) => {
-    if (purchaseItems.some(i => i.supplyId === supply.id)) return;
-    setPurchaseItems(prev => [...prev, { supplyId: supply.id, name: supply.name, unit: supply.unit, quantity: 1, cost: 0 }]);
-  };
-
-  const updateItem = (id: string, field: 'quantity' | 'cost', value: number) => {
-    setPurchaseItems(prev => prev.map(i => i.supplyId === id ? { ...i, [field]: value } : i));
-  };
-
-  const removeItem = (id: string) => {
-    setPurchaseItems(prev => prev.filter(i => i.supplyId !== id));
-  };
-
-  const purchaseTotal = purchaseItems.reduce((acc, i) => acc + (i.cost * i.quantity), 0);
-
-  const handleCompletePurchase = async () => {
-    if (!selectedProvider || purchaseItems.length === 0) {
-      toast.error('Selecciona un proveedor y agrega insumos');
-      return;
+  const handleConfirmPurchase = async (provider: string, items: PurchaseItem[]) => {
+    const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
+    await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
+    for (const item of items) {
+      await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
     }
-    try {
-      await addDoc(collection(db, 'supplyPurchases'), {
-        provider: selectedProvider,
-        items: purchaseItems,
-        total: purchaseTotal,
-        createdAt: serverTimestamp()
-      });
-      for (const item of purchaseItems) {
-        await updateDoc(doc(db, 'supplies', item.supplyId), {
-          currentStock: increment(item.quantity)
-        });
-      }
-      toast.success('¡Compra registrada exitosamente!');
-      setIsPurchaseModalOpen(false);
-      setPurchaseItems([]);
-      setSelectedProvider('');
-    } catch (err) {
-      toast.error('Error al registrar la compra');
-    }
+    toast.success('¡Compra registrada y stock actualizado!');
   };
 
   const handleSaveSupply = async (data: Partial<Supply>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
-      toast.success('Insumo actualizado exitosamente');
+      toast.success('Insumo actualizado');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-      toast.success('Nuevo insumo registrado en el catálogo base');
+      toast.success('Insumo creado');
     }
   };
-
-  const formatDate = (ts: any) => {
-    const d = toDate(ts);
-    if (!d) return '';
-    return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-  };
-
-  const filteredSuppliesForModal = supplies.filter(s =>
-    s.name.toLowerCase().includes(supplySearch.toLowerCase())
-  );
 
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-h-screen relative pb-32">
         <AppHeader backTo="/admin/management" showBell={false} />
-        <PageTitle title="Insumos" subtitle="Control de Abastecimiento" />
+        <PageTitle title="Compras" subtitle="Dashboard de abastecimiento y gastos" />
 
-      <main className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5">
-        
-        {/* Tab Switcher */}
-        <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner">
-           <button 
-             onClick={() => setActiveTab('compras')}
-             className={cn("flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'compras' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
-           >
-             Compras & Historial
-           </button>
-           <button 
-             onClick={() => setActiveTab('catalogo')}
-             className={cn("flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'catalogo' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
-           >
-             Catálogo Base
-           </button>
-        </div>
+        <main className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5 w-full">
+          {/* Tab switcher */}
+          <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner">
+            {(['compras', 'catalogo'] as const).map(t => (
+              <button key={t} onClick={() => setActiveTab(t)}
+                className={cn("flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                  activeTab === t ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}>
+                {t === 'compras' ? 'Compras & Historial' : 'Catálogo Base'}
+              </button>
+            ))}
+          </div>
 
-        {activeTab === 'compras' ? (
-          <>
-            {/* Dashboard stats */}
-            <section className="grid grid-cols-3 gap-3">
-          <StatCard icon={<Package className="w-5 h-5 text-primary" />} label="Insumos" value={totalSupplies.toString()} accent="primary" />
-          <StatCard icon={<AlertTriangle className="w-5 h-5 text-orange-500" />} label="Bajo Stock" value={lowStockCount.toString()} accent="orange" />
-          <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Compras" value={completedInPeriod.toString()} accent="slate" />
-        </section>
-
-        {/* Controls */}
-        <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
-          {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map(p => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={cn("px-4 py-2 sm:py-1.5 rounded-lg transition-all flex-1 sm:flex-none", period === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}
-            >
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3">
-           <button 
-             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-             className="flex-1 flex items-center justify-between px-6 py-4 bg-white rounded-3xl border border-outline/50 shadow-sm font-bold text-sm text-secondary hover:border-primary/30 transition-all"
-           >
-              <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 opacity-40" />
-                <span>Calendario {isCalendarOpen ? 'Ocultar' : ''}</span>
-              </div>
-              <ChevronDown className={cn("w-4 h-4 opacity-40 transition-transform", isCalendarOpen && "rotate-180")} />
-           </button>
-           <button 
-             onClick={() => toast.info('Exportando informe...')}
-             className="w-14 h-14 bg-on-surface text-white rounded-2xl flex items-center justify-center shadow-xl shadow-black/20 hover:scale-105 active:scale-95 transition-all"
-           >
-              <Download className="w-6 h-6" />
-           </button>
-        </div>
-
-        <button 
-          onClick={() => setIsPurchaseModalOpen(true)}
-          className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-98 transition-all"
-        >
-           <Plus className="w-5 h-5 stroke-[3]" />
-           Registrar Compra
-        </button>
-
-        {/* Calendar mini – actividad */}
-        <AnimatePresence>
-          {isCalendarOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              className="bg-white rounded-2xl border border-outline/10 shadow-sm overflow-hidden"
-            >
-              <div className="px-5 py-4">
-                <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-3">Días con actividad</p>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(new Set(purchases.map(p => {
-                    const d = toDate(p.createdAt);
-                    return d ? d.toLocaleDateString('es-CO') : null;
-                  }).filter(Boolean))).map(day => (
-                    <span key={day} className="px-3 py-1.5 bg-primary/5 text-primary border border-primary/10 rounded-xl text-xs font-bold">
-                      {day}
-                    </span>
-                  ))}
-                  {purchases.length === 0 && <p className="text-xs text-secondary font-medium">Sin registros</p>}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Summary card */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-5 text-white">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">
-            Total invertido — {PERIOD_LABELS[period]}
-          </p>
-          <p className="text-3xl font-black tracking-tight">{formatCurrency(periodTotal)}</p>
-          <p className="text-[11px] opacity-60 mt-1">{filteredPurchases.length} compra{filteredPurchases.length !== 1 ? 's' : ''} registrada{filteredPurchases.length !== 1 ? 's' : ''}</p>
-        </div>
-
-        {/* Purchase history */}
-        <div className="flex flex-col gap-3">
-          {filteredPurchases.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 opacity-25">
-              <ShoppingCart className="w-14 h-14 mb-3" />
-              <p className="text-sm font-bold">Sin compras en este período</p>
-            </div>
-          ) : filteredPurchases.map(purchase => (
-            <div key={purchase.id} className="bg-white rounded-2xl border border-outline/10 shadow-sm p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Proveedor</p>
-                  <p className="font-bold text-on-surface">{purchase.provider}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-primary text-lg">{formatCurrency(purchase.total)}</p>
-                  <p className="text-[10px] text-secondary">{formatDate(purchase.createdAt)}</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {purchase.items?.map((item, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-surface-container text-secondary text-[10px] font-bold rounded-lg border border-outline/10">
-                    {item.name} × {item.quantity}
-                  </span>
+          {activeTab === 'compras' ? (
+            <>
+              {/* Period filter */}
+              <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
+                {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map(p => (
+                  <button key={p} onClick={() => setPeriod(p)}
+                    className={cn("px-4 py-2 rounded-lg transition-all flex-1", period === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}>
+                    {PERIOD_LABELS[p]}
+                  </button>
                 ))}
               </div>
-            </div>
-          ))}
-        </div>
-        </>) : (
-          <>
-            <button 
-              onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-              className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all mb-4"
-            >
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-xl leading-none font-light">+</span>
-              </div>
-              Añadir Insumo Base
-            </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {supplies.map((s) => {
-                 const isLow = s.currentStock <= s.minLimit;
-                 return (
-                   <div key={s.id} className="bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-colors hover:border-primary/30">
-                      <div className="flex justify-between items-start mb-3">
-                         <div className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
-                            {s.category || 'Varios'}
-                         </div>
-                         <button 
-                            onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
-                            className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all"
-                         >
-                            <Edit3 className="w-4 h-4" />
-                         </button>
-                      </div>
-                      <h4 className="font-bold text-lg text-on-surface leading-tight mb-4">{s.name}</h4>
-                      <div className="flex border-t border-outline/10 pt-4">
-                         <div className="flex-1">
-                            <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
-                            <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>
-                               {s.currentStock} <span className="text-sm font-bold opacity-60 ml-0.5">{s.unit || s.purchaseUnit}</span>
-                            </p>
-                         </div>
-                         <div className="flex-1 text-right border-l border-outline/10 pl-4">
-                            <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
-                            <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? s.stockMinimum ?? 0} {s.unit}</p>
-                         </div>
-                      </div>
-                   </div>
-                 );
-               })}
-            </div>
-            {supplies.length === 0 && (
-              <div className="py-20 flex flex-col items-center opacity-30 text-center">
-                 <Layers className="w-16 h-16 mb-4" />
-                 <p className="font-bold">No hay insumos base creados.</p>
-              </div>
-            )}
-          </>
-        )}
-      </main>
-
-      <SupplyFormModal
-        isOpen={isSupplyModalOpen}
-        onClose={() => setIsSupplyModalOpen(false)}
-        supplyToEdit={supplyToEdit}
-        onSave={handleSaveSupply}
-      />
-
-      {/* Purchase Modal — Rediseñado */}
-      <AnimatePresence>
-        {isPurchaseModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setIsPurchaseModalOpen(false)}
-              className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[85dvh] sm:h-auto sm:max-h-[85vh]"
-            >
-              {/* Handle */}
-              <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                <div className="w-10 h-1 bg-outline/20 rounded-full" />
+              {/* 4 Stat cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <StatCard icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                <StatCard icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
+                <StatCard icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
+                <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
               </div>
 
-              {/* Modal header */}
-              <div className="px-6 pt-4 pb-4 flex items-start justify-between border-b border-outline/10">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                    <ShoppingCart className="w-6 h-6 text-primary" />
-                    {purchaseItems.length > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                        {purchaseItems.length}
-                      </span>
-                    )}
-                  </div>
+              {/* Register + Download */}
+              <div className="flex gap-3">
+                <button onClick={() => setIsPurchaseOpen(true)}
+                  className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                  <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
+                </button>
+                <button onClick={() => toast.info('Exportando informe...')}
+                  className="w-14 h-14 bg-surface-container text-secondary rounded-2xl flex items-center justify-center border border-outline/20 hover:bg-surface hover:text-on-surface transition-all">
+                  <Download className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Low stock alert */}
+              {lowStock > 0 && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl">
+                  <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                  <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico. Considera abastecer pronto.</p>
+                </div>
+              )}
+
+              {/* Trend chart */}
+              <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
                   <div>
-                    <h3 className="font-bold text-lg text-on-surface">Mi Lista de Compra</h3>
-                    <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Tu selección</p>
+                    <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
+                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
                   </div>
                 </div>
-                <button onClick={() => setIsPurchaseModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
+                <TrendChart purchases={filtered} period={period} />
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-                {/* Provider */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-secondary uppercase tracking-widest">Proveedor</label>
-                  <select
-                    value={selectedProvider}
-                    onChange={e => setSelectedProvider(e.target.value)}
-                    className="w-full h-12 bg-surface-container rounded-2xl border-2 border-outline/20 px-4 font-bold text-sm focus:border-primary transition-all outline-none"
-                  >
-                    <option value="">Seleccionar proveedor...</option>
-                    {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+              {/* Purchase history */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad</h3>
+                  <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
                 </div>
-
-                {/* Supply search + add */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-secondary uppercase tracking-widest">Agregar Insumo</label>
-                  <input
-                    type="text"
-                    placeholder="Buscar insumo..."
-                    value={supplySearch}
-                    onChange={e => setSupplySearch(e.target.value)}
-                    className="w-full h-12 bg-surface-container rounded-2xl border-2 border-outline/20 px-4 font-medium text-sm focus:border-primary transition-all outline-none"
-                  />
-                  {supplySearch && (
-                    <div className="flex flex-col gap-1 max-h-40 overflow-y-auto bg-white border border-outline/10 rounded-2xl shadow-sm">
-                      {filteredSuppliesForModal.slice(0, 8).map(s => (
-                        <button
-                          key={s.id}
-                          onClick={() => { addItem(s); setSupplySearch(''); }}
-                          disabled={purchaseItems.some(i => i.supplyId === s.id)}
-                          className="flex items-center justify-between px-4 py-2.5 text-left hover:bg-primary/5 transition-colors border-b border-outline/5 last:border-none disabled:opacity-40"
-                        >
-                          <div>
-                            <p className="text-xs font-bold text-on-surface">{s.name}</p>
-                            <p className="text-[10px] text-secondary">{s.unit}</p>
-                          </div>
-                          {purchaseItems.some(i => i.supplyId === s.id) ? (
-                            <CheckCircle2 className="w-4 h-4 text-success" />
-                          ) : (
-                            <Plus className="w-4 h-4 text-primary" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Items list */}
-                <div className="flex flex-col gap-3">
-                  {purchaseItems.length === 0 ? (
-                    <div className="py-8 flex flex-col items-center justify-center opacity-25 border-2 border-dashed border-outline rounded-3xl">
-                      <Package className="w-8 h-8 mb-2" />
-                      <p className="text-xs font-bold">Busca y agrega insumos arriba</p>
-                    </div>
-                  ) : (
-                    purchaseItems.map(item => (
-                      <div key={item.supplyId} className="flex items-center gap-3 bg-surface-container/50 rounded-2xl p-3 border border-outline/10">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm text-on-surface truncate">{item.name}</p>
-                          <p className="text-[10px] text-secondary">{item.unit}</p>
-                        </div>
-                        {/* Qty */}
-                        <div className="flex items-center gap-1.5">
-                          <button onClick={() => updateItem(item.supplyId, 'quantity', Math.max(1, item.quantity - 1))} className="w-7 h-7 rounded-full bg-white border border-outline/20 flex items-center justify-center hover:border-primary/30 transition-all">
-                            <Minus className="w-3 h-3 text-secondary" />
-                          </button>
-                          <span className="font-black text-sm w-6 text-center">{item.quantity}</span>
-                          <button onClick={() => updateItem(item.supplyId, 'quantity', item.quantity + 1)} className="w-7 h-7 rounded-full bg-white border border-outline/20 flex items-center justify-center hover:border-primary/30 transition-all">
-                            <Plus className="w-3 h-3 text-secondary" />
-                          </button>
-                        </div>
-                        {/* Price */}
-                        <div className="w-24">
-                          <input
-                            type="number"
-                            value={item.cost}
-                            onChange={e => updateItem(item.supplyId, 'cost', parseFloat(e.target.value) || 0)}
-                            placeholder="$ precio"
-                            className="w-full h-8 bg-white border border-outline/20 rounded-xl px-2 text-xs font-black text-center focus:border-primary outline-none transition-all"
-                          />
-                        </div>
-                        <button onClick={() => removeItem(item.supplyId)} className="text-outline hover:text-red-500 transition-colors flex-shrink-0">
-                          <Trash2 className="w-4 h-4" />
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 opacity-20">
+                    <ShoppingCart className="w-12 h-12 mb-3" />
+                    <p className="text-sm font-bold">Sin compras en este período</p>
+                  </div>
+                ) : (
+                  filtered.map(p => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                className="w-full py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo Base
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {supplies.map(s => {
+                  const isLow = s.currentStock <= s.minLimit;
+                  return (
+                    <div key={s.id} className={cn("bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30", isLow && "border-orange-200")}>
+                      <div className="flex justify-between items-start mb-3">
+                        <span className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
+                          {isLow && '⚠ '}{s.category || 'Varios'}
+                        </span>
+                        <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                          className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
+                          <Edit3 className="w-4 h-4" />
                         </button>
                       </div>
-                    ))
-                  )}
-                </div>
+                      <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
+                      <div className="flex border-t border-outline/10 pt-4">
+                        <div className="flex-1">
+                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                          <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
+                        </div>
+                        <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                          <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                          <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* Footer */}
-              <div className="px-6 py-5 border-t border-outline/10 bg-white">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[10px] font-black text-secondary uppercase tracking-widest">Total Estimado</p>
-                  <p className="text-2xl font-black text-on-surface">{formatCurrency(purchaseTotal)}</p>
+              {supplies.length === 0 && (
+                <div className="py-20 flex flex-col items-center opacity-30 text-center">
+                  <Layers className="w-16 h-16 mb-4" />
+                  <p className="font-bold">No hay insumos base creados.</p>
                 </div>
-                <button
-                  onClick={handleCompletePurchase}
-                  disabled={purchaseItems.length === 0 || !selectedProvider}
-                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-bold text-sm disabled:opacity-40 flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all"
-                >
-                  Registrar Compra <ChevronDown className="w-5 h-5 rotate-[-90deg]" />
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              )}
+            </>
+          )}
+        </main>
 
-      <BottomNav />
+        <SupplyFormModal isOpen={isSupplyModalOpen} onClose={() => setIsSupplyModalOpen(false)} supplyToEdit={supplyToEdit} onSave={handleSaveSupply} />
+        <PurchaseModal isOpen={isPurchaseOpen} onClose={() => setIsPurchaseOpen(false)} supplies={supplies} onConfirm={handleConfirmPurchase} />
+        <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />
+        <BottomNav />
       </div>
-    </div>
-  );
-}
-
-function StatCard({ icon, label, value, accent }: { icon: React.ReactNode, label: string, value: string, accent: 'primary' | 'orange' | 'slate' }) {
-  const accentMap = {
-    primary: 'bg-primary/5 border-primary/10',
-    orange: 'bg-orange-50 border-orange-100',
-    slate: 'bg-slate-50 border-slate-100'
-  };
-  return (
-    <div className={cn("bg-white rounded-2xl p-4 border flex flex-col gap-2", accentMap[accent])}>
-      <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">
-        {icon}
-      </div>
-      <p className="text-xl font-black text-on-surface leading-none">{value}</p>
-      <p className="text-[9px] font-bold text-secondary uppercase tracking-widest leading-tight">{label}</p>
     </div>
   );
 }
