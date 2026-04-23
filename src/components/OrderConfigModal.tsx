@@ -303,6 +303,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
             {/* ── SECCIÓN CENTRAL: CONFIGURACIÓN (SCROLLABLE) ── */}
             <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar bg-surface-container-lowest/30">
+              
+
+
               <div className="mb-6">
                 <div className="flex justify-between items-end mb-3 px-1">
                   <div className="flex flex-col">

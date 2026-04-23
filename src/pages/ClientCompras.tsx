@@ -213,7 +213,10 @@ export default function ClientCompras() {
           {filteredProducts.map(product => {
             const productInCart = cart.filter(item => item.productId === product.id);
             const totalQuantity = productInCart.reduce((sum, i) => sum + i.quantity, 0);
-            const isComplex = (product.variants && product.variants.length > 0) || product.requiresFlavors || product.requiresFruitChoice;
+            const isComplex = (product.variants && product.variants.length > 1) || product.requiresFlavors || product.requiresFruitChoice;
+            
+            const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
+            const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);
 
             const handleCardClick = () => {
               if (isComplex) {
@@ -224,9 +227,10 @@ export default function ClientCompras() {
                     id: Math.random().toString(36).substr(2, 9),
                     productId: product.id,
                     productName: product.name,
+                    variantLabel: product.variants?.[0]?.label || '',
                     quantity: 1,
-                    unitPrice: product.basePrice || 0,
-                    subtotal: product.basePrice || 0,
+                    unitPrice: minPrice,
+                    subtotal: minPrice,
                   };
                   addToCart(item);
                 }
@@ -287,7 +291,7 @@ export default function ClientCompras() {
                   
                   <div className="flex justify-between items-end mt-1">
                     <p className="text-primary font-black text-base sm:text-lg leading-none">
-                      {product.basePrice ? formatCurrency(product.basePrice) : 'Var. P'}
+                      {priceDisplay}
                     </p>
 
                     {/* Quantity Controls inside logic */}
@@ -307,11 +311,16 @@ export default function ClientCompras() {
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
-                    ) : !isComplex && totalQuantity === 0 ? (
-                      <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                        <Plus className="w-4 h-4" />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {isComplex && totalQuantity > 0 && (
+                          <span className="font-bold text-[10px] uppercase text-primary tracking-wider">{totalQuantity} en carrito</span>
+                        )}
+                        <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                          <Plus className="w-4 h-4" />
+                        </div>
                       </div>
-                    ) : null}
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -379,12 +388,14 @@ export default function ClientCompras() {
                   {detailsProduct.name}
                 </h3>
                 <p className="text-sm text-secondary font-medium leading-relaxed mb-6">
-                  {detailsProduct.description || "Deliciosa opción preparada con ingredientes de la más alta calidad en D'LI."}
+                  {detailsProduct.description}
                 </p>
                 <div className="flex items-center justify-between">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Precio Base</p>
                   <p className="text-xl font-black text-primary">
-                    {detailsProduct.basePrice ? formatCurrency(detailsProduct.basePrice) : 'Var. P'}
+                    {detailsProduct.variants && detailsProduct.variants.length > 1 
+                      ? `Desde ${formatCurrency(Math.min(...detailsProduct.variants.map(v => v.price)))}` 
+                      : formatCurrency(detailsProduct.variants?.[0]?.price || detailsProduct.basePrice || 0)}
                   </p>
                 </div>
               </div>

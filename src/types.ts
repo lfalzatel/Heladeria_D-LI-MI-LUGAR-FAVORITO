@@ -27,12 +27,16 @@ export interface Product {
   id: string;
   name: string;
   category: string;
+  description?: string;
+  ingredients?: string[];
   basePrice?: number;
   variants?: ProductVariant[];
   requiresFlavors?: boolean;
   requiresFruitChoice?: boolean;
   requiresSauces?: boolean;
   fruitOptions?: string[];   // override default fruit list
+  fruitSelection?: string[]; // alternative fruit list from JSON
+  availableFruits?: string[];// alternative fruit list from JSON
   scoops?: number;
   isActive: boolean;
   imageUrl?: string;

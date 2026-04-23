@@ -69,13 +69,16 @@ export default function Login() {
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
+        const isAdminEmail = user.email === 'lfalzatel@gmail.com' || user.email === 'lfalzatel@gmai.com';
+        const assignedRole = isAdminEmail ? 'admin' : 'vendedor';
+        
         await setDoc(userRef, {
           email: user.email,
-          role: 'vendedor',
+          role: assignedRole,
           name: user.displayName || 'Usuario Google',
           createdAt: serverTimestamp()
         });
-        toast.success('Cuenta vinculada como Vendedor');
+        toast.success(isAdminEmail ? 'Cuenta vinculada como Administrador' : 'Cuenta vinculada como Vendedor');
       }
     } catch (error: any) {
       console.error(error);
@@ -191,11 +194,18 @@ export default function Login() {
                   onClick={async () => {
                     setSeeding(true);
                     try {
+                      // Autenticar primero como admin para obtener permisos de escritura
+                      await signInWithEmailAndPassword(auth, 'admin@dli.com', 'Admin123#');
+                      
                       await seedDatabase();
                       toast.success('¡Menú, Precios e Inventario cargados!');
                       setShowConfig(false);
                     } catch (error: any) {
-                      toast.error('Error al cargar datos: ' + error.message);
+                      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                        toast.error('Primero debes Inicializar Usuarios Auth');
+                      } else {
+                        toast.error('Error al cargar datos: ' + error.message);
+                      }
                     } finally {
                       setSeeding(false);
                     }

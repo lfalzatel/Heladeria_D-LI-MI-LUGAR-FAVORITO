@@ -89,7 +89,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         name: name.trim(),
         category,
         isActive: productToEdit ? productToEdit.isActive : true,
-        imageUrl: imageUrl.trim() || undefined,
+        imageUrl: imageUrl.trim() || null,
         requiresFlavors: reqFlavors,
         requiresSauces: reqSauces,
         requiresFruitChoice: reqFruit,
@@ -97,12 +97,12 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
 
       if (isVariantBased) {
         data.variants = variants;
-        data.basePrice = undefined;
-        data.scoops = undefined;
+        data.basePrice = null as any;
+        data.scoops = null as any;
       } else {
         data.basePrice = Number(basePrice);
         data.scoops = Number(baseScoops);
-        data.variants = undefined;
+        data.variants = null as any;
       }
 
       await onSave(data);
@@ -166,8 +166,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
               <div className="relative flex items-center">
                 <LinkIcon className="absolute left-4 w-5 h-5 text-secondary/50" />
                 <input
-                  type="url"
-                  placeholder="Ej: https://..."
+                  type="text"
+                  placeholder="Ej: /images/products/... o https://..."
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   className="w-full pl-12 pr-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-medium text-sm"

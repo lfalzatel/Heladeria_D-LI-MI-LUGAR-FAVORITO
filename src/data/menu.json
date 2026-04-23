@@ -1,0 +1,604 @@
+{
+  "products": [
+    {
+      "id": "cono-vaso",
+      "name": "Cono o Vaso",
+      "category": "helados",
+      "description": "Helado artesanal Mimo's servido en cono de galleta o vaso desechable. Sencillo para un antojo rápido, doble para el que no se decide por uno solo.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "variants": [
+        {
+          "label": "Sencillo",
+          "price": 3500,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 5500,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "cucurucho",
+      "name": "Cucurucho",
+      "category": "helados",
+      "description": "El clásico de la heladería en barquillo crujiente de oblea. Su forma cónica lo hace perfecto para disfrutar caminando. Disponible en sencillo, doble y triple.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "variants": [
+        {
+          "label": "Sencillo",
+          "price": 4000,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 6000,
+          "scoops": 2
+        },
+        {
+          "label": "Triple",
+          "price": 8000,
+          "scoops": 3
+        }
+      ]
+    },
+    {
+      "id": "conchita",
+      "name": "Conchita",
+      "category": "helados",
+      "description": "Helado servido en una delicada concha de oblea, crujiente por fuera y cremosa por dentro. Una presentación elegante para los más exigentes. Disponible en sencilla, doble y triple.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "variants": [
+        {
+          "label": "Sencilla",
+          "price": 4500,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 6500,
+          "scoops": 2
+        },
+        {
+          "label": "Triple",
+          "price": 8500,
+          "scoops": 3
+        }
+      ]
+    },
+    {
+      "id": "ensalada-frutas",
+      "name": "Ensalada de Frutas",
+      "category": "ensaladas",
+      "description": "Una explosión de frutas frescas: manzana, mango, fresa, banano, papaya, uvas y kiwi, acompañadas de queso, dos sabores de helado Mimo's, crema de leche, lechera y barquillo. La versión Mini incluye un solo sabor de helado. Disponible en cuatro tamaños.",
+      "ingredients": [
+        "manzana",
+        "mango",
+        "fresa",
+        "banano",
+        "papaya",
+        "uvas",
+        "kiwi",
+        "queso",
+        "helado",
+        "crema de leche",
+        "lechera",
+        "barquillo"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
+      "variants": [
+        {
+          "label": "Mini",
+          "price": 10000,
+          "scoops": 1
+        },
+        {
+          "label": "Pequeña",
+          "price": 17000,
+          "scoops": 2
+        },
+        {
+          "label": "Mediana",
+          "price": 22000,
+          "scoops": 2
+        },
+        {
+          "label": "Grande",
+          "price": 27000,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "copa-salpicon-mango",
+      "name": "Copa de Salpicón Sabor Mango",
+      "category": "salpicon",
+      "description": "Refrescante combinación de banano, papaya y mango fresco, bañados con un sabor de helado Mimo's a elección, lechera y barquillo. Todo servido en copa. Ideal para los amantes del mango.",
+      "ingredients": [
+        "banano",
+        "papaya",
+        "mango",
+        "helado",
+        "lechera",
+        "barquillo",
+        "queso"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "fruitSelection": [
+        "banano",
+        "papaya",
+        "mango"
+      ],
+      "isActive": true,
+      "imageUrl": "/Images/products/copa-salpicon.jpeg",
+      "variants": [
+        {
+          "label": "Copa Salpicón Mango",
+          "price": 11000,
+          "scoops": 1
+        }
+      ]
+    },
+    {
+      "id": "copa-salpicon-fresa",
+      "name": "Copa de Salpicón Sabor Fresa",
+      "category": "salpicon",
+      "description": "La versión frutal con banano, papaya y fresa natural, acompañada de un sabor de helado Mimo's, lechera y barquillo. Dulce, fresca y colorida.",
+      "ingredients": [
+        "banano",
+        "papaya",
+        "fresa",
+        "helado",
+        "lechera",
+        "barquillo",
+        "queso"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "fruitSelection": [
+        "banano",
+        "papaya",
+        "fresa"
+      ],
+      "isActive": true,
+      "imageUrl": "/Images/products/copa-salpicon.jpeg",
+      "variants": [
+        {
+          "label": "Copa Salpicón Fresa",
+          "price": 11000,
+          "scoops": 1
+        }
+      ]
+    },
+    {
+      "id": "vaso-salpicon",
+      "name": "Vaso de Salpicón con Helado",
+      "category": "salpicon",
+      "description": "Las mismas frutas frescas del salpicón clásico, combinadas con helado Mimo's, lechera y barquillo, servidas en vaso para llevar fácilmente. Disponible en pequeño, mediano y grande.",
+      "ingredients": [
+        "frutas frescas",
+        "helado",
+        "lechera",
+        "barquillo"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/vaso-salpicón.jpeg",
+      "variants": [
+        {
+          "label": "Pequeño",
+          "price": 7000,
+          "scoops": 1
+        },
+        {
+          "label": "Mediano",
+          "price": 9000,
+          "scoops": 1
+        },
+        {
+          "label": "Grande",
+          "price": 11000,
+          "scoops": 1
+        }
+      ]
+    },
+    {
+      "id": "copa-dli",
+      "name": "Copa D'LI",
+      "category": "copas",
+      "description": "Nuestra copa insignia. Una generosa base de arequipe, coronada con tres bolas de helado Mimo's a tu elección, queso, chantilly y cucurucho. Una experiencia completa en cada cucharada.",
+      "ingredients": [
+        "arequipe",
+        "helado",
+        "queso",
+        "chantilly",
+        "cucurucho"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/copa-dli.jpeg",
+      "variants": [
+        {
+          "label": "Copa D'LI",
+          "price": 13000,
+          "scoops": 3
+        }
+      ]
+    },
+    {
+      "id": "copa-explosion",
+      "name": "Copa Explosión de Sabores",
+      "category": "copas",
+      "description": "Para los verdaderos amantes del helado. Siete sabores de helado Mimo's sobre una cama de arequipe, cubiertos con chantilly y barquillo. Grande, vistosa e irresistible.",
+      "ingredients": [
+        "arequipe",
+        "helado",
+        "chantilly",
+        "barquillo"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/copa-explosion.jpeg",
+      "variants": [
+        {
+          "label": "Copa Explosión",
+          "price": 16000,
+          "scoops": 7
+        }
+      ]
+    },
+    {
+      "id": "oblea-tradicional",
+      "name": "Oblea Tradicional",
+      "category": "obleas",
+      "description": "Dos crujientes obleas de maíz unidas por una capa generosa de arequipe, crema y queso. La versión con fruta añade fresa, mango o durazno fresco para un toque especial. Un clásico colombiano que nunca falla.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": true,
+      "availableFruits": [
+        "fresa",
+        "mango",
+        "durazno"
+      ],
+      "isActive": true,
+      "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
+      "variants": [
+        {
+          "label": "Arequipe, crema y queso",
+          "price": 6000,
+          "hasFruit": false
+        },
+        {
+          "label": "Arequipe, crema, queso y fruta",
+          "price": 9000,
+          "hasFruit": true
+        }
+      ]
+    },
+    {
+      "id": "oblea-cuchareable",
+      "name": "Oblea Cuchareable",
+      "category": "obleas",
+      "description": "La versión moderna de la oblea tradicional: trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly, todo servido en recipiente para disfrutar con cuchara. También disponible con una bola de helado Mimo's.",
+      "ingredients": [
+        "oblea",
+        "arequipe",
+        "queso",
+        "crema de leche",
+        "fruta",
+        "chantilly"
+      ],
+      "requiresFlavors": true,
+      "requiresFruitChoice": true,
+      "availableFruits": [
+        "fresa",
+        "mango",
+        "durazno"
+      ],
+      "isActive": true,
+      "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
+      "variants": [
+        {
+          "label": "Sin helado",
+          "price": 13000,
+          "hasIceCream": false,
+          "scoops": 0
+        },
+        {
+          "label": "Con helado",
+          "price": 15000,
+          "hasIceCream": true,
+          "scoops": 1
+        }
+      ]
+    },
+    {
+      "id": "adicion-queso",
+      "name": "Adición Queso",
+      "category": "adiciones",
+      "description": "Porción adicional de queso fresco para complementar cualquier producto.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Queso",
+          "price": 4000
+        }
+      ]
+    },
+    {
+      "id": "adicion-fruta",
+      "name": "Adición Fruta",
+      "category": "adiciones",
+      "description": "Porción extra de fruta fresca de temporada.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Fruta",
+          "price": 3500
+        }
+      ]
+    },
+    {
+      "id": "adicion-helado",
+      "name": "Adición Helado",
+      "category": "adiciones",
+      "description": "Una bola adicional de helado Mimo's al sabor que prefieras.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Helado",
+          "price": 3000,
+          "scoops": 1
+        }
+      ]
+    },
+    {
+      "id": "adicion-chantilly",
+      "name": "Adición Chantilly",
+      "category": "adiciones",
+      "description": "Crema chantilly extra para los más golosos.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Chantilly",
+          "price": 4000
+        }
+      ]
+    },
+    {
+      "id": "adicion-chips-chocolate",
+      "name": "Adición Chips de Chocolate",
+      "category": "adiciones",
+      "description": "Trocitos de chocolate crujiente para añadir textura y sabor.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Chips de Chocolate",
+          "price": 3000
+        }
+      ]
+    },
+    {
+      "id": "adicion-salsa",
+      "name": "Adición Salsa",
+      "category": "adiciones",
+      "description": "Salsa dulce para bañar tu helado o ensalada. Pregunta por el sabor disponible.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Salsa",
+          "price": 1000
+        }
+      ]
+    },
+    {
+      "id": "adicion-barquillo",
+      "name": "Adición Barquillo",
+      "category": "adiciones",
+      "description": "Barquillo crujiente adicional para acompañar tu postre.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Barquillo",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "adicion-cono-cucurucho",
+      "name": "Adición Cono o Cucurucho",
+      "category": "adiciones",
+      "description": "Un cono o cucurucho extra para compartir o llevar más.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Cono o Cucurucho",
+          "price": 1000
+        }
+      ]
+    }
+  ],
+  "icecreamFlavors": [
+    {
+      "id": "fresa",
+      "name": "Fresa",
+      "isAvailable": true
+    },
+    {
+      "id": "chicle",
+      "name": "Chicle",
+      "isAvailable": true
+    },
+    {
+      "id": "brownie",
+      "name": "Brownie",
+      "isAvailable": true
+    },
+    {
+      "id": "vainilla",
+      "name": "Vainilla",
+      "isAvailable": true
+    },
+    {
+      "id": "arequipe",
+      "name": "Arequipe",
+      "isAvailable": true
+    },
+    {
+      "id": "maracuya",
+      "name": "Maracuyá",
+      "isAvailable": true
+    },
+    {
+      "id": "chocolate",
+      "name": "Chocolate",
+      "isAvailable": true
+    },
+    {
+      "id": "mandarina",
+      "name": "Mandarina",
+      "isAvailable": true
+    },
+    {
+      "id": "nata-mani",
+      "name": "Nata Maní",
+      "isAvailable": true
+    },
+    {
+      "id": "ron-pasas",
+      "name": "Ron Pasas",
+      "isAvailable": true
+    },
+    {
+      "id": "mango-biche",
+      "name": "Mango Biche",
+      "isAvailable": true
+    },
+    {
+      "id": "frutos-rojos",
+      "name": "Frutos Rojos",
+      "isAvailable": true
+    },
+    {
+      "id": "vainilla-chips",
+      "name": "Vainilla Chips",
+      "isAvailable": true
+    },
+    {
+      "id": "vainilla-pasas",
+      "name": "Vainilla Pasas",
+      "isAvailable": true
+    },
+    {
+      "id": "veteado-mora",
+      "name": "Veteado de Mora",
+      "isAvailable": true
+    },
+    {
+      "id": "veteado-caramelo",
+      "name": "Veteado de Caramelo",
+      "isAvailable": true
+    }
+  ],
+  "categories": [
+    {
+      "id": "helados",
+      "label": "Helados",
+      "icon": "icecream",
+      "order": 1
+    },
+    {
+      "id": "ensaladas",
+      "label": "Ensaladas de Frutas",
+      "icon": "lunch_dining",
+      "order": 2
+    },
+    {
+      "id": "salpicon",
+      "label": "Salpicón",
+      "icon": "local_bar",
+      "order": 3
+    },
+    {
+      "id": "copas",
+      "label": "Copas Especiales",
+      "icon": "wine_bar",
+      "order": 4
+    },
+    {
+      "id": "obleas",
+      "label": "Obleas",
+      "icon": "cookie",
+      "order": 5
+    },
+    {
+      "id": "adiciones",
+      "label": "Adiciones",
+      "icon": "add_circle",
+      "order": 6
+    }
+  ],
+  "tables": [
+    {
+      "id": "1",
+      "label": "Mesa 1",
+      "status": "free",
+      "openedAt": null,
+      "currentCartSnapshot": null
+    },
+    {
+      "id": "2",
+      "label": "Mesa 2",
+      "status": "free",
+      "openedAt": null,
+      "currentCartSnapshot": null
+    },
+    {
+      "id": "3",
+      "label": "Mesa 3",
+      "status": "free",
+      "openedAt": null,
+      "currentCartSnapshot": null
+    }
+  ]
+}
