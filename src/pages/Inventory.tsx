@@ -96,7 +96,7 @@ export default function Inventory() {
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
-      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32 overflow-x-hidden min-w-0">
         <AppHeader left={<div className="font-bold text-primary truncate hidden sm:block">Gestión</div>} />
         <PageTitle title="Inventario del Menú" subtitle="Catálogo de Venta al Público" />
 
@@ -113,14 +113,14 @@ export default function Inventory() {
         </button>
 
         {/* Toolbar */}
-        <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-4 rounded-[2rem] border border-outline/50 shadow-sm">
-           <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar">
+        <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-4 rounded-[2rem] border border-outline/50 shadow-sm w-full">
+           <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar pb-2 sm:pb-0">
               {categories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs transition-all",
+                    "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs transition-all whitespace-nowrap shrink-0",
                     activeCategory === cat.id 
                       ? "bg-primary text-white shadow-lg shadow-primary/20"
                       : "bg-surface-container text-secondary hover:bg-surface-container-high"
