@@ -224,10 +224,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   };
 
   const toggleAddition = (add: Product) => {
+    const addPrice = add.variants?.[0]?.price || 0;
     setSelectedAdditions(prev => {
       const exists = prev.find(a => a.name === add.name);
       if (exists) return prev.filter(a => a.name !== add.name);
-      return [...prev, { name: add.name, price: add.basePrice || 0 }];
+      return [...prev, { name: add.name, price: addPrice }];
     });
   };
 
@@ -454,32 +455,35 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'additions' && (
-                    <div className="flex flex-col gap-2.5">
-                      {availableAdditions.map(add => (
+                    <div className="grid grid-cols-2 gap-2">
+                      {availableAdditions.map(add => {
+                        const price = add.variants?.[0]?.price || 0;
+                        const shortName = add.name.replace(/^(Adición|Adicion)\s+/i, '');
+                        return (
                         <button
                           key={add.id}
                           onClick={() => toggleAddition(add)}
                           className={cn(
-                            "relative flex items-center p-4 rounded-[1.5rem] transition-all border-2 gap-4",
+                            "relative flex items-center p-2.5 rounded-2xl transition-all border-2 gap-3",
                             selectedAdditions.find(a => a.name === add.name)
-                              ? "bg-success/5 border-success shadow-sm"
+                              ? "bg-success/10 border-success shadow-sm"
                               : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
                           )}
                         >
                           <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
                             selectedAdditions.find(a => a.name === add.name) ? "bg-success text-white scale-110" : "bg-surface-container text-secondary"
                           )}>
-                             <Plus className="w-5 h-5" />
+                             <Plus className="w-4 h-4" />
                           </div>
-                          <div className="flex-1 text-left">
-                            <p className="font-black text-sm tracking-tight">{add.name}</p>
-                            <p className={cn("text-[11px] font-black", selectedAdditions.find(a => a.name === add.name) ? "text-success" : "text-primary")}>
-                              +{formatCurrency(add.basePrice || 0)}
+                          <div className="flex-1 text-left leading-tight">
+                            <p className="font-black text-xs tracking-tight line-clamp-2">{shortName}</p>
+                            <p className={cn("text-[10px] font-black mt-0.5", selectedAdditions.find(a => a.name === add.name) ? "text-success" : "text-primary")}>
+                              +{formatCurrency(price)}
                             </p>
                           </div>
                         </button>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </motion.div>
