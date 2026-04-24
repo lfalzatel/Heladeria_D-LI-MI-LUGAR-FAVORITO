@@ -17,14 +17,14 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
   return (
     <AnimatePresence>
       {purchase && (
-        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-on-surface/50 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-on-surface/60 backdrop-blur-md" />
           <motion.div
-            initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col max-h-[85dvh]"
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col h-[95dvh]"
           >
-            <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 bg-outline/20 rounded-full" /></div>
+
             <div className="px-6 pt-4 pb-4 border-b border-outline/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-primary/10 rounded-2xl flex items-center justify-center"><Receipt className="w-5 h-5 text-primary" /></div>
@@ -137,15 +137,14 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleClose} className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleClose} className="absolute inset-0 bg-on-surface/60 backdrop-blur-md" />
           <motion.div
-            initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[90dvh] sm:h-[85vh]"
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col h-[95dvh]"
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 bg-outline/20 rounded-full" /></div>
+
 
             {/* Header */}
             <div className="px-6 pt-3 pb-4 border-b border-outline/10">
@@ -156,7 +155,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     {selected.size > 0 && <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center">{selected.size}</span>}
                   </div>
                   <div>
-                    <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer Tienda' : 'Revisar Compra'}</h3>
+                    <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer Heladería' : 'Revisar Compra'}</h3>
                     <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">
                       {selected.size} productos · {step === 1 ? 'Selección' : 'Detalles finales'}
                     </p>
