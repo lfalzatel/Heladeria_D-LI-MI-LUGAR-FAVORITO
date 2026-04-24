@@ -400,6 +400,7 @@ export default function POS() {
 
 function ProductCard({ product, onClick, onDetailClick }: { product: Product, onClick: () => void, onDetailClick?: () => void }) {
   const { activeTable, carts, addItem, updateQuantity, removeItem } = useTableCartStore();
+  const [imgError, setImgError] = useState(false);
   
   const cartItems = carts[activeTable]?.items.filter(item => item.productId === product.id) || [];
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -461,10 +462,17 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
         }}
         className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300"
       >
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        {product.imageUrl && !imgError ? (
+          <img 
+            src={product.imageUrl} 
+            alt={product.name} 
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)} 
+          />
         ) : (
-          <IceCream className="w-8 h-8 text-secondary/30 absolute inset-0 m-auto group-hover:text-primary transition-colors" />
+          <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
+            <IceCream className="w-8 h-8 text-primary/30 group-hover:text-primary transition-colors" />
+          </div>
         )}
         
         {totalQuantity > 0 && !isComplex && (

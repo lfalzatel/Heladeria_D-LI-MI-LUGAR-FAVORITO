@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, Database, CheckCircle2 } from 'lucide-react';
+import { Loader2, Database, CheckCircle2, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { seedDatabase } from '../services/seedService';
 import { useNavigate } from 'react-router-dom';
@@ -27,11 +27,19 @@ export default function Seed() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-surface">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-outline">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="p-3 bg-primary/10 rounded-2xl text-primary font-bold">
-            <Database className="w-6 h-6" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl text-primary font-bold">
+              <Database className="w-6 h-6" />
+            </div>
+            <h2 className="font-headline font-bold text-2xl text-on-surface">Configuración Inicial</h2>
           </div>
-          <h2 className="font-headline font-bold text-2xl text-on-surface">Configuración Inicial</h2>
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all"
+          >
+            <X className="w-5 h-5 text-secondary" />
+          </button>
         </div>
 
         <p className="text-secondary text-sm mb-8 leading-relaxed">
