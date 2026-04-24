@@ -8,7 +8,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "imageUrl": "https://images.unsplash.com/photo-1501443762994-82bd5dabb892?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Sencillo",
@@ -30,7 +30,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "imageUrl": "https://images.unsplash.com/photo-1567206244249-41bafdb74459?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Sencillo",
@@ -57,7 +57,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "imageUrl": "https://images.unsplash.com/photo-1560008511-11c63416e52d?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Sencilla",
@@ -336,7 +336,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1552767059-ce182ead6c1b?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Queso",
@@ -352,7 +352,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Fruta",
@@ -368,7 +368,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1576506295286-5cda18df43e7?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Helado",
@@ -385,7 +385,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1590080875515-8a03b1447d9c?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Chantilly",
@@ -401,7 +401,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1585502866757-32ae7269226e?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Chips de Chocolate",
@@ -417,7 +417,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1589135398302-044738846b4e?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Salsa",
@@ -433,7 +433,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1559181567-c3190ca9959b?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Barquillo",
@@ -449,7 +449,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
           "label": "Cono o Cucurucho",
