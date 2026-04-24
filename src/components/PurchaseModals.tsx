@@ -4,7 +4,7 @@ import { X, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCirc
 import { cn, formatCurrency } from '../lib/utils';
 
 export interface Supply { id: string; name: string; currentStock: number; unit: string; minLimit: number; category: string; }
-export interface PurchaseItem { supplyId: string; name: string; unit: string; quantity: number; cost: number; margin: number; category: string; }
+export interface PurchaseItem { supplyId: string; name: string; unit: string; quantity: number; cost: number; portions: number; category: string; }
 export interface PurchaseRecord { id: string; provider: string; items: PurchaseItem[]; total: number; createdAt: any; }
 
 const PROVIDERS = ['Colacteos', 'Frubana', 'DPA', 'Distribuidora El Heladero', 'Otro'];
@@ -53,8 +53,14 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline/5">
                       <div><p className="text-[9px] text-secondary font-black uppercase">Cantidad</p><p className="font-bold text-sm">{item.quantity}</p></div>
                       <div><p className="text-[9px] text-secondary font-black uppercase">Costo Unit.</p><p className="font-bold text-sm">{formatCurrency(item.cost || 0)}</p></div>
-                      {item.margin > 0 && <div><p className="text-[9px] text-secondary font-black uppercase">Margen</p><p className="font-bold text-sm">{item.margin}%</p></div>}
+                      {(item.portions || 0) > 0 && <div><p className="text-[9px] text-secondary font-black uppercase">Porciones</p><p className="font-bold text-sm">{item.portions} uds</p></div>}
                     </div>
+                    {(item.portions || 0) > 0 && (item.cost || 0) > 0 && (
+                      <div className="mt-2 pt-2 border-t border-outline/5 flex items-center justify-between">
+                        <p className="text-[9px] text-secondary font-black uppercase">Costo por porción</p>
+                        <p className="font-black text-emerald-600 text-sm">{formatCurrency((item.cost || 0) / (item.portions || 1))}</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -110,7 +116,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const goToStep2 = () => {
     const newItems = sortedSupplies
       .filter(s => selected.has(s.id))
-      .map(s => ({ supplyId: s.id, name: s.name, unit: s.unit, quantity: 1, cost: 0, margin: 0, category: s.category }));
+      .map(s => ({ supplyId: s.id, name: s.name, unit: s.unit, quantity: 1, cost: 0, portions: 0, category: s.category }));
     setItems(newItems);
     setStep(2);
   };
@@ -125,7 +131,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   };
 
   const total = items.reduce((acc, i) => acc + (i.cost * i.quantity), 0);
-  const pvp = (item: PurchaseItem) => item.cost > 0 ? Math.round(item.cost * (1 + item.margin / 100)) : 0;
+  const costPerPortion = (item: PurchaseItem) => item.portions > 0 && item.cost > 0 ? item.cost / item.portions : 0;
 
   const handleConfirm = async () => {
     if (!provider || items.length === 0) return;
@@ -226,7 +232,6 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   </div>
                   {items.map(item => {
                     const subtotal = item.cost * item.quantity;
-                    const pvpVal = pvp(item);
                     return (
                       <div key={item.supplyId} className="bg-white border border-outline/10 rounded-2xl p-4 shadow-sm">
                         <div className="flex items-start justify-between mb-3">
@@ -259,19 +264,19 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                               <input type="number" value={item.cost || ''} onChange={e => updateItem(item.supplyId, 'cost', parseFloat(e.target.value) || 0)} placeholder="0" className="flex-1 bg-transparent text-sm font-black outline-none w-full" />
                             </div>
                           </div>
-                          {/* Margin */}
+                          {/* Portions */}
                           <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Margen %</p>
+                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Porciones / Unidad</p>
                             <div className="flex items-center bg-surface-container rounded-xl px-3 h-9 border border-outline/20 focus-within:border-primary transition-all">
-                              <input type="number" value={item.margin || ''} onChange={e => updateItem(item.supplyId, 'margin', parseFloat(e.target.value) || 0)} placeholder="0" className="flex-1 bg-transparent text-sm font-black outline-none w-full" />
-                              <span className="text-secondary text-xs ml-1">%</span>
+                              <input type="number" value={item.portions || ''} onChange={e => updateItem(item.supplyId, 'portions', parseFloat(e.target.value) || 0)} placeholder="ej: 80" className="flex-1 bg-transparent text-sm font-black outline-none w-full" />
+                              <span className="text-secondary text-xs ml-1">uds</span>
                             </div>
                           </div>
-                          {/* PVP */}
+                          {/* Cost/portion auto-calculated */}
                           <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">PVP Final</p>
-                            <div className={cn("flex items-center rounded-xl px-3 h-9 border", pvpVal > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-container border-outline/20')}>
-                              <span className={cn("text-sm font-black", pvpVal > 0 ? 'text-emerald-700' : 'text-secondary')}>{pvpVal > 0 ? formatCurrency(pvpVal) : '—'}</span>
+                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo / Porción</p>
+                            <div className={cn("flex items-center rounded-xl px-3 h-9 border", costPerPortion(item) > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-container border-outline/20')}>
+                              <span className={cn("text-sm font-black", costPerPortion(item) > 0 ? 'text-emerald-700' : 'text-secondary')}>{costPerPortion(item) > 0 ? formatCurrency(costPerPortion(item)) : '—'}</span>
                             </div>
                           </div>
                         </div>
