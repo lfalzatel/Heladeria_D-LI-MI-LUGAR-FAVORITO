@@ -16,29 +16,19 @@ import {
   Users as UsersIcon, 
   Package, 
   Search, 
-  Shield, 
   History, 
   Plus, 
   ShoppingCart,
-  ChevronDown,
-  ChevronUp,
   X,
-  PlusCircle,
-  MinusCircle,
-  Trash2,
   Calendar,
   Wallet,
-  Check,
-  Save,
   Edit3,
-  CreditCard,
-  Phone,
-  MapPin,
   UserCheck,
-  ChevronLeft,
-  ChevronRight,
   Filter,
-  Database
+  Database,
+  AlertTriangle,
+  Download,
+  BarChart3
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -51,6 +41,8 @@ import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
 import SupplyFormModal from '../components/SupplyFormModal';
 import BottomNav from '../components/BottomNav';
+import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseItem as PurchaseItemType, PurchaseRecord } from '../components/PurchaseModals';
+import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
 
 interface UserProfile {
   uid: string;
@@ -105,9 +97,15 @@ export default function Management() {
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
   const [purchasePeriod, setPurchasePeriod] = useState<'Hoy' | 'Semana' | 'Mes'>('Hoy');
 
+  // Purchases (compras) state
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
+  const [period, setPeriod] = useState<PeriodFilter>('today');
   const [insumosSubTab, setInsumosSubTab] = useState<'compras' | 'catalogo'>('compras');
+  const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
+  const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
-  const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
+  const [supplyToEdit, setSupplyToEdit] = useState<SupplyType | null>(null);
+
 
   // User History State
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<UserProfile | null>(null);
@@ -129,7 +127,7 @@ export default function Management() {
   });
   const [isSavingUser, setIsSavingUser] = useState(false);
 
-  // Update URL when tab changes
+  // Sync URL with tab
   useEffect(() => {
     navigate(`?tab=${activeTab}`, { replace: true });
   }, [activeTab, navigate]);
@@ -153,19 +151,23 @@ export default function Management() {
     const suppliesQ = query(collection(db, 'supplies'), orderBy('name', 'asc'));
     const unsubscribeSupplies = onSnapshot(suppliesQ, 
       (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supply[];
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SupplyType[];
         setSupplies(data);
       },
-      (error) => {
-        console.error("Supplies listener error:", error);
-      }
+      (error) => { console.error("Supplies listener error:", error); }
     );
+
+    // Fetch Supply Purchases
+    const purchasesQ = query(collection(db, 'supplyPurchases'), orderBy('createdAt', 'desc'));
+    const unsubPurchases = onSnapshot(purchasesQ, snap => setPurchases(snap.docs.map(d => ({ id: d.id, ...d.data() })) as PurchaseRecord[]));
 
     return () => {
       unsubscribeUsers();
       unsubscribeSupplies();
+      unsubPurchases();
     };
   }, [currentUser]);
+
 
   // History Fetching Logic
   useEffect(() => {
@@ -343,7 +345,25 @@ export default function Management() {
     }
   };
 
-  const handleSaveSupply = async (data: Partial<Supply>) => {
+  // Purchases confirm
+  const handleConfirmPurchase = async (provider: string, items: PurchaseItemType[]) => {
+    const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
+    await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
+    for (const item of items) {
+      await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
+    }
+    toast.success('¡Compra registrada y stock actualizado!');
+  };
+
+  // Period-filtered purchases
+  const filtered = purchases.filter(p => isInPeriod(p.createdAt, period));
+  const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
+  const totalUnits = filtered.reduce((a, p) => a + (p.items?.reduce((b, i) => b + (i.quantity || 0), 0) || 0), 0);
+  const activeDays = new Set(filtered.map(p => { const d = p.createdAt?.toDate?.() || (p.createdAt ? new Date(p.createdAt) : null); return d?.toDateString(); }).filter(Boolean)).size;
+  const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
+  const lowStock = supplies.filter((s: any) => s.currentStock <= s.minLimit).length;
+
+  const handleSaveSupply = async (data: Partial<SupplyType>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
       toast.success('Insumo actualizado exitosamente');
@@ -372,7 +392,7 @@ export default function Management() {
       <main className="p-4 sm:p-6 max-w-5xl mx-auto flex flex-col gap-6">
         <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-md mx-auto shadow-inner border border-outline/30">
           <button
-            onClick={() => navigate('/admin/supplies')}
+            onClick={() => setActiveTab('insumos')}
             className={cn(
               "flex-1 py-3 px-4 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2",
               activeTab === 'insumos' ? "bg-white text-primary shadow-md" : "text-secondary hover:text-on-surface"
@@ -480,52 +500,124 @@ export default function Management() {
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="flex flex-col gap-8 pb-10"
+              className="flex flex-col gap-5 pb-10"
             >
-              <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner max-w-sm mx-auto w-full mb-2">
-                 <button 
-                   onClick={() => setInsumosSubTab('compras')}
-                   className={cn("flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", insumosSubTab === 'compras' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
-                 >
-                   Compras
-                 </button>
-                 <button 
-                   onClick={() => setInsumosSubTab('catalogo')}
-                   className={cn("flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", insumosSubTab === 'catalogo' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}
-                 >
-                   Catálogo
-                 </button>
+              {/* Sub-tabs */}
+              <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner max-w-sm mx-auto w-full">
+                <button onClick={() => setInsumosSubTab('compras')}
+                  className={cn("flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", insumosSubTab === 'compras' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}>
+                  Compras &amp; Historial
+                </button>
+                <button onClick={() => setInsumosSubTab('catalogo')}
+                  className={cn("flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", insumosSubTab === 'catalogo' ? "bg-white text-primary shadow-sm" : "text-secondary hover:bg-surface-container-high")}>
+                  Catálogo Base
+                </button>
               </div>
 
               {insumosSubTab === 'compras' ? (
-                 <div className="flex flex-col gap-6">
-                    <button 
-                      onClick={() => setIsSupplySelectionModalOpen(true)}
-                      className="w-full py-5 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-98 transition-all"
-                    >
-                      <Plus className="w-5 h-5 stroke-[3]" />
-                      Registrar Compra
-                    </button>
-                 </div>
-              ) : (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <button 
-                      onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-                      className="w-full py-5 border-2 border-dashed border-outline/30 rounded-3xl flex items-center justify-center gap-3 text-secondary/40 hover:text-primary hover:border-primary/30 transition-all font-black text-xs uppercase tracking-widest"
-                    >
-                      + Nuevo Insumo
-                    </button>
-                    {supplies.map(s => (
-                       <div key={s.id} className="bg-white rounded-3xl p-5 border shadow-sm group hover:border-primary/30 transition-all">
-                          <div className="flex justify-between items-start mb-3">
-                             <span className="px-3 py-1 rounded-lg bg-surface-container text-[9px] font-black uppercase tracking-widest">{s.category}</span>
-                             <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }} className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary opacity-0 group-hover:opacity-100 transition-all"><Edit3 className="w-4 h-4" /></button>
-                          </div>
-                          <h4 className="font-bold text-on-surface truncate">{s.name}</h4>
-                          <p className="text-xl font-black mt-2">{s.currentStock} <span className="text-[10px] font-bold text-secondary">{s.unit}</span></p>
-                       </div>
+                <>
+                  {/* Period filter */}
+                  <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
+                    {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map(p => (
+                      <button key={p} onClick={() => setPeriod(p)}
+                        className={cn("px-4 py-2 rounded-lg transition-all flex-1", period === p ? "bg-on-surface text-white shadow-sm" : "text-secondary hover:bg-surface")}>
+                        {PERIOD_LABELS[p]}
+                      </button>
                     ))}
-                 </div>
+                  </div>
+
+                  {/* Register + Download */}
+                  <div className="flex gap-3">
+                    <button onClick={() => setIsPurchaseOpen(true)}
+                      className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                      <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
+                    </button>
+                    <button onClick={() => toast.info('Exportando informe...')}
+                      className="w-14 h-14 bg-surface-container text-secondary rounded-2xl flex items-center justify-center border border-outline/20 hover:bg-surface hover:text-on-surface transition-all">
+                      <Download className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* 4 Stat cards */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <StatCard icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                    <StatCard icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
+                    <StatCard icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
+                    <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
+                  </div>
+
+                  {/* Low stock alert */}
+                  {lowStock > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl">
+                      <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                      <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
+                    </div>
+                  )}
+
+                  {/* Trend chart */}
+                  <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
+                      <div>
+                        <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
+                        <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
+                      </div>
+                    </div>
+                    <TrendChart purchases={filtered} period={period} />
+                  </div>
+
+                  {/* Purchase history */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between px-1">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad</h3>
+                      <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
+                    </div>
+                    {filtered.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 opacity-20">
+                        <ShoppingCart className="w-12 h-12 mb-3" />
+                        <p className="text-sm font-bold">Sin compras en este período</p>
+                      </div>
+                    ) : (
+                      filtered.map(p => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                    className="w-full py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                    <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo Base
+                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {supplies.map((s: any) => {
+                      const isLow = s.currentStock <= s.minLimit;
+                      return (
+                        <div key={s.id} className={cn("bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30", isLow && "border-orange-200")}>
+                          <div className="flex justify-between items-start mb-3">
+                            <span className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
+                              {isLow && '⚠ '}{s.category || 'Varios'}
+                            </span>
+                            <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                              className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
+                          <div className="flex border-t border-outline/10 pt-4">
+                            <div className="flex-1">
+                              <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                              <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
+                            </div>
+                            <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                              <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                              <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </motion.div>
           )}
@@ -539,8 +631,13 @@ export default function Management() {
         onSave={handleSaveSupply}
       />
 
-      {/* Reusable Modals (Supply Select, Purchase, Edit User, etc) would go here */}
-      {/* ... keeping them compact for this rewrite ... */}
+      <PurchaseModal
+        isOpen={isPurchaseOpen}
+        onClose={() => setIsPurchaseOpen(false)}
+        supplies={supplies as any}
+        onConfirm={handleConfirmPurchase}
+      />
+      <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />
 
       <AnimatePresence>
         {selectedUserForHistory && (

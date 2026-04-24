@@ -22,7 +22,7 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col h-[95dvh]"
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col" style={{ height: 'calc(100dvh - 2rem)' }}
           >
 
             <div className="px-6 pt-4 pb-4 border-b border-outline/10 flex items-center justify-between">
@@ -142,7 +142,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col h-[95dvh]"
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col" style={{ height: 'calc(100dvh - 2rem)' }}
           >
 
 
@@ -171,15 +171,9 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
               </div>
             </div>
 
-            {/* STEP 1 */}
+            {/* STEP 1 — solo selección de productos */}
             {step === 1 && (
               <>
-                <div className="px-6 pt-4 pb-2">
-                  <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all">
-                    <option value="">Seleccionar proveedor...</option>
-                    {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
                 <div className="flex-1 overflow-y-auto px-6 py-2 flex flex-col gap-2">
                   {sortedSupplies.map(s => {
                     const isLow = s.currentStock <= s.minLimit;
@@ -206,11 +200,11 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     );
                   })}
                 </div>
-                <div className="px-6 py-4 border-t border-outline/10 bg-white">
+                <div className="px-6 py-4 border-t border-outline/10 bg-white rounded-b-[2.5rem]">
                   <div className="flex items-center justify-between mb-3">
                     <div><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Items Totales</p><p className="font-black text-lg">{selected.size} uds</p></div>
                   </div>
-                  <button onClick={goToStep2} disabled={selected.size === 0 || !provider}
+                  <button onClick={goToStep2} disabled={selected.size === 0}
                     className="w-full py-4 rounded-2xl bg-on-surface text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30 hover:opacity-90 active:scale-[0.98] transition-all">
                     Continuar al Resumen ({selected.size}) <ChevronRight className="w-4 h-4" />
                   </button>
@@ -218,10 +212,18 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
               </>
             )}
 
-            {/* STEP 2 */}
+            {/* STEP 2 — proveedor + detalles */}
             {step === 2 && (
               <>
                 <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+                  {/* Proveedor — ahora en el paso 2 */}
+                  <div>
+                    <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Proveedor</p>
+                    <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all">
+                      <option value="">Seleccionar proveedor...</option>
+                      {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
                   {items.map(item => {
                     const subtotal = item.cost * item.quantity;
                     const pvpVal = pvp(item);
@@ -280,7 +282,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     );
                   })}
                 </div>
-                <div className="px-6 py-4 border-t border-outline/10 bg-white">
+                <div className="px-6 py-4 border-t border-outline/10 bg-white rounded-b-[2.5rem]">
                   <div className="flex items-center justify-between mb-3">
                     <div><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Monto Inversión</p><p className="text-2xl font-black text-on-surface">{formatCurrency(total)}</p></div>
                     <div className="text-right"><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Items Totales</p><p className="text-2xl font-black text-on-surface">{items.length} uds</p></div>
@@ -289,7 +291,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border border-outline/30 text-on-surface font-black text-xs uppercase tracking-widest hover:bg-surface-container transition-all flex items-center justify-center gap-2">
                       <ChevronLeft className="w-4 h-4" /> Editar
                     </button>
-                    <button onClick={handleConfirm} disabled={saving || items.length === 0 || total === 0}
+                    <button onClick={handleConfirm} disabled={saving || items.length === 0 || total === 0 || !provider}
                       className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
                       <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : 'Confirmar y Abastecer'}
                     </button>

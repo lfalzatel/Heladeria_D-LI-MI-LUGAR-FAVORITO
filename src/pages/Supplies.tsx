@@ -11,12 +11,11 @@ import AdminSidebar from '../components/AdminSidebar';
 import SupplyFormModal from '../components/SupplyFormModal';
 import { PurchaseModal, PurchaseDetailModal, Supply, PurchaseItem, PurchaseRecord } from '../components/PurchaseModals';
 
-type PeriodFilter = 'today' | 'week' | 'month';
-const PERIOD_LABELS: Record<PeriodFilter, string> = { today: 'Hoy', week: 'Semana', month: 'Mes' };
-
-const toDate = (ts: any): Date | null => { if (!ts) return null; if (ts.toDate) return ts.toDate(); return new Date(ts); };
-const isInPeriod = (ts: any, period: PeriodFilter): boolean => {
-  const d = toDate(ts); if (!d) return false;
+export type PeriodFilter = 'today' | 'week' | 'month';
+export const PERIOD_LABELS: Record<PeriodFilter, string> = { today: 'Hoy', week: 'Semana', month: 'Mes' };
+export const toDateS = (ts: any): Date | null => { if (!ts) return null; if (ts.toDate) return ts.toDate(); return new Date(ts); };
+export const isInPeriod = (ts: any, period: PeriodFilter): boolean => {
+  const d = toDateS(ts); if (!d) return false;
   const now = new Date();
   if (period === 'today') return d.toDateString() === now.toDateString();
   if (period === 'week') { const s = new Date(now); s.setDate(now.getDate() - 7); return d >= s; }
@@ -24,7 +23,7 @@ const isInPeriod = (ts: any, period: PeriodFilter): boolean => {
 };
 
 /* ─── SVG TREND CHART ─── */
-function TrendChart({ purchases, period }: { purchases: PurchaseRecord[], period: PeriodFilter }) {
+export function TrendChart({ purchases, period }: { purchases: PurchaseRecord[], period: PeriodFilter }) {
   const W = 320, H = 100, PAD = 10;
   if (purchases.length === 0) return (
     <div className="h-24 flex items-center justify-center opacity-20">
@@ -35,7 +34,7 @@ function TrendChart({ purchases, period }: { purchases: PurchaseRecord[], period
   // Group by day
   const byDay: Record<string, number> = {};
   purchases.forEach(p => {
-    const d = toDate(p.createdAt);
+    const d = toDateS(p.createdAt);
     if (d) { const k = d.toLocaleDateString('es-CO'); byDay[k] = (byDay[k] || 0) + p.total; }
   });
   const entries = Object.entries(byDay).slice(-14);
@@ -65,7 +64,7 @@ function TrendChart({ purchases, period }: { purchases: PurchaseRecord[], period
 }
 
 /* ─── STAT CARD ─── */
-function StatCard({ icon, label, value, sub, accent }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' }) {
+export function StatCard({ icon, label, value, sub, accent }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' }) {
   const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100' };
   return (
     <div className={cn("bg-white rounded-3xl p-4 border flex flex-col gap-2 shadow-sm", map[accent])}>
@@ -80,8 +79,8 @@ function StatCard({ icon, label, value, sub, accent }: { icon: React.ReactNode, 
 }
 
 /* ─── PURCHASE HISTORY CARD ─── */
-function PurchaseCard({ purchase, onClick }: { purchase: PurchaseRecord, onClick: () => void }) {
-  const d = toDate(purchase.createdAt);
+export function PurchaseCard({ purchase, onClick }: { purchase: PurchaseRecord, onClick: () => void }) {
+  const d = toDateS(purchase.createdAt);
   const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
   const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
