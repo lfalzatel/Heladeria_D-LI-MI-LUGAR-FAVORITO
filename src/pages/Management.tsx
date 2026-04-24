@@ -500,7 +500,7 @@ export default function Management() {
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="flex flex-col gap-5 pb-10"
+              className="w-full flex flex-col gap-5 pb-10"
             >
               {/* Sub-tabs */}
               <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner max-w-sm mx-auto w-full">
