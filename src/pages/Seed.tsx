@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Loader2, Database, CheckCircle2, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { seedDatabase } from '../services/seedService';
+import { syncProductImages } from '../services/imageFixService';
 import { useNavigate } from 'react-router-dom';
 
 export default function Seed() {
@@ -19,6 +20,20 @@ export default function Seed() {
     } catch (error: any) {
       console.error(error);
       toast.error('Error al cargar datos: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncImages = async () => {
+    setLoading(true);
+    try {
+      const count = await syncProductImages();
+      setDone(true);
+      toast.success(`¡Se actualizaron ${count} imágenes correctamente!`);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error al sincronizar imágenes: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -62,13 +77,23 @@ export default function Seed() {
             </button>
           </motion.div>
         ) : (
-          <button 
-            onClick={handleSeed}
-            disabled={loading}
-            className="w-full py-5 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-          >
-            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Sincronizar Catálogo D\'LI'}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={handleSeed}
+              disabled={loading}
+              className="w-full py-5 rounded-2xl bg-on-surface text-white font-bold shadow-lg shadow-black/10 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Borrar y Recargar Todo'}
+            </button>
+
+            <button 
+              onClick={handleSyncImages}
+              disabled={loading}
+              className="w-full py-5 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Sincronizar Solo Imágenes'}
+            </button>
+          </div>
         )}
 
         <div className="mt-8 pt-6 border-t border-outline/50">

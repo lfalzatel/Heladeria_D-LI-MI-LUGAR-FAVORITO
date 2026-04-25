@@ -8,8 +8,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import Login from './pages/Login';
 import POS from './pages/POS';
 import Dashboard from './pages/Dashboard';
-import Seed from './pages/Seed';
-import Supplies from './pages/Supplies';
 import Inventory from './pages/Inventory';
 import Management from './pages/Management';
 import Reports from './pages/Reports';
@@ -50,7 +48,7 @@ export default function App() {
   }, [authLoading, hideSplash]);
 
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <Toaster position="top-center" richColors />
       
       <AnimatePresence>
@@ -105,11 +103,6 @@ export default function App() {
             : (authLoading ? null : <Navigate to="/login" />)
         } />
 
-        <Route path="/admin/supplies" element={
-          user && profile && (profile.role === 'admin' || profile.role === 'propietario') 
-            ? <Supplies /> 
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
 
         <Route path="/admin/inventory" element={
           user && profile && (profile.role === 'admin' || profile.role === 'propietario') 
@@ -157,7 +150,6 @@ export default function App() {
         } />
 
         <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
-        <Route path="/admin/seed" element={<Seed />} />
         
         <Route path="/" element={<Navigate to={user && profile ? (profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard') : '/login'} />} />
       </Routes>

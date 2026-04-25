@@ -42,3 +42,16 @@ export function handleFirestoreError(error: any, operation: FirestoreErrorInfo['
   }
   throw error;
 }
+
+export function getAssetUrl(path: string | undefined | null): string {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  
+  // Clean the path to avoid double slashes
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  const base = (import.meta.env.BASE_URL || '/').endsWith('/') 
+    ? import.meta.env.BASE_URL 
+    : `${import.meta.env.BASE_URL}/`;
+    
+  return `${base}${cleanPath}`;
+}

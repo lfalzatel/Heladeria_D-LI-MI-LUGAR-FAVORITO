@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Save, IceCream, Link as LinkIcon, Info } from 'lucide-react';
 import { Product, ProductVariant } from '../types';
 import { toast } from 'sonner';
+import { getAssetUrl } from '../lib/utils';
 
 interface ProductFormModalProps {
   isOpen: boolean;

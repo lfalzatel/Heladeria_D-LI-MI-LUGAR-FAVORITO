@@ -128,7 +128,7 @@ export default function Supplies() {
   const filtered = purchases.filter(p => isInPeriod(p.createdAt, period));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
   const totalUnits = filtered.reduce((a, p) => a + (p.items?.reduce((b, i) => b + (i.quantity || 0), 0) || 0), 0);
-  const activeDays = new Set(filtered.map(p => toDate(p.createdAt)?.toDateString()).filter(Boolean)).size;
+  const activeDays = new Set(filtered.map(p => toDateS(p.createdAt)?.toDateString()).filter(Boolean)).size;
   const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
   const lowStock = supplies.filter(s => s.currentStock <= s.minLimit).length;
 

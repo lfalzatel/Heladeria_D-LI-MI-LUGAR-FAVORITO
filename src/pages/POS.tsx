@@ -23,7 +23,7 @@ import {
   ChevronLeft,
   X
 } from 'lucide-react';
-import { formatCurrency, cn } from '../lib/utils';
+import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import OrderConfigModal from '../components/OrderConfigModal';
 import CartDrawer from '../components/CartDrawer';
@@ -463,12 +463,12 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
         className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300"
       >
         {product.imageUrl && !imgError ? (
-          <img 
-            src={product.imageUrl} 
-            alt={product.name} 
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)} 
-          />
+           <img 
+             src={getAssetUrl(product.imageUrl)} 
+             alt={product.name} 
+             className="w-full h-full object-cover"
+             onError={() => setImgError(true)} 
+           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
             <IceCream className="w-8 h-8 text-primary/30 group-hover:text-primary transition-colors" />

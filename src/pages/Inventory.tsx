@@ -15,7 +15,7 @@ import {
   Utensils,
   GlassWater
 } from 'lucide-react';
-import { formatCurrency, cn } from '../lib/utils';
+import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -162,7 +162,7 @@ export default function Inventory() {
                      product.isActive ? "bg-primary/5 text-primary" : "bg-surface-container text-secondary/40"
                    )}>
                       {product.imageUrl ? (
-                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                         <img src={getAssetUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
                          <IceCream className="w-6 h-6" />
                       )}

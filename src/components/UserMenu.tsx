@@ -134,13 +134,29 @@ export default function UserMenu() {
 
   const handleInstall = async () => {
     setIsOpen(false);
+    
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+
+    if (isStandalone) {
+      return toast.success('¡La app ya está instalada!');
+    }
+
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') toast.success('¡App instalada!');
-      setDeferredPrompt(null);
+      if (outcome === 'accepted') {
+        toast.success('¡App instalada!');
+        setDeferredPrompt(null);
+      }
+    } else if (isIOS) {
+      toast.info(
+        'Para instalar en iPhone/iPad: toca el botón "Compartir" (el cuadrado con flecha) y selecciona "Añadir a la pantalla de inicio".',
+        { duration: 8000 }
+      );
     } else {
-      toast.info('Usa el menú del navegador para instalar la app en tu dispositivo.');
+      toast.info('Para instalar la app: abre el menú del navegador y selecciona "Instalar aplicación" o "Añadir a pantalla de inicio".');
     }
   };
 

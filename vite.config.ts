@@ -7,6 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    base: mode === 'production' ? '/Heladeria_D-LI-MI-LUGAR-FAVORITO/' : '/',
     plugins: [
       react(), 
       tailwindcss(),

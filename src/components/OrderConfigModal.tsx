@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus } from 'lucide-react';
 import { Product, ProductVariant, CartItem } from '../types';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
-import { formatCurrency, cn } from '../lib/utils';
+import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { toast } from 'sonner';
 
 const SALSAS = ['Chocolate', 'Mora', 'Arequipe', 'Fresa', 'Leche Condensada', 'Miel'];
@@ -265,8 +265,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             {/* ── SECCIÓN SUPERIOR: HERO IMAGE + OVERLAY ── */}
             <div className="relative h-[25%] sm:h-[28%] flex-shrink-0 bg-surface-container-low group">
                {product.imageUrl ? (
-                 <img 
-                   src={product.imageUrl} 
+                   <img 
+                     src={getAssetUrl(product.imageUrl)} 
                    alt={product.name} 
                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                  />

@@ -3,7 +3,7 @@ import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy 
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Product, ProductVariant } from '../types';
-import { formatCurrency, cn } from '../lib/utils';
+import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingCart, X, Plus, Minus, Search, IceCream, 
@@ -264,7 +264,7 @@ export default function ClientCompras() {
                   className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300"
                 >
                   {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                    <img src={getAssetUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     <IceCream className="w-8 h-8 text-secondary/30 absolute inset-0 m-auto group-hover:text-primary transition-colors" />
                   )}
@@ -365,7 +365,7 @@ export default function ClientCompras() {
             >
               <div className="relative w-full aspect-square bg-surface-container-low">
                 {detailsProduct.imageUrl ? (
-                  <img src={detailsProduct.imageUrl} alt={detailsProduct.name} className="w-full h-full object-cover" />
+                  <img src={getAssetUrl(detailsProduct.imageUrl)} alt={detailsProduct.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-secondary/30">
                     <IceCream className="w-24 h-24" />

@@ -42,6 +42,8 @@ import AdminSidebar from '../components/AdminSidebar';
 import SupplyFormModal from '../components/SupplyFormModal';
 import BottomNav from '../components/BottomNav';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseItem as PurchaseItemType, PurchaseRecord } from '../components/PurchaseModals';
+import { seedDatabase } from '../services/seedService';
+import { syncProductImages } from '../services/imageFixService';
 import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
 
 interface UserProfile {
@@ -105,6 +107,8 @@ export default function Management() {
   const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
   const [supplyToEdit, setSupplyToEdit] = useState<SupplyType | null>(null);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
 
   // User History State
@@ -373,6 +377,33 @@ export default function Management() {
     }
   };
 
+  const handleFullSeed = async () => {
+    if (!window.confirm('¿Estás seguro? Esto borrará todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
+    setIsSyncing(true);
+    try {
+      await seedDatabase();
+      toast.success('¡Catálogo recargado completamente!');
+      setIsSyncModalOpen(false);
+    } catch (error: any) {
+      toast.error('Error: ' + error.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleImageSync = async () => {
+    setIsSyncing(true);
+    try {
+      const count = await syncProductImages();
+      toast.success(`¡Se actualizaron ${count} imágenes correctamente!`);
+      setIsSyncModalOpen(false);
+    } catch (error: any) {
+      toast.error('Error: ' + error.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
@@ -381,11 +412,11 @@ export default function Management() {
         <div className="flex justify-between items-start pr-4 sm:pr-6">
           <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
           <button 
-            onClick={() => navigate('/admin/seed')}
+            onClick={() => setIsSyncModalOpen(true)}
             className="mt-6 px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
           >
             <Database className="w-4 h-4" /> 
-            <span className="hidden sm:inline">Catálogo</span>
+            <span className="hidden sm:inline">Sincronizar</span>
           </button>
         </div>
 
@@ -787,6 +818,58 @@ export default function Management() {
                <button onClick={handleUpdateUser} className="w-full h-14 bg-primary text-white rounded-2xl font-black mt-8 uppercase shadow-xl">{isSavingUser ? 'Guardando...' : 'Actualizar'}</button>
              </motion.div>
            </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Sync Catalog Modal */}
+      <AnimatePresence>
+        {isSyncModalOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isSyncing && setIsSyncModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Database className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-on-surface">Sincronización</h3>
+                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Base de datos D'LI</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-secondary font-medium leading-relaxed mb-8">
+                Selecciona el tipo de actualización que deseas realizar en el sistema.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={handleImageSync}
+                  disabled={isSyncing}
+                  className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {isSyncing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Sincronizar Solo Imágenes
+                </button>
+                
+                <button 
+                  onClick={handleFullSeed}
+                  disabled={isSyncing}
+                  className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {isSyncing ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+                  Recargar Catálogo Completo
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setIsSyncModalOpen(false)}
+                disabled={isSyncing}
+                className="w-full mt-6 py-2 text-[10px] font-black text-secondary/40 uppercase tracking-widest hover:text-secondary transition-colors disabled:opacity-0"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
       

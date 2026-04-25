@@ -8,7 +8,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1501443762994-82bd5dabb892?auto=format&fit=crop&q=80&w=500",
+      "imageUrl": "/images/products/vaso-cono.jpg",
       "variants": [
         {
           "label": "Sencillo",
@@ -57,7 +57,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1560008511-11c63416e52d?auto=format&fit=crop&q=80&w=500",
+      "imageUrl": "/images/products/conchita.jpeg",
       "variants": [
         {
           "label": "Sencilla",
