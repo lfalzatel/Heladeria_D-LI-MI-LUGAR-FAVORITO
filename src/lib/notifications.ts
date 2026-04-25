@@ -1,4 +1,4 @@
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import { doc, updateDoc, arrayUnion, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { toast } from 'sonner';
@@ -16,6 +16,10 @@ export async function requestNotificationPermission(userId: string) {
     const permission = await Notification.requestPermission();
     
     if (permission === 'granted') {
+      if (!(await isSupported())) {
+        console.log('Mensajería no soportada en este navegador');
+        return;
+      }
       const messaging = getMessaging();
       
       // Obtener el token de registro de FCM
@@ -42,8 +46,9 @@ export async function requestNotificationPermission(userId: string) {
 }
 
 // Escuchar mensajes cuando la app está abierta (Primer plano)
-export function listenToForegroundMessages() {
+export async function listenToForegroundMessages() {
   try {
+    if (!(await isSupported())) return;
     const messaging = getMessaging();
     onMessage(messaging, (payload) => {
       console.log('Mensaje recibido en primer plano:', payload);
