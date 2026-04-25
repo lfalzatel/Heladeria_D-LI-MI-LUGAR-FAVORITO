@@ -222,7 +222,7 @@ export default function UserMenu() {
             animate={{ opacity: 1, y: 4, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-            className="absolute right-0 mt-2 w-72 bg-white rounded-3xl shadow-2xl shadow-black/12 border border-outline/30 overflow-hidden z-[100]"
+            className="absolute right-0 mt-2 w-72 bg-white rounded-3xl shadow-2xl shadow-black/12 border border-outline/30 overflow-y-auto overflow-x-hidden z-[100] max-h-[calc(100vh-120px)] hide-scrollbar"
           >
             {/* User card */}
             <div className="p-4 bg-gradient-to-br from-surface-container/60 to-white border-b border-outline/10">

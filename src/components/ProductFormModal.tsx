@@ -259,6 +259,20 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                      {c.name}
                    </button>
                  ))}
+
+                 {/* Custom Color Picker */}
+                 <div className="relative flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-outline/20 hover:border-primary/30 transition-all bg-surface-container/50">
+                    <input 
+                      type="color" 
+                      value={cardColor?.startsWith('#') ? cardColor : '#ffffff'}
+                      onChange={(e) => setCardColor(e.target.value)}
+                      className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-secondary">Personalizado</span>
+                      <span className="text-[10px] font-bold text-on-surface uppercase">{cardColor?.startsWith('#') ? cardColor : 'Escoger'}</span>
+                    </div>
+                 </div>
                </div>
                <p className="text-[9px] text-secondary/60 font-bold italic">
                  * El rojo y amarillo estimulan el apetito y la compra impulsiva.

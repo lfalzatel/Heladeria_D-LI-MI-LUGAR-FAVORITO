@@ -295,10 +295,11 @@ export default function ClientCompras() {
                   onClick={handleCardClick}
                   className={cn(
                     "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-                    product.cardColor || "bg-white",
+                    (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
                     totalQuantity > 0 ? "ring-4 ring-primary/10 shadow-md border-primary/20" : 
                     product.cardColor ? "border-outline/20 shadow-sm" : "border-outline/10 shadow-sm"
                   )}
+                  style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
                 >
                   <div 
                     onClick={(e) => { 

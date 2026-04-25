@@ -152,9 +152,10 @@ export default function Inventory() {
               key={product.id}
               className={cn(
                 "rounded-[2.5rem] p-6 border-2 transition-all flex flex-col justify-between group",
-                product.cardColor || "bg-white",
+                (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
                 product.isActive ? "border-outline/50" : "border-dashed border-outline opacity-60 bg-surface-container/10"
               )}
+              style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
             >
               <div>
                 <div className="flex justify-between items-start mb-4">
