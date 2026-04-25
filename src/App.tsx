@@ -32,19 +32,31 @@ export default function App() {
 
   const hasRequestedNotifs = useRef(false);
 
-  // Re-initialize flavors every time user authenticates (retries after permission-denied)
+  // Re-initialize flavors and handle notifications
   useEffect(() => {
     if (user && profile) {
       initFlavors();
       
-      // Intentar registrar notificaciones si el permiso ya está concedido
-      // Usamos el ref para evitar bucles infinitos cuando el perfil se actualiza
-      if (!hasRequestedNotifs.current && 'Notification' in window && Notification.permission === 'granted') {
-        hasRequestedNotifs.current = true;
-        requestNotificationPermission(user.uid).catch(err => {
-          console.error(err);
-          hasRequestedNotifs.current = false; // Permitir reintento si falló
-        });
+      if (!hasRequestedNotifs.current && 'Notification' in window) {
+        // 1. Si ya tiene permiso, registrar el token silenciosamente
+        if (Notification.permission === 'granted') {
+          hasRequestedNotifs.current = true;
+          requestNotificationPermission(user.uid).catch(err => {
+            console.error('Error registrando token:', err);
+            hasRequestedNotifs.current = false;
+          });
+        } 
+        // 2. Si no ha decidido (default), pedir permiso automáticamente al ingresar
+        else if (Notification.permission === 'default') {
+          hasRequestedNotifs.current = true;
+          // Pequeño delay para no interrumpir el splash screen
+          setTimeout(() => {
+            requestNotificationPermission(user.uid).catch(err => {
+              console.error('Error pidiendo permiso:', err);
+              hasRequestedNotifs.current = false;
+            });
+          }, 2000);
+        }
       }
     }
   }, [user, profile, initFlavors]);
