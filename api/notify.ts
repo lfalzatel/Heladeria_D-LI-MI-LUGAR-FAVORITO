@@ -1,50 +1,107 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getMessaging } from 'firebase-admin/messaging';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { GoogleAuth } from 'google-auth-library';
 
-// Esta función se encarga de enviar notificaciones a múltiples tokens
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Método no permitido' });
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const { tokens, title, body, data } = req.body;
-
-  if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
-    return res.status(400).json({ message: 'Se requieren tokens válidos' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Inicializar Firebase Admin si no está inicializado
-    if (getApps().length === 0) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-      initializeApp({
-        credential: cert(serviceAccount)
-      });
+    const { tokens, title, body, data } = req.body;
+
+    if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
+      return res.status(400).json({ error: 'Tokens array is required' });
     }
 
-    const messaging = getMessaging();
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable is not set');
+    }
 
-    const message = {
-      notification: {
-        title: title || "D'LI Heladería",
-        body: body || "Nueva actualización"
-      },
-      data: data || {},
-      tokens: tokens,
-    };
+    // Obtener access token con Service Account
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    const auth = new GoogleAuth({
+      credentials: serviceAccount,
+      scopes: ['https://www.googleapis.com/auth/firebase.messaging']
+    });
 
-    // Enviar mensajes a todos los dispositivos
-    const response = await messaging.sendEachForMulticast(message);
+    const client = await auth.getClient();
+    const accessTokenResponse = await client.getAccessToken();
+    const accessToken = accessTokenResponse.token;
     
-    console.log('Resultado del envío:', response.successCount, 'mensajes enviados con éxito');
-    
+    if (!accessToken) {
+      throw new Error('Failed to get access token');
+    }
+
+    const projectId = serviceAccount.project_id;
+
+    console.log(`Enviando notificación a ${tokens.length} dispositivos vía FCM V1...`);
+
+    // Enviar a cada token usando FCM V1 API
+    const results = await Promise.allSettled(
+      tokens.map((token: string) =>
+        fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: {
+              token,
+              notification: { title, body },
+              data: data || {},
+              android: { 
+                priority: 'high',
+                notification: {
+                  sound: 'default',
+                  click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                }
+              },
+              apns: { 
+                payload: { 
+                  aps: { 
+                    sound: 'default',
+                    contentAvailable: true
+                  } 
+                } 
+              },
+              webpush: {
+                headers: {
+                  Urgency: 'high'
+                },
+                notification: {
+                  icon: '/pwa-192x192.png',
+                  badge: '/pwa-192x192.png'
+                }
+              }
+            }
+          })
+        })
+      )
+    );
+
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    console.log(`Notificaciones enviadas con éxito: ${successCount}`);
+
     return res.status(200).json({ 
       success: true, 
-      successCount: response.successCount, 
-      failureCount: response.failureCount 
+      sent: successCount,
+      total: tokens.length
     });
-  } catch (error) {
-    console.error('Error enviando notificación:', error);
-    return res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+
+  } catch (error: any) {
+    console.error('Error en API notify:', error);
+    return res.status(500).json({ 
+      error: error.message || 'Internal server error' 
+    });
   }
 }
