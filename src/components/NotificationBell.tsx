@@ -45,6 +45,8 @@ export default function NotificationBell() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [showBadge, setShowBadge] = useState(false);
+  const prevCount = useRef(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
@@ -64,10 +66,10 @@ export default function NotificationBell() {
         orderBy('createdAt', 'desc')
       );
     } else if (isStaff) {
-      // Staff sees all pending pedidos
+      // Staff sees pending and accepted pedidos to allow ongoing chat
       q = query(
         collection(db, 'pedidos'),
-        where('status', '==', 'pendiente'),
+        where('status', 'in', ['pendiente', 'aceptado']),
         orderBy('createdAt', 'desc')
       );
     } else {
@@ -84,6 +86,26 @@ export default function NotificationBell() {
     return unsubscribe;
   }, [profile?.uid, isCliente, isStaff]);
 
+  const unreadCount = isCliente
+    ? pedidos.filter(p => p.status !== 'pendiente').length
+    : pedidos.filter(p => {
+        // Contar como "no leído" si es pendiente O si el último mensaje no es del staff
+        const lastMsg = p.messages?.[p.messages.length - 1];
+        const hasNewMsg = lastMsg && lastMsg.from !== profile?.uid;
+        return p.status === 'pendiente' || hasNewMsg;
+      }).length;
+
+  // Manejar visibilidad del badge (solo si aumenta el número)
+  useEffect(() => {
+    if (unreadCount > prevCount.current) {
+      setShowBadge(true);
+    }
+    if (unreadCount === 0) {
+      setShowBadge(false);
+    }
+    prevCount.current = unreadCount;
+  }, [unreadCount]);
+
   // Close panel when clicking outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -94,10 +116,6 @@ export default function NotificationBell() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-
-  const unreadCount = isCliente
-    ? pedidos.filter(p => p.status !== 'pendiente').length
-    : pedidos.length; // For staff: count pending pedidos
 
   const handleUpdateStatus = async (pedidoId: string, status: 'aceptado' | 'rechazado') => {
     try {
@@ -141,18 +159,34 @@ export default function NotificationBell() {
     <div className="relative" ref={panelRef}>
       {/* Bell button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen) setShowBadge(false);
+          setIsOpen(!isOpen);
+        }}
         className={cn(
           "relative w-10 h-10 flex items-center justify-center rounded-full transition-all",
           isOpen ? "bg-primary text-white" : "bg-surface-container text-secondary hover:bg-primary/10 hover:text-primary"
         )}
       >
-        <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
+        <motion.div
+          animate={showBadge ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
+          transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
+        >
+          <Bell className="w-5 h-5" />
+        </motion.div>
+        
+        {unreadCount > 0 && showBadge && (
           <motion.span
             initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              boxShadow: ["0 0 0 0px rgba(239, 68, 68, 0.4)", "0 0 0 8px rgba(239, 68, 68, 0)", "0 0 0 0px rgba(239, 68, 68, 0)"]
+            }}
+            transition={{ 
+              scale: { duration: 0.3 },
+              boxShadow: { repeat: Infinity, duration: 1.5 }
+            }}
+            className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white z-10"
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </motion.span>
@@ -289,24 +323,49 @@ export default function NotificationBell() {
                   <div className="flex flex-col divide-y divide-outline/10">
                     {pedidos.map(pedido => {
                       const config = STATUS_CONFIG[pedido.status];
+                      const lastMsg = pedido.messages?.[pedido.messages.length - 1];
+                      const isUnreadChat = lastMsg && lastMsg.from !== profile?.uid;
+
                       return (
                         <button
                           key={pedido.id}
                           onClick={() => setSelectedId(pedido.id)}
-                          className="w-full px-5 py-4 text-left hover:bg-surface-container/50 transition-colors flex items-center gap-4 group"
+                          className={cn(
+                            "w-full px-5 py-4 text-left hover:bg-surface-container/50 transition-colors flex items-center gap-4 group relative",
+                            isUnreadChat && "bg-primary/5"
+                          )}
                         >
+                          {isUnreadChat && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
+                          )}
                           <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ring-1", config.bg, config.ring, config.color)}>
                             {config.icon}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5">
-                              <p className="text-xs font-black text-on-surface">
+                              <p className="text-xs font-black text-on-surface flex items-center gap-2">
                                 {isStaff ? pedido.clienteName : 'Tu pedido'} #{pedido.id.slice(-6).toUpperCase()}
+                                {isUnreadChat && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
                               </p>
                               <span className="text-[10px] font-bold text-primary">{formatCurrency(pedido.total)}</span>
                             </div>
-                            <p className={cn("text-[10px] font-bold uppercase", config.color)}>{config.label}</p>
-                            <p className="text-[10px] text-secondary mt-0.5">{formatTime(pedido.createdAt)}</p>
+                            <div className="flex items-center justify-between">
+                              <p className={cn("text-[10px] font-bold uppercase", config.color)}>{config.label}</p>
+                              <p className="text-[9px] text-secondary/50 font-medium">{formatTime(pedido.createdAt)}</p>
+                            </div>
+                            
+                            {/* Vista previa de mensaje estilo WhatsApp */}
+                            {lastMsg && (
+                              <div className="mt-1.5 flex items-start gap-1.5 bg-surface-container/30 p-2 rounded-lg border border-outline/5">
+                                <MessageCircle className={cn("w-3 h-3 mt-0.5", isUnreadChat ? "text-primary" : "text-secondary/40")} />
+                                <p className={cn(
+                                  "text-[10px] leading-relaxed truncate flex-1",
+                                  isUnreadChat ? "text-on-surface font-bold" : "text-secondary/70 font-medium"
+                                )}>
+                                  <span className="opacity-60">{lastMsg.fromName}:</span> {lastMsg.text}
+                                </p>
+                              </div>
+                            )}
                           </div>
                           <ChevronRight className="w-4 h-4 text-secondary/30 group-hover:text-primary transition-colors flex-shrink-0" />
                         </button>
