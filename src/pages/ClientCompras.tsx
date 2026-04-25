@@ -167,7 +167,7 @@ export default function ClientCompras() {
         else if (err.code === 3) toast.error('Tiempo de espera agotado');
         else toast.error('Error al obtener GPS');
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
     );
   };
 
@@ -191,13 +191,17 @@ export default function ClientCompras() {
         messages: [],
       });
 
-      // Actualizar conteo de ventas de productos
-      const updatePromises = cart.map(item => 
-        updateDoc(doc(db, 'products', item.productId), {
-          salesCount: increment(item.quantity)
-        })
-      );
-      await Promise.all(updatePromises);
+      // Actualizar conteo de ventas de productos (Opcional, puede fallar por permisos en el cliente)
+      try {
+        const updatePromises = cart.map(item => 
+          updateDoc(doc(db, 'products', item.productId), {
+            salesCount: increment(item.quantity)
+          })
+        );
+        await Promise.all(updatePromises);
+      } catch (err) {
+        console.warn('No se pudo actualizar salesCount (probablemente falta de permisos), pero el pedido fue enviado.', err);
+      }
 
       toast.success('¡Pedido enviado! Pronto te confirmaremos.');
       setCart([]);
