@@ -6,7 +6,7 @@ import {
   Sun, Moon, Monitor, LogOut, Settings, Package, Share2, Download, 
   ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight, CircleAlert 
 } from 'lucide-react';
-import { requestNotificationPermission } from '../lib/notifications';
+import { requestNotificationPermission, unregisterNotifications } from '../lib/notifications';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -358,11 +358,20 @@ export default function UserMenu() {
                      } finally {
                        setIsRequestingPermission(false);
                      }
-                   } else {
-                     setNotificationsEnabled(false);
-                     localStorage.setItem('notifications_enabled', 'false');
-                     toast.info('Notificaciones pausadas en esta sesión');
-                   }
+                    } else {
+                      setIsRequestingPermission(true);
+                      try {
+                        await unregisterNotifications(profile?.uid || '');
+                        setNotificationsEnabled(false);
+                        localStorage.setItem('notifications_enabled', 'false');
+                        toast.info('Notificaciones desactivadas en este dispositivo');
+                      } catch (err) {
+                        console.error(err);
+                        toast.error('Error al desactivar notificaciones');
+                      } finally {
+                        setIsRequestingPermission(false);
+                      }
+                    }
                  }}
                  className={cn(
                    "w-full flex items-center gap-3 p-3 rounded-2xl transition-all group border border-outline/5",

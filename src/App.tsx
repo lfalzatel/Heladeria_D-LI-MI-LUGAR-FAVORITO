@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { listenToForegroundMessages } from './lib/notifications';
+import { listenToForegroundMessages, requestNotificationPermission } from './lib/notifications';
 import { Toaster } from 'sonner';
 import { useAuthStore } from './stores/useAuthStore';
 import { useFlavorsStore, useSplashStore } from './stores/useFlavorsStore';
@@ -30,12 +30,24 @@ export default function App() {
     listenToForegroundMessages();
   }, [initialize]);
 
+  const hasRequestedNotifs = useRef(false);
+
   // Re-initialize flavors every time user authenticates (retries after permission-denied)
   useEffect(() => {
-    if (user) {
+    if (user && profile) {
       initFlavors();
+      
+      // Intentar registrar notificaciones si el permiso ya está concedido
+      // Usamos el ref para evitar bucles infinitos cuando el perfil se actualiza
+      if (!hasRequestedNotifs.current && 'Notification' in window && Notification.permission === 'granted') {
+        hasRequestedNotifs.current = true;
+        requestNotificationPermission(user.uid).catch(err => {
+          console.error(err);
+          hasRequestedNotifs.current = false; // Permitir reintento si falló
+        });
+      }
     }
-  }, [user, initFlavors]);
+  }, [user, profile, initFlavors]);
 
 
 

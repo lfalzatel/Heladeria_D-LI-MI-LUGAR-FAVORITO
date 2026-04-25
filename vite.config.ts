@@ -12,10 +12,14 @@ export default defineConfig(({mode}) => {
       react(), 
       tailwindcss(),
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'public',
+        filename: 'firebase-messaging-sw.js',
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         devOptions: {
-          enabled: true
+          enabled: true,
+          type: 'classic'
         },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
