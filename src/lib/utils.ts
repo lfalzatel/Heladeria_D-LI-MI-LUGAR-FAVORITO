@@ -49,12 +49,17 @@ export function getAssetUrl(path: string | undefined | null): string {
   // Si ya es una URL completa o data, devolverla tal cual
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
-  // Limpiar la ruta
+  // Limpiar la ruta y corregir mayúsculas si es necesario
   let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  
+  // Corregir 'images' a 'Images' para Vercel (sensibilidad a mayúsculas)
+  if (cleanPath.startsWith('images/')) {
+    cleanPath = 'Images/' + cleanPath.substring(7);
+  }
   
   // Si no tiene carpetas (ej: conchita.jpeg), es un producto
   if (!cleanPath.includes('/')) {
-    cleanPath = `images/products/${cleanPath}`;
+    cleanPath = `Images/products/${cleanPath}`;
   }
 
   // En Vercel usamos la raíz '/'

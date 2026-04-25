@@ -8,7 +8,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/vaso-cono.jpg",
+      "imageUrl": "/Images/products/vaso-cono.jpg",
       "variants": [
         {
           "label": "Sencillo",
@@ -30,7 +30,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/cucurucho.jpeg",
+      "imageUrl": "/Images/products/cucurucho.jpeg",
       "variants": [
         {
           "label": "Sencillo",
@@ -57,7 +57,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/conchita.jpeg",
+      "imageUrl": "/Images/products/conchita.jpeg",
       "variants": [
         {
           "label": "Sencilla",
@@ -98,7 +98,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/ensalada-frutas-mini.jpeg",
+      "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
       "variants": [
         {
           "label": "Mini",
@@ -144,7 +144,7 @@
         "mango"
       ],
       "isActive": true,
-      "imageUrl": "/images/products/copa-salpicon.jpeg",
+      "imageUrl": "/Images/products/copa-salpicon.jpeg",
       "variants": [
         {
           "label": "Copa Salpicón Mango",
@@ -175,7 +175,7 @@
         "fresa"
       ],
       "isActive": true,
-      "imageUrl": "/images/products/copa-salpicon.jpeg",
+      "imageUrl": "/Images/products/copa-salpicon.jpeg",
       "variants": [
         {
           "label": "Copa Salpicón Fresa",
@@ -198,7 +198,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/vaso-salpicon.jpeg",
+      "imageUrl": "/Images/products/vaso-salpicon.jpeg",
       "variants": [
         {
           "label": "Pequeño",
@@ -232,7 +232,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/copa-dli.jpeg",
+      "imageUrl": "/Images/products/copa-dli.jpeg",
       "variants": [
         {
           "label": "Copa D'LI",
@@ -255,7 +255,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/copa-explosion.jpeg",
+      "imageUrl": "/Images/products/copa-explosion.jpeg",
       "variants": [
         {
           "label": "Copa Explosión",
@@ -277,7 +277,7 @@
         "durazno"
       ],
       "isActive": true,
-      "imageUrl": "/images/products/oblea-tradicional-fruta.jpeg",
+      "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
       "variants": [
         {
           "label": "Arequipe, crema y queso",
@@ -312,7 +312,7 @@
         "durazno"
       ],
       "isActive": true,
-      "imageUrl": "/images/products/oblea-cuchareable.jpeg",
+      "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
       "variants": [
         {
           "label": "Sin helado",
@@ -385,7 +385,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/chantilly.jpg",
+      "imageUrl": "/Images/products/chantilly.jpg",
       "variants": [
         {
           "label": "Chantilly",
@@ -401,7 +401,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/chips_chocolate.jpeg",
+      "imageUrl": "/Images/products/chips_chocolate.jpeg",
       "variants": [
         {
           "label": "Chips de Chocolate",
@@ -417,7 +417,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/adicion-salsa.jpg",
+      "imageUrl": "/Images/products/adicion-salsa.jpg",
       "variants": [
         {
           "label": "Salsa",
@@ -433,7 +433,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/images/products/barquillos.jpeg",
+      "imageUrl": "/Images/products/barquillos.jpeg",
       "variants": [
         {
           "label": "Barquillo",
