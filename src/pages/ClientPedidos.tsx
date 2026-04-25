@@ -71,21 +71,23 @@ export default function ClientPedidos() {
       if (newStatus === 'entregado' && profile) {
         const pedido = pedidos.find(p => p.id === pedidoId);
         if (pedido) {
+          const now = new Date();
           const saleData = {
             items: pedido.items,
             total: pedido.total,
             sellerId: profile.uid,
             sellerName: profile.name,
-            soldBy: profile.uid,
+            soldBy: profile.uid, // Requerido por reglas de seguridad
+            tableName: pedido.tableName || 'Pedido Online',
             status: 'completed',
-            tableName: 'Pedido Online',
             timestamp: serverTimestamp(),
             createdAt: serverTimestamp(),
             paymentMethod: pedido.paymentMethod || 'Efectivo',
-            date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
-            hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            date: now.toISOString().split('T')[0],
+            hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
-            type: 'online'
+            type: 'online',
+            customerName: pedido.clienteName || profile.name // Para saber quién lo marcó como entregado
           };
           
           await addDoc(collection(db, 'sales'), saleData);

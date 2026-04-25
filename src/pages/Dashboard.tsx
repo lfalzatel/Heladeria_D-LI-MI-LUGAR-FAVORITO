@@ -64,50 +64,44 @@ export default function Dashboard() {
   useEffect(() => {
     if (!profile) return;
 
-    const todayDate = new Date().toISOString().split('T')[0];
     const salesRef = collection(db, 'sales');
     
-    // Base query for today's sales
-    let q = query(
+    // Traemos las ventas más recientes
+    const q = query(
       salesRef, 
-      where('date', '==', todayDate),
       orderBy('timestamp', 'desc'),
-      limit(20)
+      limit(50)
     );
-
-    // If seller, only show their sales
-    if (profile.role === 'vendedor') {
-      q = query(
-        salesRef,
-        where('date', '==', todayDate),
-        where('sellerId', '==', profile.uid),
-        orderBy('timestamp', 'desc'),
-        limit(20)
-      );
-    }
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
-        const sales: SaleRecord[] = [];
-        let total = 0;
-        
+        const allSales: SaleRecord[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data() as Omit<SaleRecord, 'id'>;
-          sales.push({ id: doc.id, ...data });
+          allSales.push({ id: doc.id, ...data });
         });
 
-        // To get accurate totals for the day (even beyond the limit of 20 for list)
-        // We might need a separate listener or just use the snapshot if it's the full day
-        setRecentSales(sales);
-        setDailyTotal(sales.reduce((sum, s) => sum + s.total, 0));
-        setTxCount(sales.length);
+        // Filtrar por hoy en memoria (más seguro)
+        const todayStr = new Date().toDateString();
+        const salesToday = allSales.filter(s => {
+          const d = s.timestamp?.toDate ? s.timestamp.toDate() : new Date(s.timestamp || s.createdAt);
+          const isToday = d.toDateString() === todayStr;
+          
+          // Si es vendedor, filtrar solo las suyas
+          if (profile.role === 'vendedor') {
+            return isToday && s.sellerId === profile.uid;
+          }
+          return isToday;
+        });
+
+        setRecentSales(salesToday.slice(0, 20));
+        setDailyTotal(salesToday.reduce((sum, s) => sum + (s.total || 0), 0));
+        setTxCount(salesToday.length);
         setLoading(false);
       },
       (error) => {
         console.error("Dashboard sales listener error:", error);
-        if (error.code === 'permission-denied') {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 

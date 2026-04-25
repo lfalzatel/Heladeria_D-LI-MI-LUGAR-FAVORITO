@@ -127,19 +127,20 @@ export default function NotificationBell() {
       if (newStatus === 'entregado' && profile) {
         const pedido = pedidos.find(p => p.id === pedidoId);
         if (pedido) {
+          const now = new Date();
           const saleData = {
             items: pedido.items,
             total: pedido.total,
             sellerId: profile.uid,
             sellerName: profile.name,
-            soldBy: profile.uid,
-            status: 'completed',
+            soldBy: profile.uid, // Requerido por reglas de seguridad
             tableName: 'Pedido Online',
+            status: 'completed',
             timestamp: serverTimestamp(),
             createdAt: serverTimestamp(),
             paymentMethod: pedido.paymentMethod || 'Efectivo',
-            date: new Date().toLocaleDateString('en-CA'),
-            hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            date: now.toISOString().split('T')[0],
+            hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
             type: 'online'
           };

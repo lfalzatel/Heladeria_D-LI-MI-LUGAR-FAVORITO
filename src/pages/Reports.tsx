@@ -281,6 +281,8 @@ export default function Reports() {
   
   const open = (name: string) => setOpenModal(name);
   const close = () => setOpenModal(null);
+  
+  const period = PERIOD_MAP[filter];
 
   // ── SALES listener (period-filtered) ──
   useEffect(() => {
@@ -290,17 +292,27 @@ export default function Reports() {
     if (filter === 'semana') startDate.setDate(startDate.getDate() - 7);
     else if (filter === 'mes') startDate.setMonth(startDate.getMonth() - 1);
 
+    // Buscamos ventas que tengan timestamp O createdAt >= startDate
+    // Para simplificar y asegurar que traemos todo lo de hoy, traemos una lista más amplia 
+    // y filtramos en memoria para evitar errores de índices compuestos complejos de Firestore
     const q = query(
       collection(db, 'sales'),
-      where('timestamp', '>=', Timestamp.fromDate(startDate)),
       orderBy('timestamp', 'desc')
     );
+    
     const unsub = onSnapshot(q, snap => {
-      setSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Filtramos en memoria para ser 100% precisos con el periodo
+      const filteredSales = allSales.filter(s => isInPeriod(s.timestamp || s.createdAt, period));
+      setSales(filteredSales);
       setLoading(false);
-    }, err => { console.error(err); setLoading(false); });
+    }, err => { 
+      console.error(err); 
+      setLoading(false); 
+      toast.error("Error al cargar ventas");
+    });
     return unsub;
-  }, [filter, profile]);
+  }, [filter, profile, period]);
 
   // ── SUPPLIES listener ──
   useEffect(() => {
@@ -335,7 +347,7 @@ export default function Reports() {
   }, [profile]);
 
   // ── COMPUTED METRICS ──
-  const period = PERIOD_MAP[filter];
+  
 
   // Ingresos (POS sales, non-credit)
   const ingresosSales = sales.filter(s => {

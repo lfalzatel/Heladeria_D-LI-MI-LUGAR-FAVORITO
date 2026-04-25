@@ -8,6 +8,7 @@ import {
   doc, 
   where,
   addDoc,
+  getDocs,
   serverTimestamp,
   increment
 } from 'firebase/firestore';
@@ -310,6 +311,75 @@ export default function Management() {
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleRepairSales = async () => {
+    if (!currentUser) return;
+    setIsSyncing(true);
+    try {
+      // 1. Obtener TODOS los pedidos entregados (históricos)
+      const pedidosRef = collection(db, 'pedidos');
+      const qPedidos = query(
+        pedidosRef, 
+        where('status', '==', 'entregado')
+      );
+      
+      const pedidosSnap = await getDocs(qPedidos);
+      const pedidosEntregados = pedidosSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      if (pedidosEntregados.length === 0) {
+        toast.info('No se encontraron pedidos entregados para reparar.');
+        return;
+      }
+
+      // 2. Obtener TODAS las ventas registradas para comparar
+      const salesRef = collection(db, 'sales');
+      const salesSnap = await getDocs(salesRef);
+      const existingSalesIds = new Set(salesSnap.docs.map(d => d.data().pedidoId).filter(Boolean));
+
+      let repairedCount = 0;
+
+      // 3. Crear ventas faltantes con sus fechas originales
+      for (const pedido of pedidosEntregados as any) {
+        if (!existingSalesIds.has(pedido.id)) {
+          // Extraer fecha y hora del pedido original o usar el timestamp
+          const pedidoDate = pedido.date || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+          const pedidoHour = pedido.hour || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--');
+
+          const saleData = {
+            items: pedido.items,
+            total: pedido.total,
+            sellerId: currentUser.uid,
+            sellerName: currentUser.name,
+            soldBy: currentUser.uid,
+            tableName: pedido.tableName || 'Pedido Online',
+            status: 'completed',
+            timestamp: pedido.createdAt || serverTimestamp(), // Mantener el tiempo original
+            createdAt: pedido.createdAt || serverTimestamp(),
+            paymentMethod: pedido.paymentMethod || 'Efectivo',
+            date: pedidoDate,
+            hour: pedidoHour,
+            pedidoId: pedido.id,
+            type: 'online'
+          };
+          
+          await addDoc(collection(db, 'sales'), saleData);
+          repairedCount++;
+        }
+      }
+
+      if (repairedCount > 0) {
+        toast.success(`¡Éxito! Se recuperaron ${repairedCount} ventas históricas faltantes.`);
+      } else {
+        toast.info('Todo el historial de ventas está sincronizado correctamente.');
+      }
+      setIsSyncModalOpen(false);
+    } catch (error: any) {
+      console.error("Error repairing sales:", error);
+      toast.error('Error al reparar historial: ' + error.message);
     } finally {
       setIsSyncing(false);
     }
@@ -805,6 +875,15 @@ export default function Management() {
                 >
                   {isSyncing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                   Sincronizar Solo Imágenes
+                </button>
+
+                <button 
+                  onClick={handleRepairSales}
+                  disabled={isSyncing}
+                  className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {isSyncing ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <History className="w-4 h-4" />}
+                  Reparar Todo el Historial de Ventas
                 </button>
                 
                 <button 
