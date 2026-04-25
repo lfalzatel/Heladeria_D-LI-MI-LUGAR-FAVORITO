@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check, XCircle, MessageCircle, Send, ChevronRight, Clock, Package } from 'lucide-react';
-import { collection, query, where, onSnapshot, updateDoc, doc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, addDoc, serverTimestamp, orderBy, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
+import { Truck } from 'lucide-react';
 
 interface PedidoMessage {
   id: string;
@@ -117,11 +118,54 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleUpdateStatus = async (pedidoId: string, status: 'aceptado' | 'rechazado') => {
+  const handleUpdateStatus = async (pedidoId: string, newStatus: string) => {
     try {
-      await updateDoc(doc(db, 'pedidos', pedidoId), { status });
-      toast.success(`Pedido ${status}`);
+      // 1. Update status
+      await updateDoc(doc(db, 'pedidos', pedidoId), { status: newStatus });
+      
+      // 2. If delivered, record as SALE
+      if (newStatus === 'entregado' && profile) {
+        const pedido = pedidos.find(p => p.id === pedidoId);
+        if (pedido) {
+          const saleData = {
+            items: pedido.items,
+            total: pedido.total,
+            sellerId: profile.uid,
+            sellerName: profile.name,
+            soldBy: profile.uid,
+            status: 'completed',
+            tableName: 'Pedido Online',
+            timestamp: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            paymentMethod: pedido.paymentMethod || 'Efectivo',
+            date: new Date().toLocaleDateString('en-CA'),
+            hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            pedidoId: pedido.id,
+            type: 'online'
+          };
+          
+          await addDoc(collection(db, 'sales'), saleData);
+          
+          // Update product sales stats
+          const updatePromises = pedido.items.map(item => 
+            updateDoc(doc(db, 'products', item.productId), {
+              salesCount: increment(item.quantity)
+            })
+          );
+          await Promise.all(updatePromises);
+        }
+      }
+
+      const labels: Record<string, string> = {
+        aceptado: 'Pedido en preparación ✓',
+        celebrado: '¡Pedido enviado! 🚀',
+        entregado: 'Venta completada ✓',
+        rechazado: 'Pedido rechazado',
+      };
+      toast.success(labels[newStatus] || 'Estado actualizado');
+      if (newStatus === 'entregado' || newStatus === 'rechazado') setSelectedId(null);
     } catch (err) {
+      console.error("Error updating status:", err);
       toast.error('Error al actualizar el pedido');
     }
   };
@@ -250,23 +294,48 @@ export default function NotificationBell() {
                   <p className="text-sm font-bold text-primary">{formatCurrency(selectedPedido.total)}</p>
                   <p className="text-xs text-secondary mt-1 truncate">📍 {selectedPedido.address}</p>
 
-                  {/* Staff actions */}
-                  {isStaff && selectedPedido.status === 'pendiente' && (
-                    <div className="flex gap-2 mt-3">
+                  {/* Acciones rápidas según el estado */}
+                  <div className="flex gap-2 mt-3">
+                    {isStaff && selectedPedido.status === 'pendiente' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedPedido.id, 'aceptado')}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-success/10 text-success border border-success/20 text-xs font-bold hover:bg-success hover:text-white transition-all"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Aceptar
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedPedido.id, 'rechazado')}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-50 text-red-500 border border-red-200 text-xs font-bold hover:bg-red-500 hover:text-white transition-all"
+                        >
+                          <XCircle className="w-3.5 h-3.5" /> Rechazar
+                        </button>
+                      </>
+                    )}
+
+                    {isStaff && selectedPedido.status === 'aceptado' && (
                       <button
-                        onClick={() => handleUpdateStatus(selectedPedido.id, 'aceptado')}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-success/10 text-success border border-success/20 text-xs font-bold hover:bg-success hover:text-white transition-all"
+                        onClick={() => handleUpdateStatus(selectedPedido.id, 'celebrado')}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-200 text-xs font-black uppercase tracking-wider hover:bg-blue-600 transition-all"
                       >
-                        <Check className="w-3.5 h-3.5" /> Aceptar
+                        <Truck className="w-4 h-4" /> Pedido Enviado
                       </button>
+                    )}
+
+                    {(selectedPedido.status === 'celebrado' || (isStaff && selectedPedido.status === 'aceptado')) && (
                       <button
-                        onClick={() => handleUpdateStatus(selectedPedido.id, 'rechazado')}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-50 text-red-500 border border-red-200 text-xs font-bold hover:bg-red-500 hover:text-white transition-all"
+                        onClick={() => handleUpdateStatus(selectedPedido.id, 'entregado')}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+                          selectedPedido.status === 'celebrado' 
+                            ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-600"
+                            : "bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100"
+                        )}
                       >
-                        <XCircle className="w-3.5 h-3.5" /> Rechazar
+                        <Check className="w-4 h-4" /> Marcar como Entregado
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Chat */}
@@ -357,9 +426,9 @@ export default function NotificationBell() {
                             {/* Vista previa de mensaje estilo WhatsApp */}
                             {lastMsg && (
                               <div className="mt-1.5 flex items-start gap-1.5 bg-surface-container/30 p-2 rounded-lg border border-outline/5">
-                                <MessageCircle className={cn("w-3 h-3 mt-0.5", isUnreadChat ? "text-primary" : "text-secondary/40")} />
+                                <MessageCircle className={cn("w-3 h-3 mt-0.5 flex-shrink-0", isUnreadChat ? "text-primary" : "text-secondary/40")} />
                                 <p className={cn(
-                                  "text-[10px] leading-relaxed truncate flex-1",
+                                  "text-[10px] leading-relaxed line-clamp-2 flex-1",
                                   isUnreadChat ? "text-on-surface font-bold" : "text-secondary/70 font-medium"
                                 )}>
                                   <span className="opacity-60">{lastMsg.fromName}:</span> {lastMsg.text}
