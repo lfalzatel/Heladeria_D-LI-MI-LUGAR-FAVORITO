@@ -36,10 +36,19 @@ export default function Inventory() {
   useEffect(() => {
     if (!profile) return;
 
-    const q = query(collection(db, 'products'), orderBy('name', 'asc'));
+    const q = query(collection(db, 'products'));
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
+        
+        // Order by salesCount desc, then name
+        data.sort((a, b) => {
+          const salesA = a.salesCount || 0;
+          const salesB = b.salesCount || 0;
+          if (salesB !== salesA) return salesB - salesA;
+          return a.name.localeCompare(b.name);
+        });
+        
         setProducts(data);
       },
       (error) => {

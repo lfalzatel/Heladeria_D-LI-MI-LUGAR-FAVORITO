@@ -75,7 +75,7 @@ export default function POS() {
   useEffect(() => {
     if (!profile) return;
     
-    const q = query(collection(db, 'products'), where('isActive', '==', true), orderBy('name', 'asc'));
+    const q = query(collection(db, 'products'), where('isActive', '==', true));
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
         const prods = snapshot.docs.map(doc => ({
@@ -84,14 +84,14 @@ export default function POS() {
         })) as Product[];
         
         // Sort by salesCount (desc) then by name
-        const sortedProds = [...prods].sort((a, b) => {
+        prods.sort((a, b) => {
           const salesA = a.salesCount || 0;
           const salesB = b.salesCount || 0;
           if (salesB !== salesA) return salesB - salesA;
           return a.name.localeCompare(b.name);
         });
         
-        setProducts(sortedProds);
+        setProducts(prods);
         setLoading(false);
       },
       (error) => {
@@ -128,8 +128,8 @@ export default function POS() {
       const matchesCategory = activeCategory === 'todos' || p.category === activeCategory;
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+    });
+    // products is already sorted by salesCount in the listener
   const itemCount = useTableCartStore(state => state.getItemCount(activeTable));
 
   return (
@@ -168,7 +168,7 @@ export default function POS() {
             >
               <div className="relative w-full aspect-square bg-surface-container-low">
                 {detailsProduct.imageUrl ? (
-                  <img src={detailsProduct.imageUrl} alt={detailsProduct.name} className="w-full h-full object-cover" />
+                  <img src={getAssetUrl(detailsProduct.imageUrl)} alt={detailsProduct.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-secondary/30">
                     <IceCream className="w-24 h-24" />

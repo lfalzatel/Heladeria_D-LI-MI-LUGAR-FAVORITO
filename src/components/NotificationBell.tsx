@@ -313,16 +313,21 @@ export default function NotificationBell() {
                       </>
                     )}
 
+                    {/* Botón Pedido Enviado: Solo para Staff cuando está aceptado */}
                     {isStaff && selectedPedido.status === 'aceptado' && (
                       <button
                         onClick={() => handleUpdateStatus(selectedPedido.id, 'celebrado')}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-200 text-xs font-black uppercase tracking-wider hover:bg-blue-600 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-200 text-xs font-black uppercase tracking-wider hover:bg-blue-600 transition-all"
                       >
                         <Truck className="w-4 h-4" /> Pedido Enviado
                       </button>
                     )}
 
-                    {(selectedPedido.status === 'celebrado' || (isStaff && selectedPedido.status === 'aceptado')) && (
+                    {/* Botón Marcar como Entregado: 
+                        - Para el Cliente: Visible desde que se acepta (aceptado) o envía (celebrado).
+                        - Para el Staff: Visible principalmente cuando ya se envió (celebrado). 
+                    */}
+                    {(selectedPedido.status === 'celebrado' || (!isStaff && selectedPedido.status === 'aceptado')) && (
                       <button
                         onClick={() => handleUpdateStatus(selectedPedido.id, 'entregado')}
                         className={cn(

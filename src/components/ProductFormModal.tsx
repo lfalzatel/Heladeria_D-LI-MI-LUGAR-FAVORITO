@@ -178,6 +178,24 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                   className="w-full pl-12 pr-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-medium text-sm"
                 />
               </div>
+              
+              {/* Previsualización de Imagen */}
+              {imageUrl && (
+                <div className="mt-2 relative w-full h-40 rounded-2xl overflow-hidden bg-surface-container-low border border-outline/10">
+                  <img 
+                    src={getAssetUrl(imageUrl)} 
+                    alt="Vista previa" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400';
+                    }}
+                  />
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[8px] text-white font-black uppercase tracking-widest">
+                    Vista Previa
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 mt-1 text-secondary/70">
                  <Info className="w-4 h-4" />
                  <p className="text-xs">Para no incurrir en costos de Firebase, usa links de imágenes (ej. Google Images o Unsplash).</p>

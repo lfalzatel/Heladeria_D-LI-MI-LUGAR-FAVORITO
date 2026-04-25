@@ -72,17 +72,19 @@ export default function ClientCompras() {
   }, [cart]);
 
   useEffect(() => {
-    const q = query(collection(db, 'products'), where('isActive', '==', true), orderBy('name', 'asc'));
+    const q = query(collection(db, 'products'), where('isActive', '==', true));
     const unsub = onSnapshot(q, (snap) => {
       const prods = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[];
+      
       // Sort by salesCount (desc) then by name
-      const sortedProds = [...prods].sort((a, b) => {
+      prods.sort((a, b) => {
         const salesA = a.salesCount || 0;
         const salesB = b.salesCount || 0;
         if (salesB !== salesA) return salesB - salesA;
         return a.name.localeCompare(b.name);
       });
-      setProducts(sortedProds);
+      
+      setProducts(prods);
     });
     return unsub;
   }, []);
