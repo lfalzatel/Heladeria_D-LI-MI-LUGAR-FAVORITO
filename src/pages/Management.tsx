@@ -355,8 +355,9 @@ export default function Management() {
             sellerId: currentUser.uid,
             sellerName: currentUser.name,
             soldBy: currentUser.uid,
-            tableName: pedido.tableName || 'Pedido Online',
-            status: 'completed',
+            tableName: pedido.tableName || '',
+            clienteName: pedido.clienteName || pedido.nombre || '',
+            status: 'entregado',
             timestamp: pedido.createdAt || serverTimestamp(), // Mantener el tiempo original
             createdAt: pedido.createdAt || serverTimestamp(),
             paymentMethod: pedido.paymentMethod || 'Efectivo',
@@ -770,20 +771,27 @@ export default function Management() {
                       ) : userSales.length === 0 ? (
                         <div className="text-center py-10 opacity-30 italic text-[10px] uppercase font-black">Sin actividad registrada</div>
                       ) : (
-                        userSales.slice(0, 10).map((sale, index) => (
-                           <HistoryMovementCard 
-                             key={sale.id ? `sale-${sale.id}` : `idx-${index}`}
-                             id={sale.id || `temp-${index}`}
-                             title={sale.title}
-                             total={sale.total || 0}
-                             date={sale.hour}
-                             paymentMethod={sale.paymentMethod || 'Efectivo'}
-                             status={sale.status || 'aceptado'}
-                             itemCount={sale.items?.length || 0}
-                             items={sale.items}
-                             onClick={() => setSelectedSaleDetail(sale)}
-                           />
-                        ))
+                        userSales.slice(0, 10).map((sale, index) => {
+                           const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
+                           const tName = sale.tableName || sale.mesa;
+                           const origin = cName || (tName && tName !== 'Pedido Online' ? `Mesa: ${tName}` : 'Pedido Online');
+
+                           return (
+                             <HistoryMovementCard 
+                               key={sale.id ? `sale-${sale.id}` : `idx-${index}`}
+                               id={sale.id || `temp-${index}`}
+                               title={sale.title}
+                               total={sale.total || 0}
+                               date={sale.hour}
+                               paymentMethod={sale.paymentMethod || 'Efectivo'}
+                               status={sale.status || 'aceptado'}
+                               itemCount={sale.items?.length || 0}
+                               items={sale.items}
+                               customerName={origin}
+                               onClick={() => setSelectedSaleDetail(sale)}
+                             />
+                           );
+                        })
                       )}
                    </div>
                 </div>

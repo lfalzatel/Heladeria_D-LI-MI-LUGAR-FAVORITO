@@ -216,7 +216,19 @@ function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
   const timeStr = d ? d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
   const fullTime = `${dateStr} · ${timeStr}`;
 
-  const clientName = sale.clientName || sale.userName || sale.customerName || sale.nombre;
+  let originLabel = 'Venta Directa POS';
+  let isTable = false;
+  const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
+  const tName = sale.tableName || sale.mesa;
+
+  if (cName) {
+    originLabel = cName;
+  } else if (tName && tName !== 'Pedido Online') {
+    originLabel = `Mesa: ${tName}`;
+    isTable = true;
+  } else if (tName === 'Pedido Online' || sale.type === 'online') {
+    originLabel = 'Pedido Online';
+  }
   
   const pmIcon = {
     efectivo: <Banknote className="w-3.5 h-3.5 text-emerald-600" />,
@@ -233,22 +245,23 @@ function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
       onClick={onClick}
       className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all group"
     >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center relative overflow-hidden">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0">
           {pmIcon}
           {/* Subtle indicator if it has items */}
           {sale.items?.length > 0 && (
             <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-bl-sm" />
           )}
         </div>
-        <div className="text-left">
-          <div className="flex items-center gap-2">
-            <p className="font-black text-sm text-on-surface">{formatCurrency(sale.total)}</p>
-            {clientName && (
-              <span className="text-[10px] font-bold text-primary truncate max-w-[100px]">
-                {clientName}
-              </span>
-            )}
+        <div className="text-left min-w-0 pr-2">
+          <div className="flex flex-col">
+            <p className="font-black text-sm text-on-surface leading-none">{formatCurrency(sale.total)}</p>
+            <span className={cn(
+              "text-[9px] font-black uppercase tracking-widest mt-1.5 truncate",
+              isTable ? "text-blue-600" : originLabel === 'Venta Directa POS' ? "text-secondary/40" : "text-primary"
+            )}>
+              {originLabel}
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] font-black text-secondary uppercase tracking-widest">{sale.paymentMethod || 'Venta'}</span>

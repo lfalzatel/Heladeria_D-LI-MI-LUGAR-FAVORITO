@@ -38,6 +38,7 @@ const STATUS_CONFIG: Record<string, any> = {
   aceptado:  { label: 'En Preparación',       color: 'text-blue-500',  bg: 'bg-blue-400/10',  ring: 'ring-blue-500/20'  },
   celebrado: { label: 'Listo para entregar',  color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20' },
   entregado: { label: 'Entregado',            color: 'text-emerald-600', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20' },
+  completed: { label: 'Venta Completada',     color: 'text-emerald-600', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20' },
   rechazado: { label: 'Rechazado',            color: 'text-red-500',   bg: 'bg-red-400/10',   ring: 'ring-red-500/20'   },
 };
 
@@ -102,13 +103,49 @@ export default function MovementDetailModal({
                        <p className={cn("text-[9px] font-black uppercase tracking-[0.2em]", cfg.color)}>Estado</p>
                        <p className={cn("font-headline font-black text-base", cfg.color)}>{cfg.label}</p>
                      </div>
-                     {/* Cliente (solo si hay clienteName) */}
-                     {data.clienteName && (
-                       <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-2">
-                         <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Cliente</p>
-                         <p className="font-headline font-bold text-on-surface text-sm">{data.clienteName}</p>
-                       </div>
-                     )}
+
+                     {/* Origen (Cliente, Mesa o POS) */}
+                     {(() => {
+                       const cName = data.clienteName || data.userName || data.customerName || data.nombre || data.clientName;
+                       const tName = data.tableName || data.mesa;
+                       
+                       let label = 'Venta Directa POS';
+                       let sub = 'Atención en mostrador';
+                       let icon = <Receipt className="w-3.5 h-3.5 text-secondary/40" />;
+                       let colorClass = "text-secondary/40";
+
+                       if (cName) {
+                         label = cName;
+                         sub = 'Cliente Registrado';
+                         icon = <Check className="w-3.5 h-3.5 text-primary" />;
+                         colorClass = "text-primary";
+                       } else if (tName && tName !== 'Pedido Online') {
+                         label = `Mesa: ${tName}`;
+                         sub = 'Consumo en local';
+                         icon = <Check className="w-3.5 h-3.5 text-blue-600" />;
+                         colorClass = "text-blue-600";
+                       } else if (tName === 'Pedido Online' || data.type === 'online') {
+                         label = 'Pedido Online';
+                         sub = 'Venta por App/Web';
+                         icon = <Smartphone className="w-3.5 h-3.5 text-purple-600" />;
+                         colorClass = "text-purple-600";
+                       }
+
+                       return (
+                         <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-2">
+                           <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Origen de Venta</p>
+                           <div className="flex items-center gap-2 mt-0.5">
+                             <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                                {icon}
+                             </div>
+                             <div className="flex flex-col">
+                               <p className={cn("font-headline font-black text-sm leading-tight", colorClass)}>{label}</p>
+                               <p className="text-[8px] font-bold text-secondary/40 uppercase tracking-widest">{sub}</p>
+                             </div>
+                           </div>
+                         </div>
+                       );
+                     })()}
                      {/* Fecha y hora */}
                      <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>

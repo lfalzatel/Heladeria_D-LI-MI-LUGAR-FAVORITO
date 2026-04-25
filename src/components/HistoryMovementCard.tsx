@@ -12,6 +12,7 @@ const STATUS_CONFIG: Record<string, any> = {
   rechazado: { label: 'Rechazado', color: 'text-red-500', bg: 'bg-red-400/10', ring: 'ring-red-500/20', dot: 'bg-red-400', icon: <XCircle className="w-5 h-5" /> },
   entregado: { label: 'Entregado', color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', dot: 'bg-emerald-500', icon: <Check className="w-5 h-5" /> },
   celebrado: { label: 'Listo',     color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', dot: 'bg-emerald-500', icon: <Check className="w-5 h-5" /> },
+  completed: { label: 'Completado', color: 'text-emerald-500', bg: 'bg-emerald-400/10', ring: 'ring-emerald-500/20', dot: 'bg-emerald-500', icon: <Check className="w-5 h-5" /> },
 };
 
 const PAYMENT_ICONS: Record<string, any> = {
@@ -30,6 +31,7 @@ interface HistoryMovementCardProps {
   itemCount: number;
   items?: any[];
   title?: string;
+  customerName?: string;
   onClick: () => void;
 }
 
@@ -42,6 +44,7 @@ export default function HistoryMovementCard({
   itemCount, 
   items,
   title,
+  customerName,
   onClick 
 }: HistoryMovementCardProps) {
   const cfg = STATUS_CONFIG[status.toLowerCase()] || STATUS_CONFIG.pendiente;
@@ -74,10 +77,19 @@ export default function HistoryMovementCard({
               <h4 className="font-brand font-black text-on-surface text-base sm:text-lg leading-tight uppercase line-clamp-2">
                 {firstItem ? firstItem.productName : `Order #${id.slice(-6).toUpperCase()}`}
               </h4>
-              {itemCount > 1 && (
-                <p className="text-[10px] text-primary font-bold mt-1">
-                  + {itemCount - 1} {itemCount - 1 === 1 ? 'producto adicional' : 'productos adicionales'}
-                </p>
+              {(customerName || itemCount > 1) && (
+                <div className="flex flex-col gap-0.5 mt-1">
+                  {customerName && (
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest truncate">
+                      {customerName}
+                    </p>
+                  )}
+                  {itemCount > 1 && (
+                    <p className="text-[10px] text-secondary/40 font-bold">
+                      + {itemCount - 1} {itemCount - 1 === 1 ? 'producto adicional' : 'productos adicionales'}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
             <div className="text-right flex-shrink-0">
