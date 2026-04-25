@@ -55,6 +55,7 @@ function MenuItem({
   onClick,
   danger,
   iconBg,
+  closeMenu,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -62,10 +63,15 @@ function MenuItem({
   onClick?: () => void;
   danger?: boolean;
   iconBg?: string;
+  closeMenu?: () => void;
 }) {
+  const handleClick = () => {
+    onClick?.();
+    closeMenu?.();
+  };
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all text-left group",
         danger
@@ -214,16 +220,26 @@ export default function UserMenu() {
         <ChevronDown className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5 text-secondary/50 transition-transform duration-300 flex-shrink-0", isOpen && "rotate-180")} />
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown & Backdrop */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 4, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.96 }}
-            transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-            className="absolute right-0 mt-2 w-72 bg-white rounded-3xl shadow-2xl shadow-black/12 border border-outline/30 overflow-y-auto overflow-x-hidden z-[100] max-h-[calc(100vh-120px)] hide-scrollbar"
-          >
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[90]"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 4, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 350 }}
+              className="absolute right-0 mt-2 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-[2rem] shadow-2xl shadow-black/20 border border-outline/30 overflow-y-auto overflow-x-hidden z-[100] max-h-[95vh] hide-scrollbar"
+            >
             {/* User card */}
             <div className="p-4 bg-gradient-to-br from-surface-container/60 to-white border-b border-outline/10">
               <div className="flex items-center gap-3">
@@ -257,7 +273,8 @@ export default function UserMenu() {
                 icon={<User className="w-4 h-4" />}
                 label="Mi Perfil"
                 sublabel="Ver y editar datos personales"
-                onClick={() => { setIsOpen(false); navigate('/profile'); }}
+                onClick={() => navigate('/profile')}
+                closeMenu={() => setIsOpen(false)}
               />
               {/* Notifications toggle */}
               <button
@@ -292,13 +309,15 @@ export default function UserMenu() {
                     icon={<Package className="w-4 h-4" />}
                     label="Catálogo e Inventario"
                     sublabel="Gestionar menú y productos"
-                    onClick={() => { setIsOpen(false); navigate('/admin/inventory'); }}
+                    onClick={() => navigate('/admin/inventory')}
+                    closeMenu={() => setIsOpen(false)}
                   />
                   <MenuItem
                     icon={<Settings className="w-4 h-4" />}
                     label="Configuración"
                     sublabel="Ajustes del sistema"
-                    onClick={() => { setIsOpen(false); toast.info('Configuración del sistema próximamente'); }}
+                    onClick={() => toast.info('Configuración del sistema próximamente')}
+                    closeMenu={() => setIsOpen(false)}
                   />
                 </>
               )}
@@ -311,18 +330,21 @@ export default function UserMenu() {
                 label="Compartir app"
                 sublabel="Invitar por WhatsApp u otras apps"
                 onClick={handleShare}
+                closeMenu={() => setIsOpen(false)}
               />
               <MenuItem
                 icon={<Download className="w-4 h-4" />}
                 label="Instalar app"
                 sublabel="Guardar en pantalla de inicio"
                 onClick={handleInstall}
+                closeMenu={() => setIsOpen(false)}
               />
               <MenuItem
                 icon={<HelpCircle className="w-4 h-4" />}
                 label="Ayuda y soporte"
                 sublabel="Guía de uso de la app"
-                onClick={() => { setIsOpen(false); toast.info('Centro de ayuda próximamente'); }}
+                onClick={() => toast.info('Centro de ayuda próximamente')}
+                closeMenu={() => setIsOpen(false)}
               />
             </div>
 
@@ -356,10 +378,12 @@ export default function UserMenu() {
                 sublabel="Finalizar turno actual"
                 onClick={handleSignOut}
                 danger
+                closeMenu={() => setIsOpen(false)}
               />
             </div>
           </motion.div>
-        )}
+        </>
+      )}
       </AnimatePresence>
     </div>
   );

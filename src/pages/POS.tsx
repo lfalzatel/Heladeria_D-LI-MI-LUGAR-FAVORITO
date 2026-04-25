@@ -123,11 +123,13 @@ export default function POS() {
     { id: 'mesa5', label: 'Mesa 5', type: 'table' },
   ];
 
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === 'todos' || p.category === activeCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = products
+    .filter(p => {
+      const matchesCategory = activeCategory === 'todos' || p.category === activeCategory;
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
   const itemCount = useTableCartStore(state => state.getItemCount(activeTable));
 
   return (

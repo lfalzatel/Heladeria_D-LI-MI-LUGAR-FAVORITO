@@ -27,7 +27,7 @@ export default function AppHeader({ backTo, left, showBell = true, rightExtra }:
   const navigate = useNavigate();
 
   return (
-    <header className="flex justify-between items-center px-4 sm:px-8 h-16 sm:h-20 bg-white/80 backdrop-blur-md border-b border-outline sticky top-0 z-[60]">
+    <header className="flex justify-between items-center px-4 sm:px-8 h-16 sm:h-20 bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-[60] shadow-sm">
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D — solo mobile sin sidebar */}
