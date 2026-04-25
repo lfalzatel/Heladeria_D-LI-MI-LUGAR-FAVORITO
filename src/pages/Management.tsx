@@ -341,11 +341,16 @@ export default function Management() {
       const existingSalesIds = new Set(salesSnap.docs.map(d => d.data().pedidoId).filter(Boolean));
 
       let repairedCount = 0;
-
-      // 3. Crear ventas faltantes con sus fechas originales
+ 
+      // 3. Reparar o Crear ventas
       for (const pedido of pedidosEntregados as any) {
-        if (!existingSalesIds.has(pedido.id)) {
-          // Extraer fecha y hora del pedido original o usar el timestamp
+        const cName = pedido.clienteName || pedido.nombre || pedido.userName || 'Cliente Online';
+        
+        // Buscar si ya existe la venta para este pedido
+        const saleDoc = salesSnap.docs.find(d => d.data().pedidoId === pedido.id);
+
+        if (!saleDoc) {
+          // CREAR VENTA FALTANTE
           const pedidoDate = pedido.date || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
           const pedidoHour = pedido.hour || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--');
 
@@ -355,10 +360,10 @@ export default function Management() {
             sellerId: currentUser.uid,
             sellerName: currentUser.name,
             soldBy: currentUser.uid,
-            tableName: pedido.tableName || '',
-            clienteName: pedido.clienteName || pedido.nombre || '',
+            tableName: '', // Limpiar para que no salga como mesa
+            clienteName: cName,
             status: 'entregado',
-            timestamp: pedido.createdAt || serverTimestamp(), // Mantener el tiempo original
+            timestamp: pedido.createdAt || serverTimestamp(),
             createdAt: pedido.createdAt || serverTimestamp(),
             paymentMethod: pedido.paymentMethod || 'Efectivo',
             date: pedidoDate,
@@ -369,11 +374,23 @@ export default function Management() {
           
           await addDoc(collection(db, 'sales'), saleData);
           repairedCount++;
+        } else {
+          // ACTUALIZAR SIEMPRE EL NOMBRE Y QUITAR MESA SI ES "PEDIDO ONLINE"
+          const currentData = saleDoc.data();
+          // Forzamos actualización si no tiene el nombre correcto o si tiene "Pedido Online" como mesa
+          if (currentData.clienteName !== cName || currentData.tableName === 'Pedido Online' || currentData.status !== 'entregado') {
+            await updateDoc(doc(db, 'sales', saleDoc.id), {
+              clienteName: cName,
+              tableName: '', // Asegurarnos de que no diga "Mesa: Pedido Online"
+              status: 'entregado' // Asegurarnos de que esté en verde
+            });
+            repairedCount++;
+          }
         }
       }
 
       if (repairedCount > 0) {
-        toast.success(`¡Éxito! Se recuperaron ${repairedCount} ventas históricas faltantes.`);
+        toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`);
       } else {
         toast.info('Todo el historial de ventas está sincronizado correctamente.');
       }

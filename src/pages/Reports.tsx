@@ -208,7 +208,7 @@ function TrendChart({ data, color = 'currentColor', label = 'Ventas' }: { data: 
 }
 
 // ── SALE CARD ──
-function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
+function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () => void, index?: number }) {
   const d = toDateS(sale.timestamp || sale.createdAt);
   
   // Format: "Lun 25 · 05:40 a. m."
@@ -220,13 +220,14 @@ function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
   let isTable = false;
   const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
   const tName = sale.tableName || sale.mesa;
-
+  const isOnline = sale.type === 'online' || tName === 'Pedido Online';
+  
   if (cName) {
     originLabel = cName;
   } else if (tName && tName !== 'Pedido Online') {
     originLabel = `Mesa: ${tName}`;
     isTable = true;
-  } else if (tName === 'Pedido Online' || sale.type === 'online') {
+  } else if (isOnline) {
     originLabel = 'Pedido Online';
   }
   
@@ -243,7 +244,8 @@ function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all group"
+      className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all group animate-card-mix opacity-0"
+      style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0">
@@ -256,12 +258,21 @@ function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
         <div className="text-left min-w-0 pr-2">
           <div className="flex flex-col">
             <p className="font-black text-sm text-on-surface leading-none">{formatCurrency(sale.total)}</p>
-            <span className={cn(
-              "text-[9px] font-black uppercase tracking-widest mt-1.5 truncate",
-              isTable ? "text-blue-600" : originLabel === 'Venta Directa POS' ? "text-secondary/40" : "text-primary"
-            )}>
-              {originLabel}
-            </span>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <span className={cn(
+                "px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ring-1",
+                isTable ? "bg-blue-50 text-blue-500 ring-blue-500/20" : 
+                (isOnline ? "bg-purple-50 text-purple-600 ring-purple-500/20" : "bg-primary/5 text-primary ring-primary/20")
+              )}>
+                {isTable ? 'Mesa' : (isOnline ? 'Online' : 'POS')}
+              </span>
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-widest truncate max-w-[100px]",
+                isTable ? "text-blue-600" : (isOnline ? "text-purple-600" : "text-secondary/40")
+              )}>
+                {originLabel}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] font-black text-secondary uppercase tracking-widest">{sale.paymentMethod || 'Venta'}</span>
@@ -579,10 +590,11 @@ export default function Reports() {
                   <p className="text-xs font-bold uppercase tracking-widest">Sin actividad en este período</p>
                 </div>
               ) : (
-                sales.slice(0, 10).map(sale => (
+                sales.slice(0, 15).map((sale, index) => (
                   <SaleCard 
                     key={sale.id} 
                     sale={sale} 
+                    index={index}
                     onClick={() => setSelectedSale(sale)} 
                   />
                 ))

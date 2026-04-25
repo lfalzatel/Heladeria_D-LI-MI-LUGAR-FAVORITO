@@ -155,16 +155,19 @@ export default function Inventory() {
 
         {/* Product Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product, index) => (
             <motion.div 
               layout
               key={product.id}
               className={cn(
-                "rounded-[2.5rem] p-6 border-2 transition-all flex flex-col justify-between group",
+                "rounded-[2.5rem] p-6 border-2 transition-all flex flex-col justify-between group animate-card-mix opacity-0",
                 (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
                 product.isActive ? "border-outline/50" : "border-dashed border-outline opacity-60 bg-surface-container/10"
               )}
-              style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
+              style={{ 
+                ...(product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}),
+                animationDelay: `${index * 0.05}s`
+              }}
             >
               <div>
                 <div className="flex justify-between items-start mb-4">
