@@ -241,7 +241,7 @@ export default function UserMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+              className="fixed top-16 sm:top-20 inset-x-0 bottom-0 bg-black/60 backdrop-blur-md z-[80]"
             />
 
             <motion.div
@@ -249,7 +249,7 @@ export default function UserMenu() {
               animate={{ opacity: 1, y: 4, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-              className="absolute right-0 mt-2 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-[2.5rem] shadow-2xl shadow-black/30 border border-outline/30 overflow-y-auto overflow-x-hidden z-[90] max-h-[85vh] hide-scrollbar overscroll-contain flex flex-col"
+              className="absolute right-0 mt-4 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-[2.5rem] shadow-2xl shadow-black/30 border border-outline/30 overflow-y-auto overflow-x-hidden z-[90] max-h-[calc(100vh-100px)] hide-scrollbar overscroll-contain flex flex-col"
             >
             {/* User card */}
             <div className="p-4 bg-gradient-to-br from-surface-container/60 to-white border-b border-outline/10">
