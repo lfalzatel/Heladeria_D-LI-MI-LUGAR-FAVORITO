@@ -33,7 +33,7 @@ const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
         ? "text-white"
         : active 
           ? "text-white" 
-          : "text-secondary/40 hover:text-secondary"
+          : "text-primary/40 hover:text-primary/70"
     )}>
       <div className={cn(
         "relative flex flex-col items-center justify-center transition-all duration-500",
