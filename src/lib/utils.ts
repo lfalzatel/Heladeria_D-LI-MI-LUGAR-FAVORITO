@@ -47,8 +47,14 @@ export function getAssetUrl(path: string | undefined | null): string {
   if (!path) return '';
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
-  // Clean the path to avoid double slashes
-  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  // Limpiar la ruta para evitar dobles barras
+  let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  
+  // Si es solo un nombre de archivo (ej: conchita.jpeg), asumir que está en la carpeta de productos
+  if (!cleanPath.includes('/') && (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg') || cleanPath.endsWith('.png') || cleanPath.endsWith('.webp'))) {
+    cleanPath = `images/products/${cleanPath}`;
+  }
+
   const base = (import.meta.env.BASE_URL || '/').endsWith('/') 
     ? import.meta.env.BASE_URL 
     : `${import.meta.env.BASE_URL}/`;
