@@ -498,10 +498,17 @@ export default function Management() {
                 {users.filter(u => 
                   u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
                   u.email.toLowerCase().includes(userSearch.toLowerCase())
-                ).map(user => (
+                ).map((user, i) => (
                   <motion.div 
                     layout
                     key={user.uid}
+                    initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                    transition={{ 
+                      duration: 0.6, 
+                      ease: [0.34, 1.56, 0.64, 1],
+                      delay: i * 0.05 
+                    }}
                     className="bg-white rounded-[2rem] p-5 sm:p-6 border border-outline/50 shadow-sm flex flex-col sm:flex-row items-center gap-6 group hover:border-primary/20 transition-all"
                   >
                     <div className="relative">
@@ -597,10 +604,10 @@ export default function Management() {
 
                   {/* 4 Stat cards */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                    <StatCard icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
-                    <StatCard icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
-                    <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
+                    <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                    <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
+                    <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
+                    <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
                   </div>
 
                   {/* Low stock alert */}

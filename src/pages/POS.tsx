@@ -338,14 +338,23 @@ export default function POS() {
                 <div key={i} className="aspect-[4/5] bg-surface-container animate-pulse rounded-3xl" />
               ))
             ) : filteredProducts.length > 0 ? (
-              filteredProducts.map(product => (
-                <div key={product.id}>
+              filteredProducts.map((product, i) => (
+                <motion.div 
+                  key={product.id}
+                  initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+                  animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                  transition={{ 
+                    duration: 0.6, 
+                    ease: [0.34, 1.56, 0.64, 1],
+                    delay: i * 0.05 
+                  }}
+                >
                   <ProductCard 
                     product={product} 
                     onClick={() => setSelectedProduct(product)}
                     onDetailClick={() => setDetailsProduct(product)}
                   />
-                </div>
+                </motion.div>
               ))
             ) : (
               <div className="col-span-full py-20 flex flex-col items-center opacity-20">

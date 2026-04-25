@@ -4,6 +4,7 @@ import { db } from '../lib/firebase';
 import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
 import { notifyAdmins } from '../lib/notifications';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
@@ -65,29 +66,48 @@ export function TrendChart({ purchases, period }: { purchases: PurchaseRecord[],
 }
 
 /* ─── STAT CARD ─── */
-export function StatCard({ icon, label, value, sub, accent }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' }) {
+export function StatCard({ icon, label, value, sub, accent, index = 0 }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate', index?: number }) {
   const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100' };
   return (
-    <div className={cn("bg-white rounded-3xl p-4 border flex flex-col gap-2 shadow-sm", map[accent])}>
+    <motion.div 
+      initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      transition={{ 
+        duration: 0.6, 
+        ease: [0.34, 1.56, 0.64, 1],
+        delay: index * 0.1
+      }}
+      className={cn("bg-white rounded-3xl p-4 border flex flex-col gap-2 shadow-sm", map[accent])}
+    >
       <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">{icon}</div>
       <p className="text-lg font-black text-on-surface leading-none">{value}</p>
       <div>
         <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
         {sub && <p className="text-[9px] text-secondary/60 font-medium mt-0.5 leading-tight">{sub}</p>}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 /* ─── PURCHASE HISTORY CARD ─── */
-export function PurchaseCard({ purchase, onClick }: { purchase: PurchaseRecord, onClick: () => void }) {
+export function PurchaseCard({ purchase, onClick, index = 0 }: { purchase: PurchaseRecord, onClick: () => void, index?: number }) {
   const d = toDateS(purchase.createdAt);
   const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
   const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
 
   return (
-    <button onClick={onClick} className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group">
+    <motion.button 
+      initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      transition={{ 
+        duration: 0.6, 
+        ease: [0.34, 1.56, 0.64, 1],
+        delay: Math.min(index * 0.05, 0.5) // Cap delay for long lists
+      }}
+      onClick={onClick} 
+      className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group"
+    >
       <div className="flex items-start justify-between mb-2">
         <div>
           <p className="font-black text-sm text-on-surface">{purchase.provider}</p>
@@ -103,7 +123,7 @@ export function PurchaseCard({ purchase, onClick }: { purchase: PurchaseRecord, 
           <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} más</span>
         )}
       </div>
-    </button>
+    </motion.button>
   );
 }
 
@@ -211,10 +231,10 @@ export default function Supplies() {
 
               {/* 4 Stat cards */}
               <div className="grid grid-cols-2 gap-3">
-                <StatCard icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                <StatCard icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
-                <StatCard icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
-                <StatCard icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
+                <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
+                <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
+                <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
               </div>
 
 
@@ -250,7 +270,7 @@ export default function Supplies() {
                     <p className="text-sm font-bold">Sin compras en este período</p>
                   </div>
                 ) : (
-                  filtered.map(p => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
+                  filtered.map((p, i) => <PurchaseCard key={p.id} index={i} purchase={p} onClick={() => setDetailPurchase(p)} />)
                 )}
               </div>
             </>

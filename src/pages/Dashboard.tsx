@@ -142,9 +142,13 @@ export default function Dashboard() {
             {stats.map((stat, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
+                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                transition={{ 
+                  duration: 0.6, 
+                  ease: [0.34, 1.56, 0.64, 1],
+                  delay: i * 0.1 
+                }}
                 className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm flex items-center gap-6"
               >
                 <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
@@ -180,11 +184,16 @@ export default function Dashboard() {
               
               <div className="flex-1 flex flex-col gap-3 min-h-[400px]">
                 {recentSales.length > 0 ? (
-                  recentSales.map((sale) => (
+                  recentSales.map((sale, i) => (
                     <motion.div 
                       key={sale.id}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+                      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                      transition={{ 
+                        duration: 0.6, 
+                        ease: [0.34, 1.56, 0.64, 1],
+                        delay: i * 0.05 
+                      }}
                       onClick={() => setSelectedSale(sale)}
                       className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low/50 hover:bg-white border border-transparent hover:border-primary/10 transition-all group cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
                     >

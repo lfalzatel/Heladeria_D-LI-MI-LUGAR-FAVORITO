@@ -108,6 +108,8 @@ export default function UserMenu() {
     }
     return false;
   });
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default');
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
