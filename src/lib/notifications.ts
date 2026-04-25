@@ -3,8 +3,8 @@ import { doc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getD
 import { db } from './firebase';
 import { toast } from 'sonner';
 
-// IMPORTANTE: Debes obtener esta clave desde la Consola de Firebase -> Cloud Messaging -> Web Configuration
-const VAPID_KEY = "BD23yi5wkKcpl9rTRkvb4ownj-yxzeDF9w69eC7F2J6wNHWJTTy1qA90VU_hjS17VYW2nGX_2YJreL9ayxvaKak"; 
+// IMPORTANTE: Debes configurar VITE_FIREBASE_VAPID_KEY en tu .env o en Vercel
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "BD23yi5wkKcpl9rTRkvb4ownj-yxzeDF9w69eC7F2J6wNHWJTTy1qA90VU_hjS17VYW2nGX_2YJreL9ayxvaKak"; 
 
 export async function requestNotificationPermission(userId: string) {
   try {
