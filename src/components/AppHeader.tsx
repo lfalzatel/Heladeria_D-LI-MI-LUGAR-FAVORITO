@@ -30,10 +30,19 @@ export default function AppHeader({ backTo, left, showBell = true, rightExtra }:
     <header className="flex justify-between items-center px-4 sm:px-8 h-16 sm:h-20 bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-[60] shadow-sm">
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
-        {/* Logo D — solo mobile sin sidebar */}
+        {/* Logo D'LI Real */}
         {!backTo && (
-          <div className="lg:hidden w-9 h-9 bg-primary rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-primary/20 flex-shrink-0">
-            <span className="font-brand text-white font-bold text-xl leading-none">D</span>
+          <div className="lg:hidden w-10 h-10 flex items-center justify-center flex-shrink-0">
+            <img 
+              src="/logo-dli.png" 
+              alt="D'LI" 
+              className="w-full h-full object-contain drop-shadow-sm"
+              onError={(e) => {
+                // Fallback si la imagen aún no se ha subido
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-primary/20 flex-shrink-0"><span class="font-brand text-white font-bold text-xl leading-none">D</span></div>';
+              }}
+            />
           </div>
         )}
 
