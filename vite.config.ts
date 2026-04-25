@@ -9,14 +9,17 @@ export default defineConfig({
     react(), 
     tailwindcss(),
     VitePWA({
-      strategies: 'injectManifest',
-      srcDir: 'public',
-      filename: 'firebase-messaging-sw.js',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: {
         enabled: true,
         type: 'classic'
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
@@ -27,8 +30,6 @@ export default defineConfig({
         background_color: '#fcf9f8',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
         icons: [
           {
             src: '/pwa-192x192.png',
@@ -47,12 +48,6 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true
       }
     })
   ],

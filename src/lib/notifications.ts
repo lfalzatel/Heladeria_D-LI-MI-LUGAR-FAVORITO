@@ -26,16 +26,36 @@ export async function requestNotificationPermission(userId: string) {
       throw new Error('Permiso de notificaciones denegado');
     }
 
-    // 2. Esperar a que el Service Worker (gestionado por VitePWA) esté listo
-    console.log("Esperando Service Worker de VitePWA...");
-    const registration = await navigator.serviceWorker.ready;
-    console.log("Service Worker listo:", registration.scope);
+    // 2. Registrar el Service Worker de Firebase por separado con su propio scope
+    console.log("Registrando Service Worker de Firebase (scope dedicado)...");
+    const fcmReg = await navigator.serviceWorker.register(
+      '/firebase-messaging-sw.js',
+      { scope: '/firebase-cloud-messaging-push-scope' }
+    );
 
-    // 3. Inicializar Firebase Messaging
+    // 3. Esperar a que el SW esté activo
+    await new Promise<void>((resolve) => {
+      if (fcmReg.active) {
+        resolve();
+      } else {
+        const sw = fcmReg.installing || fcmReg.waiting;
+        if (sw) {
+          sw.addEventListener('statechange', (e: any) => {
+            if (e.target.state === 'activated') resolve();
+          });
+        }
+        // Timeout de seguridad de 3 segundos
+        setTimeout(resolve, 3000);
+      }
+    });
+
+    console.log("Service Worker de Firebase listo en scope:", fcmReg.scope);
+
+    // 4. Inicializar Firebase Messaging
     const { app } = await import('./firebase');
     const messaging = getMessaging(app);
 
-    // 4. Limpiar token anterior si existe para evitar conflictos
+    // 5. Limpiar token anterior si existe para evitar conflictos
     try {
       console.log("Limpiando token antiguo...");
       await deleteToken(messaging);
@@ -43,11 +63,11 @@ export async function requestNotificationPermission(userId: string) {
       console.warn("Error al intentar borrar token antiguo (ignorable):", err);
     }
 
-    // 5. Obtener nuevo token usando la registración de VitePWA
+    // 6. Obtener nuevo token usando la registración dedicada
     console.log("Solicitando nuevo token FCM...");
     const currentToken = await getToken(messaging, { 
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration
+      serviceWorkerRegistration: fcmReg
     });
 
     if (currentToken) {
@@ -78,13 +98,16 @@ export async function unregisterNotifications(userId: string) {
     const { app } = await import('./firebase');
     const messaging = getMessaging(app);
     
-    // Esperar al Service Worker de VitePWA
-    const registration = await navigator.serviceWorker.ready;
+    // Registrar/obtener el Service Worker de Firebase dedicado
+    const fcmReg = await navigator.serviceWorker.register(
+      '/firebase-messaging-sw.js',
+      { scope: '/firebase-cloud-messaging-push-scope' }
+    );
     
-    // Obtener el token actual pasando la registración
+    // Obtener el token actual pasando la registración dedicada
     const currentToken = await getToken(messaging, { 
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration 
+      serviceWorkerRegistration: fcmReg 
     });
     
     if (currentToken) {

@@ -1,8 +1,3 @@
-/* eslint-disable no-undef */
-// REQUERIDO por VitePWA para inyectar el manifest de precaché
-// @ts-ignore
-self.__WB_MANIFEST;
-
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js');
 
@@ -27,8 +22,7 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
     vibrate: [200, 100, 200],
-    data: payload.data,
-    tag: 'order-update' // Agrupar notificaciones
+    data: payload.data
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
