@@ -319,7 +319,7 @@ export default function Management() {
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-h-screen relative pb-32">
-        <AppHeader showBell left={<div className="font-bold text-primary truncate hidden sm:block">Gestión</div>} />
+        <AppHeader showBell />
         <div className="flex justify-between items-start pr-4 sm:pr-6">
           <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
           <button 
@@ -331,8 +331,8 @@ export default function Management() {
           </button>
         </div>
 
-      <main className="p-4 sm:p-6 max-w-5xl mx-auto flex flex-col gap-6">
-        <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-md mx-auto shadow-inner border border-outline/30">
+      <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
+        <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-md shadow-inner border border-outline/30">
           <button
             onClick={() => setActiveTab('insumos')}
             className={cn(
@@ -379,7 +379,7 @@ export default function Management() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {users.filter(u => 
                   u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
                   u.email.toLowerCase().includes(userSearch.toLowerCase())
@@ -481,7 +481,7 @@ export default function Management() {
                   </div>
 
                   {/* 4 Stat cards */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
                     <StatCard icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
                     <StatCard icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />

@@ -216,13 +216,6 @@ export default function POS() {
       <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
         <AppHeader
           showBell
-          left={
-            <HeaderSearch
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Buscar producto..."
-            />
-          }
           rightExtra={
             <button 
               onClick={() => setIsCartOpen(true)}
@@ -461,7 +454,8 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
       className={cn(
         product.cardColor || "bg-white",
         "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-        totalQuantity > 0 ? "ring-2 ring-primary/40 shadow-sm" : "border-outline/10 shadow-sm"
+        totalQuantity > 0 ? "ring-2 ring-primary/40 shadow-sm" : 
+        product.cardColor ? "border-outline/30 shadow-sm" : "border-outline/10 shadow-sm"
       )}
     >
       {/* Zone 1: Image defaults to open details if passed */}

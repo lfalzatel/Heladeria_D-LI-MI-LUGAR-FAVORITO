@@ -237,12 +237,12 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                <div className="flex flex-wrap gap-3">
                  {[
                    { name: 'Ninguno', color: '' },
-                   { name: 'Rojo', color: 'bg-red-50', border: 'border-red-200' },
-                   { name: 'Amarillo', color: 'bg-amber-50', border: 'border-amber-200' },
-                   { name: 'Azul', color: 'bg-blue-50', border: 'border-blue-200' },
-                   { name: 'Verde', color: 'bg-emerald-50', border: 'border-emerald-200' },
-                   { name: 'Naranja', color: 'bg-orange-50', border: 'border-orange-200' },
-                   { name: 'Morado', color: 'bg-purple-50', border: 'border-purple-200' },
+                   { name: 'Rojo', color: 'bg-red-100', border: 'border-red-300' },
+                   { name: 'Amarillo', color: 'bg-amber-100', border: 'border-amber-300' },
+                   { name: 'Azul', color: 'bg-blue-100', border: 'border-blue-300' },
+                   { name: 'Verde', color: 'bg-emerald-100', border: 'border-emerald-300' },
+                   { name: 'Naranja', color: 'bg-orange-100', border: 'border-orange-300' },
+                   { name: 'Morado', color: 'bg-purple-100', border: 'border-purple-300' },
                  ].map((c) => (
                    <button
                      key={c.name}

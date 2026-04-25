@@ -296,7 +296,8 @@ export default function ClientCompras() {
                   className={cn(
                     "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
                     product.cardColor || "bg-white",
-                    totalQuantity > 0 ? "ring-2 ring-primary/40 shadow-sm border-primary/40" : "border-outline/10 shadow-sm"
+                    totalQuantity > 0 ? "ring-2 ring-primary/40 shadow-sm border-primary/40" : 
+                    product.cardColor ? "border-outline/30 shadow-sm" : "border-outline/10 shadow-sm"
                   )}
                 >
                   <div 

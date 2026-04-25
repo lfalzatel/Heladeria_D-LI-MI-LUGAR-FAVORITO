@@ -401,7 +401,7 @@ export default function Reports() {
         <AppHeader showBell />
         <PageTitle title="Reportes & BI" subtitle="Análisis Operativo" />
 
-        <main className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-6 w-full">
+        <main className="p-4 sm:p-8 max-w-7xl mx-auto flex flex-col gap-6 w-full">
 
           {/* ── FILTERS ── */}
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
