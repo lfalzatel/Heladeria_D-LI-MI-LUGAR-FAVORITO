@@ -14,8 +14,8 @@ export async function requestNotificationPermission(userId: string) {
     // ⚠️ FCM push no funciona consistentemente en localhost — saltar silenciosamente en desarrollo
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       console.warn('⚠️ Notificaciones push simuladas en localhost. Despliega en Vercel para probar con HTTPS.');
-      toast.info('Simulación: Notificaciones activadas (solo en producción)', {
-        description: 'En localhost no se registra el token real, pero el toggle se activará.'
+      toast.info('Simulación: Notificaciones activadas', {
+        description: 'En localhost no se registra el token real para evitar errores de servicio push.'
       });
       return 'fake-token-localhost';
     }
@@ -26,17 +26,11 @@ export async function requestNotificationPermission(userId: string) {
       throw new Error('Permiso de notificaciones denegado');
     }
 
-    // 2. Registrar el Service Worker de Firebase por separado (no el de VitePWA)
-    // Usamos un scope diferente para evitar conflictos
-    console.log("Registrando Service Worker de Firebase...");
-    const firebaseSWReg = await navigator.serviceWorker.register(
-      '/firebase-messaging-sw.js',
-      { scope: '/firebase-cloud-messaging-push-scope' }
-    );
+    // 2. Esperar a que el Service Worker (gestionado por VitePWA) esté listo
+    console.log("Esperando Service Worker de VitePWA...");
+    const registration = await navigator.serviceWorker.ready;
+    console.log("Service Worker listo:", registration.scope);
 
-    // Asegurarse de que esté actualizado
-    await firebaseSWReg.update();
-    
     // 3. Inicializar Firebase Messaging
     const { app } = await import('./firebase');
     const messaging = getMessaging(app);
@@ -49,11 +43,11 @@ export async function requestNotificationPermission(userId: string) {
       console.warn("Error al intentar borrar token antiguo (ignorable):", err);
     }
 
-    // 5. Obtener nuevo token usando la registración dedicada
+    // 5. Obtener nuevo token usando la registración de VitePWA
     console.log("Solicitando nuevo token FCM...");
     const currentToken = await getToken(messaging, { 
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: firebaseSWReg
+      serviceWorkerRegistration: registration
     });
 
     if (currentToken) {
@@ -67,7 +61,7 @@ export async function requestNotificationPermission(userId: string) {
     }
     throw new Error('No se pudo obtener el token de FCM');
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al configurar notificaciones:', error);
     throw error;
   }
@@ -84,16 +78,13 @@ export async function unregisterNotifications(userId: string) {
     const { app } = await import('./firebase');
     const messaging = getMessaging(app);
     
-    // Registrar el Service Worker de Firebase
-    const firebaseSWReg = await navigator.serviceWorker.register(
-      '/firebase-messaging-sw.js',
-      { scope: '/firebase-cloud-messaging-push-scope' }
-    );
+    // Esperar al Service Worker de VitePWA
+    const registration = await navigator.serviceWorker.ready;
     
-    // Obtener el token actual pasando la registración dedicada
+    // Obtener el token actual pasando la registración
     const currentToken = await getToken(messaging, { 
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: firebaseSWReg 
+      serviceWorkerRegistration: registration 
     });
     
     if (currentToken) {
@@ -137,7 +128,6 @@ export async function listenToForegroundMessages() {
 
 export async function notifyAdmins(title: string, body: string, data: any = {}) {
   try {
-    // 1. Obtener los tokens de todos los admins y propietarios de Firestore
     const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'propietario']));
     const snapshot = await getDocs(q);
     
@@ -153,10 +143,9 @@ export async function notifyAdmins(title: string, body: string, data: any = {}) 
 
     if (uniqueTokens.length === 0) {
       console.log('No hay tokens de administradores registrados.');
-      return { success: true, successCount: 0 };
+      return { success: true, sent: 0 };
     }
 
-    // 2. Llamar a nuestro endpoint de Vercel pasando los tokens
     const response = await fetch('/api/notify', {
       method: 'POST',
       headers: {
