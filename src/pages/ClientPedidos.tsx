@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  collection, onSnapshot, query, orderBy, where, doc, updateDoc
+  collection, onSnapshot, query, orderBy, where, doc, updateDoc,
+  addDoc, serverTimestamp, increment
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -63,7 +64,42 @@ export default function ClientPedidos() {
     e?.stopPropagation();
     setUpdatingId(pedidoId);
     try {
+      // 1. Update Pedido Status
       await updateDoc(doc(db, 'pedidos', pedidoId), { status: newStatus });
+      
+      // 2. If delivered, record as SALE
+      if (newStatus === 'entregado' && profile) {
+        const pedido = pedidos.find(p => p.id === pedidoId);
+        if (pedido) {
+          const saleData = {
+            items: pedido.items,
+            total: pedido.total,
+            sellerId: profile.uid,
+            sellerName: profile.name,
+            soldBy: profile.uid,
+            status: 'completed',
+            tableName: 'Pedido Online',
+            timestamp: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            paymentMethod: pedido.paymentMethod || 'Efectivo',
+            date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+            hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            pedidoId: pedido.id,
+            type: 'online'
+          };
+          
+          await addDoc(collection(db, 'sales'), saleData);
+          
+          // Update product sales stats
+          const updatePromises = pedido.items.map(item => 
+            updateDoc(doc(db, 'products', item.productId), {
+              salesCount: increment(item.quantity)
+            })
+          );
+          await Promise.all(updatePromises);
+        }
+      }
+
       const labels: Record<string, string> = {
         aceptado: 'Pedido aceptado ✓',
         entregado: 'Pedido entregado ✓',
@@ -72,7 +108,8 @@ export default function ClientPedidos() {
       };
       toast.success(labels[newStatus] || 'Estado actualizado');
       if (selectedId === pedidoId) setSelectedId(null);
-    } catch {
+    } catch (error: any) {
+      console.error("Error updating status or recording sale:", error);
       toast.error('Error al actualizar el estado');
     } finally {
       setUpdatingId(null);
