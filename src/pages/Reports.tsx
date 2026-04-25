@@ -1,103 +1,398 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot,
-  Timestamp,
-  getDocs
+import {
+  collection, query, where, orderBy, onSnapshot, Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { 
-  BarChart3, 
-  Calendar, 
-  Download, 
-  TrendingUp, 
-  DollarSign, 
-  CreditCard, 
-  Trophy, 
-  Clock,
-  Filter,
-  FileText,
-  ChevronDown,
-  PieChart,
-  ArrowRight
+import {
+  Calendar, Download, TrendingUp, DollarSign, CreditCard,
+  Trophy, Clock, ChevronDown, AlertTriangle, Plus, Banknote, Smartphone, History
 } from 'lucide-react';
+import MovementDetailModal from '../components/MovementDetailModal';
 import { formatCurrency, cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { isInPeriod } from './Supplies';
+import {
+  IngresosModal,
+  VentasCreditoModal,
+  GananciaModal,
+  RankingModal,
+  DeudaClientesModal,
+  StockCriticoModal,
+} from '../components/ReportsModals';
 
-type DateFilter = 'hoy' | 'semana' | 'mes' | 'personalizado';
+type DateFilter = 'hoy' | 'semana' | 'mes';
+const FILTER_LABEL: Record<DateFilter, string> = { hoy: 'Hoy', semana: 'Semana', mes: 'Mes' };
+const PERIOD_MAP: Record<DateFilter, 'today' | 'week' | 'month'> = {
+  hoy: 'today', semana: 'week', mes: 'month'
+};
+
+// ── UTILS ──
+const toDateS = (ts: any): Date | null => { 
+  if (!ts) return null; 
+  if (ts.toDate) return ts.toDate(); 
+  return new Date(ts); 
+};
+
+// ── COMPONENTS ──
+function MetricCard({
+  icon, label, value, sub, badge, accent, onOpen
+}: {
+  icon: React.ReactNode; label: string; value: string;
+  sub: string; badge?: { text: string; color: string } | null; 
+  accent: 'emerald' | 'orange' | 'amber' | 'blue';
+  onOpen: () => void;
+}) {
+  const accentMap = {
+    emerald: 'bg-emerald-50/50 border-emerald-100',
+    orange: 'bg-orange-50/50 border-orange-100',
+    amber: 'bg-amber-50/50 border-amber-100',
+    blue: 'bg-blue-50/50 border-blue-100'
+  };
+
+  return (
+    <motion.button
+      onClick={onOpen}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileTap={{ scale: 0.98 }}
+      className={cn(
+        "bg-white text-left w-full rounded-3xl p-4 border flex flex-col gap-2 shadow-sm relative group hover:shadow-md transition-all",
+        accentMap[accent]
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm text-on-surface">
+          {icon}
+        </div>
+        <div className="w-7 h-7 rounded-lg bg-white/80 flex items-center justify-center text-secondary border border-outline/10 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
+          <Plus className="w-3.5 h-3.5" />
+        </div>
+      </div>
+      
+      <div className="flex flex-col gap-0.5 mt-1">
+        <p className="text-xl font-black text-on-surface leading-none tracking-tight">{value}</p>
+        <div className="flex flex-col">
+          <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
+          {sub && <p className="text-[9px] text-secondary/50 font-bold leading-tight">{sub}</p>}
+        </div>
+      </div>
+
+      {badge && (
+        <div className="mt-1">
+          <span className={cn('text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full inline-block', badge.color)}>
+            {badge.text}
+          </span>
+        </div>
+      )}
+    </motion.button>
+  );
+}
+
+// ── TREND CHART (SMOOTH LINE) ──
+function TrendChart({ data, color = 'currentColor', label = 'Ventas' }: { data: any[], color?: string, label?: string }) {
+  const W = 320, H = 140, PAD = 20;
+  
+  if (data.length === 0) return (
+    <div className="h-32 flex flex-col items-center justify-center opacity-20 bg-surface-container/30 rounded-3xl border border-dashed border-outline/30">
+      <TrendingUp className="w-8 h-8 mb-2" />
+      <p className="text-[10px] font-black uppercase tracking-widest">Sin datos suficientes</p>
+    </div>
+  );
+
+  // Group by day (last 7 days)
+  const byDay: Record<string, number> = {};
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    byDay[d.toLocaleDateString('es-CO')] = 0;
+  }
+
+  data.forEach(s => {
+    const d = toDateS(s.timestamp || s.createdAt);
+    if (d) {
+      const k = d.toLocaleDateString('es-CO');
+      if (byDay[k] !== undefined) byDay[k] += s.total || 0;
+    }
+  });
+
+  const entries = Object.entries(byDay);
+  const vals = entries.map(e => e[1]);
+  const max = Math.max(...vals, 1000);
+  
+  // Points calculation
+  const points = entries.map(([, val], i) => ({
+    x: PAD + (i * (W - PAD * 2) / (entries.length - 1)),
+    y: H - PAD - (val / max * (H - PAD * 2))
+  }));
+
+  // Bezier Path
+  const path = points.reduce((acc, p, i, a) => {
+    if (i === 0) return `M ${p.x} ${p.y}`;
+    const prev = a[i - 1];
+    const cp1x = prev.x + (p.x - prev.x) / 2;
+    return `${acc} C ${cp1x} ${prev.y}, ${cp1x} ${p.y}, ${p.x} ${p.y}`;
+  }, '');
+
+  const gradId = `grad-${label.toLowerCase().replace(/\s/g, '-')}`;
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-32 overflow-visible">
+        {/* Grid lines */}
+        {[0, 0.5, 1].map(v => (
+          <line 
+            key={v} 
+            x1={PAD} y1={H - PAD - v * (H - PAD * 2)} 
+            x2={W - PAD} y2={H - PAD - v * (H - PAD * 2)} 
+            className="stroke-outline/10 stroke-[1]" 
+            strokeDasharray="4 4"
+          />
+        ))}
+        
+        {/* Area fill */}
+        <path
+          d={`${path} L ${points[points.length - 1].x} ${H - PAD} L ${points[0].x} ${H - PAD} Z`}
+          fill={`url(#${gradId})`}
+          className="opacity-20"
+        />
+        
+        {/* Line */}
+        <motion.path
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+
+        {/* Data points */}
+        {points.map((p, i) => (
+          <circle 
+            key={i} cx={p.x} cy={p.y} r="3" 
+            className="fill-white stroke-current stroke-[2]"
+            style={{ color }}
+          />
+        ))}
+
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} />
+            <stop offset="100%" stopColor="white" />
+          </linearGradient>
+        </defs>
+      </svg>
+      
+      {/* X Axis Labels */}
+      <div className="flex justify-between px-1 mt-2">
+        {entries.map(([date], i) => {
+          const d = date.split('/');
+          return (
+            <span key={i} className="text-[8px] font-bold text-secondary/40 uppercase">
+              {i % 2 === 0 ? `${d[0]} ${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(d[1])-1]}` : ''}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── SALE CARD ──
+function SaleCard({ sale, onClick }: { sale: any; onClick: () => void }) {
+  const d = toDateS(sale.timestamp || sale.createdAt);
+  
+  // Format: "Lun 25 · 05:40 a. m."
+  const dateStr = d ? d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }) : '';
+  const timeStr = d ? d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+  const fullTime = `${dateStr} · ${timeStr}`;
+
+  const clientName = sale.clientName || sale.userName || sale.customerName || sale.nombre;
+  
+  const pmIcon = {
+    efectivo: <Banknote className="w-3.5 h-3.5 text-emerald-600" />,
+    cash: <Banknote className="w-3.5 h-3.5 text-emerald-600" />,
+    datafono: <CreditCard className="w-3.5 h-3.5 text-blue-600" />,
+    tarjeta: <CreditCard className="w-3.5 h-3.5 text-blue-600" />,
+    transferencia: <Smartphone className="w-3.5 h-3.5 text-purple-600" />,
+    digital: <Smartphone className="w-3.5 h-3.5 text-purple-600" />,
+    credito: <Clock className="w-3.5 h-3.5 text-orange-600" />,
+  }[(sale.paymentMethod || '').toLowerCase()] || <DollarSign className="w-3.5 h-3.5 text-secondary" />;
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all group"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center relative overflow-hidden">
+          {pmIcon}
+          {/* Subtle indicator if it has items */}
+          {sale.items?.length > 0 && (
+            <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-bl-sm" />
+          )}
+        </div>
+        <div className="text-left">
+          <div className="flex items-center gap-2">
+            <p className="font-black text-sm text-on-surface">{formatCurrency(sale.total)}</p>
+            {clientName && (
+              <span className="text-[10px] font-bold text-primary truncate max-w-[100px]">
+                {clientName}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-black text-secondary uppercase tracking-widest">{sale.paymentMethod || 'Venta'}</span>
+            <span className="w-1 h-1 rounded-full bg-outline/40" />
+            <span className="text-[9px] font-bold text-secondary/50 capitalize">{fullTime}</span>
+          </div>
+        </div>
+      </div>
+      <Plus className="w-4 h-4 text-secondary/30 group-hover:text-primary transition-colors" />
+    </button>
+  );
+}
 
 export default function Reports() {
   const { profile } = useAuthStore();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<DateFilter>('hoy');
+
+  // Data state
   const [sales, setSales] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [supplies, setSupplies] = useState<any[]>([]);
+  const [creditPedidos, setCreditPedidos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal state
+  const [openModal, setOpenModal] = useState<string | null>(null);
+  const [selectedSale, setSelectedSale] = useState<any | null>(null);
+  const [chatMsg, setChatMsg] = useState('');
+  
+  const open = (name: string) => setOpenModal(name);
+  const close = () => setOpenModal(null);
+
+  // ── SALES listener (period-filtered) ──
   useEffect(() => {
     if (!profile) return;
-
     let startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
+    if (filter === 'semana') startDate.setDate(startDate.getDate() - 7);
+    else if (filter === 'mes') startDate.setMonth(startDate.getMonth() - 1);
 
-    if (filter === 'semana') {
-      startDate.setDate(startDate.getDate() - 7);
-    } else if (filter === 'mes') {
-      startDate.setMonth(startDate.getMonth() - 1);
-    }
-
-    const salesRef = collection(db, 'sales');
     const q = query(
-      salesRef, 
+      collection(db, 'sales'),
       where('timestamp', '>=', Timestamp.fromDate(startDate)),
       orderBy('timestamp', 'desc')
     );
-
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSales(data);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Sales listener error:", error);
-        if (error.code === 'permission-denied') {
-          setLoading(false);
-        }
-      }
-    );
-
-    return unsubscribe;
+    const unsub = onSnapshot(q, snap => {
+      setSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    }, err => { console.error(err); setLoading(false); });
+    return unsub;
   }, [filter, profile]);
 
-  const totalRevenue = sales.reduce((sum, s) => sum + s.total, 0);
-  const totalCarts = sales.length;
-  const avgTicket = totalCarts > 0 ? totalRevenue / totalCarts : 0;
+  // ── SUPPLIES listener ──
+  useEffect(() => {
+    if (!profile) return;
+    const unsub = onSnapshot(query(collection(db, 'supplies'), orderBy('name', 'asc')), snap => {
+      setSupplies(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return unsub;
+  }, [profile]);
 
-  const downloadReport = () => {
-    toast.info('Generando reporte PDF...');
-    setTimeout(() => {
-      toast.success('Reporte descargado correctamente');
-    }, 2000);
-  };
+  // ── SUPPLY PURCHASES listener ──
+  useEffect(() => {
+    if (!profile) return;
+    const unsub = onSnapshot(query(collection(db, 'supplyPurchases'), orderBy('createdAt', 'desc')), snap => {
+      setPurchases(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return unsub;
+  }, [profile]);
 
-  const chartData = [
-    { name: 'Lun', sales: 4000 },
-    { name: 'Mar', sales: 3000 },
-    { name: 'Mie', sales: 2000 },
-    { name: 'Jue', sales: 2780 },
-    { name: 'Vie', sales: 1890 },
-    { name: 'Sab', sales: 2390 },
-    { name: 'Dom', sales: 3490 },
-  ];
+  // ── CREDIT PEDIDOS listener (all-time) ──
+  useEffect(() => {
+    if (!profile) return;
+    const q = query(
+      collection(db, 'pedidos'),
+      where('paymentMethod', '==', 'credito'),
+      orderBy('createdAt', 'desc')
+    );
+    const unsub = onSnapshot(q, snap => {
+      setCreditPedidos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, err => { console.error('Credit pedidos error:', err); });
+    return unsub;
+  }, [profile]);
+
+  // ── COMPUTED METRICS ──
+  const period = PERIOD_MAP[filter];
+
+  // Ingresos (POS sales, non-credit)
+  const ingresosSales = sales.filter(s => {
+    const pm = (s.paymentMethod || '').toLowerCase();
+    return pm !== 'credito';
+  });
+  const totalIngresos = ingresosSales.reduce((s, x) => s + (x.total || 0), 0);
+  
+  const getMethodTotal = (methods: string[]) => 
+    ingresosSales
+      .filter(s => methods.includes((s.paymentMethod || '').toLowerCase()))
+      .reduce((s, x) => s + (x.total || 0), 0);
+
+  const efectivo = getMethodTotal(['cash', 'efectivo', 'cash/efectivo']);
+  const tarjeta = getMethodTotal(['datafono', 'card', 'tarjeta', 'débito', 'crédito']);
+  const transferencia = getMethodTotal(['transfer', 'transferencia', 'digital', 'nequi', 'daviplata']);
+
+  // Credit pedidos for current period
+  const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, period));
+  const totalCredito = creditPedidosPeriod.reduce((s, p) => s + (p.total || 0), 0);
+
+  // Supply purchases for current period
+  const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, period));
+  const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
+
+  // Ganancia
+  const gananciaNeta = totalIngresos - totalCompras;
+  const isPositive = gananciaNeta >= 0;
+
+  // Product ranking
+  const productMap: Record<string, { name: string; units: number; revenue: number }> = {};
+  sales.forEach(s => {
+    s.items?.forEach((item: any) => {
+      const k = item.productName || 'Desconocido';
+      if (!productMap[k]) productMap[k] = { name: k, units: 0, revenue: 0 };
+      productMap[k].units += item.quantity || 0;
+      productMap[k].revenue += item.subtotal || 0;
+    });
+  });
+  const ranking = Object.values(productMap).sort((a, b) => b.units - a.units).slice(0, 20);
+  const starProduct = ranking[0];
+
+  // Critical stock
+  const criticalSupplies = supplies.filter(s => s.currentStock <= s.minLimit);
+
+  // Deuda by client (all-time)
+  const deudaMap: Record<string, { clienteId: string; name: string; total: number; pedidos: any[] }> = {};
+  creditPedidos.forEach(p => {
+    const k = p.clienteId || p.clienteName || 'desconocido';
+    if (!deudaMap[k]) deudaMap[k] = { clienteId: k, name: p.clienteName || 'Cliente', total: 0, pedidos: [] };
+    deudaMap[k].total += p.total || 0;
+    deudaMap[k].pedidos.push(p);
+  });
+  const deudaByClient = Object.values(deudaMap).sort((a, b) => b.total - a.total);
+  const totalDeuda = creditPedidos.reduce((s, p) => s + (p.total || 0), 0);
+
+  const filterLabel = FILTER_LABEL[filter];
 
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
@@ -106,186 +401,237 @@ export default function Reports() {
         <AppHeader showBell />
         <PageTitle title="Reportes & BI" subtitle="Análisis Operativo" />
 
-      <main className="p-4 sm:p-6 max-w-5xl mx-auto flex flex-col gap-8">
-        {/* Date Selector */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <main className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-6 w-full">
+
+          {/* ── FILTERS ── */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="flex p-1 bg-surface-container rounded-2xl border border-outline/30 w-full sm:w-auto">
-               {(['hoy', 'semana', 'mes'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={cn(
-                      "flex-1 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      filter === f ? "bg-white text-primary shadow-sm" : "text-secondary hover:text-on-surface"
-                    )}
-                  >
-                    {f}
-                  </button>
-               ))}
+              {(['hoy', 'semana', 'mes'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    'flex-1 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                    filter === f ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-on-surface'
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
             </div>
-
             <div className="flex items-center gap-3 w-full sm:w-auto">
-               <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white rounded-2xl border border-outline/50 shadow-sm text-xs font-bold text-secondary">
-                  <Calendar className="w-4 h-4" />
-                  Calendario
-                  <ChevronDown className="w-4 h-4 opacity-30" />
-               </button>
-               <button 
-                 onClick={downloadReport}
-                 className="flex items-center justify-center w-12 h-12 bg-white rounded-2xl border border-outline/50 shadow-sm text-secondary hover:text-primary transition-all"
-               >
-                  <Download className="w-5 h-5" />
-               </button>
+              <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white rounded-2xl border border-outline/50 shadow-sm text-xs font-bold text-secondary">
+                <Calendar className="w-4 h-4" />
+                Calendario
+                <ChevronDown className="w-4 h-4 opacity-30" />
+              </button>
+              <button
+                onClick={() => toast.info('Generando reporte...')}
+                className="flex items-center justify-center w-12 h-12 bg-white rounded-2xl border border-outline/50 shadow-sm text-secondary hover:text-primary transition-all"
+              >
+                <Download className="w-5 h-5" />
+              </button>
             </div>
-        </div>
+          </div>
 
-        {/* Financial Cards Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-           <ReportCard 
-             label="Ingresos Recibidos" 
-             value={formatCurrency(totalRevenue)} 
-             icon={<DollarSign className="w-5 h-5" />} 
-             color="emerald" 
-             info="Hoy"
-           />
-           <ReportCard 
-             label="Ventas a Crédito" 
-             value={formatCurrency(0)} 
-             icon={<CreditCard className="w-5 h-5" />} 
-             color="orange" 
-             info="Hoy"
-           />
-           <ReportCard 
-             label="Ganancia Neta" 
-             value={formatCurrency(totalRevenue * 0.4)} 
-             icon={<TrendingUp className="w-5 h-5" />} 
-             color="blue" 
-             info="40% estimado"
-           />
-           <ReportCard 
-             label="Producto Estrella" 
-             value="Cono Triple" 
-             icon={<Trophy className="w-5 h-5" />} 
-             color="purple" 
-             info="12 unidades"
-           />
-        </section>
+          {/* ── 2×3 METRIC GRID ── */}
+          <section className="grid grid-cols-2 gap-3">
+            <MetricCard
+              icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
+              accent="emerald"
+              label="Ingresos Recibidos"
+              value={loading ? '...' : formatCurrency(totalIngresos)}
+              sub={filterLabel}
+              onOpen={() => open('ingresos')}
+            />
+            <MetricCard
+              icon={<CreditCard className="w-5 h-5 text-orange-600" />}
+              accent="orange"
+              label="Ventas a Crédito"
+              value={loading ? '...' : formatCurrency(totalCredito)}
+              sub={filterLabel}
+              onOpen={() => open('credito')}
+            />
+            <MetricCard
+              icon={<TrendingUp className="w-5 h-5 text-emerald-600" />}
+              accent="emerald"
+              label="Ganancia Neta"
+              value={loading ? '...' : formatCurrency(gananciaNeta)}
+              sub={filterLabel}
+              badge={totalIngresos > 0 ? {
+                text: isPositive ? '↑ Positivo' : '↓ Negativo',
+                color: isPositive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+              } : null}
+              onOpen={() => open('ganancia')}
+            />
+            <MetricCard
+              icon={<Trophy className="w-5 h-5 text-amber-600" />}
+              accent="amber"
+              label="Producto Estrella"
+              value={starProduct ? starProduct.name.length > 12 ? starProduct.name.slice(0, 12) + '…' : starProduct.name : 'N/A'}
+              sub={starProduct ? `${starProduct.units} unidades` : 'Sin ventas'}
+              onOpen={() => open('ranking')}
+            />
+            <MetricCard
+              icon={<Clock className="w-5 h-5 text-orange-600" />}
+              accent="orange"
+              label="Deuda Clientes"
+              value={formatCurrency(totalDeuda)}
+              sub="Cartera histórica"
+              onOpen={() => open('deuda')}
+            />
+            <MetricCard
+              icon={<AlertTriangle className="w-5 h-5 text-orange-600" />}
+              accent="orange"
+              label="Stock Crítico"
+              value={criticalSupplies.length.toString()}
+              sub="Por debajo del límite"
+              onOpen={() => open('stock')}
+            />
+          </section>
 
-        {/* Charts Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-           <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-6 sm:p-8 border border-outline/50 shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                 <div>
-                    <h3 className="font-headline font-bold text-lg text-on-surface">Ventas por Día</h3>
-                    <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Tendencia semanal</p>
-                 </div>
-                 <PieChart className="w-5 h-5 text-secondary/30" />
-              </div>
-              <div className="h-64 mt-4">
-                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                       <defs>
-                          <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                             <stop offset="5%" stopColor="#E91E8C" stopOpacity={0.1}/>
-                             <stop offset="95%" stopColor="#E91E8C" stopOpacity={0}/>
-                          </linearGradient>
-                       </defs>
-                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#64748b'}} />
-                       <Tooltip 
-                         contentStyle={{ backgroundColor: '#fff', borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                         itemStyle={{ color: '#E91E8C', fontWeight: 900, fontSize: '10px' }}
-                       />
-                       <Area type="monotone" dataKey="sales" stroke="#E91E8C" fillOpacity={1} fill="url(#colorSales)" strokeWidth={3} />
-                    </AreaChart>
-                 </ResponsiveContainer>
-              </div>
-           </div>
-
-           <div className="bg-primary rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden group">
-              <div className="relative z-10">
-                 <h3 className="text-xl font-headline font-bold mb-2">Ticket Promedio</h3>
-                 <p className="text-4xl font-black mb-6 tracking-tight">{formatCurrency(avgTicket)}</p>
-                 
-                 <div className="space-y-4">
-                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-70">
-                       <span>Conversión</span>
-                       <span>85%</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                       <div className="h-full bg-white rounded-full w-[85%]" />
-                    </div>
-                    <p className="text-xs font-medium leading-relaxed opacity-80 mt-4">
-                       Tus ventas han aumentado un <span className="font-black text-white">12%</span> respecto a la semana pasada.
-                    </p>
-                 </div>
-
-                 <button className="mt-10 w-full py-4 bg-white text-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl group-hover:scale-[1.05] transition-all">
-                    Detalle por Sede
-                 </button>
-              </div>
-              <TrendingUp className="absolute -bottom-10 -right-10 w-48 h-48 opacity-10 blur-sm transform -rotate-12 transition-transform group-hover:rotate-0 duration-700" />
-           </div>
-        </section>
-
-        {/* Detailed Transactions List */}
-        <section className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-outline/50 shadow-sm flex flex-col">
-            <div className="flex justify-between items-center mb-8">
-               <h3 className="font-headline font-bold text-lg text-on-surface">Historial Detallado</h3>
-               <button className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest">
-                  Ver Todo
-                  <ArrowRight className="w-4 h-4" />
-               </button>
-            </div>
-            
-            <div className="flex flex-col gap-4 divide-y divide-outline/30">
-               {sales.slice(0, 5).map(sale => (
-                  <div key={sale.id} className="flex items-center justify-between pt-4">
-                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary shadow-sm">
-                           <Clock className="w-5 h-5 opacity-40" />
-                        </div>
-                        <div>
-                           <p className="text-sm font-bold text-on-surface">{sale.tableName} - #{sale.id.slice(-4).toUpperCase()}</p>
-                           <p className="text-[10px] text-secondary font-black uppercase tracking-widest">{sale.hour} • {sale.paymentMethod}</p>
-                        </div>
-                     </div>
-                     <p className="font-black text-on-surface">{formatCurrency(sale.total)}</p>
+          {/* ── CHARTS ── */}
+          <div className="flex flex-col gap-4">
+            {/* Sales Trend */}
+            <section className="bg-white rounded-[2.5rem] border border-outline/10 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-on-surface/5 rounded-2xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-on-surface" />
                   </div>
-               ))}
-               {sales.length === 0 && (
-                  <div className="py-20 text-center opacity-30 flex flex-col items-center">
-                     <FileText className="w-10 h-10 mb-2" />
-                     <p className="text-xs font-bold uppercase tracking-widest">Sin transacciones registradas</p>
+                  <div>
+                    <h4 className="font-headline font-black text-lg text-on-surface leading-tight">Tendencia de Ventas</h4>
+                    <p className="text-[9px] font-black text-secondary uppercase tracking-[0.2em] mt-0.5">Últimos 7 días</p>
                   </div>
-               )}
-            </div>
-        </section>
-      </main>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-xl">
+                  <div className="w-2 h-2 rounded-full bg-on-surface" />
+                  <span className="text-[9px] font-black text-on-surface uppercase tracking-widest">Ingresos</span>
+                </div>
+              </div>
+              <TrendChart data={sales} color="#1c1b1f" label="Ingresos" />
+            </section>
 
-      <BottomNav />
+            {/* Investment Trend */}
+            <section className="bg-white rounded-[2.5rem] border border-outline/10 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/5 rounded-2xl flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-headline font-black text-lg text-on-surface leading-tight">Tendencia de Inversión</h4>
+                    <p className="text-[9px] font-black text-secondary uppercase tracking-[0.2em] mt-0.5">Historial de Compras</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-xl">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-[9px] font-black text-primary uppercase tracking-widest">Egresos</span>
+                </div>
+              </div>
+              <TrendChart data={purchases} color="#ff4d8d" label="Egresos" />
+            </section>
+          </div>
+
+          {/* ── ACTIVITY LIST ── */}
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-surface-container rounded-xl flex items-center justify-center">
+                  <History className="w-4 h-4 text-secondary" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface">Actividad</h3>
+              </div>
+              <span className="px-3 py-1 bg-surface-container text-secondary rounded-full text-[9px] font-black uppercase tracking-widest">
+                {sales.length} Ventas
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {sales.length === 0 ? (
+                <div className="py-12 flex flex-col items-center opacity-20 text-center">
+                  <History className="w-10 h-10 mb-2" />
+                  <p className="text-xs font-bold uppercase tracking-widest">Sin actividad en este período</p>
+                </div>
+              ) : (
+                sales.slice(0, 10).map(sale => (
+                  <SaleCard 
+                    key={sale.id} 
+                    sale={sale} 
+                    onClick={() => setSelectedSale(sale)} 
+                  />
+                ))
+              )}
+              {sales.length > 10 && (
+                <button className="py-3 text-[9px] font-black text-secondary uppercase tracking-widest hover:text-primary transition-colors">
+                  Ver todas las ventas del período
+                </button>
+              )}
+            </div>
+          </section>
+
+          {/* ── HINT ── */}
+          <p className="text-center text-[9px] font-black text-secondary/40 uppercase tracking-widest mt-4">
+            Toca una tarjeta o actividad para ver el detalle completo
+          </p>
+
+        </main>
+
+        <BottomNav />
       </div>
-    </div>
-  );
-}
 
-function ReportCard({ label, value, icon, color, info }: { label: string, value: string, icon: React.ReactNode, color: 'emerald' | 'orange' | 'blue' | 'purple', info: string }) {
-  const colors = {
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    orange: "bg-orange-50 text-orange-600 border-orange-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100"
-  };
+      {/* ── MODALS ── */}
+      <IngresosModal
+        isOpen={openModal === 'ingresos'}
+        onClose={close}
+        filter={filterLabel}
+        efectivo={efectivo}
+        tarjeta={tarjeta}
+        transferencia={transferencia}
+      />
+      <VentasCreditoModal
+        isOpen={openModal === 'credito'}
+        onClose={close}
+        filter={filterLabel}
+        creditPedidos={creditPedidosPeriod}
+      />
+      <GananciaModal
+        isOpen={openModal === 'ganancia'}
+        onClose={close}
+        filter={filterLabel}
+        totalIngresos={totalIngresos}
+        totalCompras={totalCompras}
+        totalCredito={totalCredito}
+      />
+      <RankingModal
+        isOpen={openModal === 'ranking'}
+        onClose={close}
+        filter={filterLabel}
+        ranking={ranking}
+      />
+      <DeudaClientesModal
+        isOpen={openModal === 'deuda'}
+        onClose={close}
+        deudaByClient={deudaByClient}
+        totalDeuda={totalDeuda}
+      />
+      <StockCriticoModal
+        isOpen={openModal === 'stock'}
+        onClose={close}
+        criticalSupplies={criticalSupplies}
+      />
 
-  return (
-    <div className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm flex flex-col gap-4 group hover:scale-[1.02] transition-all">
-       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110", colors[color])}>
-          {icon}
-       </div>
-       <div>
-          <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-xl font-black text-on-surface tracking-tight">{value}</p>
-          <p className="text-[9px] font-bold text-secondary/40 uppercase tracking-widest mt-1">{info}</p>
-       </div>
+      {/* Sale Detail Modal */}
+      <MovementDetailModal
+        isOpen={!!selectedSale}
+        onClose={() => setSelectedSale(null)}
+        data={selectedSale}
+        profile={profile}
+        chatMessage={chatMsg}
+        setChatMessage={setChatMsg}
+        onSendMessage={async () => {}}
+        isSending={false}
+      />
     </div>
   );
 }
