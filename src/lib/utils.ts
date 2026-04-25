@@ -45,19 +45,29 @@ export function handleFirestoreError(error: any, operation: FirestoreErrorInfo['
 
 export function getAssetUrl(path: string | undefined | null): string {
   if (!path) return '';
+  
+  // Si ya es una URL completa o data, devolverla tal cual
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
-  // Limpiar la ruta para evitar dobles barras
+  // Limpiar la ruta
   let cleanPath = path.startsWith('/') ? path.substring(1) : path;
   
-  // Si es solo un nombre de archivo (ej: conchita.jpeg), asumir que está en la carpeta de productos
-  if (!cleanPath.includes('/') && (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg') || cleanPath.endsWith('.png') || cleanPath.endsWith('.webp'))) {
+  // Si no tiene carpetas (ej: conchita.jpeg), es un producto
+  if (!cleanPath.includes('/')) {
     cleanPath = `images/products/${cleanPath}`;
   }
 
-  const base = (import.meta.env.BASE_URL || '/').endsWith('/') 
-    ? import.meta.env.BASE_URL 
-    : `${import.meta.env.BASE_URL}/`;
-    
-  return `${base}${cleanPath}`;
+  // En Vercel usamos la raíz '/'
+  const isVercel = window.location.hostname.includes('vercel.app');
+  const base = isVercel ? '/' : (import.meta.env.BASE_URL || '/');
+  const finalBase = base.endsWith('/') ? base : `${base}/`;
+  
+  const result = `${finalBase}${cleanPath}`;
+  
+  // Log para que veas en la consola (F12) qué ruta se está pidiendo
+  if (isVercel && !path.includes('icon')) {
+    console.log(`[AssetDebug] Original: ${path} -> Final: ${result}`);
+  }
+  
+  return result;
 }
