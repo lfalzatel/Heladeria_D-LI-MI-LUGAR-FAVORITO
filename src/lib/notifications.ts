@@ -1,10 +1,10 @@
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { toast } from 'sonner';
 
 // IMPORTANTE: Debes obtener esta clave desde la Consola de Firebase -> Cloud Messaging -> Web Configuration
-const VAPID_KEY = "TU_VAPID_KEY_AQUI"; 
+const VAPID_KEY = "lxBvfDCBU_sEUsKLz0n_ygYisMX-1_jcMcch9WMgxbk"; 
 
 export async function requestNotificationPermission(userId: string) {
   try {
@@ -60,5 +60,48 @@ export function listenToForegroundMessages() {
     });
   } catch (error) {
     console.error('Error al escuchar mensajes en primer plano:', error);
+  }
+}
+
+export async function notifyAdmins(title: string, body: string, data: any = {}) {
+  try {
+    // 1. Obtener todos los administradores y propietarios
+    const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'propietario']));
+    const snapshot = await getDocs(q);
+    
+    // 2. Recopilar todos sus tokens de dispositivo
+    const allTokens: string[] = [];
+    snapshot.docs.forEach(doc => {
+      const userData = doc.data();
+      if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+        allTokens.push(...userData.fcmTokens);
+      }
+    });
+
+    // Si no hay tokens, no hay a quién notificar
+    if (allTokens.length === 0) {
+      console.log('No se encontraron tokens de administradores para notificar');
+      return;
+    }
+
+    // 3. Llamar a nuestra API segura en Vercel
+    const response = await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tokens: [...new Set(allTokens)], // Evitar duplicados
+        title,
+        body,
+        data
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al llamar a la API de notificación');
+    }
+    
+    console.log('Notificación enviada a los administradores');
+  } catch (error) {
+    console.error('Error al disparar notificación a admins:', error);
   }
 }

@@ -4,6 +4,7 @@ import { db } from '../lib/firebase';
 import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { notifyAdmins } from '../lib/notifications';
 import AppHeader, { PageTitle } from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -149,6 +150,19 @@ export default function Supplies() {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
       toast.success('Insumo creado');
     }
+
+    // Alerta de stock bajo si aplica
+    if (data.currentStock !== undefined && data.minLimit !== undefined) {
+      if (data.currentStock <= data.minLimit) {
+        notifyAdmins(
+          "⚠️ Stock Crítico",
+          `El insumo "${data.name || supplyToEdit?.name}" está por debajo del límite (${data.currentStock} ${data.unit || supplyToEdit?.unit})`
+        );
+      }
+    }
+    
+    setIsSupplyModalOpen(false);
+    setSupplyToEdit(null);
   };
 
   return (

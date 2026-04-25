@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { collection, addDoc, serverTimestamp, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useState } from 'react';
+import { notifyAdmins } from '../lib/notifications';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -56,6 +57,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
       await Promise.all(updatePromises);
       
       toast.success('¡Venta realizada con éxito!');
+      notifyAdmins(
+        "🍦 Nueva venta realizada",
+        `Venta manual por $${total.toLocaleString()} - ${paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}`
+      );
       clearCart(activeTable);
       onClose();
     } catch (error: any) {

@@ -16,6 +16,7 @@ import BottomNav from '../components/BottomNav';
 import AdminSidebar from '../components/AdminSidebar';
 import OrderConfigModal from '../components/OrderConfigModal';
 import { toast } from 'sonner';
+import { notifyAdmins } from '../lib/notifications';
 
 interface CartItem {
   id: string;
@@ -204,6 +205,10 @@ export default function ClientCompras() {
       }
 
       toast.success('¡Pedido enviado! Pronto te confirmaremos.');
+      notifyAdmins(
+        "🆕 Nuevo pedido online",
+        `De ${profile.name} por $${cartTotal.toLocaleString()} - ${paymentMethod}`
+      );
       setCart([]);
       setShowCheckout(false);
       setAddress('');
