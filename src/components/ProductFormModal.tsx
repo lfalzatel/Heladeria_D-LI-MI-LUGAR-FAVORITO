@@ -237,8 +237,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                <div className="flex flex-wrap gap-3">
                  {[
                    { name: 'Ninguno', color: '' },
-                   { name: 'Rojo', color: 'bg-red-100', border: 'border-red-300' },
-                   { name: 'Amarillo', color: 'bg-amber-100', border: 'border-amber-300' },
+                   { name: 'Rojo', color: 'bg-[#FFEBEE]', border: 'border-red-200' },
+                   { name: 'Amarillo', color: 'bg-[#FFF9C4]', border: 'border-amber-200' },
                    { name: 'Azul', color: 'bg-blue-100', border: 'border-blue-300' },
                    { name: 'Verde', color: 'bg-emerald-100', border: 'border-emerald-300' },
                    { name: 'Naranja', color: 'bg-orange-100', border: 'border-orange-300' },

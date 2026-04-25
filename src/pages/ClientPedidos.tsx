@@ -112,7 +112,7 @@ export default function ClientPedidos() {
         <AppHeader showBell />
         <PageTitle title={pageTitle} subtitle={pageSubtitle} />
 
-        <main className="p-4 sm:p-6 max-w-4xl mx-auto w-full flex flex-col gap-6">
+        <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
 
         {/* ── ACTIVOS ── */}
         <section className="flex flex-col gap-3">

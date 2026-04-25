@@ -454,8 +454,8 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
       className={cn(
         product.cardColor || "bg-white",
         "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-        totalQuantity > 0 ? "ring-2 ring-primary/40 shadow-sm" : 
-        product.cardColor ? "border-outline/30 shadow-sm" : "border-outline/10 shadow-sm"
+        totalQuantity > 0 ? "ring-4 ring-primary/10 shadow-md border-primary/20" : 
+        product.cardColor ? "border-outline/20 shadow-sm" : "border-outline/10 shadow-sm"
       )}
     >
       {/* Zone 1: Image defaults to open details if passed */}
