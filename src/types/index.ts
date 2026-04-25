@@ -23,6 +23,7 @@ export interface Product {
   isActive: boolean;
   imageUrl?: string;
   cardColor?: string;
+  salesCount?: number;
 }
 
 export interface ProductVariant {

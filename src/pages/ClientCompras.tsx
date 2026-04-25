@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Product, ProductVariant } from '../types';
@@ -73,7 +73,15 @@ export default function ClientCompras() {
   useEffect(() => {
     const q = query(collection(db, 'products'), where('isActive', '==', true), orderBy('name', 'asc'));
     const unsub = onSnapshot(q, (snap) => {
-      setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[]);
+      const prods = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[];
+      // Sort by salesCount (desc) then by name
+      const sortedProds = [...prods].sort((a, b) => {
+        const salesA = a.salesCount || 0;
+        const salesB = b.salesCount || 0;
+        if (salesB !== salesA) return salesB - salesA;
+        return a.name.localeCompare(b.name);
+      });
+      setProducts(sortedProds);
     });
     return unsub;
   }, []);
@@ -182,6 +190,15 @@ export default function ClientCompras() {
         createdAt: serverTimestamp(),
         messages: [],
       });
+
+      // Actualizar conteo de ventas de productos
+      const updatePromises = cart.map(item => 
+        updateDoc(doc(db, 'products', item.productId), {
+          salesCount: increment(item.quantity)
+        })
+      );
+      await Promise.all(updatePromises);
+
       toast.success('¡Pedido enviado! Pronto te confirmaremos.');
       setCart([]);
       setShowCheckout(false);

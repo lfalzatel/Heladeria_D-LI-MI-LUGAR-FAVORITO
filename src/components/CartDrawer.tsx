@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { CartItem } from '../types';
 import { toast } from 'sonner';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useState } from 'react';
 
@@ -46,6 +46,14 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
       };
 
       await addDoc(collection(db, 'sales'), saleData);
+      
+      // Actualizar conteo de ventas de productos
+      const updatePromises = cart.items.map(item => 
+        updateDoc(doc(db, 'products', item.productId), {
+          salesCount: increment(item.quantity)
+        })
+      );
+      await Promise.all(updatePromises);
       
       toast.success('¡Venta realizada con éxito!');
       clearCart(activeTable);

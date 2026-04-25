@@ -82,7 +82,16 @@ export default function POS() {
           id: doc.id,
           ...doc.data()
         })) as Product[];
-        setProducts(prods);
+        
+        // Sort by salesCount (desc) then by name
+        const sortedProds = [...prods].sort((a, b) => {
+          const salesA = a.salesCount || 0;
+          const salesB = b.salesCount || 0;
+          if (salesB !== salesA) return salesB - salesA;
+          return a.name.localeCompare(b.name);
+        });
+        
+        setProducts(sortedProds);
         setLoading(false);
       },
       (error) => {
@@ -450,8 +459,9 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
       animate={{ opacity: 1, scale: 1 }}
       onClick={handleMainClick}
       className={cn(
-        "bg-white rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-        totalQuantity > 0 ? "ring-2 ring-primary/40 bg-primary/5 border-primary/40 shadow-sm" : "border-outline/10 shadow-sm"
+        product.cardColor || "bg-white",
+        "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
+        totalQuantity > 0 ? "ring-2 ring-primary/40 shadow-sm" : "border-outline/10 shadow-sm"
       )}
     >
       {/* Zone 1: Image defaults to open details if passed */}
