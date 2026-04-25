@@ -6,6 +6,11 @@ import {
   Users,
   BarChart3,
   ShoppingCart,
+  IceCream,
+  Receipt,
+  History,
+  User,
+  LayoutDashboard
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -43,9 +48,8 @@ function SidebarLink({ to, icon, label, active }: SidebarLinkProps) {
 }
 
 /**
- * Sidebar unificado para todas las páginas admin.
- * Muestra exactamente las mismas opciones que el BottomNav admin:
- * Inicio · Vender · Gestión · Reportes · Pedidos
+ * Sidebar universal para todas las páginas.
+ * Detecta el rol del usuario y muestra las opciones correspondientes.
  */
 export default function AdminSidebar() {
   const location = useLocation();
@@ -53,20 +57,33 @@ export default function AdminSidebar() {
 
   if (!profile) return null;
 
+  const isCliente = profile.role === 'cliente';
   const isVendedor = profile.role === 'vendedor';
   const isAdmin = profile.role === 'admin' || profile.role === 'propietario';
 
   const nav = [
-    { to: '/admin/dashboard', icon: <Home className="w-5 h-5" />, label: isVendedor ? 'Mi Actividad' : 'Inicio', show: isAdmin || isVendedor },
+    // Admin / Vendedor Links
+    { to: '/admin/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: isVendedor ? 'Mi Actividad' : 'Inicio', show: isAdmin || isVendedor },
     { to: '/pos',             icon: <MenuSquare className="w-5 h-5" />, label: 'Vender', show: isAdmin || isVendedor },
+    
+    // Client Links
+    { to: '/cliente/compras', icon: <IceCream className="w-5 h-5" />, label: 'Comprar', show: isCliente },
+    
+    // Common / Management Links
     { to: '/admin/management',icon: <Users className="w-5 h-5" />, label: 'Gestión', show: isAdmin },
     { to: '/admin/inventory', icon: <ShoppingCart className="w-5 h-5" />, label: 'Menú & Stock', show: isAdmin },
     { to: '/admin/reports',   icon: <BarChart3 className="w-5 h-5" />, label: 'Reportes', show: isAdmin },
-    { to: '/cliente/pedidos', icon: <ShoppingCart className="w-5 h-5" />, label: 'Pedidos', show: isAdmin || isVendedor },
+    
+    // Orders (Everyone)
+    { to: '/cliente/pedidos', icon: <Receipt className="w-5 h-5" />, label: isCliente ? 'Mis Pedidos' : 'Pedidos', show: true },
+    
+    // History & Profile (Client)
+    { to: '/cliente/historial', icon: <History className="w-5 h-5" />, label: 'Historial', show: isCliente },
+    { to: '/profile',         icon: <User className="w-5 h-5" />, label: 'Mi Perfil', show: isCliente },
   ].filter(item => item.show);
 
   return (
-    <nav className="hidden lg:flex flex-col w-64 h-screen bg-sidebar-bg py-8 sticky top-0 z-40 flex-shrink-0">
+    <nav className="hidden lg:flex flex-col w-64 h-screen bg-sidebar-bg py-8 sticky top-0 z-40 flex-shrink-0 border-r border-white/5">
       {/* Logo */}
       <div className="px-6 mb-10">
         <div className="flex items-center gap-3">
@@ -75,7 +92,9 @@ export default function AdminSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="font-headline font-bold text-white text-base leading-none tracking-tight">D'LI Boutique</span>
-            <span className="font-brand text-primary italic text-xs mt-1">Panel de Control</span>
+            <span className="font-brand text-primary italic text-xs mt-1">
+              {isCliente ? 'Portal Clientes' : 'Panel de Control'}
+            </span>
           </div>
         </div>
       </div>
@@ -99,7 +118,7 @@ export default function AdminSidebar() {
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
             {profile.role?.toUpperCase()}
           </p>
-          <p className="text-sm font-bold text-white truncate">{profile.name || 'Administrador'}</p>
+          <p className="text-sm font-bold text-white truncate">{profile.name || 'Usuario'}</p>
         </div>
       </div>
     </nav>

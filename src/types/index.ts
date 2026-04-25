@@ -22,6 +22,7 @@ export interface Product {
   scoops?: number;
   isActive: boolean;
   imageUrl?: string;
+  cardColor?: string;
 }
 
 export interface ProductVariant {

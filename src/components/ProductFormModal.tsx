@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Save, IceCream, Link as LinkIcon, Info } from 'lucide-react';
 import { Product, ProductVariant } from '../types';
 import { toast } from 'sonner';
-import { getAssetUrl } from '../lib/utils';
+import { getAssetUrl, cn } from '../lib/utils';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
   const [basePrice, setBasePrice] = useState<number>('');
   const [baseScoops, setBaseScoops] = useState<number>(1);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [cardColor, setCardColor] = useState<string>('');
   
   // Toggles
   const [reqFlavors, setReqFlavors] = useState(false);
@@ -36,6 +37,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setReqFlavors(!!productToEdit.requiresFlavors);
         setReqSauces(!!productToEdit.requiresSauces);
         setReqFruit(!!productToEdit.requiresFruitChoice);
+        setCardColor(productToEdit.cardColor || '');
 
         if (productToEdit.variants && productToEdit.variants.length > 0) {
           setIsVariantBased(true);
@@ -59,6 +61,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setReqFlavors(false);
         setReqSauces(false);
         setReqFruit(false);
+        setCardColor('');
       }
     }
   }, [isOpen, productToEdit]);
@@ -94,6 +97,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         requiresFlavors: reqFlavors,
         requiresSauces: reqSauces,
         requiresFruitChoice: reqFruit,
+        cardColor: cardColor || null as any,
       };
 
       if (isVariantBased) {
@@ -223,6 +227,42 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                   <FormToggle isActive={reqSauces} onClick={() => setReqSauces(!reqSauces)} label="Elegir Salsas" />
                   <FormToggle isActive={reqFruit} onClick={() => setReqFruit(!reqFruit)} label="Elegir Frutas" />
                </div>
+            </div>
+
+            {/* Selector de Color de Tarjeta */}
+            <div className="flex flex-col gap-3">
+               <label className="text-[11px] font-black uppercase tracking-widest text-secondary">
+                 Color Estratégico (Psicología del Color)
+               </label>
+               <div className="flex flex-wrap gap-3">
+                 {[
+                   { name: 'Ninguno', color: '' },
+                   { name: 'Rojo', color: 'bg-red-50', border: 'border-red-200' },
+                   { name: 'Amarillo', color: 'bg-amber-50', border: 'border-amber-200' },
+                   { name: 'Azul', color: 'bg-blue-50', border: 'border-blue-200' },
+                   { name: 'Verde', color: 'bg-emerald-50', border: 'border-emerald-200' },
+                   { name: 'Naranja', color: 'bg-orange-50', border: 'border-orange-200' },
+                   { name: 'Morado', color: 'bg-purple-50', border: 'border-purple-200' },
+                 ].map((c) => (
+                   <button
+                     key={c.name}
+                     type="button"
+                     onClick={() => setCardColor(c.color)}
+                     className={cn(
+                       "flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                       cardColor === c.color 
+                         ? "border-primary shadow-md scale-105" 
+                         : "border-transparent opacity-70 hover:opacity-100"
+                     )}
+                   >
+                     <div className={cn("w-4 h-4 rounded-full border border-black/5", c.color || 'bg-white')} />
+                     {c.name}
+                   </button>
+                 ))}
+               </div>
+               <p className="text-[9px] text-secondary/60 font-bold italic">
+                 * El rojo y amarillo estimulan el apetito y la compra impulsiva.
+               </p>
             </div>
 
             <div className="h-px bg-outline/10 w-full my-2" />

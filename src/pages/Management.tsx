@@ -28,7 +28,9 @@ import {
   Database,
   AlertTriangle,
   Download,
-  BarChart3
+  BarChart3,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -112,7 +114,8 @@ export default function Management() {
 
 
   // User History State
-  const [selectedUserForHistory, setSelectedUserForHistory] = useState<UserProfile | null>(null);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState<any | null>(null);
+  const [viewDate, setViewDate] = useState(new Date());
   const [userSales, setUserSales] = useState<any[]>([]);
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<any | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -195,19 +198,15 @@ export default function Management() {
     const unsubscribe = onSnapshot(salesQ, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const item = doc.data();
-        let hourStr = item.hour;
-        if (!hourStr) {
-          const ts = item.createdAt || item.timestamp;
-          if (ts) {
-            const dateObj = ts.toDate ? ts.toDate() : new Date(ts);
-            hourStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
-          }
-        }
+        const ts = item.createdAt || item.timestamp;
+        const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
+        const hourStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dayStr = dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
 
         return { 
           id: doc.id, 
           ...item, 
-          hour: hourStr || 'Reciente',
+          hour: `${dayStr} - ${hourStr}`,
           title: item.tableName || (isClient ? 'Pedido Online' : 'Venta POS')
         };
       });
@@ -271,94 +270,6 @@ export default function Management() {
     }
   };
 
-  const handleOpenPurchaseModal = () => {
-    if (selectedForPurchase.length === 0) {
-      toast.error('Selecciona insumos para abastecer');
-      return;
-    }
-
-    const selectedItems: PurchaseItem[] = selectedForPurchase.map(id => {
-      const supply = supplies.find(s => s.id === id);
-      return {
-        ...supply,
-        quantity: 1,
-        cost: supply?.costPerUnit || 0,
-        portions: supply?.portionsPerUnit || 1
-      };
-    });
-
-    setPurchaseItems(selectedItems);
-    setIsSupplySelectionModalOpen(false);
-    setIsPurchaseModalOpen(true);
-  };
-
-  const updatePurchaseItem = (id: string, updates: Partial<PurchaseItem>) => {
-    setPurchaseItems(items => items.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
-  };
-
-  const handleConfirmPurchaseAll = async () => {
-    try {
-      const total = purchaseItems.reduce((acc, item) => acc + (item.cost * item.quantity), 0);
-      
-      await addDoc(collection(db, 'supplyPurchases'), {
-        items: purchaseItems.map(item => ({
-          name: item.name,
-          supplyId: item.isNew ? null : item.id,
-          cost: item.cost,
-          quantity: item.quantity,
-          portions: item.portions,
-          subtotal: item.cost * item.quantity
-        })),
-        total,
-        registeredBy: currentUser?.uid,
-        createdAt: serverTimestamp()
-      });
-
-      for (const item of purchaseItems) {
-        if (item.isNew && item.name) {
-          await addDoc(collection(db, 'supplies'), {
-            name: item.name,
-            category: item.category || 'Insumos',
-            unit: item.unit || 'Unidad',
-            currentStock: item.quantity,
-            minLimit: 1,
-            costPerUnit: item.cost,
-            portionsPerUnit: item.portions,
-            updatedAt: serverTimestamp()
-          });
-        } else if (!item.isNew && item.id) {
-          const supplyRef = doc(db, 'supplies', item.id);
-          await updateDoc(supplyRef, {
-             currentStock: increment(item.quantity),
-             costPerUnit: item.cost,
-             portionsPerUnit: item.portions,
-             updatedAt: serverTimestamp()
-          });
-        }
-      }
-
-      toast.success('Compra registrada y stock actualizado');
-      setIsPurchaseModalOpen(false);
-      setSelectedForPurchase([]);
-      setPurchaseItems([]);
-    } catch (error) {
-      console.error(error);
-      toast.error('Error al registrar la compra');
-    }
-  };
-
-  // Purchases confirm
-  const handleConfirmPurchase = async (provider: string, items: PurchaseItemType[]) => {
-    const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
-    await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
-    for (const item of items) {
-      await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
-    }
-    toast.success('¡Compra registrada y stock actualizado!');
-  };
-
   // Period-filtered purchases
   const filtered = purchases.filter(p => isInPeriod(p.createdAt, period));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
@@ -408,7 +319,7 @@ export default function Management() {
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-h-screen relative pb-32">
-        <AppHeader showBell />
+        <AppHeader showBell left={<div className="font-bold text-primary truncate hidden sm:block">Gestión</div>} />
         <div className="flex justify-between items-start pr-4 sm:pr-6">
           <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
           <button 
@@ -666,7 +577,14 @@ export default function Management() {
         isOpen={isPurchaseOpen}
         onClose={() => setIsPurchaseOpen(false)}
         supplies={supplies as any}
-        onConfirm={handleConfirmPurchase}
+        onConfirm={async (provider, items) => {
+           const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
+           await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
+           for (const item of items) {
+             await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
+           }
+           toast.success('¡Compra registrada y stock actualizado!');
+        }}
       />
       <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />
 
@@ -690,7 +608,7 @@ export default function Management() {
                          )}
                       </div>
                       <div className="flex-1 min-w-0">
-                         <h3 className="text-white font-brand font-black text-2xl leading-tight uppercase truncate">
+                         <h3 className="text-white font-brand font-black text-xl leading-tight uppercase">
                             {selectedUserForHistory.name}
                          </h3>
                          <p className="text-[10px] font-black text-white/60 tracking-[0.2em] uppercase mt-1">
@@ -703,9 +621,8 @@ export default function Management() {
                 {/* RESTORED CALENDAR HEATMAP CONTENT */}
                 <div className="bg-surface-container-lowest flex-1 px-6 sm:px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)] overflow-y-auto custom-scrollbar">
                    {(() => {
-                      const now = new Date();
-                      const currentMonth = now.getMonth();
-                      const currentYear = now.getFullYear();
+                      const currentMonth = viewDate.getMonth();
+                      const currentYear = viewDate.getFullYear();
                       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
                       const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
                       const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
@@ -722,20 +639,32 @@ export default function Management() {
                       });
 
                       const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                      
+                      const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
+                      const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
 
                       return (
                         <>
                           <div className="flex items-center justify-between mb-8 px-2">
-                             <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Mapa de actividad</span>
+                             <button onClick={handlePrevMonth} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary">
+                                <ChevronLeft className="w-4 h-4" />
+                             </button>
+                             <div className="text-center">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Actividad</p>
+                                <h4 className="text-sm font-bold text-on-surface">
+                                   {monthNames[currentMonth]} {currentYear}
+                                </h4>
                              </div>
-                             <div className="flex items-center gap-4">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">{monthNames[currentMonth]} {currentYear}</span>
-                             </div>
+                             <button 
+                                onClick={handleNextMonth} 
+                                disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()}
+                                className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20"
+                             >
+                                <ChevronRight className="w-4 h-4" />
+                             </button>
                           </div>
 
-                          <div className="grid grid-cols-7 gap-y-4 gap-x-1 mb-10">
+                          <div className="grid grid-cols-7 gap-y-2 gap-x-1 mb-6">
                              {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
                                <div key={d} className="text-[8px] font-black text-secondary/30 text-center uppercase">{d}</div>
                              ))}
@@ -747,11 +676,14 @@ export default function Management() {
                                return (
                                  <div key={day} className="flex flex-col items-center justify-center">
                                    <div className={cn(
-                                     "w-9 h-9 rounded-2xl flex flex-col items-center justify-center transition-all",
-                                     hasActivity ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-secondary/20 bg-surface-container/30"
+                                     "w-7 h-9 rounded-xl flex flex-col items-center justify-center transition-all relative",
+                                     hasActivity ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-surface-container text-on-surface",
+                                     day === new Date().getDate() && currentMonth === new Date().getMonth() && !hasActivity && "ring-1 ring-primary ring-inset"
                                    )}>
-                                      <span className="text-[10px] font-black">{day}</span>
-                                      {hasActivity && <span className="text-[6px] font-bold opacity-60 leading-none">{count}</span>}
+                                      <span className="text-[9px] font-bold">{day}</span>
+                                      {hasActivity && (
+                                         <span className="text-[6px] font-black opacity-60 mt-0.5">{count}</span>
+                                      )}
                                    </div>
                                  </div>
                                );
@@ -778,6 +710,7 @@ export default function Management() {
                              paymentMethod={sale.paymentMethod || 'Efectivo'}
                              status={sale.status || 'aceptado'}
                              itemCount={sale.items?.length || 0}
+                             items={sale.items}
                              onClick={() => setSelectedSaleDetail(sale)}
                            />
                         ))
@@ -808,12 +741,35 @@ export default function Management() {
              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
                <h2 className="text-2xl font-black mb-6">Editar Usuario</h2>
                <div className="space-y-4">
-                 <input type="text" value={editFormData.name} onChange={e=>setEditFormData({...editFormData, name: e.target.value})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold" placeholder="Nombre" />
-                 <select value={editFormData.role} onChange={e=>setEditFormData({...editFormData, role: e.target.value as any})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold">
-                   <option value="vendedor">Vendedor</option>
-                   <option value="cliente">Cliente</option>
-                   <option value="admin">Administrador</option>
-                 </select>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Nombre Completo</label>
+                    <input type="text" value={editFormData.name} onChange={e=>setEditFormData({...editFormData, name: e.target.value})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="Nombre" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Cédula / ID</label>
+                      <input type="text" value={editFormData.cedula} onChange={e=>setEditFormData({...editFormData, cedula: e.target.value})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="No. Cédula" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Teléfono</label>
+                      <input type="text" value={editFormData.phone} onChange={e=>setEditFormData({...editFormData, phone: e.target.value})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="Celular" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Rol del Sistema</label>
+                    <select value={editFormData.role} onChange={e=>setEditFormData({...editFormData, role: e.target.value as any})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none">
+                      <option value="vendedor">Vendedor</option>
+                      <option value="cliente">Cliente</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Dirección de Entrega</label>
+                    <input type="text" value={editFormData.address} onChange={e=>setEditFormData({...editFormData, address: e.target.value})} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="Calle, Barrio, Casa..." />
+                  </div>
                </div>
                <button onClick={handleUpdateUser} className="w-full h-14 bg-primary text-white rounded-2xl font-black mt-8 uppercase shadow-xl">{isSavingUser ? 'Guardando...' : 'Actualizar'}</button>
              </motion.div>

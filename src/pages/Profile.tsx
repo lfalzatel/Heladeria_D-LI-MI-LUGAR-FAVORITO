@@ -59,10 +59,10 @@ export default function Profile() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen flex bg-surface-container-lowest">
-      {profile?.role !== 'cliente' && <AdminSidebar />}
-      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
-        <AppHeader showBell={false} />
+    <div className="min-h-screen flex bg-surface-container-lowest overflow-x-hidden w-full">
+      <AdminSidebar />
+      <div className="flex-1 w-full min-w-0 flex flex-col min-h-screen relative pb-24 lg:pb-0">
+        <AppHeader showBell />
         <PageTitle title="Mi Perfil" subtitle="Información de Cuenta" />
 
         <div className="px-4 sm:px-6 flex justify-end">
@@ -75,7 +75,7 @@ export default function Profile() {
           </button>
         </div>
 
-      <main className="p-4 sm:p-6 max-w-lg mx-auto flex flex-col gap-6">
+      <main className="p-4 sm:p-6 max-w-4xl mx-auto w-full flex flex-col gap-6">
         {/* Profile Card */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

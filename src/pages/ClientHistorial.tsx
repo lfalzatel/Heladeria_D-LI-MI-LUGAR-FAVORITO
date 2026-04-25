@@ -13,15 +13,18 @@ import {
   X,
   Calendar,
   History,
-  ArrowLeft
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader, { PageTitle } from '../components/AppHeader';
-import HistoryMovementCard from '../components/HistoryMovementCard';
+import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { useAuthStore } from '../stores/useAuthStore';
+import AdminSidebar from '../components/AdminSidebar';
 import BottomNav from '../components/BottomNav';
 
 export default function ClientHistorial() {
@@ -33,6 +36,7 @@ export default function ClientHistorial() {
   const [isLoading, setIsLoading] = useState(true);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [viewDate, setViewDate] = useState(new Date());
 
   useEffect(() => {
     if (!profile) return;
@@ -48,19 +52,15 @@ export default function ClientHistorial() {
     const unsubscribe = onSnapshot(salesQ, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const item = doc.data();
-        let hourStr = item.hour;
-        if (!hourStr) {
-          const ts = item.createdAt;
-          if (ts) {
-            const dateObj = ts.toDate ? ts.toDate() : new Date(ts);
-            hourStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
-          }
-        }
+        const ts = item.createdAt;
+        const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
+        const hourStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dayStr = dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
 
         return { 
           id: doc.id, 
           ...item, 
-          hour: hourStr || 'Reciente',
+          hour: `${dayStr} - ${hourStr}`,
           title: item.tableName || 'Pedido Online'
         };
       });
@@ -98,43 +98,42 @@ export default function ClientHistorial() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest pb-32">
-      <AppHeader showBell />
-      
-      <div className="max-w-md mx-auto relative">
-         {/* BOTÓN VOLVER (ESTILO MÓVIL) */}
-         <button 
-           onClick={() => navigate(-1)}
-           className="absolute top-4 left-4 z-10 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-outline/5 active:scale-90 transition-all"
-         >
-           <ArrowLeft className="w-5 h-5 text-on-surface" />
-         </button>
+    <div className="min-h-screen bg-surface-container-lowest flex overflow-x-hidden w-full">
+      <AdminSidebar />
+
+      <div className="flex-1 w-full min-w-0 flex flex-col min-h-screen pb-24 lg:pb-0">
+        <AppHeader showBell />
+        
+        <div className="max-w-4xl mx-auto w-full relative">
 
          {/* ENCABEZADO SIMÉTRICO AL ADMIN */}
-         <div className="bg-primary pt-16 pb-20 px-8 flex flex-col items-center">
-            <div className="w-24 h-24 rounded-[2.5rem] bg-white/20 backdrop-blur-md border-2 border-white/30 flex items-center justify-center text-white text-4xl font-black overflow-hidden shadow-2xl mb-4">
-               {profile.imageUrl ? (
-                  <img src={profile.imageUrl} alt="" className="w-full h-full object-cover" />
-               ) : (
-                  profile.name[0]
-               )}
-            </div>
-            <h2 className="text-white font-brand font-black text-3xl uppercase tracking-tighter text-center">
-               Mi Historial
-            </h2>
-            <p className="text-white/60 text-[10px] uppercase font-black tracking-widest mt-2">
-               Registro de Actividad y Pedidos
-            </p>
-         </div>
+          <div className="bg-primary pt-12 pb-14 px-8 flex flex-col items-start">
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white text-xl font-black overflow-hidden shadow-lg">
+                   {profile.imageUrl ? (
+                      <img src={profile.imageUrl} alt="" className="w-full h-full object-cover" />
+                   ) : (
+                      profile.name[0]
+                   )}
+                </div>
+                <div>
+                   <h2 className="text-white font-brand font-black text-xl uppercase tracking-tight">
+                      Mi Historial
+                   </h2>
+                   <p className="text-white/50 text-[9px] uppercase font-black tracking-widest mt-0.5">
+                      Actividad Reciente
+                   </p>
+                </div>
+             </div>
+          </div>
 
-         {/* CONTENIDO (CALENDARIO + LISTA) */}
-         <div className="bg-surface-container-lowest -mt-10 rounded-t-[3.5rem] px-6 sm:px-8 py-12 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-10 border-t border-white/20">
+          {/* CONTENIDO (CALENDARIO + LISTA) */}
+          <div className="bg-surface-container-lowest -mt-6 rounded-t-[2.5rem] px-6 sm:px-8 py-8 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-10 border-t border-white/20">
             
             {/* HEATMAP CALENDAR */}
             {(() => {
-                const now = new Date();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
+                const currentMonth = viewDate.getMonth();
+                const currentYear = viewDate.getFullYear();
                 const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
                 const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
@@ -150,41 +149,68 @@ export default function ClientHistorial() {
                   }
                 });
 
+                const daysOfWeek = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
                 const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                
+                const days = Array.from({ length: firstDayAdjusted }, () => null).concat(
+                   Array.from({ length: daysInMonth }, (_, i) => i + 1)
+                );
+
+                const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
+                const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
 
                 return (
-                  <div className="mb-12">
-                    <div className="flex items-center justify-between mb-8 px-2">
-                       <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-primary">Días de Pedidos</span>
+                  <div className="mb-12 max-w-sm mx-auto">
+                    {/* Calendar Header with Controls */}
+                    <div className="flex items-center justify-between mb-6 px-2">
+                       <button onClick={handlePrevMonth} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary">
+                          <ChevronLeft className="w-4 h-4" />
+                       </button>
+                       <div className="text-center">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Calendario</p>
+                          <h4 className="text-sm font-bold text-on-surface">
+                             {monthNames[currentMonth]} {currentYear}
+                          </h4>
                        </div>
-                       <span className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
-                          {monthNames[currentMonth]} {currentYear}
-                       </span>
+                       <button 
+                          onClick={handleNextMonth} 
+                          disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()}
+                          className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20"
+                       >
+                          <ChevronRight className="w-4 h-4" />
+                       </button>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-                       {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
-                         <div key={d} className="text-[9px] font-black text-secondary/30 text-center uppercase mb-2">{d}</div>
-                       ))}
-                       {Array.from({ length: firstDayAdjusted }).map((_, i) => <div key={`empty-${i}`} />)}
-                       {Array.from({ length: daysInMonth }).map((_, i) => {
-                         const day = i + 1;
-                         const count = activityMap[day] || 0;
-                         const hasActivity = count > 0;
-                         return (
-                           <div key={day} className="aspect-square flex items-center justify-center">
-                             <div className={cn(
-                               "w-full h-full rounded-2xl flex flex-col items-center justify-center transition-all",
-                               hasActivity ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-secondary/20 bg-surface-container/30"
-                             )}>
-                                <span className={cn("text-[10px] font-black", !hasActivity && "opacity-40")}>{day}</span>
-                                {hasActivity && <span className="text-[7px] font-bold opacity-60 leading-none">{count}</span>}
+                    <div className="flex flex-col items-center">
+                       <div className="grid grid-cols-7 gap-1 w-fit">
+                          {daysOfWeek.map(day => (
+                             <div key={day} className="w-8 h-8 flex items-center justify-center">
+                                <span className="text-[10px] font-black text-secondary/40 uppercase">{day}</span>
                              </div>
-                           </div>
-                         );
-                       })}
+                          ))}
+                          {days.map((day, i) => {
+                             const count = day ? activityMap[day] : 0;
+                             const hasActivity = count > 0;
+                             const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
+
+                             return (
+                                <div 
+                                   key={i} 
+                                   className={cn(
+                                      "w-7 h-9 rounded-lg flex flex-col items-center justify-center text-[9px] font-bold transition-all relative",
+                                      hasActivity ? "bg-primary text-white shadow-md shadow-primary/20" : 
+                                      day ? "bg-surface-container text-on-surface" : "opacity-0",
+                                      isToday && !hasActivity && "ring-1 ring-primary ring-inset"
+                                   )}
+                                >
+                                   <span>{day}</span>
+                                   {hasActivity && (
+                                      <span className="text-[6px] font-black opacity-60 leading-none mt-0.5">{count}</span>
+                                   )}
+                                </div>
+                             );
+                          })}
+                       </div>
                     </div>
                   </div>
                 );
@@ -202,36 +228,31 @@ export default function ClientHistorial() {
                    <p className="uppercase font-black text-[10px] tracking-widest">No tienes pedidos en tu historial aún</p>
                 </div>
               ) : (
-                userSales.map((sale, index) => (
-                  <HistoryMovementCard 
-                    key={sale.id ? `sale-${sale.id}` : `idx-${index}`}
-                    id={sale.id || `temp-${index}`}
-                    title={sale.title}
-                    total={sale.total || 0}
-                    date={sale.hour}
-                    paymentMethod={sale.paymentMethod || 'Efectivo'}
-                    status={sale.status || 'aceptado'}
-                    itemCount={sale.items?.length || 0}
-                    onClick={() => setSelectedSaleDetail(sale)}
+                userSales.map((sale) => (
+                  <OrderCard 
+                    key={sale.id}
+                    pedido={sale}
+                    isStaff={false}
+                    userId={profile.uid}
+                    onOpen={() => setSelectedSaleDetail(sale)}
                   />
                 ))
               )}
             </div>
          </div>
+        </div>
+        <MovementDetailModal 
+          isOpen={!!selectedSaleDetail}
+          onClose={() => setSelectedSaleDetail(null)}
+          data={selectedSaleDetail}
+          profile={profile}
+          chatMessage={chatMessage}
+          setChatMessage={setChatMessage}
+          onSendMessage={handleSendMessage}
+          isSending={sending}
+        />
+        <BottomNav />
       </div>
-
-      <MovementDetailModal 
-        isOpen={!!selectedSaleDetail}
-        onClose={() => setSelectedSaleDetail(null)}
-        data={selectedSaleDetail}
-        profile={profile}
-        chatMessage={chatMessage}
-        setChatMessage={setChatMessage}
-        onSendMessage={handleSendMessage}
-        isSending={sending}
-      />
-
-      <BottomNav />
     </div>
   );
 }

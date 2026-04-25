@@ -30,9 +30,12 @@ interface Pedido {
 }
 
 const STATUS_CONFIG = {
-  pendiente: { label: 'Pendiente', color: 'text-amber-500', bg: 'bg-amber-50', ring: 'ring-amber-200', icon: <Clock className="w-4 h-4" /> },
-  aceptado:  { label: 'Aceptado',  color: 'text-success',   bg: 'bg-success/10', ring: 'ring-success/20',  icon: <Check className="w-4 h-4" /> },
-  rechazado: { label: 'Rechazado', color: 'text-red-500',   bg: 'bg-red-50',    ring: 'ring-red-200',    icon: <XCircle className="w-4 h-4" /> },
+  pendiente: { label: 'Pendiente',           color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-200', icon: <Clock className="w-4 h-4" /> },
+  aceptado:  { label: 'En Preparación',      color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-200',  icon: <Package className="w-4 h-4" /> },
+  celebrado: { label: 'Listo p/ entregar',   color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-200', icon: <Check className="w-4 h-4" /> },
+  entregado: { label: 'Entregado',           color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'ring-emerald-200', icon: <Check className="w-4 h-4" /> },
+  cancelado: { label: 'Cancelado',           color: 'text-secondary',   bg: 'bg-surface-container', ring: 'ring-outline/10', icon: <XCircle className="w-4 h-4" /> },
+  rechazado: { label: 'Rechazado',           color: 'text-red-500',     bg: 'bg-red-50',     ring: 'ring-red-200',    icon: <XCircle className="w-4 h-4" /> },
 };
 
 export default function NotificationBell() {

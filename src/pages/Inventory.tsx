@@ -151,7 +151,8 @@ export default function Inventory() {
               layout
               key={product.id}
               className={cn(
-                "bg-white rounded-[2.5rem] p-6 border-2 transition-all flex flex-col justify-between group",
+                "rounded-[2.5rem] p-6 border-2 transition-all flex flex-col justify-between group",
+                product.cardColor || "bg-white",
                 product.isActive ? "border-outline/50" : "border-dashed border-outline opacity-60 bg-surface-container/10"
               )}
             >
