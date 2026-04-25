@@ -116,11 +116,11 @@ export default function MovementDetailModal({
 
                        if (cName) {
                          label = cName;
-                         sub = (data.type === 'online' || data.tableName === 'Pedido Online') ? 'Pedido Online' : (data.tableName ? `Mesa: ${data.tableName}` : 'Venta Directa POS');
+                         sub = (data.type === 'online' || data.tableName === 'Pedido Online') ? 'Pedido Online' : (data.tableName ? data.tableName : 'Venta Directa POS');
                          icon = (data.type === 'online' || data.tableName === 'Pedido Online') ? <Smartphone className="w-3.5 h-3.5 text-purple-600" /> : <Check className="w-3.5 h-3.5 text-primary" />;
                          colorClass = (data.type === 'online' || data.tableName === 'Pedido Online') ? "text-purple-600" : "text-primary";
                        } else if (tName && tName !== 'Pedido Online') {
-                         label = `Mesa: ${tName}`;
+                         label = tName;
                          sub = 'Consumo en local';
                          icon = <Check className="w-3.5 h-3.5 text-blue-600" />;
                          colorClass = "text-blue-600";

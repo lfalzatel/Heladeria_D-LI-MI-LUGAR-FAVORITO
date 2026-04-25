@@ -216,20 +216,12 @@ function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () => void
   const timeStr = d ? d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
   const fullTime = `${dateStr} · ${timeStr}`;
 
-  let originLabel = 'Venta Directa POS';
-  let isTable = false;
   const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
-  const tName = sale.tableName || sale.mesa;
-  const isOnline = sale.type === 'online' || tName === 'Pedido Online';
+  const isTable = !!sale.tableName && sale.tableName !== 'Pedido Online';
+  const isOnline = sale.type === 'online' || sale.tableName === 'Pedido Online';
   
-  if (cName) {
-    originLabel = cName;
-  } else if (tName && tName !== 'Pedido Online') {
-    originLabel = `Mesa: ${tName}`;
-    isTable = true;
-  } else if (isOnline) {
-    originLabel = 'Pedido Online';
-  }
+  // Prioridad: 1. Nombre Cliente, 2. Mesa (valor directo), 3. Online, 4. Venta Directa
+  const originLabel = cName || (isTable ? sale.tableName : (isOnline ? 'Pedido Online' : 'Venta Directa'));
   
   const pmIcon = {
     efectivo: <Banknote className="w-3.5 h-3.5 text-emerald-600" />,

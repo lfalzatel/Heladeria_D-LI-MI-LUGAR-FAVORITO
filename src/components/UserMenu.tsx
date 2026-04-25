@@ -4,7 +4,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { 
   Sun, Moon, Monitor, LogOut, Settings, Package, Share2, Download, 
-  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight 
+  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight, CircleAlert 
 } from 'lucide-react';
 import { requestNotificationPermission } from '../lib/notifications';
 import { motion, AnimatePresence } from 'motion/react';
@@ -99,8 +99,15 @@ export default function UserMenu() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [theme, setTheme] = useState<Theme>('system');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'system');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('notifications_enabled');
+      if (saved !== null) return saved === 'true';
+      return 'Notification' in window && Notification.permission === 'granted';
+    }
+    return false;
+  });
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,6 +140,30 @@ export default function UserMenu() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Sync notifications status with browser permission
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotifPermission(Notification.permission);
+      const isGranted = Notification.permission === 'granted';
+      // If permission is denied/default but we thought it was enabled, update state
+      if (!isGranted && notificationsEnabled) {
+        setNotificationsEnabled(false);
+        localStorage.setItem('notifications_enabled', 'false');
+      }
+    }
+  }, [notificationsEnabled]);
+
+  // Persist theme changes
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    const root = window.document.documentElement;
+    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   const handleShare = async () => {
     setIsOpen(false);
@@ -272,6 +303,19 @@ export default function UserMenu() {
               </div>
             </div>
 
+            {/* Warning if blocked */}
+            {notifPermission === 'denied' && (
+              <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-100 rounded-2xl flex gap-3 animate-in fade-in slide-in-from-top-2">
+                <CircleAlert className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-black text-red-600">Notificaciones Bloqueadas</p>
+                  <p className="text-[10px] text-red-500/80 font-medium leading-relaxed">
+                    Has bloqueado las notificaciones en este navegador. Haz clic en el <b>candado</b> junto a la dirección web y actívalas para recibir alertas de pedidos.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Main menu */}
             <div className="p-2 border-b border-outline/10 space-y-0.5">
               <MenuItem
@@ -283,25 +327,58 @@ export default function UserMenu() {
               />
               {/* Notifications toggle */}
               <button 
-                onClick={async () => {
-                  if (!notificationsEnabled && profile) {
-                    const token = await requestNotificationPermission(profile.uid);
-                    if (token) {
-                      setNotificationsEnabled(true);
-                      toast.success('¡Notificaciones activadas!');
-                    }
-                  } else {
-                    setNotificationsEnabled(false);
-                    toast.info('Notificaciones pausadas');
-                  }
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface-container/30 hover:bg-surface-container transition-all group border border-outline/5"
-              >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-surface-container">
-                  {notificationsEnabled
-                    ? <Bell className="w-4 h-4 text-on-surface" />
-                    : <BellOff className="w-4 h-4 text-secondary" />}
-                </div>
+                 disabled={isRequestingPermission}
+                 onClick={async () => {
+                   if (!notificationsEnabled) {
+                     if (!('Notification' in window)) {
+                       return toast.error('Este navegador no soporta notificaciones');
+                     }
+                     
+                     if (Notification.permission === 'denied') {
+                       setNotifPermission('denied');
+                       return toast.error('Has bloqueado las notificaciones. Por favor, actívalas en los ajustes del sitio (candado en la barra de direcciones).');
+                     }
+ 
+                     setIsRequestingPermission(true);
+                     try {
+                       const token = await requestNotificationPermission(profile?.uid || '');
+                       if (token) {
+                         setNotificationsEnabled(true);
+                         setNotifPermission('granted');
+                         localStorage.setItem('notifications_enabled', 'true');
+                         toast.success('¡Notificaciones activadas!');
+                       } else {
+                         toast.error('No se pudo activar las notificaciones');
+                       }
+                     } catch (err) {
+                       console.error(err);
+                       toast.error('Error al solicitar permisos');
+                     } finally {
+                       setIsRequestingPermission(false);
+                     }
+                   } else {
+                     setNotificationsEnabled(false);
+                     localStorage.setItem('notifications_enabled', 'false');
+                     toast.info('Notificaciones pausadas en esta sesión');
+                   }
+                 }}
+                 className={cn(
+                   "w-full flex items-center gap-3 p-3 rounded-2xl transition-all group border border-outline/5",
+                   notificationsEnabled ? "bg-primary/5 hover:bg-primary/10" : "bg-surface-container/30 hover:bg-surface-container"
+                 )}
+               >
+                 <div className={cn(
+                   "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
+                   notificationsEnabled ? "bg-primary/10" : "bg-surface-container"
+                 )}>
+                   {isRequestingPermission ? (
+                     <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                   ) : notificationsEnabled ? (
+                     <Bell className="w-4 h-4 text-primary" />
+                   ) : (
+                     <BellOff className="w-4 h-4 text-secondary" />
+                   )}
+                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-on-surface">
                     {notificationsEnabled ? 'Notificaciones activas' : 'Notificaciones desactivadas'}

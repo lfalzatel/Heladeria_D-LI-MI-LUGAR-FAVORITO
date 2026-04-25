@@ -31,7 +31,9 @@ import {
   Download,
   BarChart3,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  BellRing
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -410,13 +412,38 @@ export default function Management() {
         <AppHeader showBell />
         <div className="flex justify-between items-start pr-4 sm:pr-6">
           <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
-          <button 
-            onClick={() => setIsSyncModalOpen(true)}
-            className="mt-6 px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
-          >
-            <Database className="w-4 h-4" /> 
-            <span className="hidden sm:inline">Sincronizar</span>
-          </button>
+          <div className="flex items-center gap-2 mt-6">
+            <button 
+              onClick={async () => {
+                const { notifyAdmins } = await import('../lib/notifications');
+                toast.promise(
+                  notifyAdmins(
+                    "🔔 Prueba de Sistema",
+                    `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`,
+                    { type: 'test' }
+                  ),
+                  {
+                    loading: 'Enviando notificación de prueba...',
+                    success: '¡Notificación enviada! Revisa tus dispositivos.',
+                    error: 'Error al enviar notificación'
+                  }
+                );
+              }}
+              className="px-4 py-2.5 bg-surface-container text-on-surface font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center gap-2 hover:bg-surface-container-high transition-all shadow-sm"
+            >
+              <BellRing className="w-4 h-4 text-primary" />
+              <span className="hidden sm:inline">Probar Notificación</span>
+              <span className="sm:hidden">Test</span>
+            </button>
+
+            <button 
+              onClick={() => setIsSyncModalOpen(true)}
+              className="px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
+            >
+              <Database className="w-4 h-4" /> 
+              <span className="hidden sm:inline">Sincronizar</span>
+            </button>
+          </div>
         </div>
 
       <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
@@ -684,10 +711,10 @@ export default function Management() {
                 
                 {/* RESTORED PREMIUM HEADER (PINK) */}
                 <div className="bg-primary p-8 pb-12 relative flex flex-col items-center flex-shrink-0">
-                   <button onClick={() => setSelectedUserForHistory(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white/20 transition-all">
-                      <X className="w-6 h-6" />
-                   </button>
-                   <div className="flex items-center gap-5 w-full">
+                 <button onClick={() => setSelectedUserForHistory(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white/20 transition-all">
+                    <X className="w-6 h-6" />
+                 </button>
+                 <div className="flex items-center gap-5 w-full">
                       <div className="w-16 h-16 rounded-[1.5rem] bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-3xl font-black overflow-hidden shadow-xl">
                          {selectedUserForHistory.imageUrl ? (
                             <img src={selectedUserForHistory.imageUrl} alt="" className="w-full h-full object-cover" />
