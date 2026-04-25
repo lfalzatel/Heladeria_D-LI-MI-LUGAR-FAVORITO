@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { listenToForegroundMessages } from './lib/notifications';
 import { Toaster } from 'sonner';
 import { useAuthStore } from './stores/useAuthStore';
 import { useFlavorsStore, useSplashStore } from './stores/useFlavorsStore';
@@ -26,6 +27,7 @@ export default function App() {
 
   useEffect(() => {
     initialize();
+    listenToForegroundMessages();
   }, [initialize]);
 
   // Re-initialize flavors every time user authenticates (retries after permission-denied)

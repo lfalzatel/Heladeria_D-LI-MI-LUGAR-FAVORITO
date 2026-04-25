@@ -3,10 +3,10 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { 
-  LogOut, User, ChevronDown, Share2, Download, 
-  Sun, Moon, Monitor, HelpCircle, Bell, BellOff,
-  Settings, ChevronRight, Package
+  Sun, Moon, Monitor, LogOut, Settings, Package, Share2, Download, 
+  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight 
 } from 'lucide-react';
+import { requestNotificationPermission } from '../lib/notifications';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -187,12 +187,6 @@ export default function UserMenu() {
     }
   };
 
-  const handleCopyLink = () => {
-    setIsOpen(false);
-    navigator.clipboard.writeText('https://heladeria-d-li-mi-lugar-favorito.vercel.app/');
-    toast.success('Enlace de acceso copiado');
-  };
-
   const roleLabel = ROLE_LABELS[profile?.role || ''] || profile?.role || '';
   const roleColor = ROLE_COLORS[profile?.role || ''] || 'text-primary';
   const roleDot = ROLE_DOT[profile?.role || ''] || 'bg-primary';
@@ -288,9 +282,20 @@ export default function UserMenu() {
                 closeMenu={() => setIsOpen(false)}
               />
               {/* Notifications toggle */}
-              <button
-                onClick={() => setNotificationsEnabled(v => !v)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all text-left group hover:bg-surface-container"
+              <button 
+                onClick={async () => {
+                  if (!notificationsEnabled && profile) {
+                    const token = await requestNotificationPermission(profile.uid);
+                    if (token) {
+                      setNotificationsEnabled(true);
+                      toast.success('¡Notificaciones activadas!');
+                    }
+                  } else {
+                    setNotificationsEnabled(false);
+                    toast.info('Notificaciones pausadas');
+                  }
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface-container/30 hover:bg-surface-container transition-all group border border-outline/5"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-surface-container">
                   {notificationsEnabled
