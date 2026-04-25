@@ -12,9 +12,6 @@ export default defineConfig(({mode}) => {
       react(), 
       tailwindcss(),
       VitePWA({
-        strategies: 'injectManifest',
-        srcDir: 'public',
-        filename: 'firebase-messaging-sw.js',
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         devOptions: {

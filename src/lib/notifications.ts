@@ -26,16 +26,17 @@ export async function requestNotificationPermission(userId: string) {
       throw new Error('Permiso de notificaciones denegado');
     }
 
-    // 2. Esperar a que el Service Worker (gestionado por VitePWA) esté listo con timeout
-    console.log("Esperando Service Worker de VitePWA...");
-    const registration = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<ServiceWorkerRegistration>((_, reject) => 
-        setTimeout(() => reject(new Error('Tiempo de espera agotado para el Service Worker — Intenta recargar la página')), 5000)
-      )
-    ]);
-    console.log("Service Worker listo:", registration.active?.scriptURL);
+    // 2. Registrar el Service Worker de Firebase por separado (no el de VitePWA)
+    // Usamos un scope diferente para evitar conflictos
+    console.log("Registrando Service Worker de Firebase...");
+    const firebaseSWReg = await navigator.serviceWorker.register(
+      '/firebase-messaging-sw.js',
+      { scope: '/firebase-cloud-messaging-push-scope' }
+    );
 
+    // Asegurarse de que esté actualizado
+    await firebaseSWReg.update();
+    
     // 3. Inicializar Firebase Messaging
     const { app } = await import('./firebase');
     const messaging = getMessaging(app);
@@ -48,11 +49,11 @@ export async function requestNotificationPermission(userId: string) {
       console.warn("Error al intentar borrar token antiguo (ignorable):", err);
     }
 
-    // 5. Obtener nuevo token usando la registración de VitePWA
+    // 5. Obtener nuevo token usando la registración dedicada
     console.log("Solicitando nuevo token FCM...");
     const currentToken = await getToken(messaging, { 
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration
+      serviceWorkerRegistration: firebaseSWReg
     });
 
     if (currentToken) {
@@ -83,18 +84,16 @@ export async function unregisterNotifications(userId: string) {
     const { app } = await import('./firebase');
     const messaging = getMessaging(app);
     
-    // Esperar al Service Worker de VitePWA con timeout
-    const registration = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<ServiceWorkerRegistration>((_, reject) => 
-        setTimeout(() => reject(new Error('Tiempo de espera agotado para el Service Worker')), 5000)
-      )
-    ]);
+    // Registrar el Service Worker de Firebase
+    const firebaseSWReg = await navigator.serviceWorker.register(
+      '/firebase-messaging-sw.js',
+      { scope: '/firebase-cloud-messaging-push-scope' }
+    );
     
-    // Obtener el token actual pasando la registración
+    // Obtener el token actual pasando la registración dedicada
     const currentToken = await getToken(messaging, { 
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration 
+      serviceWorkerRegistration: firebaseSWReg 
     });
     
     if (currentToken) {
