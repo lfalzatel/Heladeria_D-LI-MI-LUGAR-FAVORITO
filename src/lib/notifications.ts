@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { toast } from 'sonner';
 
 // IMPORTANTE: Debes obtener esta clave desde la Consola de Firebase -> Cloud Messaging -> Web Configuration
-const VAPID_KEY = "lxBvfDCBU_sEUsKLz0n_ygYisMX-1_jcMcch9WMgxbk"; 
+const VAPID_KEY = "BD23yi5wkkcpI9rTRkvb4ownj-yxzeDF9w69eC7F2J6wNHWJTTy1qA90VU_hjS17VYW2nGx_2YJreL9ayxvaKak"; 
 
 export async function requestNotificationPermission(userId: string) {
   try {
@@ -20,10 +20,16 @@ export async function requestNotificationPermission(userId: string) {
         console.log('Mensajería no soportada en este navegador');
         return;
       }
+      // Asegurarse de que el Service Worker esté listo antes de pedir el token
+      const registration = await navigator.serviceWorker.ready;
+      
       const messaging = getMessaging();
       
       // Obtener el token de registro de FCM
-      const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+      const currentToken = await getToken(messaging, { 
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration 
+      });
       
       if (currentToken) {
         console.log('Token FCM obtenido:', currentToken);
