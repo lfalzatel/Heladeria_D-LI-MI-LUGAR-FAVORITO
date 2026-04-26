@@ -68,11 +68,12 @@ export default function NotificationBell() {
         orderBy('createdAt', 'desc')
       );
     } else if (isStaff) {
-      // Staff sees pending and accepted pedidos to allow ongoing chat
+      // Staff sees recent pedidos to allow ongoing chat even if delivered
       q = query(
         collection(db, 'pedidos'),
-        where('status', 'in', ['pendiente', 'aceptado']),
-        orderBy('createdAt', 'desc')
+        where('status', 'in', ['pendiente', 'aceptado', 'celebrado', 'entregado']),
+        orderBy('createdAt', 'desc'),
+        limit(15)
       );
     } else {
       return;
@@ -192,7 +193,8 @@ export default function NotificationBell() {
   };
 
   const handleSendMessage = async () => {
-    if (!chatMessage.trim() || !selectedPedido || !profile) return;
+    const messageText = chatMessage.trim();
+    if (!messageText || !selectedPedido || !profile) return;
     setSending(true);
     try {
       const messages = selectedPedido.messages || [];
@@ -200,7 +202,7 @@ export default function NotificationBell() {
         id: Math.random().toString(36).substr(2, 9),
         from: profile.uid,
         fromName: profile.name,
-        text: chatMessage.trim(),
+        text: messageText,
         timestamp: new Date().toISOString(),
       };
       await updateDoc(doc(db, 'pedidos', selectedPedido.id), {
@@ -213,13 +215,13 @@ export default function NotificationBell() {
         await notifyUser(
           selectedPedido.clienteId,
           "💬 Nuevo mensaje de la Boutique",
-          `Sobre tu pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          `Sobre tu pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { type: 'chat_message', pedidoId: selectedPedido.id }
         );
       } else {
         await notifyAdmins(
           `💬 Mensaje de ${profile.name}`,
-          `Pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          `Pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { 
             type: 'chat_message',
             pedidoId: selectedPedido.id,

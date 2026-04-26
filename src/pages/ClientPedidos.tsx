@@ -138,14 +138,15 @@ export default function ClientPedidos() {
   };
 
   const handleSendMessage = async () => {
-    if (!chatMessage.trim() || !selectedPedido || !profile) return;
+    const messageText = chatMessage.trim();
+    if (!messageText || !selectedPedido || !profile) return;
     setSending(true);
     try {
       const newMsg = {
         id: Math.random().toString(36).substring(2, 9),
         from: profile.uid,
         fromName: profile.name,
-        text: chatMessage.trim(),
+        text: messageText,
         timestamp: new Date().toISOString(),
       };
       await updateDoc(doc(db, 'pedidos', selectedPedido.id), {
@@ -158,13 +159,13 @@ export default function ClientPedidos() {
         await notifyUser(
           selectedPedido.clienteId,
           "💬 Nuevo mensaje de la Boutique",
-          `Sobre tu pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          `Sobre tu pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { type: 'chat_message', pedidoId: selectedPedido.id }
         );
       } else {
         await notifyAdmins(
           `💬 Mensaje de ${profile.name}`,
-          `Pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          `Pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { 
             type: 'chat_message',
             pedidoId: selectedPedido.id,
