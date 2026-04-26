@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check, XCircle, MessageCircle, Send, ChevronRight, Clock, Package } from 'lucide-react';
-import { collection, query, where, onSnapshot, updateDoc, doc, addDoc, serverTimestamp, orderBy, increment } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, addDoc, serverTimestamp, orderBy, increment, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';

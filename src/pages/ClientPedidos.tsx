@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   collection, onSnapshot, query, orderBy, where, doc, updateDoc,
-  addDoc, serverTimestamp, increment
+  addDoc, serverTimestamp, increment, limit
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
