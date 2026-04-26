@@ -199,12 +199,12 @@ export async function notifyAdmins(title: string, body: string, data: any = {}) 
       }),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al llamar a la API de notificación');
+      throw new Error(result.error || 'Error al llamar a la API de notificación');
     }
-
-    return await response.json();
+    console.log('Resultado notificación admins:', result);
+    return result;
   } catch (error) {
     console.error('Error al disparar notificación a admins:', error);
     throw error;
@@ -235,12 +235,12 @@ export async function notifyUser(userId: string, title: string, body: string, da
       }),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al llamar a la API de notificación');
+      throw new Error(result.error || 'Error al llamar a la API de notificación');
     }
-
-    return await response.json();
+    console.log(`Resultado notificación usuario ${userId}:`, result);
+    return result;
   } catch (error) {
     console.error(`Error al notificar al usuario ${userId}:`, error);
     throw error;
