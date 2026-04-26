@@ -139,10 +139,45 @@ export async function listenToForegroundMessages() {
 
     onMessage(messaging, (payload) => {
       console.log('Mensaje recibido en primer plano:', payload);
+      
+      // 1. Toast visual (sonner)
       toast.info(payload.notification?.title || 'Nueva notificación', {
         description: payload.notification?.body,
         duration: 5000,
       });
+
+      // 2. Vibración (funciona en Android)
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+
+      // 3. Sonido
+      try {
+        const audio = new Audio('/notification-sound.mp3');
+        audio.volume = 0.7;
+        audio.play().catch(() => {
+          // El navegador puede bloquear el audio si no hay interacción previa
+          console.warn('Reproducción de audio bloqueada por el navegador');
+        });
+      } catch (err) {
+        console.warn('Error al reproducir sonido:', err);
+      }
+
+      // 4. Notificación nativa del sistema (para que aparezca en la barra aunque la app esté abierta)
+      if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(swReg => {
+          swReg.showNotification(
+            payload.notification?.title || "D'LI Boutique", {
+              body: payload.notification?.body,
+              icon: '/pwa-192x192.png',
+              badge: '/pwa-192x192.png',
+              vibrate: [200, 100, 200],
+              tag: 'dli-notification',
+              renotify: true,
+            }
+          );
+        });
+      }
     });
   } catch (error) {
     console.error('Error al configurar escucha de mensajes:', error);

@@ -15,12 +15,6 @@ export default defineConfig({
         enabled: true,
         type: 'classic'
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true
-      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: "D'LI Boutique — Mi Lugar Favorito",
