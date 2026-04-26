@@ -25,9 +25,10 @@ interface Pedido {
   total: number;
   paymentMethod: string;
   address: string;
-  status: 'pendiente' | 'aceptado' | 'rechazado';
+  status: 'pendiente' | 'aceptado' | 'celebrado' | 'entregado' | 'cancelado' | 'rechazado';
   note?: string;
   createdAt: any;
+  updatedAt: any;
   messages?: PedidoMessage[];
 }
 
@@ -93,7 +94,7 @@ export default function NotificationBell() {
       q = query(
         collection(db, 'pedidos'),
         orderBy('updatedAt', 'desc'),
-        limit(20)
+        limit(40)
       );
     } else {
       return;
@@ -138,14 +139,21 @@ export default function NotificationBell() {
     return unsubscribe;
   }, [profile?.uid, isCliente, isStaff]);
 
-  const unreadCount = isCliente
-    ? pedidos.filter(p => p.status !== 'pendiente').length
-    : pedidos.filter(p => {
-        // Contar como "no leído" si es pendiente O si el último mensaje no es del staff
-        const lastMsg = p.messages?.[p.messages.length - 1];
-        const hasNewMsg = lastMsg && lastMsg.from !== profile?.uid;
-        return p.status === 'pendiente' || hasNewMsg;
-      }).length;
+  const unreadCount = pedidos.filter(p => {
+    const lastMsg = p.messages?.[p.messages.length - 1];
+    const hasNewMsg = lastMsg && lastMsg.from !== profile?.uid;
+
+    if (isStaff) {
+      // Staff: Mientras no sea terminal (entregado/rechazado/cancelado) O tenga mensaje nuevo del cliente
+      const isTerminal = ['entregado', 'rechazado', 'cancelado'].includes(p.status);
+      return !isTerminal || hasNewMsg;
+    } else {
+      // Cliente: Mientras no sea pendiente (ya lo vio el admin) y no esté terminado O tenga mensaje nuevo del staff
+      const isTerminal = ['entregado', 'rechazado', 'cancelado'].includes(p.status);
+      const isAccepted = p.status !== 'pendiente';
+      return (isAccepted && !isTerminal) || hasNewMsg;
+    }
+  }).length;
 
   // Manejar visibilidad del badge (solo si aumenta el número)
   useEffect(() => {
@@ -347,7 +355,7 @@ export default function NotificationBell() {
               <div>
                 <h3 className="font-headline font-bold text-on-surface text-base">Notificaciones</h3>
                 <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mt-0.5">
-                  {isCliente ? 'Estado de tus pedidos' : 'Pedidos pendientes'}
+                  {isCliente ? 'Estado de tus pedidos' : 'Gestión de pedidos'}
                 </p>
               </div>
               {unreadCount > 0 && (
