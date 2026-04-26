@@ -1,5 +1,5 @@
 import { getMessaging, getToken, deleteToken, isSupported } from 'firebase/messaging';
-import { doc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { toast } from 'sonner';
 
@@ -186,7 +186,7 @@ export async function listenToForegroundMessages() {
 
 export async function notifyAdmins(title: string, body: string, data: any = {}) {
   try {
-    const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'propietario']));
+    const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'propietario', 'vendedor']));
     const snapshot = await getDocs(q);
     
     const allTokens: string[] = [];
@@ -225,6 +225,42 @@ export async function notifyAdmins(title: string, body: string, data: any = {}) 
     return await response.json();
   } catch (error) {
     console.error('Error al disparar notificación a admins:', error);
+    throw error;
+  }
+}
+
+export async function notifyUser(userId: string, title: string, body: string, data: any = {}) {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) return { success: false, error: 'User not found' };
+    
+    const tokens = userDoc.data().fcmTokens || [];
+    if (!Array.isArray(tokens) || tokens.length === 0) {
+      console.log(`Usuario ${userId} no tiene tokens registrados.`);
+      return { success: true, sent: 0 };
+    }
+
+    const response = await fetch('/api/notify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        tokens: [...new Set(tokens)],
+        title, 
+        body, 
+        data 
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al llamar a la API de notificación');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error al notificar al usuario ${userId}:`, error);
     throw error;
   }
 }

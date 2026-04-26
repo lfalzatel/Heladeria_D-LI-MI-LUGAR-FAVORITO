@@ -26,10 +26,12 @@ import MovementDetailModal from '../components/MovementDetailModal';
 import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
 import BottomNav from '../components/BottomNav';
+import { notifyAdmins, notifyUser } from '../lib/notifications';
 
 export default function ClientHistorial() {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
+  const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
   
   const [userSales, setUserSales] = useState<any[]>([]);
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<any | null>(null);
@@ -88,6 +90,28 @@ export default function ClientHistorial() {
       const messages = [...(selectedSaleDetail.messages || []), newMsg];
       await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { messages });
       setChatMessage('');
+
+      // Notificar según quién escribe
+      if (isStaff) {
+        // Staff respondió al cliente — notificar al cliente
+        await notifyUser(
+          selectedSaleDetail.clienteId,
+          "💬 Nuevo mensaje de la Boutique",
+          `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          { type: 'chat_message', pedidoId: selectedSaleDetail.id }
+        );
+      } else {
+        // Cliente le escribe al admin — notificar a staff
+        await notifyAdmins(
+          `💬 Mensaje de ${profile.name}`,
+          `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          { 
+            type: 'chat_message',
+            pedidoId: selectedSaleDetail.id,
+            fromName: profile.name
+          }
+        );
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {

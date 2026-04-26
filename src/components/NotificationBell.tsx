@@ -7,6 +7,7 @@ import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { Truck } from 'lucide-react';
+import { notifyAdmins, notifyUser } from '../lib/notifications';
 
 interface PedidoMessage {
   id: string;
@@ -164,6 +165,25 @@ export default function NotificationBell() {
         rechazado: 'Pedido rechazado',
       };
       toast.success(labels[newStatus] || 'Estado actualizado');
+
+      // Notificar al cliente sobre el cambio de estado
+      const statusMessages: Record<string, string> = {
+        aceptado: 'Tu pedido ha sido aceptado y está en preparación 🍦',
+        celebrado: '¡Tu pedido va en camino! 🚀',
+        entregado: '¡Tu pedido ha sido entregado! Disfrútalo ✓',
+        rechazado: 'Lo sentimos, tu pedido ha sido rechazado.'
+      };
+
+      const pedido = pedidos.find(p => p.id === pedidoId);
+      if (statusMessages[newStatus] && pedido?.clienteId) {
+        await notifyUser(
+          pedido.clienteId,
+          `Pedido ${newStatus.toUpperCase()}`,
+          statusMessages[newStatus],
+          { type: 'order_status', pedidoId, status: newStatus }
+        );
+      }
+
       if (newStatus === 'entregado' || newStatus === 'rechazado') setSelectedId(null);
     } catch (err) {
       console.error("Error updating status:", err);
@@ -187,6 +207,26 @@ export default function NotificationBell() {
         messages: [...messages, newMsg]
       });
       setChatMessage('');
+
+      // Notificar según quién escribe
+      if (isStaff) {
+        await notifyUser(
+          selectedPedido.clienteId,
+          "💬 Nuevo mensaje de la Boutique",
+          `Sobre tu pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          { type: 'chat_message', pedidoId: selectedPedido.id }
+        );
+      } else {
+        await notifyAdmins(
+          `💬 Mensaje de ${profile.name}`,
+          `Pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          { 
+            type: 'chat_message',
+            pedidoId: selectedPedido.id,
+            fromName: profile.name
+          }
+        );
+      }
     } catch (err) {
       toast.error('Error al enviar el mensaje');
     } finally {

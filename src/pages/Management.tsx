@@ -50,6 +50,7 @@ import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseItem 
 import { seedDatabase } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
+import { notifyUser, notifyAdmins } from '../lib/notifications';
 
 interface UserProfile {
   uid: string;
@@ -90,6 +91,7 @@ export default function Management() {
   
   const [activeTab, setActiveTab] = useState<'personas' | 'insumos'>(initialTab);
   const { profile: currentUser } = useAuthStore();
+  const isStaff = currentUser?.role === 'admin' || currentUser?.role === 'propietario' || currentUser?.role === 'vendedor';
   
   // Personas State
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -237,6 +239,26 @@ export default function Management() {
       const messages = [...(selectedSaleDetail.messages || []), newMsg];
       await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { messages });
       setChatMessage('');
+
+      // Notificar según quién escribe
+      if (isStaff) {
+        await notifyUser(
+          selectedSaleDetail.clienteId,
+          "💬 Nuevo mensaje de la Boutique",
+          `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          { type: 'chat_message', pedidoId: selectedSaleDetail.id }
+        );
+      } else {
+        await notifyAdmins(
+          `💬 Mensaje de ${currentUser?.name || 'Cliente'}`,
+          `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          { 
+            type: 'chat_message',
+            pedidoId: selectedSaleDetail.id,
+            fromName: currentUser?.name
+          }
+        );
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
