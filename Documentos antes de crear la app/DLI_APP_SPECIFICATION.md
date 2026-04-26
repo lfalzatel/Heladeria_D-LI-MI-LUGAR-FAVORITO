@@ -1128,5 +1128,683 @@ Todos con `isAvailable: true` al inicio.
 ---
 
 *Documento generado: Abril 18, 2026*
-*Versión: 1.0 — Especificación completa lista para desarrollo*
+*Versión: 2.0 — Actualizado Abril 25, 2026 con implementación real completa*
 *Referencia base: VentaÁgil APP_COMPLETE_SPECIFICATION.md*
+
+---
+
+## 15. 🛠️ DIARIO DE IMPLEMENTACIÓN — ABRIL 25, 2026
+
+> **Este capítulo documenta todo lo que se implementó, cada error encontrado y su solución exacta durante la sesión de desarrollo del 25 de abril de 2026. Sirve como guía de recuperación ante cualquier daño o pérdida.**
+
+### 15.1 Stack real usado (difiere de la spec original)
+
+La app se construyó con **Vite + React** (no Next.js como decía la spec original). Esto es importante porque cambia cómo funcionan las API Routes y el Service Worker.
+
+| Elemento | Spec original | Implementación real |
+|----------|--------------|-------------------|
+| Framework | Next.js 16 | **Vite 6.4.2 + React** |
+| API Routes | Next.js API Routes | **Vercel Serverless Functions** (`/api/`) |
+| SW strategy | generateSW simple | **generateSW + SW Firebase dedicado** |
+| Deploy | Vercel | **Vercel (conectado a GitHub)** |
+| Repo | — | `github.com/lfalzatel/Heladeria_D-LI-MI-LUGAR-FAVORITO` |
+| URL producción | — | `heladeria-d-li-mi-lugar-favorito.vercel.app` |
+| Firebase proyecto | — | `ruta-comun-4fcaf` |
+
+---
+
+### 15.2 Estructura de archivos real del proyecto
+
+```
+proyecto/
+├── public/
+│   ├── firebase-messaging-sw.js     ← SW de Firebase (background notifications)
+│   ├── notification-sound.mp3       ← Sonido personalizado in-app
+│   ├── pwa-192x192.png             ← Ícono PWA requerido
+│   ├── pwa-512x512.png             ← Ícono PWA requerido
+│   ├── favicon.ico
+│   └── apple-touch-icon.png
+├── api/
+│   └── notify.ts                    ← Vercel Serverless Function (envío FCM V1)
+├── src/
+│   ├── lib/
+│   │   ├── firebase.ts              ← Configuración Firebase
+│   │   └── notifications.ts        ← Lógica completa de notificaciones
+│   ├── pages/
+│   │   └── ClientPedidos.tsx       ← Chat cliente-admin con notificaciones
+│   └── components/
+│       └── UserMenu.tsx             ← Botón instalar PWA + toggle notificaciones
+├── index.html                       ← Título y meta tags de D'LI
+├── vite.config.ts                   ← Configuración VitePWA
+└── .gitignore                       ← Incluye dev-dist/
+```
+
+---
+
+### 15.3 Configuración Firebase (proyecto `ruta-comun-4fcaf`)
+
+```json
+{
+  "projectId": "ruta-comun-4fcaf",
+  "appId": "1:764541288248:web:266038ea513e8c13b98bcd",
+  "apiKey": "AIzaSyAd8eXIrpn396YOsQwr4M99PaMRBlbse88",
+  "authDomain": "ruta-comun-4fcaf.firebaseapp.com",
+  "messagingSenderId": "764541288248",
+  "storageBucket": "ruta-comun-4fcaf.firebasestorage.app"
+}
+```
+
+**VAPID Key FCM:**
+```
+BD23yi5wkKcpl9rTRkvb4ownj-yxzeDF9w69eC7F2J6wNHWJTTy1qA90VU_hjS17VYW2nGX_2YJreL9ayxvaKak
+```
+
+**APIs activas en Firebase Console:**
+- ✅ Firebase Cloud Messaging V1 — **HABILITADA**
+- ❌ Cloud Messaging heredada — **INHABILITADA** (deprecada desde jun/2023)
+
+> ⚠️ **CRÍTICO:** Usar siempre FCM HTTP API V1. La API heredada (`fcm.googleapis.com/fcm/send` con Server Key) ya no funciona. Ver sección 15.7.
+
+---
+
+### 15.4 Variables de entorno en Vercel
+
+| Variable | Valor | Entornos |
+|----------|-------|----------|
+| `VITE_FIREBASE_VAPID_KEY` | El VAPID key de arriba | Production + Preview |
+| `FIREBASE_SERVICE_ACCOUNT` | JSON completo de Service Account | Production + Preview |
+| `GEMINI_API_KEY` | Clave de Gemini (ya existía) | Production + Preview |
+| `VITE_APP_URL` | URL de Vercel (ya existía) | Production + Preview |
+
+Para obtener `FIREBASE_SERVICE_ACCOUNT`:
+Firebase Console → ⚙️ Project Settings → Service accounts → **Generate new private key** → Descargar JSON → Pegar el contenido completo como valor de la variable.
+
+---
+
+### 15.5 `vite.config.ts` — configuración final
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      devOptions: {
+        enabled: true,
+        type: 'classic'    // ← CRÍTICO: sin esto falla importScripts en desarrollo
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      manifest: {
+        name: "D'LI Boutique — Mi Lugar Favorito",
+        short_name: "D'LI",
+        description: "Gestión integral para la heladería D'LI",
+        theme_color: '#b30069',
+        background_color: '#fcf9f8',
+        display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',    // ← REQUERIDO para que el navegador permita instalación
+        scope: '/',        // ← REQUERIDO
+        icons: [
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      }
+    })
+  ],
+  server: {
+    port: 3000,
+    host: '0.0.0.0'
+  },
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
+});
+```
+
+---
+
+### 15.6 `public/firebase-messaging-sw.js` — versión final
+
+```javascript
+importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyAd8eXIrpn396YOsQwr4M99PaMRBlbse88",
+  authDomain: "ruta-comun-4fcaf.firebaseapp.com",
+  projectId: "ruta-comun-4fcaf",
+  storageBucket: "ruta-comun-4fcaf.firebasestorage.app",
+  messagingSenderId: "764541288248",
+  appId: "1:764541288248:web:266038ea513e8c13b98bcd"
+});
+
+const messaging = firebase.messaging();
+
+// Notificación cuando la app está CERRADA o en SEGUNDO PLANO
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Mensaje recibido en background:', payload);
+  return self.registration.showNotification(
+    payload.notification?.title || "D'LI Boutique", {
+      body: payload.notification?.body || 'Nueva actualización disponible',
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      vibrate: [200, 100, 200],
+      tag: 'dli-notification',
+      renotify: true,
+      data: payload.data || {}
+    }
+  );
+});
+
+// Al tocar la notificación → abrir/enfocar la app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clientList => {
+        for (const client of clientList) {
+          if (client.url.includes('heladeria-d-li') && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        return clients.openWindow('https://heladeria-d-li-mi-lugar-favorito.vercel.app/');
+      })
+  );
+});
+```
+
+---
+
+### 15.7 `api/notify.ts` — Vercel Serverless Function (versión final)
+
+> **Por qué existe este archivo:** Firebase exige plan Blaze (pago) para Cloud Functions. Esta función corre en Vercel gratuitamente y llama directamente a la FCM HTTP API V1.
+
+```typescript
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { GoogleAuth } from 'google-auth-library';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') return res.status(405).end();
+
+  const { tokens, title, body, data } = req.body;
+  if (!tokens?.length) return res.json({ sent: 0 });
+
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
+    const auth = new GoogleAuth({
+      credentials: serviceAccount,
+      scopes: ['https://www.googleapis.com/auth/firebase.messaging']
+    });
+    const accessToken = await auth.getAccessToken();
+    const projectId = serviceAccount.project_id;
+
+    const results = await Promise.allSettled(
+      tokens.map((token: string) =>
+        fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: {
+              token,
+              notification: { title, body },
+              data: data || {},
+              android: { priority: 'high' },
+              apns: { payload: { aps: { sound: 'default' } } }
+            }
+          })
+        })
+      )
+    );
+
+    const sent = results.filter(r => r.status === 'fulfilled').length;
+    return res.json({ sent });
+  } catch (error: any) {
+    console.error('Error en /api/notify:', error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+```
+
+**Dependencia requerida:**
+```bash
+npm install google-auth-library @vercel/node
+```
+
+---
+
+### 15.8 `src/lib/notifications.ts` — versión final completa
+
+```typescript
+import { getMessaging, getToken, deleteToken, onMessage, isSupported } from 'firebase/messaging';
+import { doc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebase';
+import { toast } from 'sonner';
+
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY ||
+  "BD23yi5wkKcpl9rTRkvb4ownj-yxzeDF9w69eC7F2J6wNHWJTTy1qA90VU_hjS17VYW2nGX_2YJreL9ayxvaKak";
+
+// ─── ACTIVAR ──────────────────────────────────────────────────────────────────
+export async function requestNotificationPermission(userId: string) {
+  // FCM no funciona en localhost — saltar silenciosamente
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    toast.info('Notificaciones disponibles solo en producción (Vercel)');
+    return null;
+  }
+
+  if (!('Notification' in window) || !(await isSupported())) return;
+
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') throw new Error('Permiso denegado');
+
+  const { app } = await import('./firebase');
+  const messaging = getMessaging(app);
+
+  // Registrar SW de Firebase con scope EXCLUSIVO — no choca con VitePWA (scope: '/')
+  console.log("Registrando Service Worker de Firebase (scope dedicado)...");
+  const fcmReg = await navigator.serviceWorker.register(
+    '/firebase-messaging-sw.js',
+    { scope: '/firebase-cloud-messaging-push-scope' }
+  );
+
+  // Esperar que esté activo con timeout de seguridad
+  await new Promise<void>((resolve) => {
+    if (fcmReg.active) { resolve(); return; }
+    const sw = fcmReg.installing || fcmReg.waiting;
+    sw?.addEventListener('statechange', (e: any) => {
+      if (e.target.state === 'activated') resolve();
+    });
+    setTimeout(resolve, 3000);
+  });
+
+  console.log("Service Worker listo en scope:", fcmReg.scope);
+
+  // Limpiar token anterior
+  try {
+    console.log("Limpiando token antiguo...");
+    await deleteToken(messaging);
+  } catch (e) {
+    console.warn("Error al borrar token antiguo (ignorable):", e);
+  }
+
+  console.log("Solicitando nuevo token FCM...");
+  const currentToken = await getToken(messaging, {
+    vapidKey: VAPID_KEY,
+    serviceWorkerRegistration: fcmReg  // ← SIEMPRE pasar el SW explícitamente
+  });
+
+  if (currentToken) {
+    console.log("Token FCM obtenido con éxito");
+    await updateDoc(doc(db, 'users', userId), {
+      fcmTokens: arrayUnion(currentToken)
+    });
+    return currentToken;
+  }
+  throw new Error('No se pudo obtener el token FCM');
+}
+
+// ─── DESACTIVAR ───────────────────────────────────────────────────────────────
+export async function unregisterNotifications(userId: string) {
+  if (window.location.hostname === 'localhost') return true;
+  if (!(await isSupported())) return;
+
+  const { app } = await import('./firebase');
+  const messaging = getMessaging(app);
+
+  const fcmReg = await navigator.serviceWorker.register(
+    '/firebase-messaging-sw.js',
+    { scope: '/firebase-cloud-messaging-push-scope' }
+  );
+
+  const currentToken = await getToken(messaging, {
+    vapidKey: VAPID_KEY,
+    serviceWorkerRegistration: fcmReg  // ← mismo patrón que al activar
+  });
+
+  if (currentToken) {
+    await updateDoc(doc(db, 'users', userId), {
+      fcmTokens: arrayRemove(currentToken)
+    });
+    await deleteToken(messaging);
+    console.log('Notificaciones desactivadas y token eliminado');
+  }
+  return true;
+}
+
+// ─── ESCUCHAR CON APP ABIERTA ─────────────────────────────────────────────────
+export async function listenToForegroundMessages() {
+  if (!(await isSupported())) return;
+  const { app } = await import('./firebase');
+  const messaging = getMessaging(app);
+
+  onMessage(messaging, (payload) => {
+    // 1. Toast visual in-app (Sonner)
+    toast.info(payload.notification?.title || 'Nueva notificación', {
+      description: payload.notification?.body,
+      duration: 5000,
+    });
+
+    // 2. Vibración táctil (volumen multimedia del móvil)
+    if ('vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200]);
+    }
+
+    // 3. Sonido personalizado (volumen multimedia — limitación del navegador)
+    try {
+      const audio = new Audio('/notification-sound.mp3');
+      audio.volume = 0.7;
+      audio.play().catch(() => {});
+    } catch (_) {}
+
+    // 4. Notificación nativa del sistema (aparece en barra desplegable)
+    if (Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then(swReg => {
+        swReg.showNotification(payload.notification?.title || "D'LI Boutique", {
+          body: payload.notification?.body,
+          icon: '/pwa-192x192.png',
+          badge: '/pwa-192x192.png',
+          vibrate: [200, 100, 200],
+          tag: 'dli-notification',
+          renotify: true,
+        });
+      });
+    }
+  });
+}
+
+// ─── ENVIAR A ADMINS (llama a /api/notify en Vercel) ─────────────────────────
+export async function notifyAdmins(title: string, body: string, data: any = {}) {
+  const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'propietario']));
+  const snapshot = await getDocs(q);
+
+  const allTokens: string[] = [];
+  snapshot.docs.forEach(d => {
+    const tokens = d.data().fcmTokens || [];
+    if (Array.isArray(tokens)) allTokens.push(...tokens);
+  });
+
+  const uniqueTokens = [...new Set(allTokens)];
+  if (uniqueTokens.length === 0) {
+    console.log('No hay tokens de administradores registrados');
+    return { success: true, sent: 0 };
+  }
+
+  const response = await fetch('/api/notify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tokens: uniqueTokens, title, body, data })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || 'Error al llamar a /api/notify');
+  }
+  return response.json();
+}
+```
+
+---
+
+### 15.9 `index.html` — versión final
+
+```html
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#b30069" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="D'LI" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <title>D'LI Boutique — Mi Lugar Favorito</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+> ⚠️ El título inicial decía "VentaÁgil" porque el proyecto se originó como copia de esa app. Se corrigió en este archivo.
+
+---
+
+### 15.10 Notificaciones en `ClientPedidos.tsx`
+
+La función `handleSendMessage` debía llamar a `notifyAdmins` cuando un cliente envía un mensaje. Agregar después de `setChatMessage('')`:
+
+```typescript
+// En handleSendMessage — después de guardar el mensaje en Firestore
+if (!isStaff) {
+  // Cliente le escribe al admin → notificar a admins
+  const { notifyAdmins } = await import('../lib/notifications');
+  await notifyAdmins(
+    `💬 Mensaje de ${profile.name}`,
+    `Pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+    {
+      type: 'chat_message',
+      pedidoId: selectedPedido.id,
+      fromName: profile.name
+    }
+  );
+}
+```
+
+---
+
+### 15.11 `.gitignore` — agregar entradas faltantes
+
+```
+# Generado por VitePWA en desarrollo — NO subir al repo
+dev-dist/
+```
+
+---
+
+### 15.12 Errores encontrados y soluciones exactas
+
+#### ❌ ERROR 1: `Subscription failed - no active Service Worker`
+**Cuándo:** Al intentar activar notificaciones la primera vez.
+**Causa:** El código llamaba `getToken()` sin pasar el Service Worker registrado.
+**Solución:**
+```typescript
+// ❌ Antes (falla)
+const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+
+// ✅ Después (funciona)
+const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+  scope: '/firebase-cloud-messaging-push-scope'
+});
+const token = await getToken(messaging, {
+  vapidKey: VAPID_KEY,
+  serviceWorkerRegistration: reg  // ← siempre pasar el SW explícitamente
+});
+```
+
+---
+
+#### ❌ ERROR 2: `Module scripts don't support importScripts()`
+**Cuándo:** Al cargar la app en desarrollo (localhost).
+**Causa:** VitePWA genera el SW como módulo ES6 en dev, pero `firebase-messaging-sw.js` usa `importScripts()` que solo funciona en SW clásicos.
+**Solución en `vite.config.ts`:**
+```typescript
+devOptions: {
+  enabled: true,
+  type: 'classic'  // ← esta línea soluciona el conflicto
+}
+```
+
+---
+
+#### ❌ ERROR 3: `navigator.serviceWorker.ready` — se quedaba colgado indefinidamente
+**Cuándo:** Después de aplicar el fix del error 2.
+**Causa:** El SW de VitePWA y el de Firebase competían por el scope `/`. VitePWA ganaba y Firebase nunca se activaba.
+**Solución:** Usar scope exclusivo para Firebase:
+```typescript
+await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+  scope: '/firebase-cloud-messaging-push-scope'  // ← scope diferente = sin conflicto
+});
+```
+
+---
+
+#### ❌ ERROR 4: `Unable to find a place to inject the manifest`
+**Cuándo:** Al hacer build en Vercel (error en deploy).
+**Causa:** Se intentó usar `strategies: 'injectManifest'` en VitePWA pero el archivo `firebase-messaging-sw.js` no tenía `self.__WB_MANIFEST`.
+**Solución:** No usar `injectManifest`. Volver a `generateSW` (estrategia por defecto de VitePWA) y manejar los dos SW con scopes separados.
+
+---
+
+#### ❌ ERROR 5: `Registration failed - push service error` en Vercel (HTTPS)
+**Cuándo:** Al probar en producción con HTTPS — el error persistía.
+**Causa:** `navigator.serviceWorker.ready` devuelve el SW de VitePWA (scope `/`), no el de Firebase. FCM rechaza ese SW porque no es el correcto.
+**Solución:** Registrar explícitamente el SW de Firebase con su scope y pasarlo a `getToken`. No usar `navigator.serviceWorker.ready` para FCM.
+
+---
+
+#### ❌ ERROR 6: FCM API heredada inhabilitada
+**Cuándo:** Al intentar enviar notificaciones desde el servidor.
+**Causa:** Google deprecó la API heredada (`POST fcm.googleapis.com/fcm/send` con `Authorization: key=SERVER_KEY`) desde junio 2023.
+**Solución:** Usar **FCM HTTP API V1** con OAuth2:
+```
+POST https://fcm.googleapis.com/v1/projects/{projectId}/messages:send
+Authorization: Bearer {oauth2_access_token}
+```
+El access token se obtiene con `google-auth-library` usando el Service Account JSON.
+
+---
+
+#### ❌ ERROR 7: `/api/notify` no existía (es un proyecto Vite, no Next.js)
+**Cuándo:** Al intentar enviar notificaciones — la función `notifyAdmins` llamaba a `/api/notify` pero esa ruta no existe en Vite.
+**Causa:** La especificación original asumía Next.js. El proyecto real usa Vite.
+**Solución:** Crear `/api/notify.ts` en la **raíz del proyecto** (no en `/src/`). Vercel detecta automáticamente los archivos en `/api/` y los despliega como Serverless Functions.
+
+---
+
+#### ❌ ERROR 8: Título "VentaÁgil" en la app instalada
+**Cuándo:** Al instalar la PWA en PC — aparecía "VentaÁgil" en la barra de título.
+**Causa:** El proyecto se originó como copia de VentaÁgil y el `index.html` original tenía el título de esa app.
+**Solución:** Corregir `<title>` en `index.html` + desinstalar la PWA vieja desde `edge://apps/` y reinstalar.
+
+---
+
+#### ❌ ERROR 9: Botón "Instalar app" no hacía nada en móvil
+**Cuándo:** Al tocar el botón en el menú de perfil del móvil.
+**Causa:** `deferredPrompt` (evento `beforeinstallprompt`) era `null` porque el manifest no tenía `start_url` ni `scope` — el navegador no consideraba la app instalable.
+**Solución:** Agregar al manifest en `vite.config.ts`:
+```typescript
+start_url: '/',
+scope: '/',
+```
+
+---
+
+#### ❌ ERROR 10: Notificaciones no llegaban al mensaje del chat
+**Cuándo:** Cliente enviaba mensaje → admin no recibía notificación.
+**Causa:** `handleSendMessage` en `ClientPedidos.tsx` guardaba el mensaje en Firestore pero nunca llamaba a `notifyAdmins`.
+**Solución:** Agregar llamada a `notifyAdmins` después de guardar el mensaje, condicionada a que el remitente sea un cliente (no staff).
+
+---
+
+### 15.13 Comportamiento de notificaciones por escenario
+
+| Escenario | App abierta | App minimizada | App cerrada |
+|-----------|-------------|----------------|-------------|
+| Toast Sonner | ✅ | ❌ | ❌ |
+| Sonido MP3 | ✅ (volumen multimedia) | ❌ | ❌ |
+| Vibración JS | ✅ | ❌ | ❌ |
+| Notif. del sistema (barra) | ✅ (via swReg.showNotification) | ✅ (via SW background) | ✅ (via SW background) |
+| Sonido del sistema | ✅ | ✅ (tono del móvil) | ✅ (tono del móvil) |
+| Vibración del sistema | ✅ | ✅ | ✅ |
+
+**Limitaciones conocidas y aceptadas:**
+- El sonido MP3 personalizado suena con el volumen multimedia, no el de notificaciones. Es una limitación del navegador, no se puede cambiar.
+- Cuando la app está cerrada, Android usa el tono configurado en Ajustes → Sonido → Tono de notificación. No se puede personalizar desde código en PWA.
+- iPhone requiere iOS 16.4+ y que la app esté instalada en la pantalla de inicio.
+- Firefox en Android no soporta FCM push. Usar Chrome o Edge.
+- En localhost FCM push no funciona. Solo en HTTPS (Vercel).
+
+---
+
+### 15.14 Dónde se llama `notifyAdmins` en el proyecto
+
+| Archivo | Evento | Mensaje |
+|---------|--------|---------|
+| `ClientPedidos.tsx` | Cliente envía mensaje en chat | `💬 Mensaje de {nombre}: "{texto}"` |
+| *(pendiente)* | Venta completada en POS | `🍦 Nueva venta — Mesa {n} · ${total}` |
+| *(pendiente)* | Insumo en stock crítico | `⚠️ Stock crítico — {insumo}` |
+| *(pendiente)* | Nuevo pedido online | `🛒 Nuevo pedido de {cliente}` |
+
+---
+
+### 15.15 Flujo completo de deploy
+
+```
+1. Cambios en el código local
+2. git add .
+3. git commit -m "descripción del cambio"
+4. git push origin main
+5. Vercel detecta el push y hace build automático
+6. Si el build falla → revisar logs en vercel.com/dashboard → Deployments
+7. Si el build pasa → la app se actualiza en 1-2 minutos
+8. En el móvil: cerrar y abrir la app para que el nuevo SW se active
+```
+
+**⚠️ Después de cambios en el SW (`firebase-messaging-sw.js`):**
+- En el navegador: DevTools → Application → Service Workers → Unregister
+- En el móvil: cerrar app completamente → abrir → esperar 10 segundos → cerrar → abrir de nuevo
+
+---
+
+### 15.16 Checklist de funcionalidades implementadas al 25/04/2026
+
+**Notificaciones:**
+- [x] Service Worker de Firebase con scope dedicado
+- [x] Solicitar permiso y guardar token en Firestore
+- [x] Token guardado en `users/{uid}.fcmTokens`
+- [x] Desactivar notificaciones y eliminar token
+- [x] Toast in-app con Sonner al recibir mensaje
+- [x] Sonido MP3 personalizado con app abierta
+- [x] Vibración con app abierta
+- [x] Notificación nativa del sistema con app abierta
+- [x] Notificación nativa del sistema con app cerrada/minimizada
+- [x] Toque en notificación abre/enfoca la app
+- [x] Vercel Serverless Function `/api/notify`
+- [x] FCM HTTP API V1 con OAuth2 (google-auth-library)
+- [x] `notifyAdmins` al recibir mensaje de cliente en chat
+- [x] Guard para localhost (no falla en desarrollo)
+
+**PWA:**
+- [x] Instalable en Android (Chrome/Edge)
+- [x] Botón "Instalar app" en menú de perfil
+- [x] `start_url` y `scope` en manifest
+- [x] Íconos `pwa-192x192.png` y `pwa-512x512.png`
+- [x] `apple-touch-icon` apunta a `pwa-192x192.png`
+- [x] Título correcto "D'LI Boutique" en `index.html`
+- [x] `dev-dist/` en `.gitignore`
+- [x] Deploy automático Vercel ← GitHub
+
+**Pendientes:**
+- [ ] `notifyAdmins` al completar venta en POS
+- [ ] `notifyAdmins` al detectar stock crítico
+- [ ] `notifyAdmins` al recibir nuevo pedido online
+- [ ] Instalación en iPhone (iOS 16.4+ requerido)
+- [ ] Limpieza automática de tokens FCM inválidos

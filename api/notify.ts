@@ -1,5 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleAuth } from 'google-auth-library';
+import admin from 'firebase-admin';
+
+// Inicializar Firebase Admin si no ha sido inicializado
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error) {
+    console.error('Error inicializando Firebase Admin:', error);
+  }
+}
+
+const messaging = admin.messaging();
+const db = admin.firestore();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers
@@ -16,86 +31,75 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { tokens, title, body, data } = req.body;
+    const { tokens, title, body, data, target } = req.body;
 
-    if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
-      return res.status(400).json({ error: 'Tokens array is required' });
+    let targetTokens = tokens;
+
+    // Si el target es 'admins', buscamos los tokens en Firestore desde el servidor
+    if (target === 'admins') {
+      console.log('Buscando tokens de administradores/vendedores...');
+      const snapshot = await db.collection('users')
+        .where('role', 'in', ['admin', 'propietario', 'vendedor'])
+        .get();
+      
+      const allTokens: string[] = [];
+      snapshot.forEach(doc => {
+        const userTokens = doc.data().fcmTokens || [];
+        if (Array.isArray(userTokens)) {
+          allTokens.push(...userTokens);
+        }
+      });
+      targetTokens = [...new Set(allTokens)];
     }
 
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable is not set');
+    if (!targetTokens || !Array.isArray(targetTokens) || targetTokens.length === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        sent: 0, 
+        message: 'No tokens found to notify' 
+      });
     }
 
-    // Obtener access token con Service Account
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    const auth = new GoogleAuth({
-      credentials: serviceAccount,
-      scopes: ['https://www.googleapis.com/auth/firebase.messaging']
+    console.log(`Enviando notificación a ${targetTokens.length} dispositivos...`);
+
+    // Enviar notificaciones
+    // Usamos sendEachForMulticast para eficiencia
+    const response = await messaging.sendEachForMulticast({
+      tokens: targetTokens,
+      notification: { title, body },
+      data: data || {},
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'default',
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            contentAvailable: true
+          }
+        }
+      },
+      webpush: {
+        headers: {
+          Urgency: 'high'
+        },
+        notification: {
+          icon: '/pwa-192x192.png',
+          badge: '/pwa-192x192.png'
+        }
+      }
     });
 
-    const client = await auth.getClient();
-    const accessTokenResponse = await client.getAccessToken();
-    const accessToken = accessTokenResponse.token;
-    
-    if (!accessToken) {
-      throw new Error('Failed to get access token');
-    }
-
-    const projectId = serviceAccount.project_id;
-
-    console.log(`Enviando notificación a ${tokens.length} dispositivos vía FCM V1...`);
-
-    // Enviar a cada token usando FCM V1 API
-    const results = await Promise.allSettled(
-      tokens.map((token: string) =>
-        fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: {
-              token,
-              notification: { title, body },
-              data: data || {},
-              android: { 
-                priority: 'high',
-                notification: {
-                  sound: 'default',
-                  click_action: 'FLUTTER_NOTIFICATION_CLICK'
-                }
-              },
-              apns: { 
-                payload: { 
-                  aps: { 
-                    sound: 'default',
-                    contentAvailable: true
-                  } 
-                } 
-              },
-              webpush: {
-                headers: {
-                  Urgency: 'high'
-                },
-                notification: {
-                  icon: '/pwa-192x192.png',
-                  badge: '/pwa-192x192.png'
-                }
-              }
-            }
-          })
-        })
-      )
-    );
-
-    const successCount = results.filter(r => r.status === 'fulfilled').length;
-    console.log(`Notificaciones enviadas con éxito: ${successCount}`);
+    console.log(`Notificaciones enviadas: ${response.successCount}, Fallidas: ${response.failureCount}`);
 
     return res.status(200).json({ 
       success: true, 
-      sent: successCount,
-      total: tokens.length
+      sent: response.successCount,
+      total: targetTokens.length,
+      failures: response.failureCount
     });
 
   } catch (error: any) {

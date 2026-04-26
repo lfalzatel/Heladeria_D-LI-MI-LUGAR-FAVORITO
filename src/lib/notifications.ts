@@ -186,31 +186,13 @@ export async function listenToForegroundMessages() {
 
 export async function notifyAdmins(title: string, body: string, data: any = {}) {
   try {
-    const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'propietario', 'vendedor']));
-    const snapshot = await getDocs(q);
-    
-    const allTokens: string[] = [];
-    snapshot.docs.forEach(doc => {
-      const tokens = doc.data().fcmTokens || [];
-      if (Array.isArray(tokens)) {
-        allTokens.push(...tokens);
-      }
-    });
-
-    const uniqueTokens = [...new Set(allTokens)];
-
-    if (uniqueTokens.length === 0) {
-      console.log('No hay tokens de administradores registrados.');
-      return { success: true, sent: 0 };
-    }
-
     const response = await fetch('/api/notify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        tokens: uniqueTokens,
+        target: 'admins',
         title, 
         body, 
         data 
