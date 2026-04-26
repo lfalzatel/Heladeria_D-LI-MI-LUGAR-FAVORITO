@@ -49,6 +49,7 @@ export default function NotificationBell() {
   const [sending, setSending] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
   const prevCount = useRef(0);
+  const prevPedidos = useRef<Pedido[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
@@ -56,19 +57,39 @@ export default function NotificationBell() {
   const isCliente = profile?.role === 'cliente';
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
 
+  const triggerAlert = (title: string, body: string) => {
+    // 1. Toast
+    toast.info(title, {
+      description: body,
+      duration: 5000,
+    });
+
+    // 2. Vibración
+    if ('vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200]);
+    }
+
+    // 3. Sonido
+    try {
+      const audio = new Audio('/notification-sound.mp3');
+      audio.volume = 1.0;
+      audio.play().catch(e => console.warn('Audio play blocked:', e));
+    } catch (e) {
+      console.warn('Error al reproducir sonido:', e);
+    }
+  };
+
   useEffect(() => {
     if (!profile) return;
 
     let q;
     if (isCliente) {
-      // Client sees their own pedidos
       q = query(
         collection(db, 'pedidos'),
         where('clienteId', '==', profile.uid),
-        orderBy('createdAt', 'desc')
+        orderBy('updatedAt', 'desc')
       );
     } else if (isStaff) {
-      // Staff sees recent activity to catch new messages
       q = query(
         collection(db, 'pedidos'),
         orderBy('updatedAt', 'desc'),
@@ -80,7 +101,36 @@ export default function NotificationBell() {
 
     const unsubscribe = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
+      
+      // Detección de cambios para alertas inmediatas
+      if (prevPedidos.current.length > 0) {
+        // 1. Detectar nuevos pedidos (solo para Staff)
+        if (isStaff) {
+          const newOrders = data.filter(p => !prevPedidos.current.find(old => old.id === p.id));
+          if (newOrders.length > 0) {
+            triggerAlert('🛒 ¡Nuevo Pedido!', `Has recibido ${newOrders.length} pedido(s) nuevo(s)`);
+          }
+        }
+
+        // 2. Detectar nuevos mensajes en pedidos existentes
+        data.forEach(p => {
+          const oldP = prevPedidos.current.find(old => old.id === p.id);
+          if (oldP) {
+            const newCount = p.messages?.length || 0;
+            const oldCount = oldP.messages?.length || 0;
+            if (newCount > oldCount) {
+              const lastMsg = p.messages![newCount - 1];
+              // Alertar solo si el mensaje NO es mío
+              if (lastMsg.from !== profile.uid) {
+                triggerAlert(`💬 ${lastMsg.fromName}`, lastMsg.text);
+              }
+            }
+          }
+        });
+      }
+
       setPedidos(data);
+      prevPedidos.current = data;
     }, (err) => {
       console.error('Notification bell listener error:', err);
     });
