@@ -6,7 +6,8 @@ import {
   orderBy, 
   where,
   doc,
-  updateDoc
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -77,18 +78,22 @@ export default function ClientHistorial() {
   }, [profile]);
 
   const handleSendMessage = async () => {
-    if (!chatMessage.trim() || !selectedSaleDetail || !profile) return;
+    const messageText = chatMessage.trim();
+    if (!messageText || !selectedSaleDetail || !profile) return;
     setSending(true);
     try {
       const newMsg = {
         id: Math.random().toString(36).substr(2, 9),
         from: profile.uid,
         fromName: profile.name,
-        text: chatMessage.trim(),
+        text: messageText,
         timestamp: new Date().toISOString(),
       };
       const messages = [...(selectedSaleDetail.messages || []), newMsg];
-      await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { messages });
+      await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { 
+        messages,
+        updatedAt: serverTimestamp()
+      });
       setChatMessage('');
 
       // Notificar según quién escribe
@@ -97,14 +102,14 @@ export default function ClientHistorial() {
         await notifyUser(
           selectedSaleDetail.clienteId,
           "💬 Nuevo mensaje de la Boutique",
-          `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { type: 'chat_message', pedidoId: selectedSaleDetail.id }
         );
       } else {
         // Cliente le escribe al admin — notificar a staff
         await notifyAdmins(
           `💬 Mensaje de ${profile.name}`,
-          `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`,
+          `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { 
             type: 'chat_message',
             pedidoId: selectedSaleDetail.id,

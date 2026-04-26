@@ -48,8 +48,8 @@ export default function ClientPedidos() {
     if (!profile) return;
     // For staff: all pedidos; for client: only their own
     const q = isStaff
-      ? query(collection(db, 'pedidos'), orderBy('createdAt', 'desc'))
-      : query(collection(db, 'pedidos'), where('clienteId', '==', profile.uid), orderBy('createdAt', 'desc'));
+      ? query(collection(db, 'pedidos'), orderBy('updatedAt', 'desc'), limit(50))
+      : query(collection(db, 'pedidos'), where('clienteId', '==', profile.uid), orderBy('updatedAt', 'desc'));
 
     const unsub = onSnapshot(q, (snap) => {
       setPedidos(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[]);
@@ -66,7 +66,10 @@ export default function ClientPedidos() {
     setUpdatingId(pedidoId);
     try {
       // 1. Update Pedido Status
-      await updateDoc(doc(db, 'pedidos', pedidoId), { status: newStatus });
+      await updateDoc(doc(db, 'pedidos', pedidoId), { 
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      });
       
       // 2. If delivered, record as SALE
       if (newStatus === 'entregado' && profile) {
@@ -150,7 +153,8 @@ export default function ClientPedidos() {
         timestamp: new Date().toISOString(),
       };
       await updateDoc(doc(db, 'pedidos', selectedPedido.id), {
-        messages: [...(selectedPedido.messages || []), newMsg]
+        messages: [...(selectedPedido.messages || []), newMsg],
+        updatedAt: serverTimestamp()
       });
       setChatMessage('');
 

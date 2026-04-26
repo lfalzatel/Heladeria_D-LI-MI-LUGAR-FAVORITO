@@ -191,6 +191,7 @@ export default function ClientCompras() {
         note: note.trim(),
         status: 'pendiente',
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
         messages: [],
       });
 

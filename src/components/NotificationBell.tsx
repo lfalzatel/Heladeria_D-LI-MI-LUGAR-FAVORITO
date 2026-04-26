@@ -68,12 +68,11 @@ export default function NotificationBell() {
         orderBy('createdAt', 'desc')
       );
     } else if (isStaff) {
-      // Staff sees recent pedidos to allow ongoing chat even if delivered
+      // Staff sees recent activity to catch new messages
       q = query(
         collection(db, 'pedidos'),
-        where('status', 'in', ['pendiente', 'aceptado', 'celebrado', 'entregado']),
-        orderBy('createdAt', 'desc'),
-        limit(15)
+        orderBy('updatedAt', 'desc'),
+        limit(20)
       );
     } else {
       return;
@@ -206,7 +205,8 @@ export default function NotificationBell() {
         timestamp: new Date().toISOString(),
       };
       await updateDoc(doc(db, 'pedidos', selectedPedido.id), {
-        messages: [...messages, newMsg]
+        messages: [...messages, newMsg],
+        updatedAt: serverTimestamp()
       });
       setChatMessage('');
 
