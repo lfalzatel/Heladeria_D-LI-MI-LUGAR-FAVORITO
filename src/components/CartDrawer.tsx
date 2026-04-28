@@ -59,7 +59,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
       toast.success('¡Venta realizada con éxito!');
       notifyAdmins(
         "🍦 Nueva venta realizada",
-        `Venta manual por $${total.toLocaleString()} - ${paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}`
+        `Venta manual por ${formatCurrency(total)} - ${paymentMethod}`
       );
       clearCart(activeTable);
       onClose();

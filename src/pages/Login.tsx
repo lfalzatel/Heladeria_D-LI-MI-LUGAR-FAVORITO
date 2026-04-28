@@ -70,7 +70,7 @@ export default function Login() {
       
       if (!userSnap.exists()) {
         const isAdminEmail = user.email === 'lfalzatel@gmail.com' || user.email === 'lfalzatel@gmai.com';
-        const assignedRole = isAdminEmail ? 'admin' : 'vendedor';
+        const assignedRole = isAdminEmail ? 'admin' : 'cliente';
         
         await setDoc(userRef, {
           email: user.email,

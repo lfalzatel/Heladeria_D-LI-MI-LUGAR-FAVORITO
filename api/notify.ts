@@ -70,6 +70,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
+    // Limpieza automática de tokens inválidos
+    if (response.failureCount > 0) {
+      const tokensToRemove: string[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const error = resp.error as any;
+          if (
+            error?.code === 'messaging/registration-token-not-registered' ||
+            error?.code === 'messaging/invalid-registration-token'
+          ) {
+            tokensToRemove.push(targetTokens[idx]);
+          }
+        }
+      });
+
+      if (tokensToRemove.length > 0) {
+        console.log(`Limpiando ${tokensToRemove.length} tokens inválidos...`);
+        // Buscar y eliminar estos tokens de todos los usuarios
+        const usersSnap = await db.collection('users').get();
+        const batch = db.batch();
+        
+        usersSnap.forEach(userDoc => {
+          const userData = userDoc.data();
+          const currentTokens = userData.fcmTokens || [];
+          const newTokens = currentTokens.filter((t: string) => !tokensToRemove.includes(t));
+          
+          if (newTokens.length !== currentTokens.length) {
+            batch.update(userDoc.ref, { fcmTokens: newTokens });
+          }
+        });
+        
+        await batch.commit();
+      }
+    }
+
     return res.status(200).json({ 
       success: true, 
       sent: response.successCount,
