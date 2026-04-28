@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { listenToForegroundMessages, requestNotificationPermission } from './lib/notifications';
 import { Toaster } from 'sonner';
@@ -24,6 +24,8 @@ export default function App() {
   const { initialize, user, profile, isLoading: authLoading } = useAuthStore();
   const { initialize: initFlavors } = useFlavorsStore();
   const { isVisible: splashVisible, message: splashMessage, progress: splashProgress, hideSplash } = useSplashStore();
+
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
   useEffect(() => {
     initialize();
@@ -63,15 +65,24 @@ export default function App() {
 
 
 
+  // Guarantee splash stays at least 2.5 seconds upon user change (login/logout/initial load)
+  useEffect(() => {
+    useSplashStore.getState().showSplash('');
+    setMinTimeElapsed(false);
+    
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 2500);
+    
+    return () => clearTimeout(timer);
+  }, [user?.uid]);
+
   // Handle splash completion
   useEffect(() => {
-    if (!authLoading) {
-      const timer = setTimeout(() => {
-        hideSplash();
-      }, 1000);
-      return () => clearTimeout(timer);
+    if (!authLoading && minTimeElapsed) {
+      hideSplash();
     }
-  }, [authLoading, hideSplash]);
+  }, [authLoading, minTimeElapsed, hideSplash]);
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
@@ -94,8 +105,21 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               className="relative z-10 text-center flex flex-col items-center"
             >
-              <div className="w-24 h-24 bg-primary rounded-3xl flex items-center justify-center shadow-2xl mb-8 rotate-3">
-                <h1 className="font-brand text-6xl text-white italic leading-none">D</h1>
+              <div className="relative flex items-center justify-center w-40 h-40 mb-8">
+                {/* Anillo exterior (Gira a la derecha) */}
+                <div className="absolute inset-0 rounded-full border-t-[3px] border-r-[3px] border-primary/80 animate-[spin_2.5s_linear_infinite]" />
+                
+                {/* Anillo interior (Gira a la izquierda) */}
+                <div className="absolute inset-2 rounded-full border-b-[3px] border-l-[3px] border-emerald-400/80 animate-[spin_1.5s_linear_infinite_reverse]" />
+
+                {/* Contenedor central circular de la imagen */}
+                <div className="w-32 h-32 flex items-center justify-center flex-shrink-0 relative bg-surface rounded-full overflow-hidden shadow-2xl p-1 z-10">
+                  <img 
+                    src="/Background.png" 
+                    alt="D'LI Boutique" 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
               </div>
               <h2 className="font-headline font-bold text-3xl text-on-surface mb-2 tracking-tight">D'LI Boutique</h2>
               <p className="font-brand text-xl text-primary italic mb-8">Mi Lugar Favorito</p>

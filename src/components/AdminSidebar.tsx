@@ -87,8 +87,12 @@ export default function AdminSidebar() {
       {/* Logo */}
       <div className="px-6 mb-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-black/20 rotate-3">
-            <span className="font-brand text-2xl font-bold text-white italic leading-none">D</span>
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+            <img 
+              src="/pwa-512x512.png" 
+              alt="D'LI" 
+              className="w-full h-full object-contain drop-shadow-lg rounded-xl"
+            />
           </div>
           <div className="flex flex-col">
             <span className="font-headline font-bold text-white text-base leading-none tracking-tight">D'LI Boutique</span>
