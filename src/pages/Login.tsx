@@ -235,31 +235,31 @@ export default function Login() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md px-4 sm:px-6 flex flex-col items-center relative z-10"
       >
-        <div className="flex items-center gap-4 mb-12">
-          <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+        <div className="flex flex-col items-center mb-10 text-center">
+          <div className="w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center flex-shrink-0 mb-4">
             <img 
               src="/pwa-192x192.png" 
               alt="D'LI" 
-              className="w-full h-full object-contain drop-shadow-lg rounded-2xl"
+              className="w-full h-full object-contain drop-shadow-2xl rounded-[2.5rem] animate-float"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="font-headline font-bold text-on-surface text-2xl leading-none tracking-tight">D'LI Heladería</span>
-            <span className="font-brand text-sm text-primary italic leading-none mt-1">Mi Lugar Favorito</span>
+          <div className="flex flex-col items-center">
+            <h1 className="font-headline font-bold text-on-surface text-3xl sm:text-4xl leading-none tracking-tight">D'LI Heladería</h1>
+            <p className="font-brand text-base sm:text-lg text-primary italic leading-none mt-2">Mi Lugar Favorito</p>
           </div>
         </div>
 
-        <div className="w-full bg-white/80 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-xl shadow-primary/5 border border-outline">
-          <div className="text-center mb-8">
-            <h2 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Bienvenido</h2>
-            <p className="text-secondary text-sm mt-2">Accede a la gestión integral</p>
+        <div className="w-full bg-white/80 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-xl shadow-primary/5 border border-outline">
+          <div className="text-center mb-6">
+            <h2 className="font-headline text-xl font-bold text-on-surface tracking-tight">Bienvenido</h2>
+            <p className="text-secondary text-xs mt-1">Accede a la gestión integral</p>
           </div>
 
           <div className="flex flex-col gap-4">
             <button 
               onClick={handleGoogleLogin}
               disabled={googleLoading || loading}
-              className="w-full h-14 rounded-xl border-2 border-outline/50 flex items-center justify-center gap-3 font-bold text-on-surface hover:bg-white hover:border-primary transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm"
+              className="w-full h-12 rounded-xl border-2 border-outline/50 flex items-center justify-center gap-3 font-bold text-on-surface hover:bg-white hover:border-primary transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm"
             >
               {googleLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -269,11 +269,11 @@ export default function Login() {
               <span className="text-sm">Entrar con Google</span>
             </button>
 
-            <div className="relative my-4">
+            <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-outline/50"></div>
               </div>
-              <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
+              <div className="relative flex justify-center text-[9px] uppercase tracking-widest font-bold">
                 <span className="bg-white/80 px-4 text-secondary/60">alternativa</span>
               </div>
             </div>
@@ -334,7 +334,7 @@ export default function Login() {
                     <button 
                       type="submit"
                       disabled={loading || googleLoading}
-                      className="mt-2 w-full h-14 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="mt-1 w-full h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Iniciar Sesión <ArrowRight className="w-4 h-4" /></>}
                     </button>
