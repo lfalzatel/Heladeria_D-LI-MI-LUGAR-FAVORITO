@@ -34,6 +34,7 @@ interface TableCartState {
   updateQuantity: (table: string, itemId: string, delta: number) => Promise<void>;
   removeItem: (table: string, itemId: string) => Promise<void>;
   clearCart: (table: string) => Promise<void>;
+  updateNote: (table: string, note: string) => Promise<void>;
   getTotal: (table: string) => number;
   getItemCount: (table: string) => number;
 }
@@ -146,6 +147,15 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
   clearCart: async (table) => {
     const docRef = doc(db, 'tables', table);
     await setDoc(docRef, { currentCart: { ...initialTableCart } }, { merge: true });
+  },
+
+  updateNote: async (table, note) => {
+    const tableCart = get().carts[table];
+    if (!tableCart) return;
+
+    const newCart = { ...tableCart, note };
+    const docRef = doc(db, 'tables', table);
+    await setDoc(docRef, { currentCart: newCart }, { merge: true });
   },
 
   getTotal: (table) => {

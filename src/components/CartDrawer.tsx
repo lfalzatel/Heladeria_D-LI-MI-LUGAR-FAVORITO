@@ -18,7 +18,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps) {
-  const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal } = useTableCartStore();
+  const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta'>('Efectivo');
@@ -40,6 +40,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         status: 'completed', // Required by Firestore rules
         tableId: activeTable,
         tableName: activeTable === 'paraLlevar' ? 'Para Llevar' : `Mesa ${activeTable.replace('mesa', '')}`,
+        note: cart.note || '', // Global order note
         timestamp: serverTimestamp(),
         createdAt: serverTimestamp(), // Required by Firestore rules
         paymentMethod,
@@ -190,6 +191,23 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                     </div>
                   </div>
                 ))
+              )}
+              
+              {cart?.items && cart.items.length > 0 && (
+                <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">
+                  <label htmlFor="order-note" className="block text-sm font-semibold text-on-surface mb-2 flex items-center gap-2">
+                    <Pencil className="w-4 h-4 text-primary" />
+                    Nota general del pedido (opcional)
+                  </label>
+                  <textarea
+                    id="order-note"
+                    rows={2}
+                    placeholder="Escribe aquí cualquier nota adicional para toda la orden..."
+                    value={cart.note || ''}
+                    onChange={(e) => updateNote(activeTable, e.target.value)}
+                    className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 resize-none transition-all"
+                  />
+                </div>
               )}
             </div>
 

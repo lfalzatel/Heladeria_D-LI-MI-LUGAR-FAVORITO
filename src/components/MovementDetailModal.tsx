@@ -164,6 +164,16 @@ export default function MovementDetailModal({
                  );
                })()}
 
+               {/* Nota General */}
+               {data.note && (
+                 <div className="bg-orange-500/10 rounded-2xl p-4 border border-orange-500/20 shadow-sm mb-4">
+                   <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                     Nota General del Pedido
+                   </p>
+                   <p className="font-medium text-orange-900 text-sm leading-snug">{data.note}</p>
+                 </div>
+               )}
+
                {/* Products List */}
                <section>
                   <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-secondary/50 mb-3 ml-1">Productos ({data.items?.length || 0})</h4>
