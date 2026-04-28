@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
+import { deductInventory } from '../utils/inventory';
 
 interface Pedido {
   id: string;
@@ -103,6 +104,9 @@ export default function ClientPedidos() {
             })
           );
           await Promise.all(updatePromises);
+          
+          // Deduct inventory
+          await deductInventory(pedido.items);
         }
       }
 

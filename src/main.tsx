@@ -7,6 +7,13 @@ import { registerSW } from 'virtual:pwa-register';
 // Register service worker for PWA
 registerSW({ immediate: true });
 
+// Global capture for PWA install prompt
+(window as any).deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  (window as any).deferredPrompt = e;
+});
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

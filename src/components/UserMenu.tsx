@@ -98,7 +98,6 @@ export default function UserMenu() {
   const { profile, user } = useAuthStore();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'system');
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -124,12 +123,6 @@ export default function UserMenu() {
   }, [isOpen]);
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -138,7 +131,6 @@ export default function UserMenu() {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
@@ -193,12 +185,13 @@ export default function UserMenu() {
       return toast.success('¡La app ya está instalada!');
     }
 
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+    const prompt = (window as any).deferredPrompt;
+    if (prompt) {
+      prompt.prompt();
+      const { outcome } = await prompt.userChoice;
       if (outcome === 'accepted') {
         toast.success('¡App instalada!');
-        setDeferredPrompt(null);
+        (window as any).deferredPrompt = null;
       }
     } else if (isIOS) {
       toast.info(

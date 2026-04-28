@@ -9,6 +9,7 @@ import { collection, addDoc, serverTimestamp, updateDoc, doc, increment } from '
 import { db } from '../lib/firebase';
 import { useState } from 'react';
 import { notifyAdmins } from '../lib/notifications';
+import { deductInventory } from '../utils/inventory';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -55,6 +56,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         })
       );
       await Promise.all(updatePromises);
+      
+      // Descontar insumos automáticamente (Frutas, Queso, etc)
+      await deductInventory(cart.items);
       
       toast.success('¡Venta realizada con éxito!');
       notifyAdmins(
@@ -142,6 +146,11 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                             +{a}
                           </span>
                         ))}
+                        {item.notes && (
+                          <span className="text-[10px] bg-red-500/5 text-red-600 px-1.5 py-0.5 rounded-md font-black border border-red-500/10">
+                            Nota: {item.notes}
+                          </span>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-4 mt-3">

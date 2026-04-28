@@ -14,6 +14,11 @@ export interface User {
   createdAt: Timestamp;
 }
 
+export interface RecipeItem {
+  supplyId: string;
+  quantity: number;
+}
+
 export interface ProductVariant {
   label: string;
   price: number;
@@ -21,6 +26,7 @@ export interface ProductVariant {
   fruits?: string[];
   hasFruit?: boolean;
   hasIceCream?: boolean;
+  recipe?: RecipeItem[];
 }
 
 export interface Product {
@@ -31,6 +37,7 @@ export interface Product {
   ingredients?: string[];
   basePrice?: number;
   variants?: ProductVariant[];
+  recipe?: RecipeItem[];
   requiresFlavors?: boolean;
   requiresFruitChoice?: boolean;
   requiresSauces?: boolean;
@@ -59,6 +66,7 @@ export interface CartItem {
   flavors: string[];
   fruitChoices: string[];
   additions: string[];
+  notes?: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;

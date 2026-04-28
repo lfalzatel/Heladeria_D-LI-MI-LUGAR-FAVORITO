@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { Truck } from 'lucide-react';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
+import { deductInventory } from '../utils/inventory';
 
 interface PedidoMessage {
   id: string;
@@ -213,6 +214,9 @@ export default function NotificationBell() {
             })
           );
           await Promise.all(updatePromises);
+          
+          // Deduct inventory
+          await deductInventory(pedido.items);
         }
       }
 

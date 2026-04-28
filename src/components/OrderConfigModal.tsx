@@ -16,8 +16,9 @@ interface OrderConfigModalProps {
   initialItem?: CartItem | null;
 }
 
-// Frutas por defecto (salpicón, ensalada genérica, etc.)
-const FRUTAS_DEFAULT = ['Banano', 'Fresa', 'Mango', 'Papaya', 'Uva', 'Kiwi'];
+// Frutas por defecto y específicas para Obleas
+const FRUTAS_DEFAULT = ['Fresa', 'Mango', 'Papaya', 'Manzana', 'Banano', 'Uva'];
+const OBLEA_FRUITS = ['Fresa', 'Mango', 'Durazno'];
 
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -31,6 +32,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
   const [selectedAdditions, setSelectedAdditions] = useState<{name: string, price: number}[]>([]);
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
+  const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
   
   // Dynamic step calculation
@@ -77,10 +79,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   };
   const maxScoops = getMaxScoops();
 
-  // Fruit options: use product.fruitOptions if defined, otherwise defaults
+  // Fruit options logic
+  const isOblea = product.name.toLowerCase().includes('oblea');
   const fruitOptions = product.fruitOptions && product.fruitOptions.length > 0
     ? product.fruitOptions
-    : FRUTAS_DEFAULT;
+    : (isOblea ? OBLEA_FRUITS : FRUTAS_DEFAULT);
 
   // Fetch additions
   useEffect(() => {
@@ -116,6 +119,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a));
         // We'd need prices here... for now just names
         setSelectedAdditions(otherAdds.map(name => ({name, price: 0})));
+        setNotes(initialItem.notes || '');
 
         setQuantity(initialItem.quantity);
         setStep(1);
@@ -127,6 +131,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedFrutas([]);
         setSelectedSauces([]);
         setSelectedAdditions([]);
+        setNotes('');
         setQuantity(1);
       }
     }
@@ -175,11 +180,22 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         ...selectedAdditions.map(a => a.name)
       ];
 
+      // Format flavors with counts
+      const flavorCounts = selectedFlavors.reduce((acc, f) => {
+        acc[f] = (acc[f] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const formattedFlavors = Object.entries(flavorCounts).map(([flavor, count]) => {
+        return count > 1 ? `${flavor} (x${count})` : flavor;
+      }).join(', ');
+
       const configParts = [
         variantLabel,
-        selectedFlavors.join(', '),
+        formattedFlavors,
         selectedFrutas.length > 0 ? `Fruta: ${selectedFrutas.join(', ')}` : '',
         allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
+        notes ? `Notas: ${notes}` : ''
       ].filter(Boolean);
 
       onAdd({
@@ -191,6 +207,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         flavors: selectedFlavors,
         fruitChoices: selectedFrutas,
         additions: allAdditionsNames,
+        notes,
         quantity,
         unitPrice,
         subtotal: unitPrice * quantity,
@@ -380,27 +397,72 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'flavors' && (
-                    <div className="flex flex-wrap gap-2">
-                      {allFlavors.filter(f => f.isAvailable).map(flavor => (
-                        <button
-                          key={flavor.id}
-                          onClick={() => toggleFlavor(flavor.name)}
-                          className={cn(
-                            "relative flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border-2 group flex-grow sm:flex-grow-0 justify-center",
-                            selectedFlavors.includes(flavor.name)
-                              ? "bg-primary border-primary text-white shadow-md scale-[1.02] z-10"
-                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                          )}
-                        >
-                          <IceCream className={cn("w-4 h-4 transition-transform group-hover:scale-110 shrink-0", selectedFlavors.includes(flavor.name) ? "text-white" : "text-primary")} />
-                          <span className="text-[11px] font-black leading-none">{flavor.name}</span>
-                          {selectedFlavors.includes(flavor.name) && (
-                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
-                              <Check className="w-3 h-3 text-primary stroke-[4]" />
-                            </motion.div>
-                          )}
-                        </button>
-                      ))}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      {allFlavors.filter(f => f.isAvailable).map(flavor => {
+                        const count = selectedFlavors.filter(f => f === flavor.name).length;
+                        return (
+                          <div
+                            key={flavor.id}
+                            className={cn(
+                              "relative flex flex-col p-3 rounded-[1.5rem] transition-all border-2",
+                              count > 0
+                                ? "bg-primary/5 border-primary shadow-sm"
+                                : "bg-white border-outline/10 hover:bg-surface-container-low"
+                            )}
+                          >
+                            <div className="flex items-center gap-2 mb-3">
+                              <IceCream className={cn("w-5 h-5", count > 0 ? "text-primary" : "text-secondary")} />
+                              <span className={cn("text-sm font-black leading-tight", count > 0 ? "text-primary" : "text-on-surface")}>{flavor.name}</span>
+                            </div>
+                            
+                            {count > 0 ? (
+                              <div className="flex items-center justify-between bg-white rounded-xl border border-outline/20 p-1 shadow-sm">
+                                <button 
+                                  onClick={() => {
+                                    const index = selectedFlavors.indexOf(flavor.name);
+                                    if (index > -1) {
+                                      const newFlavors = [...selectedFlavors];
+                                      newFlavors.splice(index, 1);
+                                      setSelectedFlavors(newFlavors);
+                                    }
+                                  }}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-secondary"
+                                >
+                                  <span className="text-lg font-bold leading-none">−</span>
+                                </button>
+                                <span className="font-brand font-black text-primary text-lg w-6 text-center">{count}</span>
+                                <button 
+                                  onClick={() => {
+                                    if (selectedFlavors.length < maxScoops) {
+                                      setSelectedFlavors([...selectedFlavors, flavor.name]);
+                                    } else {
+                                      toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
+                                    }
+                                  }}
+                                  disabled={selectedFlavors.length >= maxScoops}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-container active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+                                >
+                                  <Plus className="w-4 h-4 stroke-[3]" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  if (selectedFlavors.length < maxScoops) {
+                                    setSelectedFlavors([...selectedFlavors, flavor.name]);
+                                  } else {
+                                    toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
+                                  }
+                                }}
+                                disabled={selectedFlavors.length >= maxScoops}
+                                className="w-full py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-bold text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                              >
+                                Agregar
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -418,7 +480,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                           )}
                         >
                           <span className="text-sm">
-                            {fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Mixta' ? '🍇' : '🍍'}
+                            {fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}
                           </span>
                           <span className="text-[11px] font-black leading-none">{fruta}</span>
                           {selectedFrutas.includes(fruta) && (
@@ -457,35 +519,48 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'additions' && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {availableAdditions.map(add => {
-                        const price = add.variants?.[0]?.price || 0;
-                        const shortName = add.name.replace(/^(Adición|Adicion)\s+/i, '');
-                        return (
-                        <button
-                          key={add.id}
-                          onClick={() => toggleAddition(add)}
-                          className={cn(
-                            "relative flex items-center p-2.5 rounded-2xl transition-all border-2 gap-3",
-                            selectedAdditions.find(a => a.name === add.name)
-                              ? "bg-success/10 border-success shadow-sm"
-                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
-                            selectedAdditions.find(a => a.name === add.name) ? "bg-success text-white scale-110" : "bg-surface-container text-secondary"
-                          )}>
-                             <Plus className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1 text-left leading-tight">
-                            <p className="font-black text-xs tracking-tight line-clamp-2">{shortName}</p>
-                            <p className={cn("text-[10px] font-black mt-0.5", selectedAdditions.find(a => a.name === add.name) ? "text-success" : "text-primary")}>
-                              +{formatCurrency(price)}
-                            </p>
-                          </div>
-                        </button>
-                      )})}
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableAdditions.map(add => {
+                          const price = add.variants?.[0]?.price || 0;
+                          const shortName = add.name.replace(/^(Adición|Adicion)\s+/i, '');
+                          return (
+                          <button
+                            key={add.id}
+                            onClick={() => toggleAddition(add)}
+                            className={cn(
+                              "relative flex items-center p-2.5 rounded-2xl transition-all border-2 gap-3",
+                              selectedAdditions.find(a => a.name === add.name)
+                                ? "bg-success/10 border-success shadow-sm"
+                                : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
+                              selectedAdditions.find(a => a.name === add.name) ? "bg-success text-white scale-110" : "bg-surface-container text-secondary"
+                            )}>
+                               <Plus className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 text-left leading-tight">
+                              <p className="font-black text-xs tracking-tight line-clamp-2">{shortName}</p>
+                              <p className={cn("text-[10px] font-black mt-0.5", selectedAdditions.find(a => a.name === add.name) ? "text-success" : "text-primary")}>
+                                +{formatCurrency(price)}
+                              </p>
+                            </div>
+                          </button>
+                        )})}
+                      </div>
+
+                      {/* NOTAS ADICIONALES */}
+                      <div className="flex flex-col gap-2 mt-2">
+                        <label className="text-[11px] font-black text-secondary uppercase tracking-widest">Notas de preparación</label>
+                        <textarea
+                          placeholder="Ej: Sin papaya, sin crema..."
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          className="w-full bg-white border border-outline/20 rounded-2xl p-4 text-sm font-medium text-on-surface placeholder:text-outline/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none h-24 shadow-sm"
+                        />
+                      </div>
                     </div>
                   )}
                 </motion.div>
