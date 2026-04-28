@@ -48,6 +48,26 @@
   animation: card-mix-reveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+@keyframes push-and-settle {
+  0% { transform: scale(1) translateY(0); }
+  40% { transform: scale(0.8) translateY(2px); }
+  70% { transform: scale(1.2) translateY(-10px) rotate(-4deg); }
+  100% { transform: scale(1.1) translateY(-8px) rotate(-2deg); }
+}
+
+.animate-push-settle {
+  animation: push-and-settle 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes micro-bounce { 
+  from { transform: translateY(0); } 
+  to { transform: translateY(-3px); } 
+}
+
+.animate-micro-bounce {
+  animation: micro-bounce 0.4s infinite alternate;
+}
+
 @layer base {
   html, body, #root {
     height: 100%;

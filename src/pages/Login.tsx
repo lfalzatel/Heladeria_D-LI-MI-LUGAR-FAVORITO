@@ -236,8 +236,12 @@ export default function Login() {
         className="w-full max-w-md px-4 sm:px-6 flex flex-col items-center relative z-10"
       >
         <div className="flex items-center gap-4 mb-12">
-          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 rotate-3">
-            <h1 className="font-brand text-3xl font-bold text-white italic leading-none">D</h1>
+          <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+            <img 
+              src="/pwa-192x192.png" 
+              alt="D'LI" 
+              className="w-full h-full object-contain drop-shadow-lg rounded-2xl"
+            />
           </div>
           <div className="flex flex-col">
             <span className="font-headline font-bold text-on-surface text-2xl leading-none tracking-tight">D'LI Boutique</span>

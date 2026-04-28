@@ -28,24 +28,29 @@ interface NavItemProps {
 const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
   const content = (
     <div className={cn(
-      "flex flex-col items-center justify-center transition-all duration-300 w-full h-full text-center relative",
+      "flex flex-col items-center justify-center transition-colors duration-300 w-full h-full text-center relative",
       highlight
         ? "text-white"
         : active 
-          ? "text-white" 
+          ? "text-primary" 
           : "text-primary/40 hover:text-primary/70"
     )}>
       <div className={cn(
-        "relative flex flex-col items-center justify-center transition-all duration-500",
+        "relative flex flex-col items-center justify-center gap-1",
         highlight
-          ? "w-14 h-14 -mt-5 rounded-full bg-primary shadow-xl shadow-primary/40 ring-4 ring-white"
-          : cn("px-3 py-1 rounded-2xl gap-1", active ? "bg-primary text-white shadow-lg shadow-primary/40 nav-item-active-pop" : "bg-transparent")
+          ? "w-14 h-14 -mt-5 rounded-full bg-primary shadow-xl shadow-primary/40 ring-4 ring-white transition-all duration-300"
+          : cn(
+              "px-3 py-1.5 rounded-2xl",
+              active ? "bg-primary text-white shadow-lg shadow-primary/40 animate-push-settle" : "bg-transparent transition-all duration-300"
+            )
       )}>
+        
         {React.cloneElement(icon as React.ReactElement, { 
           className: cn(
-            "transition-transform duration-300",
-            highlight ? "w-6 h-6 stroke-[2.5]" : cn("w-5 h-5", active ? "stroke-[2.5]" : "stroke-[2]")
-          ) 
+            highlight ? "w-6 h-6 stroke-[2.5]" : cn("w-5 h-5", active ? "stroke-[2.5]" : "stroke-[2]"),
+            active && !highlight ? "animate-micro-bounce" : ""
+          ),
+          style: active && !highlight ? { animationDelay: '0.45s' } : {}
         })}
         
         {!highlight && (

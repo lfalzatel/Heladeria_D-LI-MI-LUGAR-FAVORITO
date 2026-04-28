@@ -34,13 +34,11 @@ export default function AppHeader({ backTo, left, showBell = true, rightExtra }:
         {!backTo && (
           <div className="lg:hidden w-10 h-10 flex items-center justify-center flex-shrink-0">
             <img 
-              src="/logo-dli.png" 
+              src="/pwa-192x192.png" 
               alt="D'LI" 
-              className="w-full h-full object-contain drop-shadow-sm"
+              className="w-full h-full object-contain drop-shadow-sm rounded-xl"
               onError={(e) => {
-                // Fallback si la imagen aún no se ha subido
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.innerHTML = '<div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-primary/20 flex-shrink-0"><span class="font-brand text-white font-bold text-xl leading-none">D</span></div>';
               }}
             />
           </div>
