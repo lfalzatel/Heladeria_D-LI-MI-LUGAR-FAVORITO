@@ -109,15 +109,15 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               className="relative z-10 text-center flex flex-col items-center"
             >
-              <div className="relative flex items-center justify-center w-40 h-40 mb-8">
+              <div className="relative flex items-center justify-center w-60 h-60 mb-8">
                 {/* Anillo exterior (Gira a la derecha) */}
                 <div className="absolute inset-0 rounded-full border-t-[3px] border-r-[3px] border-primary/80 animate-[spin_2.5s_linear_infinite]" />
                 
                 {/* Anillo interior (Gira a la izquierda) */}
-                <div className="absolute inset-2 rounded-full border-b-[3px] border-l-[3px] border-emerald-400/80 animate-[spin_1.5s_linear_infinite_reverse]" />
+                <div className="absolute inset-[5%] rounded-full border-b-[3px] border-l-[3px] border-emerald-400/80 animate-[spin_1.5s_linear_infinite_reverse]" />
 
                 {/* Contenedor central circular de la imagen */}
-                <div className="w-32 h-32 flex items-center justify-center flex-shrink-0 relative bg-surface rounded-full overflow-hidden shadow-2xl p-1 z-10">
+                <div className="w-[75%] h-[75%] flex items-center justify-center flex-shrink-0 relative bg-white rounded-full overflow-hidden shadow-2xl p-1 z-10 border border-outline/10">
                   <img 
                     src="/Background.png" 
                     alt="D'LI Heladería" 
