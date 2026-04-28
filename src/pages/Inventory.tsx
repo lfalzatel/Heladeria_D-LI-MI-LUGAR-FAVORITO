@@ -47,9 +47,18 @@ export default function Inventory() {
         
         // Order by salesCount desc, then name
         data.sort((a, b) => {
+          // 1. Adiciones always go last
+          const isAddA = a.category === 'adiciones';
+          const isAddB = b.category === 'adiciones';
+          if (isAddA && !isAddB) return 1;
+          if (!isAddA && isAddB) return -1;
+
+          // 2. Then sort by salesCount (desc)
           const salesA = a.salesCount || 0;
           const salesB = b.salesCount || 0;
           if (salesB !== salesA) return salesB - salesA;
+
+          // 3. Finally by name
           return a.name.localeCompare(b.name);
         });
         

@@ -217,11 +217,25 @@ function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () => void
   const fullTime = `${dateStr} · ${timeStr}`;
 
   const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
-  const isTable = !!sale.tableName && sale.tableName !== 'Pedido Online';
+  const isTable = !!sale.tableName && (sale.tableName.toLowerCase().includes('mesa') && sale.tableName !== 'Pedido Online' && sale.tableName !== 'Para Llevar');
+  const isTakeaway = sale.tableName === 'Para Llevar';
   const isOnline = sale.type === 'online' || sale.tableName === 'Pedido Online';
   
-  // Prioridad: 1. Nombre Cliente, 2. Mesa (valor directo), 3. Online, 4. Venta Directa
-  const originLabel = cName || (isTable ? sale.tableName : (isOnline ? 'Pedido Online' : 'Venta Directa'));
+  // Clean label logic: Remove redundant "Mesa" if it exists in the name
+  let cleanOrigin = '';
+  if (cName) {
+    cleanOrigin = cName;
+  } else if (isTable) {
+    cleanOrigin = sale.tableName.replace(/mesa/gi, '').trim();
+  } else if (isTakeaway) {
+    cleanOrigin = 'Para Llevar';
+  } else if (isOnline) {
+    cleanOrigin = 'Pedido Online';
+  } else {
+    cleanOrigin = 'Venta Directa';
+  }
+  
+  const originLabel = cleanOrigin;
   
   const pmIcon = {
     efectivo: <Banknote className="w-3.5 h-3.5 text-emerald-600" />,
@@ -254,13 +268,14 @@ function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () => void
               <span className={cn(
                 "px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ring-1",
                 isTable ? "bg-blue-50 text-blue-500 ring-blue-500/20" : 
+                isTakeaway ? "bg-emerald-50 text-emerald-600 ring-emerald-500/20" :
                 (isOnline ? "bg-purple-50 text-purple-600 ring-purple-500/20" : "bg-primary/5 text-primary ring-primary/20")
               )}>
-                {isTable ? 'Mesa' : (isOnline ? 'Online' : 'POS')}
+                {isTable ? 'Mesa' : (isTakeaway ? 'Llevar' : (isOnline ? 'Online' : 'POS'))}
               </span>
               <span className={cn(
                 "text-[9px] font-black uppercase tracking-widest truncate max-w-[100px]",
-                isTable ? "text-blue-600" : (isOnline ? "text-purple-600" : "text-secondary/40")
+                isTable ? "text-blue-600" : isTakeaway ? "text-emerald-600" : (isOnline ? "text-purple-600" : "text-secondary/40")
               )}>
                 {originLabel}
               </span>
@@ -285,6 +300,7 @@ export default function Reports() {
 
   // Data state
   const [sales, setSales] = useState<any[]>([]);
+  const [pedidosData, setPedidosData] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [supplies, setSupplies] = useState<any[]>([]);
   const [creditPedidos, setCreditPedidos] = useState<any[]>([]);
@@ -300,35 +316,56 @@ export default function Reports() {
   
   const period = PERIOD_MAP[filter];
 
-  // ── SALES listener (period-filtered) ──
+  // ── SALES & PEDIDOS listeners (period-filtered) ──
   useEffect(() => {
     if (!profile) return;
-    let startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
-    if (filter === 'semana') startDate.setDate(startDate.getDate() - 7);
-    else if (filter === 'mes') startDate.setMonth(startDate.getMonth() - 1);
-
-    // Buscamos ventas que tengan timestamp O createdAt >= startDate
-    // Para simplificar y asegurar que traemos todo lo de hoy, traemos una lista más amplia 
-    // y filtramos en memoria para evitar errores de índices compuestos complejos de Firestore
-    const q = query(
-      collection(db, 'sales'),
-      orderBy('timestamp', 'desc')
-    );
     
-    const unsub = onSnapshot(q, snap => {
-      const allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Filtramos en memoria para ser 100% precisos con el periodo
-      const filteredSales = allSales.filter(s => isInPeriod(s.timestamp || s.createdAt, period));
-      setSales(filteredSales);
-      setLoading(false);
-    }, err => { 
-      console.error(err); 
-      setLoading(false); 
-      toast.error("Error al cargar ventas");
+    // Listen to SALES
+    const qSales = query(collection(db, 'sales'), orderBy('timestamp', 'desc'));
+    const unsubSales = onSnapshot(qSales, snap => {
+      setSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      if (loading) setLoading(false);
     });
-    return unsub;
-  }, [filter, profile, period]);
+
+    // Listen to DELIVERED PEDIDOS (that might not be in sales yet)
+    const qPedidos = query(
+      collection(db, 'pedidos'), 
+      where('status', '==', 'entregado'),
+      orderBy('updatedAt', 'desc')
+    );
+    const unsubPedidos = onSnapshot(qPedidos, snap => {
+      setPedidosData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => {
+      unsubSales();
+      unsubPedidos();
+    };
+  }, [profile]);
+
+  // Combined and de-duplicated activity
+  const combinedActivity = React.useMemo(() => {
+    // 1. All sales
+    const items = [...sales];
+    
+    // 2. Add delivered pedidos that ARE NOT already in sales (check pedidoId)
+    const salesPedidoIds = new Set(sales.map(s => s.pedidoId).filter(Boolean));
+    
+    pedidosData.forEach(p => {
+      if (!salesPedidoIds.has(p.id)) {
+        items.push({ ...p, type: 'online', isDirectPedido: true });
+      }
+    });
+
+    // 3. Filter by period and Sort
+    return items
+      .filter(item => isInPeriod(item.timestamp || item.updatedAt || item.createdAt, period))
+      .sort((a, b) => {
+        const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
+        const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
+        return tB - tA;
+      });
+  }, [sales, pedidosData, period]);
 
   // ── SUPPLIES listener ──
   useEffect(() => {
@@ -365,8 +402,8 @@ export default function Reports() {
   // ── COMPUTED METRICS ──
   
 
-  // Ingresos (POS sales, non-credit)
-  const ingresosSales = sales.filter(s => {
+  // Ingresos (Combined sales & delivered pedidos, non-credit)
+  const ingresosSales = combinedActivity.filter(s => {
     const pm = (s.paymentMethod || '').toLowerCase();
     return pm !== 'credito';
   });
@@ -395,7 +432,7 @@ export default function Reports() {
 
   // Product ranking
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {};
-  sales.forEach(s => {
+  combinedActivity.forEach(s => {
     s.items?.forEach((item: any) => {
       const k = item.productName || 'Desconocido';
       if (!productMap[k]) productMap[k] = { name: k, units: 0, revenue: 0 };
@@ -537,7 +574,7 @@ export default function Reports() {
                   <span className="text-[9px] font-black text-on-surface uppercase tracking-widest">Ingresos</span>
                 </div>
               </div>
-              <TrendChart data={sales} color="#1c1b1f" label="Ingresos" />
+              <TrendChart data={combinedActivity} color="#1c1b1f" label="Ingresos" />
             </section>
 
             {/* Investment Trend */}
@@ -571,18 +608,18 @@ export default function Reports() {
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface">Actividad</h3>
               </div>
               <span className="px-3 py-1 bg-surface-container text-secondary rounded-full text-[9px] font-black uppercase tracking-widest">
-                {sales.length} Ventas
+                {combinedActivity.length} Actividades
               </span>
             </div>
 
             <div className="flex flex-col gap-2">
-              {sales.length === 0 ? (
+              {combinedActivity.length === 0 ? (
                 <div className="py-12 flex flex-col items-center opacity-20 text-center">
                   <History className="w-10 h-10 mb-2" />
                   <p className="text-xs font-bold uppercase tracking-widest">Sin actividad en este período</p>
                 </div>
               ) : (
-                sales.slice(0, 15).map((sale, index) => (
+                combinedActivity.slice(0, 20).map((sale, index) => (
                   <SaleCard 
                     key={sale.id} 
                     sale={sale} 
