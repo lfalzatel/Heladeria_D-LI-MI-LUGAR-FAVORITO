@@ -114,6 +114,16 @@ export default function UserMenu() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Sync notifications on open
+      if ('Notification' in window) {
+        setNotifPermission(Notification.permission);
+        if (Notification.permission === 'granted') {
+          const saved = localStorage.getItem('notifications_enabled');
+          setNotificationsEnabled(saved !== 'false'); // If granted, assume true unless explicitly false
+        } else {
+          setNotificationsEnabled(false);
+        }
+      }
     } else {
       document.body.style.overflow = 'unset';
     }

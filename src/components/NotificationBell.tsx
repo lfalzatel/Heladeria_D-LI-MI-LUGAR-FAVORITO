@@ -51,6 +51,7 @@ export default function NotificationBell() {
   const [sending, setSending] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
   const prevCount = useRef(0);
+  const isInitialLoad = useRef(true);
   const prevPedidos = useRef<Pedido[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -105,7 +106,7 @@ export default function NotificationBell() {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
       
       // Detección de cambios para alertas inmediatas
-      if (prevPedidos.current.length > 0) {
+      if (!isInitialLoad.current) {
         // 1. Detectar nuevos pedidos (solo para Staff)
         if (isStaff) {
           const newOrders = data.filter(p => !prevPedidos.current.find(old => old.id === p.id));
@@ -131,6 +132,7 @@ export default function NotificationBell() {
         });
       }
 
+      isInitialLoad.current = false;
       setPedidos(data);
       prevPedidos.current = data;
     }, (err) => {

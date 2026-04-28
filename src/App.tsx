@@ -43,7 +43,9 @@ export default function App() {
         // 1. Si ya tiene permiso, registrar el token silenciosamente
         if (Notification.permission === 'granted') {
           hasRequestedNotifs.current = true;
-          requestNotificationPermission(user.uid).catch(err => {
+          requestNotificationPermission(user.uid).then(token => {
+            if (token) localStorage.setItem('notifications_enabled', 'true');
+          }).catch(err => {
             console.error('Error registrando token:', err);
             hasRequestedNotifs.current = false;
           });
@@ -53,7 +55,9 @@ export default function App() {
           hasRequestedNotifs.current = true;
           // Pequeño delay para no interrumpir el splash screen
           setTimeout(() => {
-            requestNotificationPermission(user.uid).catch(err => {
+            requestNotificationPermission(user.uid).then(token => {
+              if (token) localStorage.setItem('notifications_enabled', 'true');
+            }).catch(err => {
               console.error('Error pidiendo permiso:', err);
               hasRequestedNotifs.current = false;
             });

@@ -24,14 +24,18 @@ import AppHeader, { PageTitle } from '../components/AppHeader';
 import AdminSidebar from '../components/AdminSidebar';
 import ProductFormModal from '../components/ProductFormModal';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useFlavorsStore } from '../stores/useFlavorsStore';
 
 export default function Inventory() {
   const { profile } = useAuthStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState<'productos' | 'sabores'>('productos');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+  
+  const { availableFlavors } = useFlavorsStore();
 
   useEffect(() => {
     if (!profile) return;
@@ -66,6 +70,17 @@ export default function Inventory() {
       toast.success(`Producto ${!currentStatus ? 'activado' : 'desactivado'}`);
     } catch (error) {
       toast.error('Error al actualizar estado');
+    }
+  };
+
+  const toggleFlavorStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      await updateDoc(doc(db, 'icecreamFlavors', id), {
+        isAvailable: !currentStatus
+      });
+      toast.success(`Sabor ${!currentStatus ? 'activado' : 'desactivado'}`);
+    } catch (error) {
+      toast.error('Error al actualizar estado del sabor');
     }
   };
 
@@ -121,8 +136,35 @@ export default function Inventory() {
           <span className="truncate">Añadir Nuevo Producto</span>
         </button>
 
-        {/* Toolbar */}
-        <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-4 rounded-[2rem] border border-outline/50 shadow-sm w-full">
+        <div className="flex bg-surface-container rounded-2xl p-1 mb-2">
+          <button
+            onClick={() => setActiveTab('productos')}
+            className={cn(
+              "flex-1 py-3 text-sm font-bold rounded-xl transition-all",
+              activeTab === 'productos' 
+                ? "bg-white text-primary shadow-sm" 
+                : "text-secondary hover:text-on-surface"
+            )}
+          >
+            Productos
+          </button>
+          <button
+            onClick={() => setActiveTab('sabores')}
+            className={cn(
+              "flex-1 py-3 text-sm font-bold rounded-xl transition-all",
+              activeTab === 'sabores' 
+                ? "bg-white text-primary shadow-sm" 
+                : "text-secondary hover:text-on-surface"
+            )}
+          >
+            Sabores
+          </button>
+        </div>
+
+        {activeTab === 'productos' ? (
+          <>
+            {/* Toolbar */}
+            <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-4 rounded-[2rem] border border-outline/50 shadow-sm w-full">
            <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar pb-2 sm:pb-0">
               {categories.map(cat => (
                 <button
@@ -240,6 +282,49 @@ export default function Inventory() {
              <MenuSquare className="w-16 h-16 mb-6" />
              <p className="text-lg font-bold">No se encontraron productos</p>
           </div>
+        )}
+          </>
+        ) : (
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {availableFlavors.map(flavor => (
+              <motion.div
+                layout
+                key={flavor.id}
+                className={cn(
+                  "relative bg-white rounded-[2rem] p-6 shadow-sm border transition-all",
+                  flavor.isAvailable ? "border-outline/50 hover:shadow-md" : "border-outline/20 opacity-70 grayscale-[0.5]"
+                )}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-surface-container-high shrink-0 text-primary">
+                    <IceCream className="w-6 h-6" />
+                  </div>
+                  <button 
+                    onClick={() => toggleFlavorStatus(flavor.id, flavor.isAvailable)}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95",
+                      flavor.isAvailable 
+                      ? "bg-surface-container text-secondary hover:bg-error/10 hover:text-error" 
+                      : "bg-surface-container text-secondary hover:bg-success/10 hover:text-success"
+                    )}
+                  >
+                    {flavor.isAvailable ? 'Desactivar' : 'Activar'}
+                  </button>
+                </div>
+
+                <h2 className="font-brand font-black text-2xl text-on-surface mb-2 tracking-tight">
+                  {flavor.name}
+                </h2>
+
+                <div className="flex flex-col pt-4 border-t border-outline/30 mt-4">
+                   <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado</span>
+                   <span className={cn("text-[10px] font-bold", flavor.isAvailable ? "text-success" : "text-slate-500")}>
+                      {flavor.isAvailable ? '• Disponible' : '• Agotado/Oculto'}
+                   </span>
+                </div>
+              </motion.div>
+            ))}
+          </section>
         )}
       </main>
 

@@ -123,14 +123,14 @@
       ]
     },
     {
-      "id": "copa-salpicon-mango",
-      "name": "Copa de Salpicón Sabor Mango",
+      "id": "copa-salpicon",
+      "name": "Copa de Salpicón",
       "category": "salpicon",
-      "description": "Refrescante combinación de banano, papaya y mango fresco, bañados con un sabor de helado Mimo's a elección, lechera y barquillo. Todo servido en copa. Ideal para los amantes del mango.",
+      "description": "Refrescante combinación de banano, papaya y una base a elegir (fresa o mango), bañados con un sabor de helado Mimo's a elección, lechera y barquillo. Todo servido en copa.",
       "ingredients": [
         "banano",
         "papaya",
-        "mango",
+        "base (fresa o mango)",
         "helado",
         "lechera",
         "barquillo",
@@ -138,47 +138,12 @@
       ],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
-      "fruitSelection": [
-        "banano",
-        "papaya",
-        "mango"
-      ],
+      "requiresSalpiconBase": true,
       "isActive": true,
       "imageUrl": "/Images/products/copa-salpicon.jpeg",
       "variants": [
         {
-          "label": "Copa Salpicón Mango",
-          "price": 11000,
-          "scoops": 1
-        }
-      ]
-    },
-    {
-      "id": "copa-salpicon-fresa",
-      "name": "Copa de Salpicón Sabor Fresa",
-      "category": "salpicon",
-      "description": "La versión frutal con banano, papaya y fresa natural, acompañada de un sabor de helado Mimo's, lechera y barquillo. Dulce, fresca y colorida.",
-      "ingredients": [
-        "banano",
-        "papaya",
-        "fresa",
-        "helado",
-        "lechera",
-        "barquillo",
-        "queso"
-      ],
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
-      "fruitSelection": [
-        "banano",
-        "papaya",
-        "fresa"
-      ],
-      "isActive": true,
-      "imageUrl": "/Images/products/copa-salpicon.jpeg",
-      "variants": [
-        {
-          "label": "Copa Salpicón Fresa",
+          "label": "Copa Salpicón",
           "price": 11000,
           "scoops": 1
         }
@@ -509,11 +474,7 @@
       "name": "Ron Pasas",
       "isAvailable": true
     },
-    {
-      "id": "mango-biche",
-      "name": "Mango Biche",
-      "isAvailable": true
-    },
+
     {
       "id": "frutos-rojos",
       "name": "Frutos Rojos",

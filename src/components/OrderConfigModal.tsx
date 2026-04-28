@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus, GlassWater } from 'lucide-react';
 import { Product, ProductVariant, CartItem } from '../types';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { toast } from 'sonner';
 
-const SALSAS = ['Chocolate', 'Mora', 'Arequipe', 'Fresa', 'Leche Condensada', 'Miel'];
+const SALSAS = ['Arequipe', 'Mora', 'Chocolate', 'Lecherita'];
 
 interface OrderConfigModalProps {
   product: Product;
@@ -30,21 +30,31 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedFrutas, setSelectedFrutas] = useState<string[]>([]);
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
+  const [selectedIncludedToppings, setSelectedIncludedToppings] = useState<string[]>([]);
   const [selectedAdditions, setSelectedAdditions] = useState<{name: string, price: number}[]>([]);
+  const [containerChoice, setContainerChoice] = useState<'Cono' | 'Vaso' | null>(null);
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
   
+  const isBasicIceCream = ['cono-vaso', 'cucurucho', 'conchita'].includes(product.id);
+  const isSalpicon = product.requiresSalpiconBase || product.id === 'copa-salpicon';
+
   // Dynamic step calculation
   const steps: string[] = [];
+  // For Cono o Vaso, we must choose container FIRST
+  if (product.id === 'cono-vaso') steps.push('containerChoice');
   // Only show variant step if there are 2+ variants to choose from
   if (product.variants && product.variants.length > 1) steps.push('variants');
+  // For Salpicon, choose base first
+  if (isSalpicon) steps.push('salpiconBase');
   // For Oblea Tradicional, fruit choice comes first (only for hasFruit variant)
   if (product.requiresFruitChoice) steps.push('fruits');
   // Flavors: only show if product requires it (and for Oblea Cuchareable, only when hasIceCream variant)
   if (product.requiresFlavors) steps.push('flavors');
-  // Sauces: only for helados and copas
-  if (product.requiresSauces) steps.push('sauces');
+  // Sauces: only for helados and copas, OR basic ice cream included sauces
+  if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
+  if (isBasicIceCream) steps.push('includedToppings');
   // Additions step
   steps.push('additions');
   
@@ -111,12 +121,17 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedVariant(variant);
         setSelectedFlavors(initialItem.flavors || []);
         setSelectedFrutas(initialItem.fruitChoices || []);
+        const TOPPINGS = ['Maní', 'Bolitas de colores'];
+        
         // Parse sauces from additions
         const sauceAdditions = (initialItem.additions || []).filter(a => SALSAS.includes(a));
         setSelectedSauces(sauceAdditions);
+
+        const includedToppings = (initialItem.additions || []).filter(a => TOPPINGS.includes(a));
+        setSelectedIncludedToppings(includedToppings);
         
-        // Parse actual additions (ignoring sauces for simplicity in this reconstruction)
-        const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a));
+        // Parse actual additions (ignoring sauces and included toppings for simplicity)
+        const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a) && !TOPPINGS.includes(a));
         // We'd need prices here... for now just names
         setSelectedAdditions(otherAdds.map(name => ({name, price: 0})));
         setNotes(initialItem.notes || '');
@@ -130,7 +145,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedFlavors([]);
         setSelectedFrutas([]);
         setSelectedSauces([]);
+        setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
+        setContainerChoice(null);
         setNotes('');
         setQuantity(1);
       }
@@ -152,8 +169,18 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       return;
     }
     
+    if (effectiveCurrentStepType === 'containerChoice' && !containerChoice) {
+      toast.error('Selecciona si deseas Cono o Vaso');
+      return;
+    }
+    
     if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length === 0) {
       toast.error('Selecciona al menos un sabor');
+      return;
+    }
+
+    if (effectiveCurrentStepType === 'salpiconBase' && selectedFrutas.length === 0) {
+      toast.error('Selecciona la base del salpicón (Fresa o Mango)');
       return;
     }
 
@@ -177,6 +204,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       // Combine additions names
       const allAdditionsNames = [
         ...selectedSauces,
+        ...selectedIncludedToppings,
         ...selectedAdditions.map(a => a.name)
       ];
 
@@ -192,8 +220,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
       const configParts = [
         variantLabel,
+        containerChoice ? `Envase: ${containerChoice}` : '',
         formattedFlavors,
-        selectedFrutas.length > 0 ? `Fruta: ${selectedFrutas.join(', ')}` : '',
+        selectedFrutas.length > 0 ? (isSalpicon ? `Base: ${selectedFrutas.join(', ')}` : `Fruta: ${selectedFrutas.join(', ')}`) : '',
         allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
         notes ? `Notas: ${notes}` : ''
       ].filter(Boolean);
@@ -227,10 +256,20 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   };
 
   const toggleSauce = (sauce: string) => {
-    if (selectedSauces.includes(sauce)) {
-      setSelectedSauces(selectedSauces.filter(s => s !== sauce));
+    if (isBasicIceCream) {
+      // Single select for basic ice cream (included sauces)
+      if (selectedSauces.includes(sauce)) {
+        setSelectedSauces([]);
+      } else {
+        setSelectedSauces([sauce]);
+      }
     } else {
-      setSelectedSauces([...selectedSauces, sauce]);
+      // Multi select for others (optional sauces)
+      if (selectedSauces.includes(sauce)) {
+        setSelectedSauces(selectedSauces.filter(s => s !== sauce));
+      } else {
+        setSelectedSauces([...selectedSauces, sauce]);
+      }
     }
   };
 
@@ -253,11 +292,14 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
   const getStepTitle = () => {
     switch (effectiveCurrentStepType) {
+      case 'containerChoice': return '¿Cono o Vaso?';
       case 'variants': return 'Presentación';
+      case 'salpiconBase': return 'Base del Salpicón';
       case 'flavors': return `Selecciona ${maxScoops === 1 ? 'el Sabor' : 'los Sabores'}`;
       case 'fruits': return 'Elige la Fruta';
-      case 'sauces': return 'Salsas (Opcional)';
-      case 'additions': return 'Adiciones';
+      case 'sauces': return isBasicIceCream ? 'Salsas (Incluidas)' : 'Salsas (Opcional)';
+      case 'includedToppings': return 'Toppings (Incluidos)';
+      case 'additions': return 'Adiciones (Costo Extra)';
       default: return '';
     }
   };
@@ -265,7 +307,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -393,6 +435,91 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                           </div>
                         </button>
                       ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'containerChoice' && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {['Cono', 'Vaso'].map(container => (
+                        <button
+                          key={container}
+                          onClick={() => setContainerChoice(container as 'Cono' | 'Vaso')}
+                          className={cn(
+                            "relative flex items-center justify-center p-4 rounded-[1.5rem] transition-all border-2 text-center",
+                            containerChoice === container
+                              ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <div className={cn(
+                               "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                               containerChoice === container ? "bg-primary text-white rotate-3" : "bg-surface-container text-secondary"
+                            )}>
+                              {container === 'Cono' ? <IceCream className="w-5 h-5" /> : <GlassWater className="w-5 h-5" />}
+                            </div>
+                            <span className="font-black text-sm tracking-tight uppercase">{container}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'salpiconBase' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {['Fresa', 'Mango'].map(base => (
+                        <button
+                          key={base}
+                          onClick={() => setSelectedFrutas([base])} // Overwrite, only one base allowed
+                          className={cn(
+                            "relative flex items-center justify-center p-6 rounded-[1.5rem] transition-all border-2 text-center",
+                            selectedFrutas.includes(base)
+                              ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                          )}
+                        >
+                          <span className={cn(
+                            "font-black text-xl",
+                            selectedFrutas.includes(base) ? "text-primary" : "text-on-surface"
+                          )}>{base}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'includedToppings' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {['Maní', 'Bolitas de colores'].map(topping => {
+                        const isSelected = selectedIncludedToppings.includes(topping);
+                        return (
+                          <button
+                            key={topping}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedIncludedToppings([]);
+                              } else {
+                                setSelectedIncludedToppings([topping]);
+                              }
+                            }}
+                            className={cn(
+                              "relative flex items-center p-4 rounded-[1.5rem] transition-all border-2 text-left",
+                              isSelected
+                                ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
+                                : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                            )}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <div className={cn(
+                                "w-6 h-6 rounded-md flex items-center justify-center transition-all",
+                                isSelected ? "bg-primary text-white" : "border-2 border-outline/20 bg-surface-container"
+                              )}>
+                                {isSelected && <Check className="w-4 h-4" />}
+                              </div>
+                              <span className="font-bold text-base flex-1">{topping}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 

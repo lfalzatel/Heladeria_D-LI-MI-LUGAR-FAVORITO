@@ -40,6 +40,7 @@ export interface Product {
   recipe?: RecipeItem[];
   requiresFlavors?: boolean;
   requiresFruitChoice?: boolean;
+  requiresSalpiconBase?: boolean;
   requiresSauces?: boolean;
   fruitOptions?: string[];   // override default fruit list
   fruitSelection?: string[]; // alternative fruit list from JSON

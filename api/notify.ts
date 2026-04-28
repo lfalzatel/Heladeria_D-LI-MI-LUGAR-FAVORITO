@@ -55,7 +55,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       data: data || {},
       android: {
         priority: 'high',
-        notification: { sound: 'default' }
+        notification: { 
+          sound: 'default',
+          icon: '/pwa-192x192.png',
+          color: '#1d4ed8',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+        }
       },
       apns: {
         payload: { aps: { sound: 'default', contentAvailable: true } }
@@ -65,7 +71,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         notification: {
           icon: '/pwa-192x192.png',
           badge: '/pwa-192x192.png',
-          vibrate: [200, 100, 200]
+          vibrate: [200, 100, 200, 100, 200],
+          requireInteraction: true
         }
       }
     });
