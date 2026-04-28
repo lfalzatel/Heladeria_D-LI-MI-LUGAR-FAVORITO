@@ -49,64 +49,87 @@ export default function Dashboard() {
   const location = useLocation();
   const { profile } = useAuthStore();
   const { carts, initialize } = useTableCartStore();
-  const [recentSales, setRecentSales] = useState<SaleRecord[]>([]);
-  const [selectedSale, setSelectedSale] = useState<SaleRecord | null>(null);
-  
-  useEffect(() => {
-    const unsubscribe = initialize();
-    return () => unsubscribe();
-  }, [initialize]);
-
-  const [dailyTotal, setDailyTotal] = useState(0);
-  const [txCount, setTxCount] = useState(0);
+  const [sales, setSales] = useState<any[]>([]);
+  const [pedidosData, setPedidosData] = useState<any[]>([]);
+  const [selectedSale, setSelectedSale] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     if (!profile) return;
 
-    const salesRef = collection(db, 'sales');
-    
-    // Traemos las ventas más recientes
-    const q = query(
-      salesRef, 
-      orderBy('timestamp', 'desc'),
+    // Listen to SALES
+    const qSales = query(collection(db, 'sales'), orderBy('timestamp', 'desc'), limit(100));
+    const unsubSales = onSnapshot(qSales, snap => {
+      setSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      if (loading) setLoading(false);
+    });
+
+    // Listen to DELIVERED PEDIDOS
+    const qPedidos = query(
+      collection(db, 'pedidos'), 
+      where('status', '==', 'entregado'),
+      orderBy('updatedAt', 'desc'),
       limit(50)
     );
+    const unsubPedidos = onSnapshot(qPedidos, snap => {
+      setPedidosData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
 
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
-        const allSales: SaleRecord[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data() as Omit<SaleRecord, 'id'>;
-          allSales.push({ id: doc.id, ...data });
+    const unsubCart = initialize();
+
+    return () => {
+      unsubSales();
+      unsubPedidos();
+      unsubCart();
+    };
+  }, [profile, initialize]);
+
+  // Combined and filtered activity
+  const { combinedRecent, dailyTotal, txCount } = React.useMemo(() => {
+    const items: any[] = [...sales];
+    const salesPedidoIds = new Set(sales.map(s => s.pedidoId).filter(Boolean));
+    
+    pedidosData.forEach(p => {
+      if (!salesPedidoIds.has(p.id)) {
+        items.push({ 
+          ...p, 
+          type: 'online', 
+          tableName: 'Pedido Online',
+          sellerName: 'Sistema Online',
+          timestamp: p.updatedAt || p.createdAt
         });
-
-        // Filtrar por hoy en memoria (más seguro)
-        const todayStr = new Date().toDateString();
-        const salesToday = allSales.filter(s => {
-          const d = s.timestamp?.toDate ? s.timestamp.toDate() : new Date(s.timestamp || s.createdAt);
-          const isToday = d.toDateString() === todayStr;
-          
-          // Si es vendedor, filtrar solo las suyas
-          if (profile.role === 'vendedor') {
-            return isToday && s.sellerId === profile.uid;
-          }
-          return isToday;
-        });
-
-        setRecentSales(salesToday.slice(0, 20));
-        setDailyTotal(salesToday.reduce((sum, s) => sum + (s.total || 0), 0));
-        setTxCount(salesToday.length);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Dashboard sales listener error:", error);
-        setLoading(false);
       }
-    );
+    });
 
-    return unsubscribe;
-  }, [profile]);
+    const todayStr = new Date().toDateString();
+    const filtered = items.filter(s => {
+      const d = toDateS(s.timestamp || s.updatedAt || s.createdAt);
+      if (!d) return false;
+      const isToday = d.toDateString() === todayStr;
+      
+      if (profile?.role === 'vendedor') {
+        return isToday && s.sellerId === profile.uid;
+      }
+      return isToday;
+    }).sort((a, b) => {
+      const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
+      const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
+      return tB - tA;
+    });
+
+    return {
+      combinedRecent: filtered.slice(0, 20),
+      dailyTotal: filtered.reduce((sum, s) => sum + (s.total || 0), 0),
+      txCount: filtered.length
+    };
+  }, [sales, pedidosData, profile]);
+
+  // Utils
+  function toDateS(ts: any) {
+    if (!ts) return null;
+    if (ts.toDate) return ts.toDate();
+    return new Date(ts);
+  }
 
   const stats = [
     { label: 'Ventas hoy', value: formatCurrency(dailyTotal), label2: 'Hoy', icon: <DollarSign className="w-5 h-5 text-success" />, trend: 'Actualizado' },
@@ -183,8 +206,8 @@ export default function Dashboard() {
               </div>
               
               <div className="flex-1 flex flex-col gap-3 min-h-[400px]">
-                {recentSales.length > 0 ? (
-                  recentSales.map((sale, i) => (
+                {combinedRecent.length > 0 ? (
+                  combinedRecent.map((sale, i) => (
                     <motion.div 
                       key={sale.id}
                       initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
@@ -205,7 +228,7 @@ export default function Dashboard() {
                           <div className="flex items-center gap-2">
                              <h4 className="font-bold text-sm text-on-surface">{sale.tableName}</h4>
                              <span className="text-[9px] px-2 py-0.5 bg-surface-container rounded-full font-black text-secondary uppercase tracking-tighter">
-                                {sale.paymentMethod === 'cash' ? 'Efectivo' : 'Transf'}
+                                {sale.paymentMethod === 'cash' ? 'Efectivo' : (sale.type === 'online' ? 'Digital' : 'Transf')}
                              </span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
@@ -221,18 +244,18 @@ export default function Dashboard() {
                         <p className="font-black text-on-surface text-base group-hover:text-primary transition-colors">{formatCurrency(sale.total)}</p>
                         <p className="text-[9px] font-bold text-secondary uppercase mt-0.5">{sale.items.length} productos</p>
                       </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center py-10 text-center opacity-30">
-                    <Receipt className="w-12 h-12 mb-4" />
-                    <p className="font-bold">No hay ventas registradas aún</p>
-                    <p className="text-xs">Las ventas aparecerán aquí en tiempo real</p>
-                  </div>
-                )}
+                </motion.div>
+              ))
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center py-10 text-center opacity-30">
+                <Receipt className="w-12 h-12 mb-4" />
+                <p className="font-bold">No hay ventas registradas aún</p>
+                <p className="text-xs">Las ventas aparecerán aquí en tiempo real</p>
               </div>
-              
-              {recentSales.length > 0 && (
+            )}
+          </div>
+          
+          {combinedRecent.length > 0 && (
                 <button className="w-full mt-6 py-4 rounded-2xl border-2 border-primary/10 text-primary font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-primary/5 transition-all">
                    Ver Todas las Ventas
                 </button>
