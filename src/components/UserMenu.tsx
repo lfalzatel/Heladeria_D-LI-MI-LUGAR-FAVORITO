@@ -109,7 +109,16 @@ export default function UserMenu() {
   });
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default');
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkStandalone = () => {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+      setIsStandalone(!!standalone);
+    };
+    checkStandalone();
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -439,13 +448,15 @@ export default function UserMenu() {
                 onClick={handleShare}
                 closeMenu={() => setIsOpen(false)}
               />
-              <MenuItem
-                icon={<Download className="w-4 h-4" />}
-                label="Instalar app"
-                sublabel="Guardar en pantalla de inicio"
-                onClick={handleInstall}
-                closeMenu={() => setIsOpen(false)}
-              />
+              {!isStandalone && (
+                <MenuItem
+                  icon={<Download className="w-4 h-4" />}
+                  label="Instalar app"
+                  sublabel="Guardar en pantalla de inicio"
+                  onClick={handleInstall}
+                  closeMenu={() => setIsOpen(false)}
+                />
+              )}
               <MenuItem
                 icon={<HelpCircle className="w-4 h-4" />}
                 label="Ayuda y soporte"
