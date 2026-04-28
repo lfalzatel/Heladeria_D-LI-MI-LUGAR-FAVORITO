@@ -26,10 +26,10 @@ import {
   StockCriticoModal,
 } from '../components/ReportsModals';
 
-type DateFilter = 'hoy' | 'semana' | 'mes';
-const FILTER_LABEL: Record<DateFilter, string> = { hoy: 'Hoy', semana: 'Semana', mes: 'Mes' };
-const PERIOD_MAP: Record<DateFilter, 'today' | 'week' | 'month'> = {
-  hoy: 'today', semana: 'week', mes: 'month'
+type DateFilter = 'hoy' | 'semana' | 'mes' | 'custom';
+const FILTER_LABEL: Record<DateFilter, string> = { hoy: 'Hoy', semana: 'Semana', mes: 'Mes', custom: 'Fecha' };
+const PERIOD_MAP: Record<DateFilter, 'today' | 'week' | 'month' | 'custom'> = {
+  hoy: 'today', semana: 'week', mes: 'month', custom: 'custom'
 };
 
 // ── UTILS ──
@@ -293,10 +293,112 @@ function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () => void
   );
 }
 
+import { ChevronLeft, ChevronRight, X as CloseIcon } from 'lucide-react';
+
+function CalendarModal({ 
+  isOpen, 
+  onClose, 
+  allActivity, 
+  onSelectDate 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  allActivity: any[]; 
+  onSelectDate: (date: Date) => void 
+}) {
+  const [viewDate, setViewDate] = useState(new Date());
+  
+  if (!isOpen) return null;
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = viewDate.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+
+  // Pre-calculate sales per day
+  const salesByDay: Record<number, number> = {};
+  allActivity.forEach(sale => {
+    const d = toDateS(sale.timestamp || sale.updatedAt || sale.createdAt);
+    if (d && d.getMonth() === month && d.getFullYear() === year) {
+      const day = d.getDate();
+      salesByDay[day] = (salesByDay[day] || 0) + 1;
+    }
+  });
+
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanks = Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }, (_, i) => i); // Start on Monday
+
+  const changeMonth = (offset: number) => {
+    const newDate = new Date(viewDate);
+    newDate.setMonth(viewDate.getMonth() + offset);
+    setViewDate(newDate);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose} className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm" 
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
+      >
+        <div className="p-6 bg-surface-container-low flex items-center justify-between border-b border-outline/10">
+          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-surface rounded-full transition-all text-secondary"><ChevronLeft /></button>
+          <h3 className="font-black text-xs uppercase tracking-widest text-on-surface capitalize">{monthName}</h3>
+          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-surface rounded-full transition-all text-secondary"><ChevronRight /></button>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-7 gap-1 mb-4">
+            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => (
+              <div key={d} className="text-center text-[10px] font-black text-secondary/40 py-2">{d}</div>
+            ))}
+            {blanks.map(i => <div key={`b-${i}`} />)}
+            {days.map(d => {
+              const count = salesByDay[d] || 0;
+              const hasActivity = count > 0;
+              return (
+                <button 
+                  key={d} 
+                  onClick={() => {
+                    const sel = new Date(year, month, d);
+                    onSelectDate(sel);
+                    onClose();
+                  }}
+                  className={cn(
+                    "relative h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 transition-all group border border-transparent",
+                    hasActivity ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-surface"
+                  )}
+                >
+                  <span className={cn("text-xs font-black", hasActivity ? "text-primary" : "text-secondary")}>{d}</span>
+                  {hasActivity && (
+                    <div className="flex flex-col items-center">
+                      <div className="w-1 h-1 bg-primary rounded-full mb-0.5 shadow-[0_0_8px_rgba(179,0,105,0.6)]" />
+                      <span className="text-[7px] font-black text-primary/60">{count}</span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <button onClick={onClose} className="w-full py-4 bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-surface transition-all">Cerrar</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Reports() {
   const { profile } = useAuthStore();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<DateFilter>('hoy');
+  const [customDate, setCustomDate] = useState<Date | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Data state
   const [sales, setSales] = useState<any[]>([]);
@@ -359,13 +461,20 @@ export default function Reports() {
 
     // 3. Filter by period and Sort
     return items
-      .filter(item => isInPeriod(item.timestamp || item.updatedAt || item.createdAt, period))
+      .filter(item => {
+        const timestamp = item.timestamp || item.updatedAt || item.createdAt;
+        if (filter === 'custom' && customDate) {
+          const d = toDateS(timestamp);
+          return d?.toDateString() === customDate.toDateString();
+        }
+        return isInPeriod(timestamp, period);
+      })
       .sort((a, b) => {
         const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
         const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
         return tB - tA;
       });
-  }, [sales, pedidosData, period]);
+  }, [sales, pedidosData, period, filter, customDate]);
 
   // ── SUPPLIES listener ──
   useEffect(() => {
@@ -419,11 +528,21 @@ export default function Reports() {
   const transferencia = getMethodTotal(['transfer', 'transferencia', 'digital', 'nequi', 'daviplata']);
 
   // Credit pedidos for current period
-  const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, period));
+  const creditPedidosPeriod = creditPedidos.filter(p => {
+    if (filter === 'custom' && customDate) {
+      return toDateS(p.createdAt)?.toDateString() === customDate.toDateString();
+    }
+    return isInPeriod(p.createdAt, period);
+  });
   const totalCredito = creditPedidosPeriod.reduce((s, p) => s + (p.total || 0), 0);
 
   // Supply purchases for current period
-  const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, period));
+  const purchasesPeriod = purchases.filter(p => {
+    if (filter === 'custom' && customDate) {
+      return toDateS(p.createdAt)?.toDateString() === customDate.toDateString();
+    }
+    return isInPeriod(p.createdAt, period);
+  });
   const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
 
   // Ganancia
@@ -457,7 +576,9 @@ export default function Reports() {
   const deudaByClient = Object.values(deudaMap).sort((a, b) => b.total - a.total);
   const totalDeuda = creditPedidos.reduce((s, p) => s + (p.total || 0), 0);
 
-  const filterLabel = FILTER_LABEL[filter];
+  const filterLabel = filter === 'custom' && customDate 
+    ? customDate.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+    : FILTER_LABEL[filter];
 
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
@@ -474,21 +595,32 @@ export default function Reports() {
               {(['hoy', 'semana', 'mes'] as const).map(f => (
                 <button
                   key={f}
-                  onClick={() => setFilter(f)}
+                  onClick={() => {
+                    setFilter(f);
+                    setCustomDate(null);
+                  }}
                   className={cn(
                     'flex-1 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                     filter === f ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-on-surface'
                   )}
                 >
-                  {f}
+                  {FILTER_LABEL[f]}
                 </button>
               ))}
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white rounded-2xl border border-outline/50 shadow-sm text-xs font-bold text-secondary">
+              <button 
+                onClick={() => setIsCalendarOpen(true)}
+                className={cn(
+                  "flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border transition-all shadow-sm text-xs font-black",
+                  filter === 'custom' ? "bg-primary/5 text-primary border-primary/20" : "bg-white text-secondary border-outline/50 hover:bg-surface"
+                )}
+              >
                 <Calendar className="w-4 h-4" />
-                Calendario
-                <ChevronDown className="w-4 h-4 opacity-30" />
+                {filter === 'custom' && customDate 
+                  ? customDate.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) 
+                  : 'Calendario'}
+                <ChevronDown className={cn("w-4 h-4 transition-transform", isCalendarOpen && "rotate-180")} />
               </button>
               <button
                 onClick={() => toast.info('Generando reporte...')}
@@ -698,6 +830,17 @@ export default function Reports() {
         onSendMessage={async () => {}}
         isSending={false}
       />
+      
+      <CalendarModal 
+        isOpen={isCalendarOpen} 
+        onClose={() => setIsCalendarOpen(false)} 
+        allActivity={[...sales, ...pedidosData]}
+        onSelectDate={(date) => {
+          setCustomDate(date);
+          setFilter('custom');
+        }}
+      />
+      <BottomNav />
     </div>
   );
 }
