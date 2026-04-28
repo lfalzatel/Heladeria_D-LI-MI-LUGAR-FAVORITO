@@ -76,7 +76,12 @@ function MetricCard({
       </div>
       
       <div className="flex flex-col gap-0.5 mt-1">
-        <p className="text-xl font-black text-on-surface leading-none tracking-tight">{value}</p>
+        <p className={cn(
+          "font-black text-on-surface leading-tight tracking-tight",
+          value.length > 18 ? "text-xs" : value.length > 14 ? "text-sm" : value.length > 11 ? "text-base" : "text-xl"
+        )}>
+          {value}
+        </p>
         <div className="flex flex-col">
           <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
           {sub && <p className="text-[9px] text-secondary/50 font-bold leading-tight">{sub}</p>}
@@ -577,7 +582,7 @@ export default function Reports() {
   const totalDeuda = creditPedidos.reduce((s, p) => s + (p.total || 0), 0);
 
   const filterLabel = filter === 'custom' && customDate 
-    ? customDate.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+    ? customDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'long' }).replace(',', '')
     : FILTER_LABEL[filter];
 
   return (
@@ -618,7 +623,7 @@ export default function Reports() {
               >
                 <Calendar className="w-4 h-4" />
                 {filter === 'custom' && customDate 
-                  ? customDate.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) 
+                  ? customDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') 
                   : 'Calendario'}
                 <ChevronDown className={cn("w-4 h-4 transition-transform", isCalendarOpen && "rotate-180")} />
               </button>
@@ -665,7 +670,7 @@ export default function Reports() {
               icon={<Trophy className="w-5 h-5 text-amber-600" />}
               accent="amber"
               label="Producto Estrella"
-              value={starProduct ? starProduct.name.length > 12 ? starProduct.name.slice(0, 12) + '…' : starProduct.name : 'N/A'}
+              value={starProduct ? starProduct.name : 'N/A'}
               sub={starProduct ? `${starProduct.units} unidades` : 'Sin ventas'}
               onOpen={() => open('ranking')}
             />
