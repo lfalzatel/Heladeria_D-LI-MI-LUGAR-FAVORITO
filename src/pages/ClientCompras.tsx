@@ -268,7 +268,12 @@ export default function ClientCompras() {
             {filteredProducts.map(product => {
               const productInCart = cart.filter(item => item.productId === product.id);
               const totalQuantity = productInCart.reduce((sum, i) => sum + i.quantity, 0);
-              const isComplex = (product.variants && product.variants.length > 1) || product.requiresFlavors || product.requiresFruitChoice;
+              const isComplex = (product.variants && product.variants.length > 1) || 
+                                product.requiresFlavors || 
+                                product.requiresFruitChoice || 
+                                product.requiresSauces || 
+                                product.requiresToppings || 
+                                product.requiresSalpiconBase;
               
               const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
               const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);

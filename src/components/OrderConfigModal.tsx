@@ -14,6 +14,7 @@ interface OrderConfigModalProps {
   onClose: () => void;
   onAdd: (item: CartItem) => void;
   initialItem?: CartItem | null;
+  initialStep?: number;
 }
 
 // Frutas por defecto y específicas para Obleas
@@ -23,15 +24,25 @@ const OBLEA_FRUITS = ['Fresa', 'Mango', 'Durazno'];
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-export default function OrderConfigModal({ product, isOpen, onClose, onAdd, initialItem }: OrderConfigModalProps) {
+export default function OrderConfigModal({ product, isOpen, onClose, onAdd, initialItem, initialStep }: OrderConfigModalProps) {
   const { availableFlavors: allFlavors } = useFlavorsStore();
   const [step, setStep] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
-  const [selectedFrutas, setSelectedFrutas] = useState<string[]>([]);
+  const isOblea = product.name.toLowerCase().includes('oblea');
+  const fruitOptions = product.fruitOptions && product.fruitOptions.length > 0
+    ? product.fruitOptions
+    : (isOblea ? OBLEA_FRUITS : FRUTAS_DEFAULT);
+
+  const [selectedFrutas, setSelectedFrutas] = useState<string[]>(() => {
+    if (initialItem?.fruitChoices) return initialItem.fruitChoices;
+    // For Ensaladas and Salpicón, pre-select all fruits by default
+    if (product.category === 'ensaladas' || product.category === 'salpicon') return fruitOptions;
+    return [];
+  });
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
   const [selectedIncludedToppings, setSelectedIncludedToppings] = useState<string[]>([]);
-  const [selectedAdditions, setSelectedAdditions] = useState<{name: string, price: number}[]>([]);
+  const [selectedAdditions, setSelectedAdditions] = useState<{id: string, name: string, price: number}[]>([]);
   const [containerChoice, setContainerChoice] = useState<'Cono' | 'Vaso' | null>(null);
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
@@ -48,15 +59,20 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   if (product.variants && product.variants.length > 1) steps.push('variants');
   // For Salpicon, choose base first
   if (isSalpicon) steps.push('salpiconBase');
-  // For Oblea Tradicional, fruit choice comes first (only for hasFruit variant)
-  if (product.requiresFruitChoice) steps.push('fruits');
-  // Flavors: only show if product requires it (and for Oblea Cuchareable, only when hasIceCream variant)
+  
+  // Flavors: only show if product requires it
   if (product.requiresFlavors) steps.push('flavors');
+
+  // Additions step - moved earlier to allow configuring choices based on additions
+  steps.push('additions');
+  
+  // Fruits step: show if product requires it OR if a fruit addition was selected
+  const hasFruitAddition = selectedAdditions.some(a => a.name.toLowerCase().includes('fruta'));
+  if (product.requiresFruitChoice || hasFruitAddition) steps.push('fruits');
+  
   // Sauces: only for helados and copas, OR basic ice cream included sauces
   if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
   if (isBasicIceCream) steps.push('includedToppings');
-  // Additions step
-  steps.push('additions');
   
   const totalSteps = steps.length;
   const currentStepType = steps[step - 1];
@@ -68,8 +84,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       if (selectedVariant?.hasIceCream === false) return false;
     }
     if (s === 'fruits') {
-      // For Oblea Tradicional, skip if the variant has no fruit
-      if (selectedVariant?.hasFruit === false) return false;
+      const hasFruitAddition = selectedAdditions.some(a => a.name.toLowerCase().includes('fruta'));
+      // Skip if it's an oblea variant without fruit AND no fruit addition was added
+      if (product.id === 'oblea-tradicional' && selectedVariant?.hasFruit === false && !hasFruitAddition) return false;
     }
     return true;
   });
@@ -89,11 +106,30 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   };
   const maxScoops = getMaxScoops();
 
-  // Fruit options logic
-  const isOblea = product.name.toLowerCase().includes('oblea');
-  const fruitOptions = product.fruitOptions && product.fruitOptions.length > 0
-    ? product.fruitOptions
-    : (isOblea ? OBLEA_FRUITS : FRUTAS_DEFAULT);
+
+
+  // Fruit logic helpers
+  const getIncludedSaucesCount = () => {
+    if (isBasicIceCream) return 1;
+    if (product.id === 'adicion-salsa') return 1;
+    return 0;
+  };
+
+  const getIncludedFruitsCount = () => {
+    if (product.category === 'ensaladas' || product.category === 'salpicon') return 99;
+    if (product.id === 'oblea-tradicional') return selectedVariant?.hasFruit ? 1 : 0;
+    if (product.id === 'oblea-cuchareable') return 1;
+    if (product.id === 'adicion-fruta') return 1;
+    return 0;
+  };
+
+  const includedSaucesCount = getIncludedSaucesCount();
+  const extraSaucesCount = Math.max(0, (selectedSauces?.length || 0) - includedSaucesCount);
+  const extraSaucesPrice = extraSaucesCount * 1000;
+
+  const includedFruitsCount = getIncludedFruitsCount();
+  const extraFruitsCount = Math.max(0, (selectedFrutas?.length || 0) - includedFruitsCount);
+  const extraFruitsPrice = extraFruitsCount * 3500;
 
   // Fetch additions
   useEffect(() => {
@@ -130,16 +166,31 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         const includedToppings = (initialItem.additions || []).filter(a => TOPPINGS.includes(a));
         setSelectedIncludedToppings(includedToppings);
         
-        // Parse actual additions (ignoring sauces and included toppings for simplicity)
+        // Reconstruct selectedAdditions using the IDs and names from the item
+        // If additionIds exists, use it, otherwise fallback to names
         const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a) && !TOPPINGS.includes(a));
-        // We'd need prices here... for now just names
-        setSelectedAdditions(otherAdds.map(name => ({name, price: 0})));
+        
+        if (initialItem.additionIds && initialItem.additionIds.length > 0) {
+          const mapped = initialItem.additionIds.map(id => {
+            const prod = availableAdditions.find(p => p.id === id);
+            return prod ? { id: prod.id, name: prod.name, price: prod.variants?.[0]?.price || 0 } : null;
+          }).filter(Boolean) as {id: string, name: string, price: number}[];
+          setSelectedAdditions(mapped);
+        } else {
+          // Fallback if no IDs (legacy items)
+          const mapped = otherAdds.map(name => {
+            const prod = availableAdditions.find(p => p.name === name);
+            return prod ? { id: prod.id, name: prod.name, price: prod.variants?.[0]?.price || 0 } : { id: '', name, price: 0 };
+          });
+          setSelectedAdditions(mapped);
+        }
+        
         setNotes(initialItem.notes || '');
 
         setQuantity(initialItem.quantity);
-        setStep(1);
+        setStep(initialStep || 1);
       } else {
-        setStep(1);
+        setStep(initialStep || 1);
         // Auto-select if only 1 variant
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
@@ -198,15 +249,33 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     } else {
       // Build cart item
       const variantLabel = selectedVariant?.label || '';
-      const additionPrices = selectedAdditions.reduce((sum, a) => sum + a.price, 0);
-      const unitPrice = (selectedVariant?.price || product.basePrice || 0) + additionPrices;
+      
+      // Calculate prices excluding manual fruit and sauce additions (will be handled by extra prices)
+      const otherAdditionsPrices = selectedAdditions
+        .filter(a => !a.name.toLowerCase().includes('fruta') && !a.name.toLowerCase().includes('salsa'))
+        .reduce((sum, a) => sum + a.price, 0);
+        
+      const unitPrice = (selectedVariant?.price || product.basePrice || 0) + 
+                       otherAdditionsPrices + 
+                       extraFruitsPrice + 
+                       extraSaucesPrice;
       
       // Combine additions names
       const allAdditionsNames = [
         ...selectedSauces,
         ...selectedIncludedToppings,
-        ...selectedAdditions.map(a => a.name)
+        ...selectedAdditions.filter(a => !a.name.toLowerCase().includes('fruta')).map(a => a.name)
       ];
+
+      // Addition IDs for inventory
+      const allAdditionIds = [
+        ...selectedAdditions.map(a => a.id)
+      ];
+
+      // Add "virtual" fruit additions to the list if they exist
+      if (extraFruitsCount > 0) {
+        allAdditionsNames.push(`Adición Fruta (x${extraFruitsCount})`);
+      }
 
       // Format flavors with counts
       const flavorCounts = selectedFlavors.reduce((acc, f) => {
@@ -236,6 +305,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         flavors: selectedFlavors,
         fruitChoices: selectedFrutas,
         additions: allAdditionsNames,
+        additionIds: allAdditionIds,
         notes,
         quantity,
         unitPrice,
@@ -284,9 +354,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const toggleAddition = (add: Product) => {
     const addPrice = add.variants?.[0]?.price || 0;
     setSelectedAdditions(prev => {
-      const exists = prev.find(a => a.name === add.name);
-      if (exists) return prev.filter(a => a.name !== add.name);
-      return [...prev, { name: add.name, price: addPrice }];
+      const exists = prev.find(a => a.id === add.id);
+      if (exists) return prev.filter(a => a.id !== add.id);
+      return [...prev, { id: add.id, name: add.name, price: addPrice }];
     });
   };
 
@@ -594,8 +664,23 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'fruits' && (
-                    <div className="flex flex-wrap gap-2">
-                      {fruitOptions.map(fruta => (
+                    <div className="flex flex-col gap-4">
+                      {extraFruitsCount > 0 && (
+                        <div className="bg-primary/10 border border-primary/20 p-3 rounded-2xl flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
+                            <Plus className="w-4 h-4 stroke-[3]" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-primary uppercase tracking-wider">Costo Adicional</p>
+                            <p className="text-[11px] font-bold text-on-surface/70 leading-tight">
+                              Has seleccionado {extraFruitsCount} {extraFruitsCount === 1 ? 'fruta adicional' : 'frutas adicionales'}. 
+                              (+{formatCurrency(extraFruitsPrice)})
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        {fruitOptions.map(fruta => (
                         <button
                           key={fruta}
                           onClick={() => toggleFruta(fruta)}
@@ -617,6 +702,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                           )}
                         </button>
                       ))}
+                      </div>
                     </div>
                   )}
 
@@ -716,7 +802,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 <div className="text-right">
                   <span className="text-[8px] font-black text-secondary uppercase tracking-[0.2em] block mb-0.5">Precio Total</span>
                   <p className="text-2xl font-brand font-black text-on-surface leading-tight">
-                    {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + selectedAdditions.reduce((s, a) => s + a.price, 0)) * quantity)}
+                    {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + 
+                      selectedAdditions.filter(a => !a.name.toLowerCase().includes('fruta')).reduce((s, a) => s + a.price, 0) + 
+                      extraFruitsPrice) * quantity)}
                   </p>
                 </div>
               </div>

@@ -14,7 +14,7 @@ import { deductInventory } from '../utils/inventory';
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onEdit?: (item: CartItem) => void;
+  onEdit?: (item: CartItem, step?: number) => void;
 }
 
 export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps) {
@@ -138,14 +138,22 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                           </span>
                         ))}
                         {(item.fruitChoices || []).map((f, i) => (
-                          <span key={i} className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10">
+                          <button 
+                            key={i} 
+                            onClick={() => onEdit?.(item, 4)} // Try to land on fruits
+                            className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 hover:bg-success/10 transition-colors"
+                          >
                             {f}
-                          </span>
+                          </button>
                         ))}
                         {(item.additions || []).map((a, i) => (
-                          <span key={i} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
+                          <button 
+                            key={i} 
+                            onClick={() => onEdit?.(item, 3)} // Try to land on additions
+                            className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10 hover:bg-orange-500/10 transition-colors"
+                          >
                             +{a}
-                          </span>
+                          </button>
                         ))}
                         {item.notes && (
                           <span className="text-[10px] bg-red-500/5 text-red-600 px-1.5 py-0.5 rounded-md font-black border border-red-500/10">

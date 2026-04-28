@@ -45,11 +45,13 @@ export default function POS() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [detailsProduct, setDetailsProduct] = useState<Product | null>(null);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
+  const [editingStep, setEditingStep] = useState<number | undefined>(undefined);
 
-  const handleEdit = (item: CartItem) => {
+  const handleEdit = (item: CartItem, step?: number) => {
     const product = products.find(p => p.id === item.productId);
     if (product) {
       setEditingItem(item);
+      setEditingStep(step);
       setSelectedProduct(product);
       setIsCartOpen(false);
     } else {
@@ -83,11 +85,20 @@ export default function POS() {
           ...doc.data()
         })) as Product[];
         
-        // Sort by salesCount (desc) then by name
+        // Sort: Adiciones last, then by salesCount (desc), then by name
         prods.sort((a, b) => {
+          // 1. Adiciones always go last
+          const isAddA = a.category === 'adiciones';
+          const isAddB = b.category === 'adiciones';
+          if (isAddA && !isAddB) return 1;
+          if (!isAddA && isAddB) return -1;
+          
+          // 2. Then sort by salesCount (desc)
           const salesA = a.salesCount || 0;
           const salesB = b.salesCount || 0;
           if (salesB !== salesA) return salesB - salesA;
+          
+          // 3. Finally by name
           return a.name.localeCompare(b.name);
         });
         
@@ -140,9 +151,11 @@ export default function POS() {
             isOpen={!!selectedProduct} 
             product={selectedProduct} 
             initialItem={editingItem}
+            initialStep={editingStep}
             onClose={() => {
               setSelectedProduct(null);
               setEditingItem(null);
+              setEditingStep(undefined);
             }} 
             onAdd={handleAddItem}
           />
@@ -418,7 +431,12 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
   const cartItems = carts[activeTable]?.items.filter(item => item.productId === product.id) || [];
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   
-  const isComplex = (product.variants && product.variants.length > 1) || product.requiresFlavors || product.requiresFruitChoice;
+  const isComplex = (product.variants && product.variants.length > 1) || 
+                    product.requiresFlavors || 
+                    product.requiresFruitChoice || 
+                    product.requiresSauces || 
+                    product.requiresToppings || 
+                    product.requiresSalpiconBase;
   const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
   const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);
 
@@ -465,8 +483,9 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
       className={cn(
         (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
         "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-        totalQuantity > 0 ? "ring-4 ring-primary/10 shadow-md border-primary/20" : 
-        product.cardColor ? "border-outline/20 shadow-sm" : "border-outline/10 shadow-sm"
+        totalQuantity > 0 
+          ? "ring-4 ring-primary/30 shadow-lg border-primary/40 scale-[1.02] bg-primary/[0.03] z-10" 
+          : product.cardColor ? "border-outline/20 shadow-sm" : "border-outline/10 shadow-sm"
       )}
       style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
     >
@@ -505,7 +524,10 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
             {product.category}
           </span>
           {totalQuantity > 0 && (
-             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+             <div className="relative flex items-center justify-center w-3 h-3">
+               <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-60" />
+               <div className="relative w-2 h-2 rounded-full bg-primary shadow-sm" />
+             </div>
           )}
         </div>
 

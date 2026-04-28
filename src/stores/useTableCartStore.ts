@@ -11,6 +11,8 @@ export interface CartItem {
   flavors: string[];
   fruitChoices: string[];
   additions: string[];
+  additionIds?: string[];
+  notes?: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -31,6 +33,7 @@ interface TableCartState {
   initialize: () => () => void;
   setActiveTable: (table: string) => void;
   addItem: (table: string, item: CartItem) => Promise<void>;
+  updateItem: (table: string, itemId: string, updates: Partial<CartItem>) => Promise<void>;
   updateQuantity: (table: string, itemId: string, delta: number) => Promise<void>;
   removeItem: (table: string, itemId: string) => Promise<void>;
   clearCart: (table: string) => Promise<void>;
@@ -113,6 +116,24 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
 
     const docRef = doc(db, 'tables', table);
     await setDoc(docRef, { currentCart: newCart }, { merge: true });
+  },
+
+  updateItem: async (table, itemId, updates) => {
+    const tableCart = get().carts[table];
+    if (!tableCart) return;
+
+    const newItems = tableCart.items.map(item => {
+      if (item.id === itemId) {
+        const updated = { ...item, ...updates };
+        // Recalculate subtotal if price or quantity changed
+        updated.subtotal = updated.unitPrice * updated.quantity;
+        return updated;
+      }
+      return item;
+    });
+
+    const newCart = { ...tableCart, items: newItems };
+    await setDoc(doc(db, 'tables', table), { currentCart: newCart }, { merge: true });
   },
 
   updateQuantity: async (table, itemId, delta) => {

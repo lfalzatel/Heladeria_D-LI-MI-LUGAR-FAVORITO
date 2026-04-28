@@ -50,6 +50,7 @@ export interface CartItem {
   flavors: string[];
   fruitChoices: string[];
   additions: string[];
+  additionIds?: string[];
   quantity: number;
   unitPrice: number;
   subtotal: number;

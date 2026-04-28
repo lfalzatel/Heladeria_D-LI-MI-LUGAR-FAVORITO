@@ -96,7 +96,7 @@
         "barquillo"
       ],
       "requiresFlavors": true,
-      "requiresFruitChoice": false,
+      "requiresFruitChoice": true,
       "isActive": true,
       "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
       "variants": [
@@ -137,7 +137,7 @@
         "queso"
       ],
       "requiresFlavors": true,
-      "requiresFruitChoice": false,
+      "requiresFruitChoice": true,
       "requiresSalpiconBase": true,
       "isActive": true,
       "imageUrl": "/Images/products/copa-salpicon.jpeg",
@@ -161,7 +161,7 @@
         "barquillo"
       ],
       "requiresFlavors": true,
-      "requiresFruitChoice": false,
+      "requiresFruitChoice": true,
       "isActive": true,
       "imageUrl": "/Images/products/vaso-salpicon.jpeg",
       "variants": [
@@ -315,7 +315,7 @@
       "category": "adiciones",
       "description": "Porción extra de fruta fresca de temporada.",
       "requiresFlavors": false,
-      "requiresFruitChoice": false,
+      "requiresFruitChoice": true,
       "isActive": true,
       "imageUrl": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=500",
       "variants": [
@@ -381,6 +381,7 @@
       "description": "Salsa dulce para bañar tu helado o ensalada. Pregunta por el sabor disponible.",
       "requiresFlavors": false,
       "requiresFruitChoice": false,
+      "requiresSauces": true,
       "isActive": true,
       "imageUrl": "/Images/products/adicion-salsa.jpg",
       "variants": [
