@@ -133,7 +133,7 @@ export default function Dashboard() {
         <AppHeader showBell />
         <PageTitle
           title={`Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`}
-          subtitle={profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Boutique hoy"}
+          subtitle={profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Heladería hoy"}
         />
 
         <div className="p-4 sm:p-8 max-w-7xl w-full flex flex-col gap-6 sm:gap-8 pb-32 relative">

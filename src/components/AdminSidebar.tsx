@@ -95,8 +95,8 @@ export default function AdminSidebar() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline font-bold text-white text-base leading-none tracking-tight">D'LI Boutique</span>
-            <span className="font-brand text-primary italic text-xs mt-1">
+            <span className="font-headline font-bold text-white text-base leading-none tracking-tight">D'LI Heladería</span>
+            <span className="font-brand text-xs text-white/70 italic leading-none mt-1">
               {isCliente ? 'Portal Clientes' : 'Panel de Control'}
             </span>
           </div>

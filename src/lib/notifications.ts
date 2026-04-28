@@ -167,7 +167,7 @@ export async function listenToForegroundMessages() {
       if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(swReg => {
           swReg.showNotification(
-            payload.notification?.title || "D'LI Boutique", {
+            payload.notification?.title || "D'LI Heladería", {
               body: payload.notification?.body,
               icon: '/pwa-192x192.png',
               badge: '/pwa-192x192.png',

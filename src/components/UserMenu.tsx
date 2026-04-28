@@ -167,7 +167,7 @@ export default function UserMenu() {
     // Try native share first, fallback to WhatsApp
     if (navigator.share) {
       try {
-        await navigator.share({ title: "D'LI Boutique", text: "¡Descubre la app de D'LI Heladería!", url: appUrl });
+        await navigator.share({ title: "D'LI Heladería", text: "¡Descubre la app de D'LI Heladería!", url: appUrl });
         return;
       } catch {}
     }

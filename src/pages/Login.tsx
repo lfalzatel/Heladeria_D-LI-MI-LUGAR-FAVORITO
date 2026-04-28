@@ -244,8 +244,8 @@ export default function Login() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline font-bold text-on-surface text-2xl leading-none tracking-tight">D'LI Boutique</span>
-            <span className="font-brand text-primary italic text-lg mt-0.5">Mi Lugar Favorito</span>
+            <span className="font-headline font-bold text-on-surface text-2xl leading-none tracking-tight">D'LI Heladería</span>
+            <span className="font-brand text-sm text-primary italic leading-none mt-1">Mi Lugar Favorito</span>
           </div>
         </div>
 

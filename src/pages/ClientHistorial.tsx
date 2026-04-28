@@ -101,7 +101,7 @@ export default function ClientHistorial() {
         // Staff respondió al cliente — notificar al cliente
         await notifyUser(
           selectedSaleDetail.clienteId,
-          "💬 Nuevo mensaje de la Boutique",
+          "💬 Nuevo mensaje de la Heladería",
           `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { type: 'chat_message', pedidoId: selectedSaleDetail.id }
         );

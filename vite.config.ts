@@ -17,7 +17,7 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: "D'LI Boutique — Mi Lugar Favorito",
+        name: "D'LI Heladería — Mi Lugar Favorito",
         short_name: "D'LI",
         description: "Gestión integral para la heladería D'LI",
         theme_color: '#b30069',

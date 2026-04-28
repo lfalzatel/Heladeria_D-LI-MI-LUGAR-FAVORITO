@@ -9,7 +9,14 @@
     <meta name="apple-mobile-web-app-title" content="D'LI" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <title>D'LI Boutique — Mi Lugar Favorito</title>
+    <title>D'LI Heladería — Mi Lugar Favorito</title>
+    <script>
+      window.deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPrompt = e;
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

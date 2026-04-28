@@ -276,7 +276,7 @@ export default function NotificationBell() {
       if (isStaff) {
         await notifyUser(
           selectedPedido.clienteId,
-          "💬 Nuevo mensaje de la Boutique",
+          "💬 Nuevo mensaje de la Heladería",
           `Sobre tu pedido #${selectedPedido.id.slice(-6).toUpperCase()}: "${messageText}"`,
           { type: 'chat_message', pedidoId: selectedPedido.id }
         );

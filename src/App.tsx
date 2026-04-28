@@ -97,8 +97,8 @@ export default function App() {
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-surface overflow-hidden"
           >
             <div className="absolute inset-0 z-0 opacity-10" style={{
-              backgroundImage: "url('https://picsum.photos/seed/dli-boutique/1920/1080?blur=10')",
-              backgroundSize: 'cover'
+              backgroundImage: "url('https://picsum.photos/seed/dli-heladeria/1920/1080?blur=10')",
+              backgroundSize: 'cover',
             }}></div>
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
@@ -116,12 +116,12 @@ export default function App() {
                 <div className="w-32 h-32 flex items-center justify-center flex-shrink-0 relative bg-surface rounded-full overflow-hidden shadow-2xl p-1 z-10">
                   <img 
                     src="/Background.png" 
-                    alt="D'LI Boutique" 
+                    alt="D'LI Heladería" 
                     className="w-full h-full object-cover rounded-full"
                   />
                 </div>
               </div>
-              <h2 className="font-headline font-bold text-3xl text-on-surface mb-2 tracking-tight">D'LI Boutique</h2>
+              <h2 className="font-headline font-bold text-3xl text-on-surface mb-2 tracking-tight">D'LI Heladería</h2>
               <p className="font-brand text-xl text-primary italic mb-8">Mi Lugar Favorito</p>
               
               <div className="w-48 h-1.5 bg-surface-container-high rounded-full overflow-hidden mx-auto shadow-inner">
