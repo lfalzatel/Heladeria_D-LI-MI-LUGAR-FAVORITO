@@ -5,6 +5,8 @@ import { motion } from 'motion/react';
 import { seedDatabase } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { useNavigate } from 'react-router-dom';
+import { collection, getDocs, updateDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Seed() {
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,43 @@ export default function Seed() {
     } catch (error: any) {
       console.error(error);
       toast.error('Error al sincronizar imágenes: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateYields = async () => {
+    setLoading(true);
+    try {
+      const yields = {
+        'Mango': 'Mini: 38p / P: 10p / M: 8p / G: 5p',
+        'Papaya': 'Mini: 30p / P: 8p / M: 6p / G: 4p',
+        'Fresa': 'Mini: 47p / P: 26p / M: 20p / G: 14p',
+        'Uva': '21 porciones (todos los tamaños)',
+        'Durazno': 'Mini: 20p / P: 12p / M: 8p',
+        'Banano': 'Mini: 4p / P: 2p / M: 3/4 / G: 1p',
+        'Queso': 'Mini: 18p / P: 13p / M: 10p / G: 8p',
+        'Manzana': 'P: 6p / M: 5p / G: 3p',
+        'Crema ensalada de frutas': 'Mini: 5p / P: 3p / M: 3.5p / G: 2p'
+      };
+
+      const snap = await getDocs(collection(db, 'supplies'));
+      let count = 0;
+      
+      for (const d of snap.docs) {
+        const name = d.data().name || '';
+        const match = Object.keys(yields).find(k => name.toLowerCase().includes(k.toLowerCase()));
+        if (match) {
+          await updateDoc(d.ref, { yieldDetails: yields[match as keyof typeof yields] });
+          count++;
+        }
+      }
+
+      toast.success(`¡Se actualizaron ${count} insumos con sus notas de rendimiento!`);
+      setDone(true);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -92,6 +131,14 @@ export default function Seed() {
               className="w-full py-5 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
             >
               {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Sincronizar Solo Imágenes'}
+            </button>
+
+            <button 
+              onClick={handleUpdateYields}
+              disabled={loading}
+              className="w-full py-5 rounded-2xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Cargar Notas de Rendimiento'}
             </button>
           </div>
         )}

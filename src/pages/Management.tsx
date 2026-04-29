@@ -74,6 +74,7 @@ interface Supply {
   price?: number;
   portionsPerUnit?: number;
   costPerUnit?: number;
+  yieldDetails?: string;
 }
 
 interface PurchaseItem extends Partial<Supply> {
@@ -689,6 +690,16 @@ export default function Management() {
                             </button>
                           </div>
                           <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
+                          
+                          {s.yieldDetails && (
+                            <div className="mt-2 mb-4 p-2.5 bg-primary/5 rounded-xl border border-primary/10">
+                              <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
+                              <p className="text-[10px] font-bold text-on-surface leading-tight italic">
+                                ✨ {s.yieldDetails}
+                              </p>
+                            </div>
+                          )}
+
                           <div className="flex border-t border-outline/10 pt-4">
                             <div className="flex-1">
                               <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>

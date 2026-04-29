@@ -21,6 +21,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
   const [unit, setUnit] = useState(UNITS[0]);
   const [minLimit, setMinLimit] = useState<number>(5);
   const [currentStock, setCurrentStock] = useState<number>(0);
+  const [yieldDetails, setYieldDetails] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -35,12 +36,14 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         }
         setMinLimit(supplyToEdit.minLimit ?? supplyToEdit.stockMinimum ?? 5);
         setCurrentStock(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0);
+        setYieldDetails(supplyToEdit.yieldDetails || '');
       } else {
         setName('');
         setCategory(CATEGORIES[0]);
         setUnit(UNITS[0]);
         setMinLimit(5);
         setCurrentStock(0);
+        setYieldDetails('');
       }
     }
   }, [isOpen, supplyToEdit]);
@@ -58,6 +61,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         unit, // we are mapping this to the UI
         minLimit,
         currentStock,
+        yieldDetails,
         // Fallbacks for older structure compatibility
         stockMinimum: minLimit,
         stockQuantity: currentStock,
@@ -136,8 +140,21 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
               >
-                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Rendimiento por Porciones (Opcional)</label>
+              <textarea
+                placeholder="Ej: 6p Pequeña / 5p Mediana / 3p Grande"
+                value={yieldDetails}
+                onChange={(e) => setYieldDetails(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-3 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-sm resize-none"
+              />
+              <p className="text-[9px] text-secondary/60 font-bold px-1 italic">
+                Usa esto para saber cuántas porciones salen de 1 {unit || 'unidad'}.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
