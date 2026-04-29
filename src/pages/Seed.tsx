@@ -5,8 +5,9 @@ import { motion } from 'motion/react';
 import { seedDatabase } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { serverTimestamp } from 'firebase/firestore';
 
 export default function Seed() {
   const [loading, setLoading] = useState(false);
@@ -78,6 +79,54 @@ export default function Seed() {
     }
   };
 
+  const handleAddMissingSupplies = async () => {
+    setLoading(true);
+    try {
+      const masterSupplies = [
+        { name: "Papaya",                   category: "Frutas",         unit: "Kilo",    currentStock: 5,  minLimit: 1, yieldDetails: 'Mini: 30p / P: 8p / M: 6p / G: 4p' },
+        { name: "Banano",                   category: "Frutas",         unit: "Unidad",  currentStock: 20, minLimit: 5, yieldDetails: 'Mini: 4p / P: 2p / M: 3/4 / G: 1p' },
+        { name: "Manzana",                  category: "Frutas",         unit: "Unidad",  currentStock: 10, minLimit: 2, yieldDetails: 'P: 6p / M: 5p / G: 3p' },
+        { name: "Uva",                      category: "Frutas",         unit: "500 gr",  currentStock: 5,  minLimit: 1, yieldDetails: '21 porciones (todos los tamaños)' },
+        { name: "Kiwi",                     category: "Frutas",         unit: "Kilo",    currentStock: 2,  minLimit: 0.5 },
+        { name: "Chantilly",                category: "Lácteos",        unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Salsa Mora",               category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Salsa Chocolate",          category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Salsa Arequipe",           category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Barquillos",               category: "Galletas",       unit: "Caja",    currentStock: 10, minLimit: 2 },
+        { name: "Vasos 10/12 ONZ",           category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Cucharas",                 category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 },
+        { name: "Servilletas",              category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 }
+      ];
+
+      const snap = await getDocs(collection(db, 'supplies'));
+      const existingNames = snap.docs.map(d => (d.data().name || '').toLowerCase());
+      
+      let addedCount = 0;
+      for (const s of masterSupplies) {
+        if (!existingNames.includes(s.name.toLowerCase())) {
+          const newDocRef = doc(collection(db, 'supplies'));
+          await setDoc(newDocRef, {
+            ...s,
+            updatedAt: serverTimestamp()
+          });
+          addedCount++;
+        }
+      }
+
+      if (addedCount > 0) {
+        toast.success(`¡Se añadieron ${addedCount} insumos faltantes correctamente!`);
+      } else {
+        toast.info('Todos los insumos ya existen en el sistema.');
+      }
+      setDone(true);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-surface">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-outline">
@@ -136,9 +185,17 @@ export default function Seed() {
             <button 
               onClick={handleUpdateYields}
               disabled={loading}
-              className="w-full py-5 rounded-2xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              className="w-full py-4 rounded-2xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Cargar Notas de Rendimiento'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Actualizar Rendimientos'}
+            </button>
+
+            <button 
+              onClick={handleAddMissingSupplies}
+              disabled={loading}
+              className="w-full py-4 rounded-2xl bg-success/10 border-2 border-success text-success font-bold hover:bg-success/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Añadir Insumos Faltantes'}
             </button>
           </div>
         )}

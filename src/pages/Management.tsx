@@ -417,6 +417,64 @@ export default function Management() {
     }
   };
 
+  const handleAddMissingSupplies = async () => {
+    setIsSyncing(true);
+    try {
+      const masterSupplies = [
+        { name: "Papaya",                   category: "Frutas",         unit: "Kilo",    currentStock: 5,  minLimit: 1, yieldDetails: 'Mini: 30p / P: 8p / M: 6p / G: 4p' },
+        { name: "Banano",                   category: "Frutas",         unit: "Unidad",  currentStock: 20, minLimit: 5, yieldDetails: 'Mini: 4p / P: 2p / M: 3/4 / G: 1p' },
+        { name: "Manzana",                  category: "Frutas",         unit: "Unidad",  currentStock: 10, minLimit: 2, yieldDetails: 'P: 6p / M: 5p / G: 3p' },
+        { name: "Uva",                      category: "Frutas",         unit: "500 gr",  currentStock: 5,  minLimit: 1, yieldDetails: '21 porciones (todos los tamaños)' },
+        { name: "Kiwi",                     category: "Frutas",         unit: "Kilo",    currentStock: 2,  minLimit: 0.5 },
+        { name: "Chantilly",                category: "Lácteos",        unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Salsa Mora",               category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Salsa Chocolate",          category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Salsa Arequipe",           category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
+        { name: "Barquillos",               category: "Galletas",       unit: "Caja",    currentStock: 10, minLimit: 2 },
+        { name: "Vasos 7 ONZ",              category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Vasos 10 ONZ",             category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Vasos 13 ONZ",             category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Vasos 16 ONZ",             category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Tapas vasos 7 ONZ",        category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Tapas vasos 10 ONZ",       category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Tapas vasos 13-16 ONZ",    category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Recipiente oblea cuchareable", category: "Desechables", unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Tapa oblea cuchareable",   category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Desechable ensalada mini", category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Desechable ensalada pequeña", category: "Desechables", unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Desechable ensalada mediana-grande", category: "Desechables", unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Cucharas",                 category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 },
+        { name: "Servilletas",              category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 }
+      ];
+
+      const snap = await getDocs(collection(db, 'supplies'));
+      const existingNames = snap.docs.map(d => (d.data().name || '').toLowerCase());
+      
+      let addedCount = 0;
+      for (const s of masterSupplies) {
+        if (!existingNames.includes(s.name.toLowerCase())) {
+          await addDoc(collection(db, 'supplies'), {
+            ...s,
+            updatedAt: serverTimestamp()
+          });
+          addedCount++;
+        }
+      }
+
+      if (addedCount > 0) {
+        toast.success(`¡Se añadieron ${addedCount} insumos faltantes correctamente!`);
+      } else {
+        toast.info('Todos los insumos ya existen en el sistema.');
+      }
+      setIsSyncModalOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error: ' + error.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // ── Derived values ────────────────────────────────────────────────────────
   const filtered = purchases.filter((p) => isInPeriod(p.createdAt, period));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
@@ -449,28 +507,32 @@ export default function Management() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pr-4 sm:pr-8 bg-surface-container-lowest border-b border-outline/10">
           <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
           <div className="flex items-center gap-2 px-4 pb-4 md:pb-0 md:mt-0">
-            <button
-              onClick={async () => {
-                const { notifyAdmins } = await import('../lib/notifications');
-                toast.promise(
-                  notifyAdmins('🔔 Prueba de Sistema', `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
-                  { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
-                );
-              }}
-              className="flex-1 md:flex-none px-4 py-2.5 bg-surface-container text-on-surface font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
-            >
-              <BellRing className="w-4 h-4 text-primary" />
-              <span className="hidden sm:inline">Probar Notificación</span>
-              <span className="sm:hidden">Test</span>
-            </button>
-            <button
-              onClick={() => setIsSyncModalOpen(true)}
-              className="flex-1 md:flex-none px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
-            >
-              <Database className="w-4 h-4" />
-              <span className="hidden sm:inline">Sincronizar</span>
-              <span className="sm:hidden">Sinc.</span>
-            </button>
+            {currentUser?.role === 'admin' && (
+              <>
+                <button
+                  onClick={async () => {
+                    const { notifyAdmins } = await import('../lib/notifications');
+                    toast.promise(
+                      notifyAdmins('🔔 Prueba de Sistema', `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
+                      { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
+                    );
+                  }}
+                  className="flex-1 md:flex-none px-4 py-2.5 bg-surface-container text-on-surface font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
+                >
+                  <BellRing className="w-4 h-4 text-primary" />
+                  <span className="hidden sm:inline">Probar Notificación</span>
+                  <span className="sm:hidden">Test</span>
+                </button>
+                <button
+                  onClick={() => setIsSyncModalOpen(true)}
+                  className="flex-1 md:flex-none px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
+                >
+                  <Database className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sincronizar</span>
+                  <span className="sm:hidden">Sinc.</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -721,31 +783,36 @@ export default function Management() {
                   {/* ── Sub-tab: SABORES ──────────────────────────────────── */}
                   {inventarioSubTab === 'sabores' && (
                     <motion.div key="sabores" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                         {availableFlavors.map((flavor) => (
                           <motion.div
                             layout
                             key={flavor.id}
-                            className={cn('relative bg-white rounded-[2rem] p-6 shadow-sm border transition-all', flavor.isAvailable ? 'border-outline/50 hover:shadow-md' : 'border-outline/20 opacity-70 grayscale-[0.5]')}
+                            onClick={() => toggleFlavorStatus(flavor.id, flavor.isAvailable)}
+                            className={cn(
+                              'relative bg-white rounded-2xl p-3 shadow-sm border transition-all cursor-pointer flex items-center justify-between gap-3 group active:scale-95 select-none',
+                              flavor.isAvailable 
+                                ? 'border-outline/50 hover:border-primary/40 hover:shadow-md' 
+                                : 'border-outline/20 opacity-60 bg-surface-container/30 grayscale-[0.5]'
+                            )}
                           >
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-surface-container-high shrink-0 text-primary">
-                                <IceCream className="w-6 h-6" />
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className={cn(
+                                'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all group-hover:scale-110',
+                                flavor.isAvailable ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
+                              )}>
+                                <IceCream className="w-4 h-4" />
                               </div>
-                              <button
-                                onClick={() => toggleFlavorStatus(flavor.id, flavor.isAvailable)}
-                                className={cn('px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95',
-                                  flavor.isAvailable ? 'bg-surface-container text-secondary hover:bg-error/10 hover:text-error' : 'bg-surface-container text-secondary hover:bg-success/10 hover:text-success')}
-                              >
-                                {flavor.isAvailable ? 'Desactivar' : 'Activar'}
-                              </button>
+                              <h3 className="font-brand font-black text-sm text-on-surface leading-tight tracking-tight">{flavor.name}</h3>
                             </div>
-                            <h2 className="font-brand font-black text-2xl text-on-surface mb-2 tracking-tight">{flavor.name}</h2>
-                            <div className="flex flex-col pt-4 border-t border-outline/30 mt-4">
-                              <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado</span>
-                              <span className={cn('text-[10px] font-bold', flavor.isAvailable ? 'text-success' : 'text-slate-500')}>
-                                {flavor.isAvailable ? '• Disponible' : '• Agotado/Oculto'}
-                              </span>
+                            
+                            <div className={cn(
+                              'px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all shrink-0 border',
+                              flavor.isAvailable 
+                                ? 'bg-success/10 text-success border-success/20' 
+                                : 'bg-secondary/5 text-secondary border-outline/10'
+                            )}>
+                              {flavor.isAvailable ? 'ON' : 'OFF'}
                             </div>
                           </motion.div>
                         ))}
@@ -1191,6 +1258,10 @@ export default function Management() {
                   <button onClick={handleFullSeed} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {isSyncing ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
                     Recargar Catálogo Completo
+                  </button>
+                  <button onClick={handleAddMissingSupplies} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
+                    {isSyncing ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Añadir Insumos Faltantes (Seguro)
                   </button>
                 </div>
                 <button onClick={() => setIsSyncModalOpen(false)} disabled={isSyncing} className="w-full mt-6 py-2 text-[10px] font-black text-secondary/40 uppercase tracking-widest hover:text-secondary transition-colors disabled:opacity-0">

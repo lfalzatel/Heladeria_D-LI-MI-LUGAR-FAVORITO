@@ -60,14 +60,22 @@ Para facilitar la lectura de los rendimientos, se utilizan las siguientes abrevi
 
 ---
 
-## 4. Desechables (Operación)
-
 | Insumo | Unidad de Compra | Categoría |
 | :--- | :--- | :--- |
-| **Vasos 7 ONZ** | Paquete | Ensaladas / Salpicón |
-| **Vasos 10/12 ONZ** | Paquete | Salpicón Grande |
-| **Cucharas** | Paquete | General |
-| **Servilletas** | Paquete | General |
+| **Vasos 7 ONZ** | Paquete | Desechables |
+| **Vasos 10 ONZ** | Paquete | Desechables |
+| **Vasos 13 ONZ** | Paquete | Desechables |
+| **Vasos 16 ONZ** | Paquete | Desechables |
+| **Tapas vasos 7 ONZ** | Paquete | Desechables |
+| **Tapas vasos 10 ONZ** | Paquete | Desechables |
+| **Tapas vasos 13-16 ONZ** | Paquete | Desechables |
+| **Recipiente oblea cuchareable** | Paquete | Desechables |
+| **Tapa oblea cuchareable** | Paquete | Desechables |
+| **Desechable ensalada mini** | Paquete | Desechables |
+| **Desechable ensalada pequeña** | Paquete | Desechables |
+| **Desechable ensalada mediana-grande** | Paquete | Desechables |
+| **Cucharas** | Paquete | Desechables |
+| **Servilletas** | Paquete | Desechables |
 | **Bolsas de Basura** | Rollo | Limpieza |
 
 ---
