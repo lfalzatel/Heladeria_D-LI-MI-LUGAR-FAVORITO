@@ -158,11 +158,7 @@ export default function App() {
         } />
 
 
-        <Route path="/admin/inventory" element={
-          user && profile && (profile.role === 'admin' || profile.role === 'propietario') 
-            ? <Inventory /> 
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
+        <Route path="/admin/inventory" element={<Navigate to="/admin/management?tab=inventario" replace />} />
 
         <Route path="/admin/management" element={
           user && profile && (profile.role === 'admin' || profile.role === 'propietario') 

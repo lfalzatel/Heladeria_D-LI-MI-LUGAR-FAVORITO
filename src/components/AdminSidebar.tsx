@@ -71,7 +71,6 @@ export default function AdminSidebar() {
     
     // Common / Management Links
     { to: '/admin/management',icon: <Users className="w-5 h-5" />, label: 'Gestión', show: isAdmin },
-    { to: '/admin/inventory', icon: <ShoppingCart className="w-5 h-5" />, label: 'Menú & Stock', show: isAdmin },
     { to: '/admin/reports',   icon: <BarChart3 className="w-5 h-5" />, label: 'Reportes', show: isAdmin },
     
     // Orders (Everyone)

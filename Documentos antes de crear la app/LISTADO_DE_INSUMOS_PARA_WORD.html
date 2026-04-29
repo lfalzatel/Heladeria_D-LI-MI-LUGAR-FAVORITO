@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 40px auto; }
+        h1 { color: #e91e63; border-bottom: 2px solid #e91e63; padding-bottom: 10px; }
+        h2 { color: #333; background: #f8f9fa; padding: 10px; border-left: 5px solid #e91e63; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .highlight { font-weight: bold; color: #e91e63; }
+        .note { font-style: italic; color: #666; font-size: 0.9em; }
+        .conventions { background: #fff5f8; border: 1px solid #ffd1df; padding: 15px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Listado Maestro de Insumos</h1>
+    <p><strong>Heladería D-LI MI LUGAR FAVORITO</strong></p>
+    
+    <p>Este listado consolida todos los insumos necesarios para la operación, basados en la <strong>Carta Técnica</strong> y la <strong>Ficha Técnica</strong>.</p>
+
+    <div class="conventions">
+        <strong>📋 Convenciones de Tamaño:</strong>
+        <ul>
+            <li><strong>Mini:</strong> Tamaño Mini</li>
+            <li><strong>P:</strong> Tamaño Pequeña</li>
+            <li><strong>M:</strong> Tamaño Mediana</li>
+            <li><strong>G:</strong> Tamaño Grande</li>
+            <li><strong>p:</strong> Porciones (ej: 10p = 10 porciones)</li>
+        </ul>
+    </div>
+
+    <h2>1. Frutas (Perecederos)</h2>
+    <p class="note">Estos insumos requieren seguimiento de rendimiento por porciones.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Insumo</th>
+                <th>Unidad de Compra</th>
+                <th>Categoría</th>
+                <th>Notas de Rendimiento</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><span class="highlight">Mango</span></td><td>Kilo</td><td>Frutas</td><td>38p Mini / 10p P / 8p M / 5p G</td></tr>
+            <tr><td><span class="highlight">Papaya</span></td><td>Kilo</td><td>Frutas</td><td>30p Mini / 8p P / 6p M / 4p G</td></tr>
+            <tr><td><span class="highlight">Fresa</span></td><td>Kilo</td><td>Frutas</td><td>47p Mini / 26p P / 20p M / 14p G</td></tr>
+            <tr><td><span class="highlight">Banano</span></td><td>Unidad</td><td>Frutas</td><td>4p Mini / 2p P / 3/4 M / 1p G</td></tr>
+            <tr><td><span class="highlight">Manzana</span></td><td>Unidad</td><td>Frutas</td><td>6p P / 5p M / 3p G</td></tr>
+            <tr><td><span class="highlight">Uva</span></td><td>500 gr</td><td>Frutas</td><td>21 porciones estándar</td></tr>
+            <tr><td><span class="highlight">Durazno</span></td><td>Lata</td><td>Frutas</td><td>20p Mini / 12p P / 8p M</td></tr>
+            <tr><td><span class="highlight">Kiwi</span></td><td>Kilo</td><td>Frutas</td><td>[POR DEFINIR]</td></tr>
+        </tbody>
+    </table>
+
+    <h2>2. Lácteos y Salsas</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Insumo</th>
+                <th>Unidad de Compra</th>
+                <th>Categoría</th>
+                <th>Uso Principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><span class="highlight">Queso</span></td><td>Bloque (1kg)</td><td>Lácteos</td><td>Ensaladas, Obleas, Copas</td></tr>
+            <tr><td><span class="highlight">Crema de Leche</span></td><td>Litro / Bolsa</td><td>Lácteos</td><td>Ensaladas y Obleas</td></tr>
+            <tr><td><span class="highlight">Lecherita</span></td><td>Pouch / Tarro</td><td>Lácteos</td><td>Salpicón, Ensaladas, Obleas</td></tr>
+            <tr><td><span class="highlight">Arequipe</span></td><td>Kg</td><td>Lácteos</td><td>Copas, Obleas</td></tr>
+            <tr><td><span class="highlight">Chantilly</span></td><td>Spray / Litro</td><td>Lácteos</td><td>Copas, Obleas</td></tr>
+            <tr><td><span class="highlight">Salsa Mora</span></td><td>Litro</td><td>Salsas</td><td>Opción incluida en menú</td></tr>
+            <tr><td><span class="highlight">Salsa Chocolate</span></td><td>Litro</td><td>Salsas</td><td>Opción incluida en menú</td></tr>
+            <tr><td><span class="highlight">Salsa Arequipe</span></td><td>Litro</td><td>Salsas</td><td>Opción incluida en menú</td></tr>
+        </tbody>
+    </table>
+
+    <h2>3. Secos y Toppings</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Insumo</th>
+                <th>Unidad de Compra</th>
+                <th>Categoría</th>
+                <th>Uso Principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><span class="highlight">Maní</span></td><td>Kg / Paquete</td><td>Toppings</td><td>Opción incluida en menú</td></tr>
+            <tr><td><span class="highlight">Bolitas de Colores</span></td><td>Kg / Paquete</td><td>Toppings</td><td>Opción incluida en menú</td></tr>
+            <tr><td><span class="highlight">Chips de Chocolate</span></td><td>Kg / Paquete</td><td>Toppings</td><td>Adición extra</td></tr>
+            <tr><td><span class="highlight">Barquillos</span></td><td>Caja</td><td>Galletas</td><td>Acompañante general</td></tr>
+            <tr><td><span class="highlight">Cucuruchos</span></td><td>Caja</td><td>Galletas</td><td>Copa D'LI / Adición</td></tr>
+            <tr><td><span class="highlight">Oblea Gruesa</span></td><td>Paquete</td><td>Galletas</td><td>Obleas Tradicionales</td></tr>
+        </tbody>
+    </table>
+
+    <p style="margin-top: 50px; font-size: 0.8em; text-align: center; color: #aaa;">Generado automáticamente para Heladería D-LI - 2026</p>
+</body>
+</html>

@@ -64,7 +64,6 @@ import { useFlavorsStore } from '../stores/useFlavorsStore';
 
 type MainTab = 'inventario' | 'equipo' | 'operacion';
 type InventarioSubTab = 'insumos' | 'productos' | 'sabores';
-type OperacionSubTab = 'compras' | 'gastos' | 'mesas';
 
 interface UserProfile {
   uid: string;
@@ -101,7 +100,6 @@ export default function Management() {
 
   const [activeTab, setActiveTab] = useState<MainTab>(initialTab);
   const [inventarioSubTab, setInventarioSubTab] = useState<InventarioSubTab>('insumos');
-  const [operacionSubTab, setOperacionSubTab] = useState<OperacionSubTab>('compras');
 
   const { profile: currentUser } = useAuthStore();
   const { availableFlavors } = useFlavorsStore();
@@ -409,11 +407,11 @@ export default function Management() {
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
       <AdminSidebar />
-      <div className="flex-1 flex flex-col min-h-screen relative pb-32 overflow-x-hidden min-w-0">
+      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
         <AppHeader showBell />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pr-4 sm:pr-8 bg-surface-container-lowest border-b border-outline/10">
+        <div className="flex justify-between items-start pr-4 sm:pr-6">
           <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
-          <div className="flex items-center gap-2 px-4 pb-4 md:pb-0 md:mt-0">
+          <div className="flex items-center gap-2 mt-6">
             <button
               onClick={async () => {
                 const { notifyAdmins } = await import('../lib/notifications');
@@ -422,7 +420,7 @@ export default function Management() {
                   { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
                 );
               }}
-              className="flex-1 md:flex-none px-4 py-2.5 bg-surface-container text-on-surface font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
+              className="px-4 py-2.5 bg-surface-container text-on-surface font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center gap-2 hover:bg-surface-container-high transition-all shadow-sm"
             >
               <BellRing className="w-4 h-4 text-primary" />
               <span className="hidden sm:inline">Probar Notificación</span>
@@ -430,16 +428,15 @@ export default function Management() {
             </button>
             <button
               onClick={() => setIsSyncModalOpen(true)}
-              className="flex-1 md:flex-none px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
+              className="px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
             >
               <Database className="w-4 h-4" />
               <span className="hidden sm:inline">Sincronizar</span>
-              <span className="sm:hidden">Sinc.</span>
             </button>
           </div>
         </div>
 
-        <main className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex flex-col gap-6 overflow-x-hidden">
+        <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
 
           {/* ── Main Tab Bar (3 tabs) ─────────────────────────────────────── */}
           <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-lg shadow-inner border border-outline/30">
@@ -505,48 +502,130 @@ export default function Management() {
 
                 <AnimatePresence mode="wait">
 
-                  {/* ── Sub-tab: INSUMOS (Solo Catálogo) ────────────────────────── */}
+                  {/* ── Sub-tab: INSUMOS ──────────────────────────────────── */}
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
-                      <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-                        className="w-full py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                        <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo al Catálogo
-                      </button>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {supplies.map((s: any) => {
-                          const isLow = s.currentStock <= s.minLimit;
-                          return (
-                            <div key={s.id} className={cn('bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30', isLow && 'border-orange-200')}>
-                              <div className="flex justify-between items-start mb-3">
-                                <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
-                                  {isLow && '⚠ '}{s.category || 'Varios'}
-                                </span>
-                                <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
-                                  className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
-                                  <Edit3 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
-                              {s.yieldDetails && (
-                                <div className="mt-2 mb-4 p-2.5 bg-primary/5 rounded-xl border border-primary/10">
-                                  <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
-                                  <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
-                                </div>
-                              )}
-                              <div className="flex border-t border-outline/10 pt-4">
-                                <div className="flex-1">
-                                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
-                                  <p className={cn('text-xl font-black', isLow ? 'text-orange-500' : 'text-on-surface')}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
-                                </div>
-                                <div className="flex-1 text-right border-l border-outline/10 pl-4">
-                                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
-                                  <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
-                                </div>
+                      {/* Insumos inner sub-tabs: Compras & Catálogo */}
+                      <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner max-w-sm mx-auto w-full">
+                        <button onClick={() => setInsumosSubTab('compras')}
+                          className={cn('flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all', insumosSubTab === 'compras' ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:bg-surface-container-high')}>
+                          Compras &amp; Historial
+                        </button>
+                        <button onClick={() => setInsumosSubTab('catalogo')}
+                          className={cn('flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all', insumosSubTab === 'catalogo' ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:bg-surface-container-high')}>
+                          Catálogo Base
+                        </button>
+                      </div>
+
+                      {insumosSubTab === 'compras' ? (
+                        <>
+                          {/* Period filter */}
+                          <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
+                            {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map((p) => (
+                              <button key={p} onClick={() => setPeriod(p)}
+                                className={cn('px-4 py-2 rounded-lg transition-all flex-1', period === p ? 'bg-on-surface text-white shadow-sm' : 'text-secondary hover:bg-surface')}>
+                                {PERIOD_LABELS[p]}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Register + Download */}
+                          <div className="flex gap-3">
+                            <button onClick={() => setIsPurchaseOpen(true)}
+                              className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                              <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
+                            </button>
+                            <button onClick={() => toast.info('Exportando informe...')}
+                              className="w-14 h-14 bg-surface-container text-secondary rounded-2xl flex items-center justify-center border border-outline/20 hover:bg-surface hover:text-on-surface transition-all">
+                              <Download className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          {/* Stat Cards */}
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                            <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
+                            <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
+                            <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
+                          </div>
+
+                          {lowStock > 0 && (
+                            <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl">
+                              <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                              <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
+                            </div>
+                          )}
+
+                          <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
+                              <div>
+                                <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
+                                <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
+                            <TrendChart purchases={filtered} period={period} />
+                          </div>
+
+                          <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between px-1">
+                              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad</h3>
+                              <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
+                            </div>
+                            {filtered.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center py-16 opacity-20">
+                                <ShoppingCart className="w-12 h-12 mb-3" />
+                                <p className="text-sm font-bold">Sin compras en este período</p>
+                              </div>
+                            ) : (
+                              filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        /* Catálogo Base */
+                        <>
+                          <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                            className="w-full py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                            <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo Base
+                          </button>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {supplies.map((s: any) => {
+                              const isLow = s.currentStock <= s.minLimit;
+                              return (
+                                <div key={s.id} className={cn('bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30', isLow && 'border-orange-200')}>
+                                  <div className="flex justify-between items-start mb-3">
+                                    <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
+                                      {isLow && '⚠ '}{s.category || 'Varios'}
+                                    </span>
+                                    <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                                      className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
+                                      <Edit3 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
+                                  {s.yieldDetails && (
+                                    <div className="mt-2 mb-4 p-2.5 bg-primary/5 rounded-xl border border-primary/10">
+                                      <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
+                                      <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
+                                    </div>
+                                  )}
+                                  <div className="flex border-t border-outline/10 pt-4">
+                                    <div className="flex-1">
+                                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                                      <p className={cn('text-xl font-black', isLow ? 'text-orange-500' : 'text-on-surface')}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
+                                    </div>
+                                    <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                                      <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                                      <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </motion.div>
                   )}
 
@@ -776,7 +855,7 @@ export default function Management() {
             )}
 
             {/* ═══════════════════════════════════════════════════════════════
-                TAB: OPERACIÓN (Compras, Gastos y Mesas)
+                TAB: OPERACIÓN (placeholder – Fase 3)
             ═══════════════════════════════════════════════════════════════ */}
             {activeTab === 'operacion' && (
               <motion.div
@@ -784,123 +863,13 @@ export default function Management() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className="w-full flex flex-col gap-5 pb-10"
+                className="flex flex-col items-center justify-center py-24 gap-5 opacity-40"
               >
-                {/* Sub-tab bar: Compras | Gastos | Mesas */}
-                <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
-                  {(
-                    [
-                      { id: 'compras', label: 'Compras' },
-                      { id: 'gastos', label: 'Gastos Local' },
-                      { id: 'mesas', label: 'Mesas' },
-                    ] as { id: OperacionSubTab; label: string }[]
-                  ).map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => setOperacionSubTab(sub.id)}
-                      className={cn(
-                        'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
-                        operacionSubTab === sub.id
-                          ? 'bg-white text-primary shadow-sm'
-                          : 'text-secondary hover:bg-surface-container-high'
-                      )}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
+                <Construction className="w-14 h-14 text-secondary" />
+                <div className="text-center">
+                  <p className="font-black text-lg uppercase tracking-widest text-on-surface">Próximamente</p>
+                  <p className="text-xs font-bold text-secondary mt-1">Mesas · Gastos · Recetas</p>
                 </div>
-
-                <AnimatePresence mode="wait">
-                  {/* ── Sub-tab: COMPRAS (Movida de Inventario) ────────────────── */}
-                  {operacionSubTab === 'compras' && (
-                    <motion.div key="op-compras" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
-                      {/* Period filter */}
-                      <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
-                        {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map((p) => (
-                          <button key={p} onClick={() => setPeriod(p)}
-                            className={cn('px-4 py-2 rounded-lg transition-all flex-1', period === p ? 'bg-on-surface text-white shadow-sm' : 'text-secondary hover:bg-surface')}>
-                            {PERIOD_LABELS[p]}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Register + Download */}
-                      <div className="flex gap-3">
-                        <button onClick={() => setIsPurchaseOpen(true)}
-                          className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                          <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
-                        </button>
-                        <button onClick={() => toast.info('Exportando informe de compras...')}
-                          className="w-14 h-14 bg-surface-container text-secondary rounded-2xl flex items-center justify-center border border-outline/20 hover:bg-surface hover:text-on-surface transition-all">
-                          <Download className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      {/* Stat Cards */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                        <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
-                        <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
-                        <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
-                      </div>
-
-                      {lowStock > 0 && (
-                        <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl">
-                          <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                          <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
-                        </div>
-                      )}
-
-                      <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
-                          <div>
-                            <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
-                            <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
-                          </div>
-                        </div>
-                        <TrendChart purchases={filtered} period={period} />
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between px-1">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad Reciente</h3>
-                          <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
-                        </div>
-                        {filtered.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-16 opacity-20">
-                            <ShoppingCart className="w-12 h-12 mb-3" />
-                            <p className="text-sm font-bold">Sin compras en este período</p>
-                          </div>
-                        ) : (
-                          filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* ── Sub-tab: GASTOS (Fase 3) ────────────────────────────────── */}
-                  {operacionSubTab === 'gastos' && (
-                    <motion.div key="op-gastos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-24 gap-5 opacity-40">
-                      <Wallet className="w-14 h-14 text-secondary" />
-                      <div className="text-center">
-                        <p className="font-black text-lg uppercase tracking-widest text-on-surface">Gastos del Local</p>
-                        <p className="text-xs font-bold text-secondary mt-1">Próximamente: Servicios, Arriendo, Papelería...</p>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* ── Sub-tab: MESAS (Fase 3) ─────────────────────────────────── */}
-                  {operacionSubTab === 'mesas' && (
-                    <motion.div key="op-mesas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-24 gap-5 opacity-40">
-                      <Utensils className="w-14 h-14 text-secondary" />
-                      <div className="text-center">
-                        <p className="font-black text-lg uppercase tracking-widest text-on-surface">Gestión de Mesas</p>
-                        <p className="text-xs font-bold text-secondary mt-1">Próximamente: Mapa de mesas y pedidos activos</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             )}
 

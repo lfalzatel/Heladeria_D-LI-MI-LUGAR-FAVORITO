@@ -425,7 +425,7 @@ export default function UserMenu() {
                     icon={<Package className="w-4 h-4" />}
                     label="Catálogo e Inventario"
                     sublabel="Gestionar menú y productos"
-                    onClick={() => navigate('/admin/inventory')}
+                    onClick={() => navigate('/admin/management?tab=inventario')}
                     closeMenu={() => setIsOpen(false)}
                   />
                   <MenuItem
