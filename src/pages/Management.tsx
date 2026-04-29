@@ -59,6 +59,7 @@ import { syncProductImages } from '../services/imageFixService';
 import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
+import RecipeConfigModal from '../components/RecipeConfigModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,8 @@ export default function Management() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+  const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
+  const [productForRecipe, setProductForRecipe] = useState<Product | null>(null);
 
   // ── User History State ───────────────────────────────────────────────────
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<any | null>(null);
@@ -281,6 +284,48 @@ export default function Management() {
     }
   };
 
+  const handleSaveProduct = async (productData: Partial<Product>) => {
+    try {
+      if (productToEdit) {
+        await updateDoc(doc(db, 'products', productToEdit.id), productData);
+        toast.success('Producto actualizado');
+      } else {
+        await addDoc(collection(db, 'products'), {
+          ...productData,
+          salesCount: 0,
+          createdAt: serverTimestamp()
+        });
+        toast.success('Producto creado');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al guardar producto');
+    }
+  };
+
+  const handleSaveRecipe = async (productId: string, recipe: any[], variantLabel?: string) => {
+    try {
+      const productRef = doc(db, 'products', productId);
+      const product = products.find(p => p.id === productId);
+      
+      if (!product) return;
+
+      if (!variantLabel) {
+        // Receta base
+        await updateDoc(productRef, { recipe });
+      } else {
+        // Receta de variante
+        const updatedVariants = (product.variants || []).map(v => 
+          v.label === variantLabel ? { ...v, recipe } : v
+        );
+        await updateDoc(productRef, { variants: updatedVariants });
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   const handleSaveSupply = async (data: Partial<SupplyType>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
@@ -306,16 +351,6 @@ export default function Management() {
       toast.success(`Sabor ${!currentStatus ? 'activado' : 'desactivado'}`);
     } catch {
       toast.error('Error al actualizar estado del sabor');
-    }
-  };
-
-  const handleSaveProduct = async (productData: Partial<Product>) => {
-    if (productToEdit) {
-      await updateDoc(doc(db, 'products', productToEdit.id), { ...productData, updatedAt: serverTimestamp() });
-      toast.success('Producto actualizado exitosamente');
-    } else {
-      await addDoc(collection(db, 'products'), { ...productData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-      toast.success('Producto creado y añadido al catálogo');
     }
   };
 
@@ -640,19 +675,35 @@ export default function Management() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-outline/30">
-                              <div className="flex flex-col">
-                                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado</span>
-                                <span className={cn('text-[10px] font-bold', product.isActive ? 'text-success' : 'text-slate-500')}>
-                                  {product.isActive ? '• Visible' : '• Oculto'}
+                            <div className="flex flex-col gap-3 pt-4 border-t border-outline/30">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado en Menú</span>
+                                <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-md', product.isActive ? 'text-success bg-success/10' : 'text-slate-500 bg-slate-100')}>
+                                  {product.isActive ? 'Visible' : 'Oculto'}
                                 </span>
                               </div>
-                              <button
-                                onClick={() => { setProductToEdit(product); setIsProductModalOpen(true); }}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-surface-container-high rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all cursor-pointer"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" /> Editar
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setProductForRecipe(product);
+                                    setIsRecipeModalOpen(true);
+                                  }}
+                                  className="flex-1 h-10 bg-surface-container text-on-surface rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors border border-outline/10"
+                                >
+                                  <Database className="w-3.5 h-3.5 text-primary" />
+                                  Receta
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setProductToEdit(product);
+                                    setIsProductModalOpen(true);
+                                  }}
+                                  className="flex-1 h-10 bg-on-surface text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  Editar
+                                </button>
+                              </div>
                             </div>
                           </motion.div>
                         ))}
@@ -934,9 +985,25 @@ export default function Management() {
         {isProductModalOpen && (
           <ProductFormModal
             isOpen={isProductModalOpen}
-            onClose={() => setIsProductModalOpen(false)}
+            onClose={() => {
+              setIsProductModalOpen(false);
+              setProductToEdit(null);
+            }}
             productToEdit={productToEdit}
             onSave={handleSaveProduct}
+          />
+        )}
+
+        {isRecipeModalOpen && (
+          <RecipeConfigModal
+            isOpen={isRecipeModalOpen}
+            onClose={() => {
+              setIsRecipeModalOpen(false);
+              setProductForRecipe(null);
+            }}
+            product={products.find(p => p.id === productForRecipe?.id) || productForRecipe}
+            supplies={supplies}
+            onSave={handleSaveRecipe}
           />
         )}
 

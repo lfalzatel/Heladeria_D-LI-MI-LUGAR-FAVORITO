@@ -9,6 +9,13 @@ export interface UserProfile {
   createdAt: any;
 }
 
+export interface RecipeIngredient {
+  supplyId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -24,6 +31,7 @@ export interface Product {
   imageUrl?: string;
   cardColor?: string;
   salesCount?: number;
+  recipe?: RecipeIngredient[];
 }
 
 export interface ProductVariant {
@@ -33,6 +41,7 @@ export interface ProductVariant {
   hasFruit?: boolean;
   hasIceCream?: boolean;
   fruits?: string[];
+  recipe?: RecipeIngredient[];
 }
 
 export interface IceCreamFlavor {

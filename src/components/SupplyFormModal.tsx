@@ -140,6 +140,9 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
               >
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
 
