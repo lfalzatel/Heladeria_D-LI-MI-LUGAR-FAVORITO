@@ -27,6 +27,24 @@ export default function App() {
 
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
+  // ── Force Update Logic ──────────────────────────────────────────────────
+  useEffect(() => {
+    const CURRENT_VERSION = '1.0.5'; // Incrementa esto para forzar recarga en todos los clientes
+    const savedVersion = localStorage.getItem('app_version');
+    if (savedVersion !== CURRENT_VERSION) {
+      localStorage.setItem('app_version', CURRENT_VERSION);
+      // Limpiar cachés básicas y recargar
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.update();
+          }
+        });
+      }
+      window.location.reload();
+    }
+  }, []);
+
   useEffect(() => {
     initialize();
     listenToForegroundMessages();
