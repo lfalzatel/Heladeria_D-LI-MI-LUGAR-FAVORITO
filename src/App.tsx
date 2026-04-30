@@ -164,6 +164,9 @@ export default function App() {
       </AnimatePresence>
 
       <Routes>
+        <Route path="/admin/inventory" element={<Navigate to="/admin/management?tab=inventario" replace />} />
+        <Route path="/admin/supplies" element={<Navigate to="/admin/management?tab=operacion" replace />} />
+
         <Route path="/login" element={user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin'} /> : <Login />} />
         
         {/* Rutas Protegidas con Layout Global */}
@@ -208,7 +211,6 @@ export default function App() {
           } />
         </Route>
 
-        <Route path="/admin/inventory" element={<Navigate to="/admin/management?tab=inventario" replace />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
         <Route path="/" element={<Navigate to={user && profile ? (profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard') : '/login'} />} />
       </Routes>

@@ -22,7 +22,7 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col" style={{ height: 'calc(100dvh - 2rem)' }}
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] max-h-[90vh]"
           >
 
             <div className="px-6 pt-4 pb-4 border-b border-outline/10 flex items-center justify-between">
@@ -148,7 +148,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col" style={{ height: 'calc(100dvh - 2rem)' }}
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] max-h-[90vh]"
           >
 
 

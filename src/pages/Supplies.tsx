@@ -157,9 +157,21 @@ export default function Supplies() {
     const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
     await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
     for (const item of items) {
-      await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
+      const supplyUpdate: any = { 
+        currentStock: increment(item.quantity),
+        lastPurchasePrice: item.cost,
+        updatedAt: serverTimestamp()
+      };
+      
+      // Si el usuario ingresó porciones en la compra, actualizamos el rendimiento del insumo
+      if (item.portions > 0) {
+        supplyUpdate.portionsPerUnit = item.portions;
+        supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+      }
+
+      await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
     }
-    toast.success('¡Compra registrada y stock actualizado!');
+    toast.success('¡Compra registrada, stock y precios actualizados!');
   };
 
   const handleSaveSupply = async (data: Partial<Supply>) => {

@@ -21,6 +21,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
   const [unit, setUnit] = useState(UNITS[0]);
   const [minLimit, setMinLimit] = useState<number>(5);
   const [currentStock, setCurrentStock] = useState<number>(0);
+  const [portionsPerUnit, setPortionsPerUnit] = useState<number>(1);
   const [yieldDetails, setYieldDetails] = useState('');
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         }
         setMinLimit(supplyToEdit.minLimit ?? supplyToEdit.stockMinimum ?? 5);
         setCurrentStock(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0);
+        setPortionsPerUnit(supplyToEdit.portionsPerUnit || supplyToEdit.yieldPerUnit || 1);
         setYieldDetails(supplyToEdit.yieldDetails || '');
       } else {
         setName('');
@@ -43,6 +45,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         setUnit(UNITS[0]);
         setMinLimit(5);
         setCurrentStock(0);
+        setPortionsPerUnit(1);
         setYieldDetails('');
       }
     }
@@ -61,6 +64,8 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         unit, // we are mapping this to the UI
         minLimit,
         currentStock,
+        portionsPerUnit,
+        yieldPerUnit: portionsPerUnit, // compatibility
         yieldDetails,
         // Fallbacks for older structure compatibility
         stockMinimum: minLimit,
@@ -81,7 +86,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
@@ -93,7 +98,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         animate={{ y: 0, opacity: 1 }} 
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="relative bg-white w-full max-w-md rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[85dvh] sm:h-auto sm:max-h-[90vh]"
+        className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh] overflow-hidden"
       >
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-12 h-1.5 bg-outline/20 rounded-full" />
@@ -146,18 +151,29 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
               </select>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Rendimiento por Porciones (Opcional)</label>
-              <textarea
-                placeholder="Ej: 6p Pequeña / 5p Mediana / 3p Grande"
-                value={yieldDetails}
-                onChange={(e) => setYieldDetails(e.target.value)}
-                rows={2}
-                className="w-full px-4 py-3 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-sm resize-none"
-              />
-              <p className="text-[9px] text-secondary/60 font-bold px-1 italic">
-                Usa esto para saber cuántas porciones salen de 1 {unit || 'unidad'}.
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Porciones x {unit || 'unidad'} *</label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  value={portionsPerUnit}
+                  onChange={(e) => setPortionsPerUnit(Number(e.target.value))}
+                  className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
+                />
+                <p className="text-[9px] text-secondary/60 font-bold px-1 italic">Para calcular costos.</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Detalle Rendimiento</label>
+                <input
+                  type="text"
+                  placeholder="Ej: 6p P / 5p M"
+                  value={yieldDetails}
+                  onChange={(e) => setYieldDetails(e.target.value)}
+                  className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-xs"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -203,7 +219,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
           </form>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white to-transparent pt-12">
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem]">
            <button
              type="submit"
              form="supply-form"

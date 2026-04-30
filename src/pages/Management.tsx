@@ -39,7 +39,8 @@ import {
   Eye,
   EyeOff,
   Boxes,
-  Construction
+  Construction,
+  Phone
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -58,11 +59,13 @@ import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPe
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import RecipeConfigModal from '../components/RecipeConfigModal';
+import { StockCriticoModal } from '../components/ReportsModals';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MainTab = 'inventario' | 'equipo' | 'operacion';
+type MainTab = 'inventario' | 'personas' | 'operacion';
 type InventarioSubTab = 'insumos' | 'productos' | 'sabores';
+type PersonasSubTab = 'equipo' | 'clientes';
 type OperacionSubTab = 'compras' | 'gastos' | 'mesas';
 
 interface UserProfile {
@@ -85,7 +88,9 @@ interface Supply {
   minLimit: number;
   category: string;
   price?: number;
+  lastPurchasePrice?: number;
   portionsPerUnit?: number;
+  yieldPerUnit?: number;
   costPerUnit?: number;
   yieldDetails?: string;
 }
@@ -96,10 +101,10 @@ export default function Management() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
-  const initialTab = (queryParams.get('tab') as MainTab) || 'inventario';
-
-  const [activeTab, setActiveTab] = useState<MainTab>(initialTab);
+  const activeTab = (queryParams.get('tab') as MainTab) || 'inventario';
+  const setActiveTab = (tab: MainTab) => navigate(`/admin/management?tab=${tab}`, { replace: true });
   const [inventarioSubTab, setInventarioSubTab] = useState<InventarioSubTab>('insumos');
+  const [personasSubTab, setPersonasSubTab] = useState<PersonasSubTab>('equipo');
   const [operacionSubTab, setOperacionSubTab] = useState<OperacionSubTab>('compras');
 
   const { profile: currentUser } = useAuthStore();
@@ -156,6 +161,7 @@ export default function Management() {
     address: '',
   });
   const [isSavingUser, setIsSavingUser] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
   // ── Header Actions ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -199,9 +205,7 @@ export default function Management() {
   }, [setHeader, clearHeader, currentUser, setIsSyncModalOpen]);
 
   // ── Sync URL with tab ────────────────────────────────────────────────────
-  useEffect(() => {
-    navigate(`?tab=${activeTab}`, { replace: true });
-  }, [activeTab, navigate]);
+  // Removed redundancy - URL is now the source of truth for activeTab
 
   // ── Firebase Listeners ───────────────────────────────────────────────────
   useEffect(() => {
@@ -516,13 +520,26 @@ export default function Management() {
     }
   };
 
+  const calculateRecipeCost = (recipe?: any[]) => {
+    if (!recipe || recipe.length === 0) return 0;
+    return recipe.reduce((acc, ing) => {
+      const supply = supplies.find(s => s.id === ing.supplyId);
+      if (!supply) return acc;
+      const lastPrice = supply.lastPurchasePrice || 0;
+      const yieldU = supply.portionsPerUnit || supply.yieldPerUnit || 1;
+      const costPerPortion = lastPrice / yieldU;
+      return acc + (costPerPortion * (ing.quantity || 1));
+    }, 0);
+  };
+
   // ── Derived values ────────────────────────────────────────────────────────
   const filtered = purchases.filter((p) => isInPeriod(p.createdAt, period));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
   const totalUnits = filtered.reduce((a, p) => a + (p.items?.reduce((b, i) => b + (i.quantity || 0), 0) || 0), 0);
   const activeDays = new Set(filtered.map((p) => { const d = p.createdAt?.toDate?.() || (p.createdAt ? new Date(p.createdAt) : null); return d?.toDateString(); }).filter(Boolean)).size;
   const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
-  const lowStock = supplies.filter((s: any) => s.currentStock <= s.minLimit).length;
+  const criticalSupplies = supplies.filter((s: any) => (s.currentStock || 0) <= (s.minLimit || 0));
+  const lowStock = criticalSupplies.length;
 
   const categories = [
     { id: 'all', label: 'Todos', icon: <MenuSquare className="w-4 h-4" /> },
@@ -548,7 +565,7 @@ export default function Management() {
           {(
             [
               { id: 'inventario', label: 'Inventario', labelShort: 'Inv.', icon: <Package className="w-4 h-4" /> },
-              { id: 'equipo', label: 'Equipo', labelShort: 'Equipo', icon: <UsersIcon className="w-4 h-4" /> },
+              { id: 'personas', label: 'Personas', labelShort: 'Pers.', icon: <UsersIcon className="w-4 h-4" /> },
               { id: 'operacion', label: 'Operación', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
             ] as { id: MainTab; label: string; labelShort: string; icon: React.ReactNode }[]
           ).map((tab) => (
@@ -629,7 +646,21 @@ export default function Management() {
                                 </button>
                               </div>
                               <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
-                              {s.yieldDetails && (
+                              {s.portionsPerUnit > 0 && (
+                                <div className="mt-2 mb-4 p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                                  <div>
+                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento</p>
+                                    <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} porciones</p>
+                                  </div>
+                                  {s.lastPurchasePrice > 0 && (
+                                    <div className="text-right">
+                                      <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Costo x Porción</p>
+                                      <p className="text-[10px] font-black text-emerald-700 leading-tight">{formatCurrency(s.lastPurchasePrice / s.portionsPerUnit)}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {s.yieldDetails && !s.portionsPerUnit && (
                                 <div className="mt-2 mb-4 p-2.5 bg-primary/5 rounded-xl border border-primary/10">
                                   <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
                                   <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
@@ -741,17 +772,44 @@ export default function Management() {
                               
                               <div className="space-y-2 mb-6 bg-surface-container/30 p-4 rounded-[2rem] border border-outline/10">
                                 {product.variants ? (
-                                  product.variants.map((v, i) => (
-                                    <div key={i} className="flex justify-between items-center text-xs font-bold py-1 border-b border-outline/10 last:border-none">
-                                      <span className="text-secondary">{v.label}</span>
-                                      <span className="text-on-surface">{formatCurrency(v.price)}</span>
-                                    </div>
-                                  ))
+                                  product.variants.map((v, i) => {
+                                    const variantRecipeCost = calculateRecipeCost(v.recipe || product.recipe);
+                                    const margin = v.price > 0 ? ((v.price - variantRecipeCost) / v.price) * 100 : 0;
+                                    return (
+                                      <div key={i} className="flex flex-col py-2 border-b border-outline/5 last:border-none">
+                                        <div className="flex justify-between items-center text-xs font-bold">
+                                          <span className="text-secondary">{v.label}</span>
+                                          <span className="text-on-surface">{formatCurrency(v.price)}</span>
+                                        </div>
+                                        {variantRecipeCost > 0 && (
+                                          <div className="flex justify-between items-center mt-1">
+                                            <span className="text-[9px] text-secondary/60 font-medium">Costo: {formatCurrency(variantRecipeCost)}</span>
+                                            <span className={cn(
+                                              "text-[9px] font-black px-1.5 py-0.5 rounded-md",
+                                              margin > 50 ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"
+                                            )}>
+                                              {margin.toFixed(0)}% util.
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })
                                 ) : (
-                                  <div className="flex justify-between items-center text-sm font-black">
-                                    <span className="text-primary text-[10px] uppercase tracking-widest">Precio Base</span>
-                                    <span className="text-on-surface">{formatCurrency(product.basePrice || 0)}</span>
-                                  </div>
+                                  <>
+                                    <div className="flex justify-between items-center text-sm font-black mb-1">
+                                      <span className="text-primary text-[10px] uppercase tracking-widest">Precio Base</span>
+                                      <span className="text-on-surface">{formatCurrency(product.basePrice || 0)}</span>
+                                    </div>
+                                    {calculateRecipeCost(product.recipe) > 0 && (
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-[10px] text-secondary/60 font-bold">COSTO: {formatCurrency(calculateRecipeCost(product.recipe))}</span>
+                                        <span className="text-[10px] font-black text-emerald-600">
+                                          {(((product.basePrice || 0) - calculateRecipeCost(product.recipe)) / (product.basePrice || 1) * 100).toFixed(0)}% MARGEN
+                                        </span>
+                                      </div>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -843,22 +901,45 @@ export default function Management() {
             )}
 
             {/* ═══════════════════════════════════════════════════════════════
-                TAB: EQUIPO (Personas)
+                TAB: PERSONAS (Equipo y Clientes)
             ═══════════════════════════════════════════════════════════════ */}
-            {activeTab === 'equipo' && (
+            {activeTab === 'personas' && (
               <motion.div
-                key="equipo"
+                key="personas"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-5"
               >
-                <div className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm">
+                {/* Sub-tab bar: Equipo | Clientes */}
+                <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
+                  {(
+                    [
+                      { id: 'equipo', label: 'Equipo' },
+                      { id: 'clientes', label: 'Clientes' },
+                    ] as { id: PersonasSubTab; label: string }[]
+                  ).map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => setPersonasSubTab(sub.id)}
+                      className={cn(
+                        'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                        personasSubTab === sub.id
+                          ? 'bg-white text-primary shadow-sm'
+                          : 'text-secondary hover:bg-surface-container-high'
+                      )}
+                    >
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="bg-white rounded-[2rem] p-4 border border-outline/50 shadow-sm">
                   <div className="flex-1 w-full bg-surface-container rounded-2xl px-4 py-3 border border-outline/50 flex items-center">
                     <Search className="w-4 h-4 text-secondary/50 mr-2" />
                     <input
                       type="text"
-                      placeholder="Buscar por nombre o correo..."
+                      placeholder={`Buscar ${personasSubTab === 'equipo' ? 'miembro' : 'cliente'}...`}
                       value={userSearch}
                       onChange={(e) => setUserSearch(e.target.value)}
                       className="bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-secondary/40"
@@ -866,43 +947,60 @@ export default function Management() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {users
-                    .filter((u) => u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()))
+                    .filter((u) => {
+                      const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
+                      const isStaff = ['admin', 'propietario', 'vendedor'].includes(u.role);
+                      const matchesTab = personasSubTab === 'equipo' ? isStaff : u.role === 'cliente';
+                      return matchesSearch && matchesTab;
+                    })
                     .map((user, i) => (
                       <motion.div
                         layout
                         key={user.uid}
-                        initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
-                        animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                        transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1], delay: i * 0.05 }}
-                        className="bg-white rounded-[2rem] p-5 sm:p-6 border border-outline/50 shadow-sm flex flex-col sm:flex-row items-center gap-6 group hover:border-primary/20 transition-all"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-3xl p-4 border border-outline/10 shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all hover:shadow-md"
                       >
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-md flex items-center justify-center text-primary font-black text-2xl">
-                            {user.imageUrl ? <img src={user.imageUrl} alt={user.name} className="w-full h-full object-cover" /> : user.name[0]}
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-lg border-2 border-white flex items-center justify-center shadow-sm">
-                            <UserCheck className="w-3.5 h-3.5 text-white" />
+                        <div className="relative shrink-0">
+                          <div className="w-14 h-14 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-primary font-black text-xl">
+                            {user.imageUrl ? (
+                              <img src={user.imageUrl} alt={user.name} className="w-full h-full object-cover" />
+                            ) : (
+                              user.name[0].toUpperCase()
+                            )}
                           </div>
                         </div>
-                        <div className="flex-1 text-center sm:text-left">
-                          <h3 className="font-brand font-black text-lg text-on-surface uppercase tracking-tight truncate max-w-[200px] mx-auto sm:mx-0">{user.name}</h3>
-                          <p className="text-secondary text-xs font-medium mb-2">{user.email}</p>
-                          <span className={cn('text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border',
-                            user.role === 'admin' ? 'bg-red-50 text-red-600 border-red-100' :
-                            user.role === 'propietario' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                            user.role === 'cliente' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                            'bg-primary/5 text-primary border-primary/10')}>
-                            {user.role}
-                          </span>
+
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-headline font-black text-sm text-on-surface uppercase truncate tracking-tight">{user.name}</h3>
+                          <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex items-center gap-2">
+                              <span className={cn('text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border',
+                                user.role === 'admin' ? 'bg-red-50 text-red-600 border-red-100' :
+                                user.role === 'propietario' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                user.role === 'cliente' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                'bg-emerald-50 text-emerald-600 border-emerald-100')}>
+                                {user.role === 'cliente' ? 'CLIENTE' : user.role}
+                              </span>
+                              {user.phone && (
+                                <div className="flex items-center gap-1 text-secondary/60">
+                                  <Phone className="w-2.5 h-2.5" />
+                                  <span className="text-[9px] font-bold">{user.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-[9px] text-secondary/40 font-medium truncate">{user.email}</p>
+                          </div>
                         </div>
-                        <div className="flex sm:flex-col gap-3 w-full sm:w-auto">
-                          <button onClick={() => handleEditUser(user)} className="flex-1 sm:h-10 px-4 rounded-xl bg-surface-container border border-outline/50 text-[10px] font-black uppercase tracking-widest hover:bg-surface-container-high transition-all flex items-center justify-center gap-2">
-                            <Edit3 className="w-3.5 h-3.5" /> Editar
+
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <button onClick={() => handleEditUser(user)} className="w-8 h-8 rounded-xl bg-surface-container text-secondary flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-outline/10">
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => setSelectedUserForHistory(user)} className="flex-1 sm:h-10 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-2">
-                            <History className="w-3.5 h-3.5" /> Historial
+                          <button onClick={() => setSelectedUserForHistory(user)} className="w-8 h-8 rounded-xl bg-on-surface text-white flex items-center justify-center hover:bg-primary transition-all shadow-sm">
+                            <History className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </motion.div>
@@ -972,6 +1070,20 @@ export default function Management() {
                         </button>
                       </div>
 
+                      {/* Stock alert moved below Registrar Compra */}
+                      {lowStock > 0 && (
+                        <motion.button 
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => setIsStockModalOpen(true)}
+                          className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
+                        >
+                          <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                          <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
+                          <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
+                        </motion.button>
+                      )}
+
                       {/* Stat Cards */}
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
@@ -980,12 +1092,6 @@ export default function Management() {
                         <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
                       </div>
 
-                      {lowStock > 0 && (
-                        <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl">
-                          <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                          <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
-                        </div>
-                      )}
 
                       <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
                         <div className="flex items-center gap-3 mb-3">
@@ -1234,6 +1340,7 @@ export default function Management() {
                     <select value={editFormData.role} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as any })} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none">
                       <option value="vendedor">Vendedor</option>
                       <option value="cliente">Cliente</option>
+                      <option value="propietario">Propietario</option>
                       <option value="admin">Administrador</option>
                     </select>
                   </div>
@@ -1289,6 +1396,11 @@ export default function Management() {
             </div>
           )}
         </AnimatePresence>
+      <StockCriticoModal
+        isOpen={isStockModalOpen}
+        onClose={() => setIsStockModalOpen(false)}
+        criticalSupplies={criticalSupplies}
+      />
     </>
   );
 }

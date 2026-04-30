@@ -92,7 +92,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
   }, 0);
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
@@ -103,7 +103,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         initial={{ scale: 0.9, opacity: 0 }} 
         animate={{ scale: 1, opacity: 1 }} 
         exit={{ scale: 0.9, opacity: 0 }}
-        className="relative bg-white w-full max-w-2xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col h-[90dvh] max-h-[800px] overflow-hidden"
+        className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] sm:max-h-[90vh] overflow-hidden"
       >
         {/* Header */}
         <div className="px-6 py-4 flex items-center justify-between border-b border-outline/10 bg-surface-container-lowest shrink-0">

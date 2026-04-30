@@ -74,7 +74,7 @@ export default function MovementDetailModal({
             animate={{ scale: 1, opacity: 1, y: 0 }} 
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[95dvh] overflow-hidden"
+            className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] overflow-hidden"
           >
             {/* Header */}
             <div className="px-6 pt-5 pb-4 border-b border-outline/10 flex items-center justify-between bg-white sticky top-0 z-10">
@@ -284,7 +284,7 @@ export default function MovementDetailModal({
 
             {/* Action buttons for staff inside modal */}
             {onUpdateStatus && data && (
-              <div className="p-4 bg-white border-t border-outline/10 flex gap-2">
+              <div className="p-4 bg-white border-t border-outline/10 flex gap-2 rounded-b-[2.5rem]">
                 {data.status === 'pendiente' && (
                   <button
                     onClick={(e) => { onUpdateStatus(data.id, 'aceptado', e); onClose(); }}
@@ -306,7 +306,7 @@ export default function MovementDetailModal({
 
             {/* Chat footer */}
             {isOnlinePedido && setChatMessage && onSendMessage && (
-              <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-3">
+              <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-3 rounded-b-[2.5rem]">
                  <div className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl flex items-center px-4 py-2 group focus-within:ring-2 ring-primary/20 transition-all">
                     <input
                       type="text"
@@ -328,7 +328,7 @@ export default function MovementDetailModal({
             )}
 
             {!isOnlinePedido && (
-              <div className="p-6 bg-white border-t border-outline/10">
+              <div className="p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem]">
                 <button 
                   onClick={onClose}
                   className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"

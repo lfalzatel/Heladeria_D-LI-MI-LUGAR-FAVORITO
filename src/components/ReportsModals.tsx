@@ -28,7 +28,7 @@ function ModalWrapper({ isOpen, onClose, children }: {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="relative w-full sm:max-w-sm bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
+            className="relative w-full sm:max-w-sm bg-white rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] max-h-[90vh] overflow-hidden"
           >
             <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
               <div className="w-10 h-1 bg-outline/30 rounded-full" />
@@ -67,7 +67,7 @@ function ModalHeader({ icon, iconBg, title, subtitle, onClose }: {
 
 function ModalFooter({ label = 'CERRAR DETALLE', onClick }: { label?: string; onClick: () => void }) {
   return (
-    <div className="px-6 py-4 border-t border-outline/10 flex-shrink-0">
+    <div className="px-6 py-4 border-t border-outline/10 flex-shrink-0 rounded-b-[2.5rem] bg-white">
       <button
         onClick={onClick}
         className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-secondary hover:text-on-surface transition-colors"
@@ -333,7 +333,7 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda 
           <motion.div
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="absolute inset-0 bg-white z-10 flex flex-col rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden"
+            className="absolute inset-0 bg-white z-10 flex flex-col rounded-[2.5rem] overflow-hidden"
           >
             <div className="flex items-center gap-3 px-6 pt-5 pb-4 flex-shrink-0 border-b border-outline/10">
               <button onClick={() => setSelectedClient(null)} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center">
@@ -465,7 +465,7 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
           );
         })}
       </div>
-      <div className="px-6 py-4 border-t border-outline/10 flex gap-3 flex-shrink-0">
+      <div className="px-6 py-4 border-t border-outline/10 flex gap-3 flex-shrink-0 rounded-b-[2.5rem] bg-white">
         <button
           onClick={onClose}
           className="flex-1 py-3 rounded-2xl border border-outline/30 text-secondary text-xs font-black uppercase tracking-widest hover:bg-surface-container transition-all"
@@ -473,7 +473,7 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
           Cerrar
         </button>
         <button
-          onClick={() => { onClose(); navigate('/admin/supplies'); }}
+          onClick={() => { onClose(); navigate('/admin/management?tab=operacion'); }}
           className="flex-1 py-3 rounded-2xl bg-on-surface text-white text-xs font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all"
         >
           <ShoppingCart className="w-4 h-4" /> Ir a Comprar
