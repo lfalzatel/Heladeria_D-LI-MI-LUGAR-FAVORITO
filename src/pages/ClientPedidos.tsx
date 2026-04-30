@@ -10,10 +10,8 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import AppHeader, { PageTitle } from '../components/AppHeader';
+import { useHeaderStore } from '../stores/useHeaderStore';
 import { useAuthStore } from '../stores/useAuthStore';
-import AdminSidebar from '../components/AdminSidebar';
-import BottomNav from '../components/BottomNav';
 import { toast } from 'sonner';
 import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
@@ -37,6 +35,7 @@ const DONE_STATUSES   = ['entregado', 'rechazado', 'cancelado'];
 
 export default function ClientPedidos() {
   const { profile } = useAuthStore();
+  const { setHeader, clearHeader } = useHeaderStore();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState('');
@@ -44,6 +43,14 @@ export default function ClientPedidos() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
+
+  useEffect(() => {
+    setHeader({
+      title: isStaff ? 'Pedidos' : 'Mis Pedidos',
+      subtitle: isStaff ? 'Gestión en tiempo real' : 'Seguimiento en tiempo real'
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader, isStaff]);
 
   useEffect(() => {
     if (!profile) return;
@@ -192,14 +199,8 @@ export default function ClientPedidos() {
   const pageSubtitle = isStaff ? 'Gestión en tiempo real' : 'Seguimiento en tiempo real';
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest flex overflow-x-hidden w-full">
-      <AdminSidebar />
-
-      <div className="flex-1 w-full min-w-0 flex flex-col min-h-screen pb-24 lg:pb-0">
-        <AppHeader showBell />
-        <PageTitle title={pageTitle} subtitle={pageSubtitle} />
-
-        <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
+    <>
+      <main className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
 
         {/* ── ACTIVOS ── */}
         <section className="flex flex-col gap-3">
@@ -281,8 +282,6 @@ export default function ClientPedidos() {
         }
       />
 
-      <BottomNav />
-      </div>
-    </div>
+    </>
   );
 }

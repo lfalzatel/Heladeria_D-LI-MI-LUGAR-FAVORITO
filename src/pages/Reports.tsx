@@ -12,10 +12,8 @@ import { formatCurrency, cn } from '../lib/utils';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import AppHeader, { PageTitle } from '../components/AppHeader';
-import BottomNav from '../components/BottomNav';
 import { useAuthStore } from '../stores/useAuthStore';
-import AdminSidebar from '../components/AdminSidebar';
+import { useHeaderStore } from '../stores/useHeaderStore';
 import { isInPeriod } from './Supplies';
 import {
   IngresosModal,
@@ -391,7 +389,6 @@ function CalendarModal({
               );
             })}
           </div>
-          <button onClick={onClose} className="w-full py-4 bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-surface transition-all">Cerrar</button>
         </div>
       </motion.div>
     </div>
@@ -400,6 +397,7 @@ function CalendarModal({
 
 export default function Reports() {
   const { profile } = useAuthStore();
+  const { setHeader, clearHeader } = useHeaderStore();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<DateFilter>('hoy');
   const [customDate, setCustomDate] = useState<Date | null>(null);
@@ -422,6 +420,14 @@ export default function Reports() {
   const close = () => setOpenModal(null);
   
   const period = PERIOD_MAP[filter];
+
+  useEffect(() => {
+    setHeader({
+      title: 'Reportes & BI',
+      subtitle: 'Análisis Operativo'
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader]);
 
   // ── SALES & PEDIDOS listeners (period-filtered) ──
   useEffect(() => {
@@ -515,7 +521,6 @@ export default function Reports() {
 
   // ── COMPUTED METRICS ──
   
-
   // Ingresos (Combined sales & delivered pedidos, non-credit)
   const ingresosSales = combinedActivity.filter(s => {
     const pm = (s.paymentMethod || '').toLowerCase();
@@ -584,30 +589,24 @@ export default function Reports() {
   const filterLabel = filter === 'custom' && customDate 
     ? customDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'long' }).replace(',', '')
     : FILTER_LABEL[filter];
-
-  return (
-    <div className="min-h-screen flex bg-surface-container-lowest">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col min-h-screen relative pb-32">
-        <AppHeader showBell />
-        <PageTitle title="Reportes & BI" subtitle="Análisis Operativo" />
-
-        <main className="p-4 sm:p-8 max-w-7xl mx-auto flex flex-col gap-6 w-full">
+ 
+   return (
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto flex flex-col gap-6 w-full pb-32">
 
           {/* ── FILTERS ── */}
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="flex p-1 bg-surface-container rounded-2xl border border-outline/30 w-full sm:w-auto">
               {(['hoy', 'semana', 'mes'] as const).map(f => (
                 <button
-                  key={f}
-                  onClick={() => {
-                    setFilter(f);
-                    setCustomDate(null);
-                  }}
-                  className={cn(
-                    'flex-1 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
-                    filter === f ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-on-surface'
-                  )}
+                   key={f}
+                   onClick={() => {
+                     setFilter(f);
+                     setCustomDate(null);
+                   }}
+                   className={cn(
+                     'flex-1 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                     filter === f ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-on-surface'
+                   )}
                 >
                   {FILTER_LABEL[f]}
                 </button>
@@ -694,7 +693,6 @@ export default function Reports() {
 
           {/* ── CHARTS ── */}
           <div className="flex flex-col gap-4">
-            {/* Sales Trend */}
             <section className="bg-white rounded-[2.5rem] border border-outline/10 shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -714,7 +712,6 @@ export default function Reports() {
               <TrendChart data={combinedActivity} color="#1c1b1f" label="Ingresos" />
             </section>
 
-            {/* Investment Trend */}
             <section className="bg-white rounded-[2.5rem] border border-outline/10 shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -735,7 +732,6 @@ export default function Reports() {
             </section>
           </div>
 
-          {/* ── ACTIVITY LIST ── */}
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
@@ -765,23 +761,12 @@ export default function Reports() {
                   />
                 ))
               )}
-              {sales.length > 10 && (
-                <button className="py-3 text-[9px] font-black text-secondary uppercase tracking-widest hover:text-primary transition-colors">
-                  Ver todas las ventas del período
-                </button>
-              )}
             </div>
           </section>
 
-          {/* ── HINT ── */}
           <p className="text-center text-[9px] font-black text-secondary/40 uppercase tracking-widest mt-4">
             Toca una tarjeta o actividad para ver el detalle completo
           </p>
-
-        </main>
-
-        <BottomNav />
-      </div>
 
       {/* ── MODALS ── */}
       <IngresosModal
@@ -824,7 +809,6 @@ export default function Reports() {
         criticalSupplies={criticalSupplies}
       />
 
-      {/* Sale Detail Modal */}
       <MovementDetailModal
         isOpen={!!selectedSale}
         onClose={() => setSelectedSale(null)}
@@ -845,7 +829,6 @@ export default function Reports() {
           setFilter('custom');
         }}
       />
-      <BottomNav />
-    </div>
-  );
+      </div>
+    );
 }

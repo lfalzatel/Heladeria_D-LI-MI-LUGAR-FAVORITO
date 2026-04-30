@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import ClientCompras from './pages/ClientCompras';
 import ClientPedidos from './pages/ClientPedidos';
 import ClientHistorial from './pages/ClientHistorial';
+import MainLayout from './components/MainLayout';
 
 
 
@@ -165,60 +166,50 @@ export default function App() {
       <Routes>
         <Route path="/login" element={user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin'} /> : <Login />} />
         
-        <Route path="/pos" element={
-          user && profile ? <POS /> : (authLoading ? null : <Navigate to="/login" />)
-        } />
-        
-        <Route path="/admin/dashboard" element={
-          user && profile && (profile.role === 'admin' || profile.role === 'propietario' || profile.role === 'vendedor') 
-            ? <Dashboard /> 
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
+        {/* Rutas Protegidas con Layout Global */}
+        <Route element={user && profile ? <MainLayout /> : (authLoading ? null : <Navigate to="/login" />)}>
+          <Route path="/pos" element={<POS />} />
+          
+          <Route path="/admin/dashboard" element={
+            (profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor') 
+              ? <Dashboard /> 
+              : <Navigate to="/login" />
+          } />
 
+          <Route path="/admin/management" element={
+            (profile?.role === 'admin' || profile?.role === 'propietario') 
+              ? <Management /> 
+              : <Navigate to="/login" />
+          } />
+
+          <Route path="/admin/reports" element={
+            (profile?.role === 'admin' || profile?.role === 'propietario') 
+              ? <Reports /> 
+              : <Navigate to="/login" />
+          } />
+
+          <Route path="/admin/schedule" element={
+            (profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor') 
+              ? <Schedule /> 
+              : <Navigate to="/login" />
+          } />
+
+          <Route path="/profile" element={<Profile />} />
+
+          {/* Client routes */}
+          <Route path="/cliente/compras" element={
+            profile?.role === 'cliente' ? <ClientCompras /> : <Navigate to="/login" />
+          } />
+          <Route path="/cliente/pedidos" element={<ClientPedidos />} />
+          <Route path="/cliente/historial" element={
+            (profile?.role === 'cliente' || ['admin', 'propietario', 'vendedor'].includes(profile?.role || ''))
+              ? <ClientHistorial />
+              : <Navigate to="/login" />
+          } />
+        </Route>
 
         <Route path="/admin/inventory" element={<Navigate to="/admin/management?tab=inventario" replace />} />
-
-        <Route path="/admin/management" element={
-          user && profile && (profile.role === 'admin' || profile.role === 'propietario') 
-            ? <Management /> 
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
-
-        <Route path="/admin/reports" element={
-          user && profile && (profile.role === 'admin' || profile.role === 'propietario') 
-            ? <Reports /> 
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
-
-        <Route path="/admin/schedule" element={
-          user && profile && (profile.role === 'admin' || profile.role === 'propietario' || profile.role === 'vendedor') 
-            ? <Schedule /> 
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
-
-        <Route path="/profile" element={
-          user && profile ? <Profile /> : (authLoading ? null : <Navigate to="/login" />)
-        } />
-
-        {/* Client routes */}
-        <Route path="/cliente/compras" element={
-          user && profile && profile.role === 'cliente'
-            ? <ClientCompras />
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
-        <Route path="/cliente/pedidos" element={
-          user && profile
-            ? <ClientPedidos />
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
-        <Route path="/cliente/historial" element={
-          user && profile && (profile.role === 'cliente' || ['admin', 'propietario', 'vendedor'].includes(profile.role))
-            ? <ClientHistorial />
-            : (authLoading ? null : <Navigate to="/login" />)
-        } />
-
         <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
-        
         <Route path="/" element={<Navigate to={user && profile ? (profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard') : '/login'} />} />
       </Routes>
     </Router>

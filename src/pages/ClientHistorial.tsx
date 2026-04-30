@@ -21,17 +21,16 @@ import {
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import AppHeader, { PageTitle } from '../components/AppHeader';
+import { useHeaderStore } from '../stores/useHeaderStore';
+import { useAuthStore } from '../stores/useAuthStore';
 import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
-import { useAuthStore } from '../stores/useAuthStore';
-import AdminSidebar from '../components/AdminSidebar';
-import BottomNav from '../components/BottomNav';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
 
 export default function ClientHistorial() {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
+  const { setHeader, clearHeader } = useHeaderStore();
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
   
   const [userSales, setUserSales] = useState<any[]>([]);
@@ -40,6 +39,15 @@ export default function ClientHistorial() {
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
+
+  useEffect(() => {
+    if (!profile) return;
+    setHeader({
+      title: "Mi Historial",
+      subtitle: "Actividad Reciente"
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader, profile]);
 
   useEffect(() => {
     if (!profile) return;
@@ -124,40 +132,12 @@ export default function ClientHistorial() {
     }
   };
 
-  if (!profile) return null;
-
   return (
-    <div className="min-h-screen bg-surface-container-lowest flex overflow-x-hidden w-full">
-      <AdminSidebar />
-
-      <div className="flex-1 w-full min-w-0 flex flex-col min-h-screen pb-24 lg:pb-0">
-        <AppHeader showBell />
-        
-        <div className="max-w-4xl mx-auto w-full relative">
-
-         {/* ENCABEZADO SIMÉTRICO AL ADMIN */}
-          <div className="bg-primary pt-12 pb-14 px-8 flex flex-col items-start">
-             <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white text-xl font-black overflow-hidden shadow-lg">
-                   {profile.imageUrl ? (
-                      <img src={profile.imageUrl} alt="" className="w-full h-full object-cover" />
-                   ) : (
-                      profile.name[0]
-                   )}
-                </div>
-                <div>
-                   <h2 className="text-white font-brand font-black text-xl uppercase tracking-tight">
-                      Mi Historial
-                   </h2>
-                   <p className="text-white/50 text-[9px] uppercase font-black tracking-widest mt-0.5">
-                      Actividad Reciente
-                   </p>
-                </div>
-             </div>
-          </div>
+    <div className="max-w-4xl mx-auto w-full relative">
+        <div className="p-4 sm:p-6 lg:p-8">
 
           {/* CONTENIDO (CALENDARIO + LISTA) */}
-          <div className="bg-surface-container-lowest -mt-6 rounded-t-[2.5rem] px-6 sm:px-8 py-8 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-10 border-t border-white/20">
+          <div className="bg-surface-container-lowest rounded-[2.5rem] px-6 sm:px-8 py-8 relative z-10 border border-outline/10">
             
             {/* HEATMAP CALENDAR */}
             {(() => {
@@ -280,8 +260,6 @@ export default function ClientHistorial() {
           onSendMessage={handleSendMessage}
           isSending={sending}
         />
-        <BottomNav />
-      </div>
     </div>
-  );
+    );
 }

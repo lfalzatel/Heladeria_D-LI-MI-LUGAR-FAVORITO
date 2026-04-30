@@ -45,14 +45,12 @@ import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import AppHeader, { PageTitle } from '../components/AppHeader';
-import HistoryMovementCard from '../components/HistoryMovementCard';
-import MovementDetailModal from '../components/MovementDetailModal';
 import { useAuthStore } from '../stores/useAuthStore';
-import AdminSidebar from '../components/AdminSidebar';
+import { useHeaderStore } from '../stores/useHeaderStore';
 import SupplyFormModal from '../components/SupplyFormModal';
+import MovementDetailModal from '../components/MovementDetailModal';
+import HistoryMovementCard from '../components/HistoryMovementCard';
 import ProductFormModal from '../components/ProductFormModal';
-import BottomNav from '../components/BottomNav';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
 import { seedDatabase } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
@@ -105,7 +103,9 @@ export default function Management() {
   const [operacionSubTab, setOperacionSubTab] = useState<OperacionSubTab>('compras');
 
   const { profile: currentUser } = useAuthStore();
+  const { setHeader, clearHeader } = useHeaderStore();
   const { availableFlavors } = useFlavorsStore();
+
   const isStaff =
     currentUser?.role === 'admin' ||
     currentUser?.role === 'propietario' ||
@@ -156,6 +156,47 @@ export default function Management() {
     address: '',
   });
   const [isSavingUser, setIsSavingUser] = useState(false);
+
+  // ── Header Actions ──────────────────────────────────────────────────────
+  useEffect(() => {
+    // Solo mostrar acciones si es admin o propietario
+    const canAdmin = currentUser?.role === 'admin' || currentUser?.role === 'propietario';
+    
+    setHeader({
+      title: "Gestión D'LI",
+      subtitle: "Panel Administrativo",
+      actions: canAdmin ? (
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <button
+            onClick={async () => {
+              const { notifyAdmins } = await import('../lib/notifications');
+              toast.promise(
+                notifyAdmins('🔔 Prueba de Sistema', `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
+                { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
+              );
+            }}
+            className="p-2 sm:px-3 sm:py-2 bg-surface-container text-on-surface rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
+            title="Probar Notificaciones"
+          >
+            <BellRing className="w-3.5 h-3.5 text-primary" />
+            <span className="hidden sm:inline font-black text-[9px] uppercase tracking-widest">Test</span>
+            <span className="sm:hidden font-black text-[8px] uppercase tracking-widest">Test</span>
+          </button>
+          
+          <button
+            onClick={() => setIsSyncModalOpen(true)}
+            className="p-2 sm:px-3 sm:py-2 bg-surface-container text-on-surface rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
+            title="Sincronizar Datos"
+          >
+            <Database className="w-3.5 h-3.5 text-success" />
+            <span className="hidden sm:inline font-black text-[9px] uppercase tracking-widest">Sinc.</span>
+            <span className="sm:hidden font-black text-[8px] uppercase tracking-widest">Sinc.</span>
+          </button>
+        </div>
+      ) : null
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader, currentUser, setIsSyncModalOpen]);
 
   // ── Sync URL with tab ────────────────────────────────────────────────────
   useEffect(() => {
@@ -500,70 +541,34 @@ export default function Management() {
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex bg-surface-container-lowest">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col min-h-screen relative pb-32 overflow-x-hidden min-w-0">
-        <AppHeader showBell />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pr-4 sm:pr-8 bg-surface-container-lowest border-b border-outline/10">
-          <PageTitle title="Gestión del Sistema" subtitle="Control Administrativo" />
-          <div className="flex items-center gap-2 px-4 pb-4 md:pb-0 md:mt-0">
-            {currentUser?.role === 'admin' && (
-              <>
-                <button
-                  onClick={async () => {
-                    const { notifyAdmins } = await import('../lib/notifications');
-                    toast.promise(
-                      notifyAdmins('🔔 Prueba de Sistema', `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
-                      { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
-                    );
-                  }}
-                  className="flex-1 md:flex-none px-4 py-2.5 bg-surface-container text-on-surface font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
-                >
-                  <BellRing className="w-4 h-4 text-primary" />
-                  <span className="hidden sm:inline">Probar Notificación</span>
-                  <span className="sm:hidden">Test</span>
-                </button>
-                <button
-                  onClick={() => setIsSyncModalOpen(true)}
-                  className="flex-1 md:flex-none px-4 py-2.5 bg-primary/10 text-primary font-black text-[10px] rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors shadow-sm"
-                >
-                  <Database className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sincronizar</span>
-                  <span className="sm:hidden">Sinc.</span>
-                </button>
-              </>
-            )}
-          </div>
+    <>
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex flex-col gap-6 pb-32 overflow-x-hidden min-w-0">
+        {/* Main Tab Bar (3 tabs) */}
+        <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-lg shadow-inner border border-outline/30 mx-auto">
+          {(
+            [
+              { id: 'inventario', label: 'Inventario', labelShort: 'Inv.', icon: <Package className="w-4 h-4" /> },
+              { id: 'equipo', label: 'Equipo', labelShort: 'Equipo', icon: <UsersIcon className="w-4 h-4" /> },
+              { id: 'operacion', label: 'Operación', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
+            ] as { id: MainTab; label: string; labelShort: string; icon: React.ReactNode }[]
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex-1 py-3 px-3 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2',
+                activeTab === tab.id ? 'bg-white text-primary shadow-md' : 'text-secondary hover:text-on-surface'
+              )}
+            >
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.labelShort}</span>
+            </button>
+          ))}
         </div>
 
-        <main className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex flex-col gap-6 overflow-x-hidden">
-
-          {/* ── Main Tab Bar (3 tabs) ─────────────────────────────────────── */}
-          <div className="flex p-1.5 bg-surface-container rounded-2xl sm:rounded-full w-full max-w-lg shadow-inner border border-outline/30">
-            {(
-              [
-                { id: 'inventario', label: 'Inventario', labelShort: 'Inv.', icon: <Package className="w-4 h-4" /> },
-                { id: 'equipo', label: 'Equipo', labelShort: 'Equipo', icon: <UsersIcon className="w-4 h-4" /> },
-                { id: 'operacion', label: 'Operación', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
-              ] as { id: MainTab; label: string; labelShort: string; icon: React.ReactNode }[]
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'flex-1 py-3 px-3 rounded-xl sm:rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2',
-                  activeTab === tab.id ? 'bg-white text-primary shadow-md' : 'text-secondary hover:text-on-surface'
-                )}
-              >
-                {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.labelShort}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* ── Tab Content ───────────────────────────────────────────────── */}
-          <AnimatePresence mode="wait">
+        {/* Tab Content ───────────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
 
             {/* ═══════════════════════════════════════════════════════════════
                 TAB: INVENTARIO
@@ -649,21 +654,27 @@ export default function Management() {
 
                   {/* ── Sub-tab: PRODUCTOS ────────────────────────────────── */}
                   {inventarioSubTab === 'productos' && (
-                    <motion.div key="productos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
+                    <motion.div 
+                      key="productos" 
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      exit={{ opacity: 0 }} 
+                      className="flex flex-col gap-5 w-full max-w-full overflow-hidden pb-10"
+                    >
                       {/* Add product button */}
                       <button
                         onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
-                        className="w-full py-4 bg-on-surface text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
+                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
                       >
-                        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <Plus className="w-4 h-4" />
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
-                        Añadir Nuevo Producto
+                        <span className="truncate">Añadir Nuevo Producto</span>
                       </button>
 
                       {/* Toolbar: categories + search */}
-                      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-[2rem] border border-outline/50 shadow-sm w-full">
-                        <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar pb-2 sm:pb-0">
+                      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-3 sm:p-4 rounded-3xl sm:rounded-[2rem] border border-outline/50 shadow-sm w-full min-w-0 overflow-hidden">
+                        <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar pb-2 sm:pb-0 px-1 min-w-0">
                           {categories.map((cat) => (
                             <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                               className={cn('flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs transition-all whitespace-nowrap shrink-0',
@@ -702,36 +713,43 @@ export default function Management() {
                             }}
                           >
                             <div>
-                              <div className="flex justify-between items-start mb-4">
-                                <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden', product.isActive ? 'bg-primary/5 text-primary' : 'bg-surface-container text-secondary/40')}>
+                              <div className="flex justify-between items-start gap-4 mb-4">
+                                <div className={cn('w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden shadow-sm shrink-0', product.isActive ? 'bg-primary/5 text-primary' : 'bg-surface-container text-secondary/40')}>
                                   {product.imageUrl ? (
                                     <img src={getAssetUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
                                   ) : (
-                                    <IceCream className="w-6 h-6" />
+                                    <IceCream className="w-8 h-8" />
                                   )}
                                 </div>
-                                <button
-                                  onClick={() => toggleProductStatus(product.id, !!product.isActive)}
-                                  className={cn('w-10 h-10 rounded-xl flex items-center justify-center transition-all', product.isActive ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400')}
-                                >
-                                  {product.isActive ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                                </button>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-headline font-black text-lg text-on-surface leading-tight mb-1 truncate">{product.name}</h4>
+                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest truncate">
+                                    {product.category}
+                                  </p>
+                                  <div className="mt-3">
+                                    <button
+                                      onClick={() => toggleProductStatus(product.id, !!product.isActive)}
+                                      className={cn('px-3 py-1.5 rounded-xl flex items-center gap-2 transition-all text-[10px] font-black uppercase tracking-widest', 
+                                        product.isActive ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400')}
+                                    >
+                                      {product.isActive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                      {product.isActive ? 'Visible' : 'Oculto'}
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                              <h4 className="font-headline font-bold text-lg text-on-surface leading-snug mb-1">{product.name}</h4>
-                              <p className="text-[10px] text-secondary font-black uppercase tracking-[0.2em] mb-4">
-                                Categoría: <span className="text-on-surface">{product.category}</span>
-                              </p>
-                              <div className="space-y-2 mb-6">
+                              
+                              <div className="space-y-2 mb-6 bg-surface-container/30 p-4 rounded-[2rem] border border-outline/10">
                                 {product.variants ? (
                                   product.variants.map((v, i) => (
-                                    <div key={i} className="flex justify-between items-center text-xs font-bold py-1.5 border-b border-outline/20 last:border-none">
+                                    <div key={i} className="flex justify-between items-center text-xs font-bold py-1 border-b border-outline/10 last:border-none">
                                       <span className="text-secondary">{v.label}</span>
                                       <span className="text-on-surface">{formatCurrency(v.price)}</span>
                                     </div>
                                   ))
                                 ) : (
-                                  <div className="flex justify-between items-center text-sm font-black py-1.5 pt-4">
-                                    <span className="text-primary">Precio Base</span>
+                                  <div className="flex justify-between items-center text-sm font-black">
+                                    <span className="text-primary text-[10px] uppercase tracking-widest">Precio Base</span>
                                     <span className="text-on-surface">{formatCurrency(product.basePrice || 0)}</span>
                                   </div>
                                 )}
@@ -1023,7 +1041,7 @@ export default function Management() {
             )}
 
           </AnimatePresence>
-        </main>
+        </div>
 
         {/* ── MODALS (todos preservados) ──────────────────────────────────── */}
 
@@ -1271,9 +1289,6 @@ export default function Management() {
             </div>
           )}
         </AnimatePresence>
-
-        <BottomNav />
-      </div>
-    </div>
+    </>
   );
 }

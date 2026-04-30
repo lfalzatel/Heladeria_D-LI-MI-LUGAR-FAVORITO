@@ -3,36 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
+import { useHeaderStore } from '../stores/useHeaderStore';
 
 interface AppHeaderProps {
   /** Muestra botón de regreso */
   backTo?: string;
-  /** Slot izquierdo personalizado (ej: buscador) */
-  left?: React.ReactNode;
-  /** Si true, muestra campana de notificaciones */
-  showBell?: boolean;
-  /** Slot derecho adicional antes del UserMenu */
-  rightExtra?: React.ReactNode;
 }
 
 /**
  * Header unificado para todas las páginas.
- * Izquierda: logo D (mobile) + back button (opcional) + slot left
- * Derecha: bell (opcional) + UserMenu
- *
- * Los títulos y subtítulos de cada página deben ir
- * DEBAJO de este header, dentro del <main> de cada página.
  */
-export default function AppHeader({ backTo, left, showBell = true, rightExtra }: AppHeaderProps) {
+export default function AppHeader({ backTo }: AppHeaderProps) {
   const navigate = useNavigate();
+  const { leftExtra, rightExtra, showBell } = useHeaderStore();
 
   return (
-    <header className="flex justify-between items-center px-4 sm:px-8 h-16 sm:h-20 bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-[100] shadow-sm">
+    <header className="flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-[100] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}
         {!backTo && (
-          <div className="lg:hidden w-10 h-10 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
             <img 
               src="/pwa-192x192.png" 
               alt="D'LI" 
@@ -55,7 +46,7 @@ export default function AppHeader({ backTo, left, showBell = true, rightExtra }:
         )}
 
         {/* Slot izquierdo personalizado */}
-        {left}
+        {leftExtra}
       </div>
 
       {/* ── Lado derecho ── */}
@@ -107,12 +98,23 @@ export function HeaderSearch({
 }
 
 /** Sub-componente: bloque título + subtítulo debajo del header */
-export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
-    <div className="px-4 sm:px-8 pt-5 pb-3 border-b border-outline/20 bg-surface-container-lowest">
-      <h1 className="font-headline font-bold text-xl sm:text-2xl text-on-surface leading-tight">{title}</h1>
-      {subtitle && (
-        <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mt-0.5">{subtitle}</p>
+    <div className="px-4 sm:px-10 pt-8 pb-6 border-b border-outline/10 bg-gradient-to-b from-white to-surface-container-lowest/30 flex items-center justify-between gap-4 sticky top-16 sm:top-24 z-[90] backdrop-blur-md">
+      <div className="min-w-0 flex-1">
+        <h1 className="font-headline font-black text-xl sm:text-4xl text-on-surface tracking-tight leading-none mb-1 truncate">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-[0.2em] truncate">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {actions && (
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {actions}
+        </div>
       )}
     </div>
   );

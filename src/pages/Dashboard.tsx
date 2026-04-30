@@ -26,10 +26,8 @@ import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link, useLocation } from 'react-router-dom';
-import UserMenu from '../components/UserMenu';
-import BottomNav from '../components/BottomNav';
-import AppHeader, { PageTitle } from '../components/AppHeader';
-import AdminSidebar from '../components/AdminSidebar';
+import { PageTitle } from '../components/AppHeader';
+import { useHeaderStore } from '../stores/useHeaderStore';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -148,184 +146,184 @@ export default function Dashboard() {
     { id: 'mesa3', label: 'M3', status: carts['mesa3']?.items.length > 0 ? 'Ocupada' : 'Libre' },
   ];
 
+  const { setHeader, clearHeader } = useHeaderStore();
+
+  useEffect(() => {
+    if (profile) {
+      setHeader({
+        title: `Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`,
+        subtitle: profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Heladería hoy"
+      });
+    }
+    return () => clearHeader();
+  }, [profile, setHeader, clearHeader]);
+
   return (
-    <div className="min-h-screen flex bg-surface-container-lowest">
-      <AdminSidebar />
-
-      <main className="flex-1 flex flex-col min-h-screen">
-        <AppHeader showBell />
-        <PageTitle
-          title={`Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`}
-          subtitle={profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Heladería hoy"}
-        />
-
-        <div className="p-4 sm:p-8 max-w-7xl w-full flex flex-col gap-6 sm:gap-8 pb-32 relative">
-          {/* Key Metrics */}
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {stats.map((stat, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                transition={{ 
-                  duration: 0.6, 
-                  ease: [0.34, 1.56, 0.64, 1],
-                  delay: i * 0.1 
-                }}
-                className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm flex items-center gap-6"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
-                   {stat.icon}
+    <>
+      <div className="p-4 sm:p-8 max-w-7xl w-full flex flex-col gap-6 sm:gap-8 pb-32 relative">
+        {/* Key Metrics */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {stats.map((stat, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ 
+                duration: 0.6, 
+                ease: [0.34, 1.56, 0.64, 1],
+                delay: i * 0.1 
+              }}
+              className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm flex items-center gap-6"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
+                 {stat.icon}
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-secondary mb-1">{stat.label}</p>
+                <div className="flex items-center gap-4">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight">{stat.value}</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold">{stat.trend}</span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-secondary mb-1">{stat.label}</p>
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-3xl font-black text-on-surface tracking-tight">{stat.value}</h3>
-                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold">{stat.trend}</span>
-                  </div>
-                  <p className="text-[10px] text-secondary/60 mt-1 font-medium">{stat.label2}</p>
-                </div>
+                <p className="text-[10px] text-secondary/60 mt-1 font-medium">{stat.label2}</p>
+              </div>
+            </motion.div>
+          ))}
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Sales List */}
+          <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-6 sm:p-8 border border-outline/50 shadow-sm flex flex-col">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                 <h4 className="font-headline font-bold text-lg text-on-surface">Ventas Recientes</h4>
+                 <p className="text-secondary text-[10px] uppercase font-bold tracking-widest mt-1">Corte de hoy</p>
+              </div>
+              <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/5 rounded-full ring-1 ring-success/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                    <span className="text-[10px] font-black text-success uppercase">En Vivo</span>
+                 </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 flex flex-col gap-3 min-h-[400px]">
+              {combinedRecent.length > 0 ? (
+                combinedRecent.map((sale, i) => (
+                  <motion.div 
+                    key={sale.id}
+                    initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                    transition={{ 
+                      duration: 0.6, 
+                      ease: [0.34, 1.56, 0.64, 1],
+                      delay: i * 0.05 
+                    }}
+                    onClick={() => setSelectedSale(sale)}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low/50 hover:bg-white border border-transparent hover:border-primary/10 transition-all group cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                        <Receipt className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                           <h4 className="font-bold text-sm text-on-surface">{sale.tableName}</h4>
+                           <span className="text-[9px] px-2 py-0.5 bg-surface-container rounded-full font-black text-secondary uppercase tracking-tighter">
+                              {sale.paymentMethod === 'cash' ? 'Efectivo' : (sale.type === 'online' ? 'Digital' : 'Transf')}
+                           </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                           <UserIcon className="w-3 h-3 text-secondary/40" />
+                           <p className="text-[10px] font-bold text-secondary uppercase tracking-wide">
+                              {sale.sellerName} <span className="mx-1 opacity-20">•</span> {sale.hour}
+                           </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="font-black text-on-surface text-base group-hover:text-primary transition-colors">{formatCurrency(sale.total)}</p>
+                      <p className="text-[9px] font-bold text-secondary uppercase mt-0.5">{sale.items.length} productos</p>
+                    </div>
               </motion.div>
-            ))}
-          </section>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Recent Sales List */}
-            <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-6 sm:p-8 border border-outline/50 shadow-sm flex flex-col">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                   <h4 className="font-headline font-bold text-lg text-on-surface">Ventas Recientes</h4>
-                   <p className="text-secondary text-[10px] uppercase font-bold tracking-widest mt-1">Corte de hoy</p>
-                </div>
-                <div className="flex items-center gap-2">
-                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/5 rounded-full ring-1 ring-success/20">
-                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                      <span className="text-[10px] font-black text-success uppercase">En Vivo</span>
-                   </div>
-                </div>
-              </div>
-              
-              <div className="flex-1 flex flex-col gap-3 min-h-[400px]">
-                {combinedRecent.length > 0 ? (
-                  combinedRecent.map((sale, i) => (
-                    <motion.div 
-                      key={sale.id}
-                      initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
-                      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                      transition={{ 
-                        duration: 0.6, 
-                        ease: [0.34, 1.56, 0.64, 1],
-                        delay: i * 0.05 
-                      }}
-                      onClick={() => setSelectedSale(sale)}
-                      className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low/50 hover:bg-white border border-transparent hover:border-primary/10 transition-all group cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                          <Receipt className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                             <h4 className="font-bold text-sm text-on-surface">{sale.tableName}</h4>
-                             <span className="text-[9px] px-2 py-0.5 bg-surface-container rounded-full font-black text-secondary uppercase tracking-tighter">
-                                {sale.paymentMethod === 'cash' ? 'Efectivo' : (sale.type === 'online' ? 'Digital' : 'Transf')}
-                             </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                             <UserIcon className="w-3 h-3 text-secondary/40" />
-                             <p className="text-[10px] font-bold text-secondary uppercase tracking-wide">
-                                {sale.sellerName} <span className="mx-1 opacity-20">•</span> {sale.hour}
-                             </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <p className="font-black text-on-surface text-base group-hover:text-primary transition-colors">{formatCurrency(sale.total)}</p>
-                        <p className="text-[9px] font-bold text-secondary uppercase mt-0.5">{sale.items.length} productos</p>
-                      </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center py-10 text-center opacity-30">
-                <Receipt className="w-12 h-12 mb-4" />
-                <p className="font-bold">No hay ventas registradas aún</p>
-                <p className="text-xs">Las ventas aparecerán aquí en tiempo real</p>
-              </div>
+            ))
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center py-10 text-center opacity-30">
+              <Receipt className="w-12 h-12 mb-4" />
+              <p className="font-bold">No hay ventas registradas aún</p>
+              <p className="text-xs">Las ventas aparecerán aquí en tiempo real</p>
+            </div>
+          )}
+        </div>
+        
+        {combinedRecent.length > 0 && (
+              <button className="w-full mt-6 py-4 rounded-2xl border-2 border-primary/10 text-primary font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-primary/5 transition-all">
+                 Ver Todas las Ventas
+              </button>
             )}
           </div>
-          
-          {combinedRecent.length > 0 && (
-                <button className="w-full mt-6 py-4 rounded-2xl border-2 border-primary/10 text-primary font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-primary/5 transition-all">
-                   Ver Todas las Ventas
-                </button>
-              )}
-            </div>
 
-            {/* Side Column: Table Status and Stock Alerts */}
-            <div className="flex flex-col gap-8">
-               {/* Tables Status */}
-               <div className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm">
-                  <h4 className="font-headline font-bold text-sm text-on-surface mb-6 flex items-center justify-between">
-                     Estado de Mesas
-                     <ChevronRight className="w-4 h-4 text-secondary/40" />
-                  </h4>
-                  <div className="grid grid-cols-3 gap-3">
-                     {tableStatus.map(t => (
-                        <div key={t.id} className="flex flex-col items-center gap-2">
-                           <div className={cn(
-                              "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
-                              t.status === 'Ocupada' ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-surface-container text-secondary/40"
-                           )}>
-                              <TableIcon className="w-6 h-6" />
+          {/* Side Column: Table Status and Stock Alerts */}
+          <div className="flex flex-col gap-8">
+             {/* Tables Status */}
+             <div className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm">
+                <h4 className="font-headline font-bold text-sm text-on-surface mb-6 flex items-center justify-between">
+                   Estado de Mesas
+                   <ChevronRight className="w-4 h-4 text-secondary/40" />
+                </h4>
+                <div className="grid grid-cols-3 gap-3">
+                   {tableStatus.map(t => (
+                      <div key={t.id} className="flex flex-col items-center gap-2">
+                         <div className={cn(
+                            "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
+                            t.status === 'Ocupada' ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-surface-container text-secondary/40"
+                         )}>
+                            <TableIcon className="w-6 h-6" />
+                         </div>
+                         <p className="text-[10px] font-bold text-on-surface">{t.label}</p>
+                         <p className={cn("text-[9px] font-black uppercase tracking-widest", t.status === 'Ocupada' ? "text-orange-600" : "text-success")}>
+                            {t.status}
+                         </p>
+                      </div>
+                   ))}
+                </div>
+             </div>
+
+             {/* Stock Alerts (Only Admin/Propietario) */}
+             {(profile?.role === 'admin' || profile?.role === 'propietario') && (
+               <div className="bg-white rounded-[2rem] p-6 border border-primary/10 shadow-sm bg-gradient-to-br from-white to-primary/5">
+                  <div className="flex items-center gap-2 text-primary mb-6">
+                     <AlertCircle className="w-4 h-4" />
+                     <h4 className="font-headline font-bold text-sm text-on-surface">Stock Crítico</h4>
+                  </div>
+                  
+                  <div className="flex flex-col gap-4">
+                     {criticalStock.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between group">
+                           <div>
+                              <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{item.item}</p>
+                              <p className="text-[9px] text-secondary font-medium">Límite: {item.limit}</p>
                            </div>
-                           <p className="text-[10px] font-bold text-on-surface">{t.label}</p>
-                           <p className={cn("text-[9px] font-black uppercase tracking-widest", t.status === 'Ocupada' ? "text-orange-600" : "text-success")}>
-                              {t.status}
-                           </p>
+                           <div className="text-right">
+                              <p className="text-xs font-black text-primary">{item.stock}</p>
+                              <div className="w-16 h-1.5 bg-surface-container rounded-full mt-1 overflow-hidden">
+                                 <div className="h-full bg-primary rounded-full w-[30%]" />
+                              </div>
+                           </div>
                         </div>
                      ))}
                   </div>
+
+                  <Link to="/admin/management?tab=insumos" className="w-full">
+                    <button className="w-full mt-6 py-3 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all">
+                       Gestionar Insumos
+                    </button>
+                  </Link>
                </div>
-
-               {/* Stock Alerts (Only Admin/Propietario) */}
-               {(profile?.role === 'admin' || profile?.role === 'propietario') && (
-                 <div className="bg-white rounded-[2rem] p-6 border border-primary/10 shadow-sm bg-gradient-to-br from-white to-primary/5">
-                    <div className="flex items-center gap-2 text-primary mb-6">
-                       <AlertCircle className="w-4 h-4" />
-                       <h4 className="font-headline font-bold text-sm text-on-surface">Stock Crítico</h4>
-                    </div>
-                    
-                    <div className="flex flex-col gap-4">
-                       {criticalStock.map((item, i) => (
-                          <div key={i} className="flex items-center justify-between group">
-                             <div>
-                                <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{item.item}</p>
-                                <p className="text-[9px] text-secondary font-medium">Límite: {item.limit}</p>
-                             </div>
-                             <div className="text-right">
-                                <p className="text-xs font-black text-primary">{item.stock}</p>
-                                <div className="w-16 h-1.5 bg-surface-container rounded-full mt-1 overflow-hidden">
-                                   <div className="h-full bg-primary rounded-full w-[30%]" />
-                                </div>
-                             </div>
-                          </div>
-                       ))}
-                    </div>
-
-                    <Link to="/admin/management?tab=insumos" className="w-full">
-                      <button className="w-full mt-6 py-3 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all">
-                         Gestionar Insumos
-                      </button>
-                    </Link>
-                 </div>
-               )}
-            </div>
+             )}
           </div>
         </div>
-      </main>
-
-      <BottomNav />
+      </div>
 
       {/* ── MODAL DE DETALLE DE VENTA ── */}
       <AnimatePresence>
@@ -455,36 +453,6 @@ export default function Dashboard() {
           </div>
         )}
       </AnimatePresence>
-
-      <BottomNav />
-    </div>
-  );
-}
-
-function SidebarLink({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <div className={cn(
-      "flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all text-sm font-bold cursor-pointer group",
-      active 
-        ? "bg-primary text-white shadow-lg shadow-primary/20" 
-        : "text-slate-500 hover:text-white hover:bg-white/5"
-    )}>
-      <span className={cn("transition-colors", active ? "text-white" : "text-slate-600 group-hover:text-primary")}>{icon}</span>
-      <span className="tracking-tight">{label}</span>
-      {active && <div className="ml-auto w-1 h-3 rounded-full bg-white shadow-[0_0_10px_white]" />}
-    </div>
-  );
-}
-
-function BottomNavLink({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <div className={cn(
-      "flex flex-col items-center gap-1 transition-all",
-      active ? "text-primary scale-110" : "text-secondary/40"
-    )}>
-      {icon}
-      <span className={cn("text-[9px] font-black uppercase tracking-widest", active ? "opacity-100" : "opacity-0")}>{label}</span>
-      {active && <div className="w-1 h-1 rounded-full bg-primary mt-1 shadow-[0_0_8px_#E91E8C]" />}
-    </div>
+    </>
   );
 }

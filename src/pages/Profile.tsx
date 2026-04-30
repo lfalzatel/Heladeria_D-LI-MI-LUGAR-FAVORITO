@@ -16,17 +16,15 @@ import {
   Phone,
   MapPin
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import UserMenu from '../components/UserMenu';
-import BottomNav from '../components/BottomNav';
-import AppHeader, { PageTitle } from '../components/AppHeader';
-import AdminSidebar from '../components/AdminSidebar';
+import { useHeaderStore } from '../stores/useHeaderStore';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 
 export default function Profile() {
   const { profile, signOut, updateProfile } = useAuthStore();
+  const { setHeader, clearHeader } = useHeaderStore();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -56,24 +54,27 @@ export default function Profile() {
     }
   };
 
+  useEffect(() => {
+    setHeader({
+      title: "Mi Perfil",
+      subtitle: "Información de Cuenta"
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader]);
+
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen flex bg-surface-container-lowest overflow-x-hidden w-full">
-      <AdminSidebar />
-      <div className="flex-1 w-full min-w-0 flex flex-col min-h-screen relative pb-24 lg:pb-0">
-        <AppHeader showBell />
-        <PageTitle title="Mi Perfil" subtitle="Información de Cuenta" />
-
-        <div className="px-4 sm:px-6 flex justify-end">
-          <button 
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-all border border-primary/20"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            Editar
-          </button>
-        </div>
+    <>
+      <div className="px-4 sm:px-6 flex justify-end mb-4">
+        <button 
+          onClick={() => setIsEditing(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-all border border-primary/20"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+          Editar
+        </button>
+      </div>
 
       <main className="p-4 sm:p-6 max-w-4xl mx-auto w-full flex flex-col gap-6">
         {/* Profile Card */}
@@ -249,9 +250,7 @@ export default function Profile() {
         )}
       </AnimatePresence>
 
-      <BottomNav />
-      </div>
-    </div>
+    </>
   );
 }
 

@@ -11,9 +11,8 @@ import {
   Navigation, Banknote, Smartphone, CreditCard, Hash,
   CheckCircle2, ChevronRight, Trash2
 } from 'lucide-react';
-import AppHeader, { HeaderSearch, PageTitle } from '../components/AppHeader';
-import BottomNav from '../components/BottomNav';
-import AdminSidebar from '../components/AdminSidebar';
+import { useHeaderStore } from '../stores/useHeaderStore';
+import { HeaderSearch } from '../components/AppHeader';
 import OrderConfigModal from '../components/OrderConfigModal';
 import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
@@ -51,6 +50,7 @@ const PAYMENT_OPTIONS = [
 
 export default function ClientCompras() {
   const { profile } = useAuthStore();
+  const { setHeader, clearHeader } = useHeaderStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('dli_heladeria_cart');
@@ -70,6 +70,21 @@ export default function ClientCompras() {
   useEffect(() => {
     localStorage.setItem('dli_heladeria_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    setHeader({
+      title: "Mis Compras",
+      subtitle: "Elige tus antojos D'LI",
+      leftExtra: (
+        <HeaderSearch
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Buscar un producto..."
+        />
+      )
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader, searchTerm]);
 
   useEffect(() => {
     const q = query(collection(db, 'products'), where('isActive', '==', true));
@@ -235,24 +250,7 @@ export default function ClientCompras() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-container-lowest to-surface-container/20 flex overflow-x-hidden w-full">
-      <AdminSidebar />
-      
-      <div className="flex-1 w-full min-w-0 flex flex-col min-h-screen pb-24 lg:pb-0 relative">
-        <AppHeader
-          showBell
-          left={
-            <HeaderSearch
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Buscar un producto..."
-            />
-          }
-        />
-        
-        <PageTitle title="Mis Compras" subtitle="Elige tus antojos D'LI" />
-
-        <main className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-5 pt-2">
+    <main className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-5 pt-2">
           {/* Category filter */}
           <div className="flex gap-1.5 p-1 overflow-x-auto hide-scrollbar bg-surface-container rounded-xl text-[10px] font-black uppercase">
             {CATEGORIES.map(cat => (
@@ -403,9 +401,7 @@ export default function ClientCompras() {
               <p className="text-sm font-bold">Sin productos en esta categoría</p>
             </div>
           )}
-        </main>
 
-        <BottomNav />
 
         {/* Floating Cart Button for Client */}
         <AnimatePresence>
@@ -443,7 +439,6 @@ export default function ClientCompras() {
             </motion.button>
           )}
         </AnimatePresence>
-      </div>
 
       {/* Order Config Modal */}
       {selectedProduct && (
@@ -601,6 +596,6 @@ export default function ClientCompras() {
           </div>
         )}
       </AnimatePresence>
-    </div>
-  );
+      </main>
+    );
 }

@@ -4,23 +4,15 @@ import { db } from '../lib/firebase';
 import { Product, CartItem } from '../types';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useTableCartStore } from '../stores/useTableCartStore';
-import { useFlavorsStore } from '../stores/useFlavorsStore';
+import { useHeaderStore } from '../stores/useHeaderStore';
 import { 
   MenuSquare, 
-  Table as TableIcon, 
-  Receipt, 
   ShoppingBag, 
   Plus, 
   Minus,
   ShoppingCart,
   IceCream,
-  Menu,
-  Database,
   Search,
-  LayoutDashboard,
-  MoreHorizontal,
-  ChevronRight,
-  ChevronLeft,
   X
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
@@ -28,10 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import OrderConfigModal from '../components/OrderConfigModal';
 import CartDrawer from '../components/CartDrawer';
 import { toast } from 'sonner';
-import { Link, useLocation } from 'react-router-dom';
-import AdminSidebar from '../components/AdminSidebar';
-import AppHeader, { HeaderSearch } from '../components/AppHeader';
-import BottomNav from '../components/BottomNav';
+import { useLocation } from 'react-router-dom';
 
 export default function POS() {
   const location = useLocation();
@@ -143,8 +132,32 @@ export default function POS() {
     // products is already sorted by salesCount in the listener
   const itemCount = useTableCartStore(state => state.getItemCount(activeTable));
 
+  const { setHeader, clearHeader } = useHeaderStore();
+
+  useEffect(() => {
+    setHeader({
+      title: 'Punto de Venta',
+      subtitle: 'Registra tus ventas y gestiona mesas',
+      rightExtra: (
+        <button 
+          onClick={() => setIsCartOpen(true)}
+          className="hidden sm:flex relative items-center justify-center w-11 h-11 rounded-full bg-surface-container hover:bg-primary/5 transition-colors mr-2 group border border-outline/10"
+          title="Ver carrito"
+        >
+          <ShoppingCart className="w-6 h-6 text-secondary group-hover:text-primary transition-colors" />
+          {itemCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+              {itemCount}
+            </span>
+          )}
+        </button>
+      )
+    });
+    return () => clearHeader();
+  }, [setHeader, clearHeader, itemCount]);
+
   return (
-    <div className="min-h-screen flex bg-surface">
+    <>
       <AnimatePresence>
         {selectedProduct && (
           <OrderConfigModal 
@@ -226,158 +239,136 @@ export default function POS() {
         onEdit={handleEdit}
       />
 
-      <AdminSidebar />
-
-      <div className="flex-1 flex flex-col min-h-screen relative overflow-x-hidden">
-        <AppHeader
-          showBell
-          rightExtra={
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="hidden sm:flex relative items-center justify-center w-11 h-11 rounded-full bg-surface-container hover:bg-primary/5 transition-colors mr-2 group border border-outline/10"
-              title="Ver carrito"
-            >
-              <ShoppingCart className="w-6 h-6 text-secondary group-hover:text-primary transition-colors" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                  {itemCount}
-                </span>
-              )}
-            </button>
-          }
-        />
-
-        <main className="flex-1 p-4 sm:p-8 flex flex-col gap-6 sm:gap-10 pb-32">
-          <section id="mesas-section">
-            <header className="flex items-center justify-between mb-3 px-1">
-              <h3 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Ubicación del Pedido</h3>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 mr-3">
-                   <div className="w-2 h-2 rounded-full bg-success/20 ring-1 ring-success animate-pulse" />
-                   <span className="text-[8px] font-bold text-secondary uppercase">Libre</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                   <div className="w-2 h-2 rounded-full bg-primary/20 ring-1 ring-primary animate-pulse" />
-                   <span className="text-[8px] font-bold text-secondary uppercase">Ocupada</span>
-                </div>
+      <main className="flex-1 p-4 sm:p-8 flex flex-col gap-6 sm:gap-10 pb-32">
+        <section id="mesas-section">
+          <header className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Ubicación del Pedido</h3>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 mr-3">
+                 <div className="w-2 h-2 rounded-full bg-success/20 ring-1 ring-success animate-pulse" />
+                 <span className="text-[8px] font-bold text-secondary uppercase">Libre</span>
               </div>
-            </header>
-            <div className="flex items-center gap-2 overflow-x-auto pb-4 hide-scrollbar snap-x px-1">
-              {tables.map((table, index) => {
-                const isActive = activeTable === table.id;
-                const cartEmpty = !carts[table.id]?.items.length;
-                return (
-                  <button 
-                    key={table.id}
-                    onClick={() => setActiveTable(table.id)}
-                    className={cn(
-                      "snap-start flex-shrink-0 min-w-[60px] h-12 rounded-xl flex items-center justify-center px-4 gap-2 transition-all duration-300 relative border-b-4",
-                      isActive 
-                        ? (cartEmpty 
-                            ? "bg-success text-white border-success shadow-xl -translate-y-1" 
-                            : "bg-primary text-white border-primary shadow-xl -translate-y-1")
-                        : (cartEmpty 
-                            ? "bg-white border-success/20 text-success hover:border-success/50" 
-                            : "bg-white border-primary/20 text-primary hover:border-primary/50"
-                          )
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5">
-                       <ShoppingBag className={cn("w-4 h-4", isActive ? "text-white" : "text-inherit opacity-40")} />
-                       <span className={cn("font-black text-sm", isActive ? "text-white" : "")}>
-                          {table.type === 'delivery' ? '' : table.label.replace('Mesa ', '')}
-                       </span>
-                    </div>
-                  </button>
-                );
-              })}
-              
-              <button 
-                className="flex-shrink-0 w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/20 hover:bg-primary/5 hover:text-primary transition-all border-2 border-dashed border-outline/40"
-                onClick={() => toast.info('Función para agregar mesas próximamente')}
-              >
-                <Plus className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                 <div className="w-2 h-2 rounded-full bg-primary/20 ring-1 ring-primary animate-pulse" />
+                 <span className="text-[8px] font-bold text-secondary uppercase">Ocupada</span>
+              </div>
             </div>
-          </section>
-
-          <section id="search-section" className="px-1">
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-secondary/40 group-focus-within:text-primary transition-colors" />
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Busca por nombre de producto..."
-                className="w-full bg-white border-2 border-outline/30 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface placeholder:text-secondary/30 transition-all outline-none"
-              />
-              {searchTerm && (
+          </header>
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 hide-scrollbar snap-x px-1">
+            {tables.map((table, index) => {
+              const isActive = activeTable === table.id;
+              const cartEmpty = !carts[table.id]?.items.length;
+              return (
                 <button 
-                  onClick={() => setSearchTerm('')}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                >
-                  <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center hover:bg-surface-container transition-colors">
-                    <X className="w-4 h-4 text-secondary/60" />
-                  </div>
-                </button>
-              )}
-            </div>
-          </section>
-
-          <section id="catalogo-section">
-            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
+                  key={table.id}
+                  onClick={() => setActiveTable(table.id)}
                   className={cn(
-                    "whitespace-nowrap px-6 py-2.5 rounded-xl font-bold text-xs transition-all border-2",
-                    activeCategory === cat.id 
-                      ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
-                      : "bg-white border-outline/50 text-secondary hover:border-primary/30"
+                    "snap-start flex-shrink-0 min-w-[60px] h-12 rounded-xl flex items-center justify-center px-4 gap-2 transition-all duration-300 relative border-b-4",
+                    isActive 
+                      ? (cartEmpty 
+                          ? "bg-success text-white border-success shadow-xl -translate-y-1" 
+                          : "bg-primary text-white border-primary shadow-xl -translate-y-1")
+                      : (cartEmpty 
+                          ? "bg-white border-success/20 text-success hover:border-success/50" 
+                          : "bg-white border-primary/20 text-primary hover:border-primary/50"
+                        )
                   )}
                 >
-                  {cat.label}
+                  <div className="flex items-center gap-1.5">
+                     <ShoppingBag className={cn("w-4 h-4", isActive ? "text-white" : "text-inherit opacity-40")} />
+                     <span className={cn("font-black text-sm", isActive ? "text-white" : "")}>
+                        {table.type === 'delivery' ? '' : table.label.replace('Mesa ', '')}
+                     </span>
+                  </div>
                 </button>
-              ))}
-            </div>
-          </section>
+              );
+            })}
+            
+            <button 
+              className="flex-shrink-0 w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/20 hover:bg-primary/5 hover:text-primary transition-all border-2 border-dashed border-outline/40"
+              onClick={() => toast.info('Función para agregar mesas próximamente')}
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
+        </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-8">
-            {loading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] bg-surface-container animate-pulse rounded-3xl" />
-              ))
-            ) : filteredProducts.length > 0 ? (
-              filteredProducts.map((product, i) => (
-                <motion.div 
-                  key={product.id}
-                  initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
-                  animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                  transition={{ 
-                    duration: 0.6, 
-                    ease: [0.34, 1.56, 0.64, 1],
-                    delay: i * 0.05 
-                  }}
-                >
-                  <ProductCard 
-                    product={product} 
-                    onClick={() => setSelectedProduct(product)}
-                    onDetailClick={() => setDetailsProduct(product)}
-                  />
-                </motion.div>
-              ))
-            ) : (
-              <div className="col-span-full py-20 flex flex-col items-center opacity-20">
-                <MenuSquare className="w-12 h-12 mb-4" />
-                <p className="font-bold">No hay productos en esta categoría</p>
-              </div>
+        <section id="search-section" className="px-1">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-secondary/40 group-focus-within:text-primary transition-colors" />
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Busca por nombre de producto..."
+              className="w-full bg-white border-2 border-outline/30 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface placeholder:text-secondary/30 transition-all outline-none"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center"
+              >
+                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center hover:bg-surface-container transition-colors">
+                  <X className="w-4 h-4 text-secondary/60" />
+                </div>
+              </button>
             )}
-          </section>
-        </main>
-      </div>
+          </div>
+        </section>
+
+        <section id="catalogo-section">
+          <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={cn(
+                  "whitespace-nowrap px-6 py-2.5 rounded-xl font-bold text-xs transition-all border-2",
+                  activeCategory === cat.id 
+                    ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
+                    : "bg-white border-outline/50 text-secondary hover:border-primary/30"
+                )}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-8">
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[4/5] bg-surface-container animate-pulse rounded-3xl" />
+            ))
+          ) : filteredProducts.length > 0 ? (
+            filteredProducts.map((product, i) => (
+              <motion.div 
+                key={product.id}
+                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                transition={{ 
+                  duration: 0.6, 
+                  ease: [0.34, 1.56, 0.64, 1],
+                  delay: i * 0.05 
+                }}
+              >
+                <ProductCard 
+                  product={product} 
+                  onClick={() => setSelectedProduct(product)}
+                  onDetailClick={() => setDetailsProduct(product)}
+                />
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full py-20 flex flex-col items-center opacity-20">
+              <MenuSquare className="w-12 h-12 mb-4" />
+              <p className="font-bold">No hay productos en esta categoría</p>
+            </div>
+          )}
+        </section>
+      </main>
 
       {/* Floating Cart Button - Mobile Only */}
       <AnimatePresence>
@@ -418,9 +409,7 @@ export default function POS() {
           </motion.button>
         )}
       </AnimatePresence>
-
-      <BottomNav onCartOpen={() => setIsCartOpen(true)} />
-    </div>
+    </>
   );
 }
 
@@ -571,30 +560,3 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
   );
 }
 
-function SidebarLink({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <div className={cn(
-      "flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all text-sm font-bold cursor-pointer group",
-      active 
-        ? "bg-primary text-white shadow-lg shadow-primary/20" 
-        : "text-slate-500 hover:text-white hover:bg-white/5"
-    )}>
-      <span className={cn("transition-colors", active ? "text-white" : "text-slate-600 group-hover:text-primary")}>{icon}</span>
-      <span className="tracking-tight">{label}</span>
-      {active && <div className="ml-auto w-1 h-3 rounded-full bg-white shadow-[0_0_10px_white]" />}
-    </div>
-  );
-}
-
-function BottomNavLink({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <div className={cn(
-      "flex flex-col items-center gap-1 transition-all",
-      active ? "text-primary scale-110" : "text-secondary/40"
-    )}>
-      {icon}
-      <span className={cn("text-[9px] font-black uppercase tracking-widest", active ? "opacity-100" : "opacity-0")}>{label}</span>
-      {active && <div className="w-1 h-1 rounded-full bg-primary mt-1 shadow-[0_0_8px_#E91E8C]" />}
-    </div>
-  );
-}
