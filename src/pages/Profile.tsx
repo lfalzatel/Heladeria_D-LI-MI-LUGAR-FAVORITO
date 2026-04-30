@@ -21,18 +21,55 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../lib/firebase';
+import { Camera, Loader2 } from 'lucide-react';
 
 export default function Profile() {
   const { profile, user, signOut, updateProfile } = useAuthStore();
   const { setHeader, clearHeader } = useHeaderStore();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     name: profile?.name || user?.displayName || '',
     cedula: profile?.cedula || '',
     phone: profile?.phone || '',
-    address: profile?.address || ''
+    address: profile?.address || '',
+    imageUrl: profile?.imageUrl || user?.photoURL || ''
   });
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      return toast.error('Por favor, selecciona una imagen válida');
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error('La imagen es muy pesada (máximo 2MB)');
+    }
+
+    setIsUploading(true);
+    const storageRef = ref(storage, `profiles/${user.uid}/${Date.now()}_${file.name}`);
+
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      await updateProfile({ imageUrl: downloadURL });
+      setFormData(prev => ({ ...prev, imageUrl: downloadURL }));
+      toast.success('Foto de perfil actualizada');
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error('Error al subir la imagen');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSignOut = async () => {
@@ -89,14 +126,37 @@ export default function Profile() {
           <div className="absolute top-0 left-0 w-full h-24 bg-primary/5" />
           
           <div className="relative mt-4">
-            <div className="w-24 h-24 rounded-3xl bg-surface-container-high border-4 border-white shadow-xl flex items-center justify-center text-primary text-4xl font-black overflow-hidden">
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <div className="w-24 h-24 rounded-3xl bg-surface-container-high border-4 border-white shadow-xl flex items-center justify-center text-primary text-4xl font-black overflow-hidden relative group">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={profile?.name} className="w-full h-full object-cover rounded-3xl" referrerPolicy="no-referrer" />
               ) : (
                 <span className="uppercase">{(profile?.name || user?.displayName || 'U')[0]}</span>
               )}
+              
+              {/* Overlay de carga o cambio de foto */}
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className={cn(
+                  "absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                  isUploading && "opacity-100"
+                )}
+              >
+                {isUploading ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </button>
             </div>
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success rounded-xl border-2 border-white flex items-center justify-center shadow-lg">
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success rounded-xl border-2 border-white flex items-center justify-center shadow-lg pointer-events-none">
               <Shield className="w-4 h-4 text-white" />
             </div>
           </div>
@@ -114,7 +174,7 @@ export default function Profile() {
               </span>
               {profile?.cedula && (
                 <span className="text-[10px] font-black text-secondary bg-surface-container px-3 py-1 rounded-full uppercase tracking-widest">
-                  CC: {profile.cedula}
+                  CC: {profile?.cedula}
                 </span>
               )}
             </div>
@@ -124,9 +184,9 @@ export default function Profile() {
 
           <div className="w-full space-y-4">
             <ProfileInfoItem icon={<Mail className="w-4 h-4" />} label="Correo Electrónico" value={userEmail || '--'} />
-            <ProfileInfoItem icon={<CreditCard className="w-4 h-4" />} label="Cédula de Ciudadanía" value={profile.cedula || 'No registrada'} />
-            <ProfileInfoItem icon={<Phone className="w-4 h-4" />} label="Teléfono de Contacto" value={profile.phone || 'No registrado'} />
-            <ProfileInfoItem icon={<MapPin className="w-4 h-4" />} label="Dirección" value={profile.address || 'No registrada'} />
+            <ProfileInfoItem icon={<CreditCard className="w-4 h-4" />} label="Cédula de Ciudadanía" value={profile?.cedula || 'No registrada'} />
+            <ProfileInfoItem icon={<Phone className="w-4 h-4" />} label="Teléfono de Contacto" value={profile?.phone || 'No registrado'} />
+            <ProfileInfoItem icon={<MapPin className="w-4 h-4" />} label="Dirección" value={profile?.address || 'No registrada'} />
           </div>
         </motion.div>
 
