@@ -40,7 +40,9 @@ import {
   EyeOff,
   Boxes,
   Construction,
-  Phone
+  Phone,
+  Mail,
+  MapPin
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -1213,13 +1215,38 @@ export default function Management() {
                       {selectedUserForHistory.imageUrl ? <img src={selectedUserForHistory.imageUrl} alt="" className="w-full h-full object-cover" /> : selectedUserForHistory.name[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-brand font-black text-xl leading-tight uppercase">{selectedUserForHistory.name}</h3>
-                      <p className="text-[10px] font-black text-white/60 tracking-[0.2em] uppercase mt-1">Historial de Registros</p>
+                      <h3 className="text-white font-brand font-black text-xl leading-tight uppercase truncate">{selectedUserForHistory.name}</h3>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                        <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-white/20 text-white border border-white/10">
+                          {selectedUserForHistory.role === 'cliente' ? 'CLIENTE' : selectedUserForHistory.role}
+                        </span>
+                        {selectedUserForHistory.phone && (
+                          <div className="flex items-center gap-1 text-white/80">
+                            <Phone className="w-2.5 h-2.5" />
+                            <span className="text-[9px] font-bold">{selectedUserForHistory.phone}</span>
+                          </div>
+                        )}
+                        {selectedUserForHistory.email && (
+                          <div className="flex items-center gap-1 text-white/80">
+                            <Mail className="w-2.5 h-2.5" />
+                            <span className="text-[9px] font-bold truncate max-w-[120px]">{selectedUserForHistory.email}</span>
+                          </div>
+                        )}
+                        {selectedUserForHistory.address && (
+                          <div className="flex items-center gap-1 text-white/80 w-full mt-1">
+                            <MapPin className="w-2.5 h-2.5" />
+                            <span className="text-[9px] font-bold truncate">{selectedUserForHistory.address}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-surface-container-lowest flex-1 px-6 sm:px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)] overflow-y-auto custom-scrollbar">
+                  <div className="mb-6 px-2">
+                    <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Registro de Actividad</p>
+                  </div>
                   {(() => {
                     const currentMonth = viewDate.getMonth();
                     const currentYear = viewDate.getFullYear();
