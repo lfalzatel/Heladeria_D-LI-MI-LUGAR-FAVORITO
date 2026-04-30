@@ -78,7 +78,7 @@ export default function AdminSidebar() {
     
     // History & Profile (Client)
     { to: '/cliente/historial', icon: <History className="w-5 h-5" />, label: 'Historial', show: isCliente },
-    { to: '/profile',         icon: <User className="w-5 h-5" />, label: 'Mi Perfil', show: isCliente },
+    { to: '/profile',         icon: <User className="w-5 h-5" />, label: 'Mi Perfil', show: isCliente || isVendedor },
   ].filter(item => item.show);
 
   return (

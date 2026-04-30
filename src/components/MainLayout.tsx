@@ -11,8 +11,12 @@ export default function MainLayout() {
   const { title, subtitle, rightExtra, actions } = useHeaderStore();
   const location = useLocation();
 
-  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/pos');
-  const showSidebar = isAdminRoute && (profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor');
+  const isOperationalRoute = location.pathname.startsWith('/admin') || 
+                             location.pathname.startsWith('/pos') || 
+                             location.pathname.startsWith('/profile') || 
+                             location.pathname.startsWith('/cliente/pedidos');
+
+  const showSidebar = isOperationalRoute && (profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor');
 
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">
