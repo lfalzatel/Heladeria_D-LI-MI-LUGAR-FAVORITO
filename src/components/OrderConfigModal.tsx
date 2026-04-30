@@ -110,17 +110,36 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
   // Fruit logic helpers
   const getIncludedSaucesCount = () => {
-    if (isBasicIceCream) return 1;
-    if (product.id === 'adicion-salsa') return 1;
-    return 0;
+    let count = 0;
+    if (isBasicIceCream) count = 1;
+    if (product.id === 'adicion-salsa') count = 1;
+    
+    // Each manual "Salsa" addition grants one more included sauce
+    const sauceAdditionsCount = selectedAdditions.filter(a => a.name.toLowerCase().includes('salsa')).length;
+    count += sauceAdditionsCount;
+    
+    return count;
   };
 
   const getIncludedFruitsCount = () => {
+    let count = 0;
     if (product.category === 'ensaladas' || product.category === 'salpicon') return 99;
-    if (product.id === 'oblea-tradicional') return selectedVariant?.hasFruit ? 1 : 0;
-    if (product.id === 'oblea-cuchareable') return 1;
-    if (product.id === 'adicion-fruta') return 1;
-    return 0;
+    
+    // Check if variant includes fruit (by flag or name)
+    const variantHasFruit = selectedVariant?.hasFruit || 
+                           selectedVariant?.label.toLowerCase().includes('fruta') ||
+                           selectedVariant?.label.toLowerCase().includes('fresa') ||
+                           selectedVariant?.label.toLowerCase().includes('mango') ||
+                           selectedVariant?.label.toLowerCase().includes('durazno');
+
+    if (variantHasFruit) count = 1;
+    if (product.id === 'oblea-cuchareable' || product.category === 'ensaladas') count = 1;
+    
+    // Each manual "Fruta" addition from the additions step grants one more included fruit
+    const fruitAdditionsCount = selectedAdditions.filter(a => a.name.toLowerCase().includes('fruta')).length;
+    count += fruitAdditionsCount;
+    
+    return count;
   };
 
   const includedSaucesCount = getIncludedSaucesCount();
@@ -210,6 +229,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     if (selectedVariant) {
       // Reset flavors if scoops changed
       setSelectedFlavors([]);
+      
+      // Smart pre-selection of fruit based on variant label
+      const label = selectedVariant.label.toLowerCase();
+      if (label.includes('fresa')) setSelectedFrutas(['Fresa']);
+      else if (label.includes('mango')) setSelectedFrutas(['Mango']);
+      else if (label.includes('durazno')) setSelectedFrutas(['Durazno']);
+      else if (!label.includes('fruta')) setSelectedFrutas([]); // Reset if it's a plain variant
     }
   }, [selectedVariant?.label]);
 
@@ -252,7 +278,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       
       // Calculate prices excluding manual fruit and sauce additions (will be handled by extra prices)
       const otherAdditionsPrices = selectedAdditions
-        .filter(a => !a.name.toLowerCase().includes('fruta') && !a.name.toLowerCase().includes('salsa'))
         .reduce((sum, a) => sum + a.price, 0);
         
       const unitPrice = (selectedVariant?.price || product.basePrice || 0) + 
