@@ -104,6 +104,10 @@ export default function Profile() {
   const avatarUrl = profile?.imageUrl || user?.photoURL;
   const userEmail = profile?.email || user?.email;
 
+  const daysActive = profile?.createdAt 
+    ? Math.max(1, Math.floor((Date.now() - (profile.createdAt.toDate ? profile.createdAt.toDate().getTime() : new Date(profile.createdAt).getTime())) / (1000 * 60 * 60 * 24)))
+    : 1;
+
   return (
     <>
       <div className="px-4 sm:px-6 flex justify-end mb-4">
@@ -197,7 +201,7 @@ export default function Profile() {
               <Calendar className="w-5 h-5" />
             </div>
             <p className="text-[9px] font-black text-secondary uppercase tracking-widest">Días Activo</p>
-            <p className="text-xl font-black text-on-surface">12</p>
+            <p className="text-xl font-black text-on-surface">{daysActive}</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-outline/50 shadow-sm flex flex-col items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
@@ -299,6 +303,14 @@ export default function Profile() {
                         </>
                       )}
                     </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Correo Electrónico (No editable)</label>
+                  <div className="w-full h-14 bg-surface-container/50 rounded-2xl border-2 border-transparent px-5 flex items-center font-bold text-sm text-secondary/60">
+                    <Mail className="w-4 h-4 mr-3 opacity-40" />
+                    {userEmail}
                   </div>
                 </div>
 
