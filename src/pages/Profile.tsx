@@ -23,12 +23,12 @@ import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 
 export default function Profile() {
-  const { profile, signOut, updateProfile } = useAuthStore();
+  const { profile, user, signOut, updateProfile } = useAuthStore();
   const { setHeader, clearHeader } = useHeaderStore();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: profile?.name || '',
+    name: profile?.name || user?.displayName || '',
     cedula: profile?.cedula || '',
     phone: profile?.phone || '',
     address: profile?.address || ''
@@ -62,7 +62,10 @@ export default function Profile() {
     return () => clearHeader();
   }, [setHeader, clearHeader]);
 
-  if (!profile) return null;
+  if (!profile && !user) return null;
+
+  const avatarUrl = profile?.imageUrl || user?.photoURL;
+  const userEmail = profile?.email || user?.email;
 
   return (
     <>
@@ -86,11 +89,11 @@ export default function Profile() {
           <div className="absolute top-0 left-0 w-full h-24 bg-primary/5" />
           
           <div className="relative mt-4">
-            <div className="w-24 h-24 rounded-3xl bg-surface-container-high border-4 border-white shadow-xl flex items-center justify-center text-primary text-4xl font-black">
-              {profile.imageUrl ? (
-                <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover rounded-3xl" referrerPolicy="no-referrer" />
+            <div className="w-24 h-24 rounded-3xl bg-surface-container-high border-4 border-white shadow-xl flex items-center justify-center text-primary text-4xl font-black overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={profile?.name} className="w-full h-full object-cover rounded-3xl" referrerPolicy="no-referrer" />
               ) : (
-                profile.name[0]
+                <span className="uppercase">{(profile?.name || user?.displayName || 'U')[0]}</span>
               )}
             </div>
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success rounded-xl border-2 border-white flex items-center justify-center shadow-lg">
@@ -99,17 +102,17 @@ export default function Profile() {
           </div>
 
           <div className="mt-6">
-            <h2 className="text-2xl font-black text-on-surface tracking-tight uppercase leading-tight">{profile.name}</h2>
+            <h2 className="text-2xl font-black text-on-surface tracking-tight uppercase leading-tight">{profile?.name || user?.displayName || 'Usuario'}</h2>
             <div className="flex items-center justify-center gap-4 mt-2">
               <span className={cn(
                 "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
-                profile.role === 'admin' ? "bg-red-100 text-red-600" : 
-                profile.role === 'propietario' ? "bg-purple-100 text-purple-600" :
+                profile?.role === 'admin' ? "bg-red-100 text-red-600" : 
+                profile?.role === 'propietario' ? "bg-purple-100 text-purple-600" :
                 "bg-primary/10 text-primary"
               )}>
-                {profile.role}
+                {profile?.role || 'Cliente'}
               </span>
-              {profile.cedula && (
+              {profile?.cedula && (
                 <span className="text-[10px] font-black text-secondary bg-surface-container px-3 py-1 rounded-full uppercase tracking-widest">
                   CC: {profile.cedula}
                 </span>
@@ -120,7 +123,7 @@ export default function Profile() {
           <div className="w-full h-px bg-outline/20 my-8" />
 
           <div className="w-full space-y-4">
-            <ProfileInfoItem icon={<Mail className="w-4 h-4" />} label="Correo Electrónico" value={profile.email || '--'} />
+            <ProfileInfoItem icon={<Mail className="w-4 h-4" />} label="Correo Electrónico" value={userEmail || '--'} />
             <ProfileInfoItem icon={<CreditCard className="w-4 h-4" />} label="Cédula de Ciudadanía" value={profile.cedula || 'No registrada'} />
             <ProfileInfoItem icon={<Phone className="w-4 h-4" />} label="Teléfono de Contacto" value={profile.phone || 'No registrado'} />
             <ProfileInfoItem icon={<MapPin className="w-4 h-4" />} label="Dirección" value={profile.address || 'No registrada'} />
@@ -226,6 +229,28 @@ export default function Profile() {
                     className="w-full h-14 bg-surface-container rounded-2xl border-2 border-transparent px-5 font-bold text-sm focus:border-primary transition-all outline-none"
                     placeholder="Tu dirección de residencia"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">URL de Imagen de Perfil</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={formData.imageUrl}
+                      onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="flex-1 bg-surface-container rounded-2xl px-4 py-3 text-sm border border-outline/50 focus:border-primary/50 outline-none transition-all font-medium"
+                      placeholder="https://ejemplo.com/foto.jpg"
+                    />
+                    {user?.photoURL && formData.imageUrl !== user.photoURL && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, imageUrl: user.photoURL || '' })}
+                        className="px-3 py-2 bg-primary/5 text-primary rounded-xl text-[8px] font-bold uppercase tracking-widest border border-primary/10 hover:bg-primary/10 transition-all"
+                      >
+                        Usar Google
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -55,10 +55,17 @@ export const useAuthStore = create<AuthState>((set, get) => {
           unsubscribeProfile = onSnapshot(userRef, async (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data();
+              
+              // Sincronizar imagen si falta en Firestore pero existe en Google
+              if (!data.imageUrl && user.photoURL) {
+                setDoc(userRef, { imageUrl: user.photoURL }, { merge: true }).catch(console.error);
+              }
+
               set({ 
                 profile: { 
                   uid: user.uid, 
                   ...data,
+                  imageUrl: data.imageUrl || user.photoURL || '',
                   role: isAdminHardcoded ? 'admin' : (data.role || 'cliente')
                 } as UserProfile,
                 isLoading: false
