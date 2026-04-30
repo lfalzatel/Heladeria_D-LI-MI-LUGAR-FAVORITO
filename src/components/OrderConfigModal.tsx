@@ -114,10 +114,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     if (isBasicIceCream) count = 1;
     if (product.id === 'adicion-salsa') count = 1;
     
-    // Each manual "Salsa" addition grants one more included sauce
-    const sauceAdditionsCount = selectedAdditions.filter(a => a.name.toLowerCase().includes('salsa')).length;
-    count += sauceAdditionsCount;
-    
     return count;
   };
 
@@ -134,10 +130,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
     if (variantHasFruit) count = 1;
     if (product.id === 'oblea-cuchareable' || product.category === 'ensaladas') count = 1;
-    
-    // Each manual "Fruta" addition from the additions step grants one more included fruit
-    const fruitAdditionsCount = selectedAdditions.filter(a => a.name.toLowerCase().includes('fruta')).length;
-    count += fruitAdditionsCount;
     
     return count;
   };
@@ -759,10 +751,20 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   {effectiveCurrentStepType === 'additions' && (
                     <div className="flex flex-col gap-6">
                       <div className="grid grid-cols-2 gap-2">
-                        {availableAdditions.map(add => {
-                          const price = add.variants?.[0]?.price || 0;
-                          const shortName = add.name.replace(/^(Adición|Adicion)\s+/i, '');
-                          return (
+                        {availableAdditions
+                          .filter(add => {
+                            // Hide redundant additions if product already has dedicated steps
+                            const isFruitStepActive = product.requiresFruitChoice || product.category === 'obleas';
+                            const isSauceStepActive = product.requiresSauces || isBasicIceCream;
+                            
+                            if (isFruitStepActive && add.name.toLowerCase().includes('fruta')) return false;
+                            if (isSauceStepActive && add.name.toLowerCase().includes('salsa')) return false;
+                            return true;
+                          })
+                          .map(add => {
+                            const price = add.variants?.[0]?.price || 0;
+                            const shortName = add.name.replace(/^(Adición|Adicion)\s+/i, '');
+                            return (
                           <button
                             key={add.id}
                             onClick={() => toggleAddition(add)}
@@ -828,8 +830,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   <span className="text-[8px] font-black text-secondary uppercase tracking-[0.2em] block mb-0.5">Precio Total</span>
                   <p className="text-2xl font-brand font-black text-on-surface leading-tight">
                     {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + 
-                      selectedAdditions.filter(a => !a.name.toLowerCase().includes('fruta')).reduce((s, a) => s + a.price, 0) + 
-                      extraFruitsPrice) * quantity)}
+                      selectedAdditions.reduce((s, a) => s + a.price, 0) + 
+                      extraFruitsPrice + extraSaucesPrice) * quantity)}
                   </p>
                 </div>
               </div>
