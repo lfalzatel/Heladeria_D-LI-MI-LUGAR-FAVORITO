@@ -14,9 +14,9 @@ export default function MainLayout() {
   const isOperationalRoute = location.pathname.startsWith('/admin') || 
                              location.pathname.startsWith('/pos') || 
                              location.pathname.startsWith('/profile') || 
-                             location.pathname.startsWith('/cliente/pedidos');
+                             location.pathname.startsWith('/cliente');
 
-  const showSidebar = isOperationalRoute && (profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor');
+  const showSidebar = isOperationalRoute && !!profile;
 
   return (
     <div className="min-h-screen flex bg-surface-container-lowest">

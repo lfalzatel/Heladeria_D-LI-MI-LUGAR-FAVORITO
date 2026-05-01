@@ -425,22 +425,23 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
   isOpen: boolean; onClose: () => void; criticalSupplies: any[];
 }) {
   const navigate = useNavigate();
+  const items = criticalSupplies || [];
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
       <ModalHeader
         icon={<AlertTriangle className="w-6 h-6 text-orange-600" />}
         iconBg="bg-orange-50"
         title="Stock Crítico"
-        subtitle={`${criticalSupplies.length} PRODUCTOS CON 5 UNIDADES O MENOS`}
+        subtitle={`${items.length} PRODUCTOS CON NIVEL CRÍTICO`}
         onClose={onClose}
       />
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-2">
-        {criticalSupplies.length === 0 ? (
+        {items.length === 0 ? (
           <div className="py-12 flex flex-col items-center opacity-30">
             <Box className="w-10 h-10 mb-2" />
             <p className="text-xs font-bold uppercase tracking-widest">¡Todo el stock en niveles normales!</p>
           </div>
-        ) : criticalSupplies.map(s => {
+        ) : items.map(s => {
           const isCero = s.currentStock === 0;
           return (
             <div key={s.id} className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-outline/10 shadow-sm">

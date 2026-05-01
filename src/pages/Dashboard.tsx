@@ -10,6 +10,7 @@ import {
   AlertCircle,
   MoreHorizontal,
   ChevronRight,
+  ChevronLeft,
   ShoppingCart,
   LayoutDashboard,
   Box,
@@ -22,7 +23,8 @@ import {
   Calendar,
   Download,
   History,
-  X
+  X,
+  Trophy
 } from 'lucide-react';
 
 import { formatCurrency, cn } from '../lib/utils';
@@ -33,6 +35,13 @@ import { PageTitle } from '../components/AppHeader';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { 
+  IngresosModal, 
+  RankingModal, 
+  StockCriticoModal 
+} from '../components/ReportsModals';
+import HistoryMovementCard from '../components/HistoryMovementCard';
+import MovementDetailModal from '../components/MovementDetailModal';
 import { toast } from 'sonner';
 
 // ── UTILS ──
@@ -69,6 +78,11 @@ export default function Dashboard() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [viewDate, setViewDate] = useState(new Date());
+  
+  // Modals for history
+  const [openModal, setOpenModal] = useState<string | null>(null);
+  const open = (name: string) => setOpenModal(name);
+  const close = () => setOpenModal(null);
   
   useEffect(() => {
     if (!profile) return;
@@ -163,7 +177,7 @@ export default function Dashboard() {
     const now = new Date();
     const sellerSales = sales.filter(s => {
       if (s.sellerId !== profile.uid) return false;
-      const d = toDateS(s.timestamp);
+      const d = toDateS(s.timestamp || s.updatedAt || s.createdAt);
       if (!d) return false;
       
       if (selectedDate) return d.toDateString() === selectedDate.toDateString();
@@ -190,7 +204,7 @@ export default function Dashboard() {
     const topProduct = Object.entries(productCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '--';
 
     return { totalIncome, avgTicket, topProduct, count: sellerSales.length };
-  }, [activeTab, historyFilter, sales, profile]);
+  }, [activeTab, historyFilter, sales, profile, selectedDate]);
 
   const tableStatus = [
     { id: 'mesa1', label: 'M1', status: (carts['mesa1']?.items?.length || 0) > 0 ? 'Ocupada' : 'Libre' },
@@ -443,99 +457,60 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                {/* Collapsable Heatmap */}
-                <AnimatePresence>
-                  {showCalendar && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden mb-6"
-                    >
-                      <div className="bg-surface-container/30 rounded-[2rem] p-6 border border-outline/5">
-                        {/* Heatmap Logic */}
-                        {(() => {
-                          const currentMonth = viewDate.getMonth();
-                          const currentYear = viewDate.getFullYear();
-                          const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                          const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                          const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-                          const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-                          
-                          return (
-                            <>
-                              <div className="flex items-center justify-between mb-6 px-2">
-                                <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                                <div className="text-center">
-                                  <h4 className="text-xs font-bold text-on-surface uppercase tracking-widest">{monthNames[currentMonth]} {currentYear}</h4>
-                                </div>
-                                <button onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20"><ChevronRight className="w-4 h-4" /></button>
-                              </div>
-                              <div className="grid grid-cols-7 gap-y-2 gap-x-1">
-                                {['L','M','X','J','V','S','D'].map((d) => <div key={d} className="text-[8px] font-black text-secondary/30 text-center uppercase">{d}</div>)}
-                                {Array.from({ length: firstDayAdjusted }).map((_, i) => <div key={`empty-${i}`} />)}
-                                {Array.from({ length: daysInMonth }).map((_, i) => {
-                                  const day = i + 1;
-                                  const count = activityData?.[day] || 0;
-                                  const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentMonth && selectedDate?.getFullYear() === currentYear;
-                                  return (
-                                    <div key={day} className="flex flex-col items-center justify-center">
-                                      <button 
-                                        onClick={() => {
-                                          const d = new Date(currentYear, currentMonth, day);
-                                          setSelectedDate(isSelected ? null : d);
-                                          if (!isSelected) setShowCalendar(false);
-                                        }}
-                                        className={cn(
-                                          'w-full aspect-square rounded-xl flex flex-col items-center justify-center transition-all', 
-                                          count > 0 ? (isSelected ? 'bg-primary text-white ring-4 ring-primary/20' : 'bg-primary/20 text-primary hover:bg-primary/30') : 'bg-surface-container text-secondary/40',
-                                          (day === new Date().getDate() && currentMonth === new Date().getMonth() && !isSelected) && 'border border-primary'
-                                        )}
-                                      >
-                                        <span className="text-[9px] font-bold">{day}</span>
-                                        {count > 0 && <span className="text-[6px] font-black opacity-60 mt-0.5">{count}</span>}
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
-                {/* History Stats Cards */}
-                <div className="grid grid-cols-2 gap-3 mb-8">
-                  <div className="bg-white p-5 rounded-[2rem] border border-outline/50 shadow-sm">
-                    <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center mb-3">
-                      <DollarSign className="w-5 h-5 text-primary" />
+
+                {/* History Stats Cards (Premium Style) */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <motion.button 
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => open('ingresos')}
+                    className="bg-emerald-50/50 border border-emerald-100 p-5 rounded-[2rem] shadow-sm flex flex-col gap-3 text-left group hover:shadow-md transition-all"
+                  >
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                      <DollarSign className="w-5 h-5" />
                     </div>
-                    <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Ingresos</p>
-                    <p className="text-lg font-black text-on-surface">{formatCurrency(historyStats?.totalIncome || 0)}</p>
-                  </div>
-                  <div className="bg-white p-5 rounded-[2rem] border border-outline/50 shadow-sm">
-                    <div className="w-10 h-10 bg-success/5 rounded-xl flex items-center justify-center mb-3">
-                      <TrendingUp className="w-5 h-5 text-success" />
+                    <div>
+                      <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest leading-none mb-1">Ingresos</p>
+                      <p className="text-xl font-black text-on-surface">{formatCurrency(historyStats?.totalIncome || 0)}</p>
                     </div>
-                    <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Producto Estrella</p>
-                    <p className="text-sm font-black text-on-surface truncate">{historyStats?.topProduct}</p>
-                  </div>
-                  <div className="bg-white p-5 rounded-[2rem] border border-outline/50 shadow-sm">
-                    <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-3">
-                      <AlertCircle className="w-5 h-5 text-orange-500" />
+                  </motion.button>
+
+                  <motion.button 
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => open('ranking')}
+                    className="bg-amber-50/50 border border-amber-100 p-5 rounded-[2rem] shadow-sm flex flex-col gap-3 text-left group hover:shadow-md transition-all"
+                  >
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                      <Trophy className="w-5 h-5" />
                     </div>
-                    <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Stock Crítico</p>
-                    <p className="text-lg font-black text-on-surface">{supplies.length}</p>
-                  </div>
-                  <div className="bg-white p-5 rounded-[2rem] border border-outline/50 shadow-sm">
-                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3">
-                      <BarChart3 className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest leading-none mb-1">Prod. Estrella</p>
+                      <p className="text-sm font-black text-on-surface truncate">{historyStats?.topProduct}</p>
                     </div>
-                    <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Ticket Promedio</p>
-                    <p className="text-lg font-black text-on-surface">{formatCurrency(historyStats?.avgTicket || 0)}</p>
+                  </motion.button>
+
+                  <motion.button 
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setIsStockModalOpen(true)}
+                    className="bg-orange-50/50 border border-orange-100 p-5 rounded-[2rem] shadow-sm flex flex-col gap-3 text-left group hover:shadow-md transition-all"
+                  >
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
+                      <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-orange-700 uppercase tracking-widest leading-none mb-1">Stock Crítico</p>
+                      <p className="text-xl font-black text-on-surface">{supplies.length}</p>
+                    </div>
+                  </motion.button>
+
+                  <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-[2rem] shadow-sm flex flex-col gap-3 text-left">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600">
+                      <BarChart3 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-blue-700 uppercase tracking-widest leading-none mb-1">Ticket Promedio</p>
+                      <p className="text-xl font-black text-on-surface">{formatCurrency(historyStats?.avgTicket || 0)}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -547,7 +522,7 @@ export default function Dashboard() {
                   </div>
                   {sales.filter(s => {
                     if (s.sellerId !== profile?.uid) return false;
-                    const d = toDateS(s.timestamp);
+                    const d = toDateS(s.timestamp || s.updatedAt || s.createdAt);
                     if (!d) return false;
                     
                     if (selectedDate) return d.toDateString() === selectedDate.toDateString();
@@ -561,22 +536,19 @@ export default function Dashboard() {
                     }
                     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
                   }).slice(0, 20).map((sale, i) => (
-                    <motion.div 
-                      key={sale.id} 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      onClick={() => setSelectedSale(sale)} 
-                      className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low/50 border border-transparent hover:border-primary/10 transition-all cursor-pointer shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary"><Receipt className="w-5 h-5" /></div>
-                        <div>
-                          <p className="font-bold text-sm text-on-surface">{sale.tableName}</p>
-                          <p className="text-[9px] text-secondary font-bold uppercase">{toDateS(sale.timestamp)?.toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <p className="font-black text-on-surface">{formatCurrency(sale.total)}</p>
-                    </motion.div>
+                    <HistoryMovementCard 
+                      key={sale.id}
+                      id={sale.id}
+                      total={sale.total}
+                      date={toDateS(sale.timestamp || sale.updatedAt || sale.createdAt)?.toLocaleDateString() || ''}
+                      paymentMethod={sale.paymentMethod || 'Efectivo'}
+                      status={sale.status || 'completed'}
+                      itemCount={sale.items?.length || 0}
+                      items={sale.items}
+                      title={sale.tableName}
+                      customerName={sale.clienteName}
+                      onClick={() => setSelectedSale(sale)}
+                    />
                   ))}
                 </div>
               </div>
@@ -614,176 +586,167 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── MODAL DE DETALLE DE VENTA ── */}
+
+
+      {/* ── MODAL DE CALENDARIO ── */}
       <AnimatePresence>
-        {selectedSale && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedSale(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        {showCalendar && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowCalendar(false)} 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
             />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]"
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+              className="relative w-full max-w-sm bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col"
             >
-              {/* Header del Modal */}
-              <div className="p-6 sm:p-8 bg-surface-container-low/50 border-b border-outline/10 flex justify-between items-start">
-                <div className="flex gap-4">
-                   <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
-                      <Receipt className="w-6 h-6" />
-                   </div>
-                   <div>
-                      <h3 className="font-headline font-black text-xl text-on-surface">Detalle de Venta</h3>
-                      <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mt-1">ID: {selectedSale.id.slice(-8).toUpperCase()}</p>
-                   </div>
-                </div>
-                <button 
-                  onClick={() => setSelectedSale(null)}
-                  className="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-all active:scale-90"
-                >
-                  <X className="w-5 h-5 text-secondary" />
-                </button>
-              </div>
-
-              {/* Contenido (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
-                {/* Info de la Venta */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
-                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Mesa / Lugar</span>
-                      <p className="font-bold text-on-surface flex items-center gap-2">
-                        <TableIcon className="w-3.5 h-3.5 text-primary" />
-                        {selectedSale.tableName}
-                      </p>
-                   </div>
-                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
-                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Fecha y Hora</span>
-                      <p className="font-bold text-on-surface flex items-center gap-2 text-sm">
-                        <Clock className="w-3.5 h-3.5 text-primary" />
-                        {selectedSale.hour}
-                      </p>
-                   </div>
-                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
-                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Vendedor</span>
-                      <p className="font-bold text-on-surface flex items-center gap-2 text-sm">
-                        <UserIcon className="w-3.5 h-3.5 text-primary" />
-                        {selectedSale.sellerName}
-                      </p>
-                   </div>
-                   <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline/5">
-                      <span className="text-[8px] font-black text-secondary uppercase tracking-widest block mb-1">Pago</span>
-                      <p className="font-bold text-on-surface flex items-center gap-2 text-sm">
-                        <DollarSign className="w-3.5 h-3.5 text-primary" />
-                        {selectedSale.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}
-                      </p>
-                   </div>
-                </div>
-
-                <h4 className="font-headline font-bold text-sm text-on-surface mb-4 uppercase tracking-widest">Productos</h4>
-                
-                <div className="flex flex-col gap-3">
-                  {selectedSale.items.map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl border border-outline/5 bg-surface-container-lowest/50">
-                       <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded-md mb-1 inline-block">x{item.quantity}</span>
-                            <p className="font-black text-on-surface text-base">{item.productName}</p>
-                            {item.variantLabel && <p className="text-[10px] font-bold text-secondary uppercase italic">{item.variantLabel}</p>}
-                          </div>
-                          <p className="font-brand font-black text-lg text-primary">{formatCurrency(item.subtotal)}</p>
-                       </div>
-                       
-                       {/* Detalles de configuración */}
-                       <div className="flex flex-wrap gap-2 mt-3">
-                          {item.flavors?.map((f: string) => (
-                            <span key={f} className="text-[9px] font-bold bg-white px-2 py-1 rounded-lg border border-outline/5 shadow-sm text-secondary">
-                              🍧 {f}
-                            </span>
-                          ))}
-                          {item.fruitChoices?.map((f: string) => (
-                            <span key={f} className="text-[9px] font-bold bg-white px-2 py-1 rounded-lg border border-outline/5 shadow-sm text-success">
-                              🍓 {f}
-                            </span>
-                          ))}
-                          {item.additions?.map((a: string) => (
-                            <span key={a} className="text-[9px] font-bold bg-white px-2 py-1 rounded-lg border border-outline/5 shadow-sm text-primary">
-                              ✨ {a}
-                            </span>
-                          ))}
-                       </div>
+              {(() => {
+                const currentMonth = viewDate.getMonth();
+                const currentYear = viewDate.getFullYear();
+                return (
+                  <>
+                    <div className="p-8 bg-white border-b border-rose-50/50">
+                      <div className="flex items-center justify-between">
+                        <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} className="w-10 h-10 rounded-full hover:bg-rose-50 flex items-center justify-center text-secondary transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+                        <h4 className="font-headline font-black text-on-surface uppercase tracking-widest text-sm">
+                          {new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(new Date(currentYear, currentMonth))}
+                        </h4>
+                        <button onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()} className="w-10 h-10 rounded-full hover:bg-rose-50 flex items-center justify-center text-secondary transition-colors disabled:opacity-10"><ChevronRight className="w-5 h-5" /></button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Footer del Modal */}
-              <div className="p-6 sm:p-8 bg-surface-container-low border-t border-outline/10">
-                <div className="flex justify-between items-end">
-                   <div>
-                      <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-1">TOTAL VENTA</p>
-                      <h3 className="text-4xl font-brand font-black text-on-surface tracking-tight leading-none">
-                        {formatCurrency(selectedSale.total)}
-                      </h3>
-                   </div>
-                   <button 
-                     onClick={() => setSelectedSale(null)}
-                     className="px-8 py-3 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                   >
-                     Cerrar
-                   </button>
-                </div>
+                    <div className="p-8">
+                      <div className="grid grid-cols-7 gap-2 mb-6">
+                        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => (
+                          <div key={d} className="text-center text-[11px] font-black text-secondary/30 uppercase tracking-tighter">{d}</div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-y-4 gap-x-2">
+                        {Array.from({ length: (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7 }).map((_, i) => (
+                          <div key={`empty-${i}`} />
+                        ))}
+                        {Array.from({ length: new Date(currentYear, currentMonth + 1, 0).getDate() }).map((_, i) => {
+                          const day = i + 1;
+                          const count = activityData?.[day] || 0;
+                          const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentMonth && selectedDate?.getFullYear() === currentYear;
+                          
+                          return (
+                            <button 
+                              key={day}
+                              onClick={() => {
+                                const d = new Date(currentYear, currentMonth, day);
+                                setSelectedDate(d);
+                                setShowCalendar(false);
+                              }}
+                              className={cn(
+                                "flex flex-col items-center justify-center transition-all py-1.5",
+                                count > 0 ? "bg-rose-50/50 rounded-[1.5rem] border border-rose-100/50" : "",
+                                isSelected ? "bg-rose-500 text-white shadow-lg shadow-rose-200 scale-110 z-10 border-none" : "text-on-surface"
+                              )}
+                            >
+                              <span className={cn("text-sm font-black", isSelected ? "text-white" : count > 0 ? "text-rose-500" : "text-secondary/60")}>
+                                {day}
+                              </span>
+                              {count > 0 && (
+                                <div className="flex flex-col items-center mt-0.5">
+                                  <div className={cn("w-1 h-1 rounded-full", isSelected ? "bg-white" : "bg-rose-500")} />
+                                  <span className={cn("text-[8px] font-black mt-0.5", isSelected ? "text-white/80" : "text-rose-400")}>
+                                    {count}
+                                  </span>
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+
+              <div className="p-8 pt-0 flex justify-center">
+                <button 
+                  onClick={() => setShowCalendar(false)}
+                  className="w-full py-4 rounded-2xl bg-surface-container-low text-secondary font-black text-[10px] uppercase tracking-[0.2em] shadow-sm active:scale-95 transition-all hover:bg-surface-container"
+                >
+                  Cerrar
+                </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      <IngresosModal
+        isOpen={openModal === 'ingresos'}
+        onClose={close}
+        filter={selectedDate ? selectedDate.toLocaleDateString() : historyFilter}
+        efectivo={(() => {
+          const s = sales.filter(s => {
+            if (s.sellerId !== profile?.uid) return false;
+            const d = toDateS(s.timestamp || s.updatedAt || s.createdAt);
+            if (!d) return false;
+            if (selectedDate) return d.toDateString() === selectedDate.toDateString();
+            if (historyFilter === 'today') return d.toDateString() === new Date().toDateString();
+            return true;
+          }).filter(s => s.paymentMethod === 'cash' || s.paymentMethod === 'efectivo');
+          return s.reduce((sum, x) => sum + (Number(x.total) || 0), 0);
+        })()}
+        tarjeta={0}
+        transferencia={(() => {
+          const s = sales.filter(s => {
+            if (s.sellerId !== profile?.uid) return false;
+            const d = toDateS(s.timestamp || s.updatedAt || s.createdAt);
+            if (!d) return false;
+            if (selectedDate) return d.toDateString() === selectedDate.toDateString();
+            return true;
+          }).filter(s => s.paymentMethod !== 'cash' && s.paymentMethod !== 'efectivo');
+          return s.reduce((sum, x) => sum + (Number(x.total) || 0), 0);
+        })()}
+      />
+      <RankingModal
+        isOpen={openModal === 'ranking'}
+        onClose={close}
+        filter={selectedDate ? selectedDate.toLocaleDateString() : historyFilter}
+        ranking={(() => {
+          const productCounts: Record<string, { name: string; units: number; revenue: number }> = {};
+          sales.filter(s => {
+            if (s.sellerId !== profile?.uid) return false;
+            const d = toDateS(s.timestamp || s.updatedAt || s.createdAt);
+            if (!d) return false;
+            if (selectedDate) return d.toDateString() === selectedDate.toDateString();
+            return true;
+          }).forEach(s => {
+            s.items?.forEach((item: any) => {
+              if (!item.productName) return;
+              if (!productCounts[item.productName]) productCounts[item.productName] = { name: item.productName, units: 0, revenue: 0 };
+              productCounts[item.productName].units += Number(item.quantity) || 0;
+              productCounts[item.productName].revenue += Number(item.subtotal) || 0;
+            });
+          });
+          return Object.values(productCounts).sort((a, b) => b.units - a.units).slice(0, 10);
+        })()}
+      />
+      
+      <MovementDetailModal
+        isOpen={!!selectedSale}
+        onClose={() => setSelectedSale(null)}
+        data={selectedSale}
+        profile={profile}
+      />
 
       {/* ── MODAL DE STOCK CRÍTICO ── */}
-      <AnimatePresence>
-        {isStockModalOpen && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsStockModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
-              <div className="p-8 bg-orange-50 border-b border-orange-100 flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-200">
-                    <AlertCircle className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-headline font-black text-xl text-orange-950 leading-none">Stock Crítico</h3>
-                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mt-2">Productos por agotarse</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsStockModalOpen(false)} className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center text-orange-900 transition-all active:scale-90"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar bg-white">
-                {supplies.map((item, i) => (
-                  <div key={i} className="p-4 rounded-2xl border border-orange-100 bg-orange-50/20 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-on-surface">{item.name}</p>
-                      <p className="text-[10px] text-secondary font-medium">Categoría: {item.category || 'Sin categoría'}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-orange-600">{item.currentStock} {item.unit}</p>
-                      <p className="text-[9px] text-secondary font-bold uppercase">Límite: {item.minLimit}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="p-8 border-t border-outline/5 bg-surface-container-lowest">
-                <button onClick={() => setIsStockModalOpen(false)} className="w-full py-4 bg-on-surface text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-98 transition-all">
-                  Entendido
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <StockCriticoModal
+        isOpen={isStockModalOpen}
+        onClose={() => setIsStockModalOpen(false)}
+        criticalSupplies={supplies}
+      />
     </>
   );
 }

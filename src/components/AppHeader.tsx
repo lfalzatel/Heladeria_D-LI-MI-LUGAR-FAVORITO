@@ -18,7 +18,7 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
   const { leftExtra, rightExtra, showBell } = useHeaderStore();
 
   return (
-    <header className="flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-[100] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
+    <header className="flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-[40] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}
@@ -100,7 +100,7 @@ export function HeaderSearch({
 /** Sub-componente: bloque título + subtítulo debajo del header */
 export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
-    <div className="px-4 sm:px-10 pt-8 pb-6 border-b border-outline/10 bg-gradient-to-b from-white to-surface-container-lowest/30 flex items-center justify-between gap-4 sticky top-16 sm:top-24 z-[90] backdrop-blur-md">
+    <div className="px-4 sm:px-10 pt-8 pb-6 border-b border-outline/10 bg-gradient-to-b from-white to-surface-container-lowest/30 flex items-center justify-between gap-4 sticky top-16 sm:top-24 z-[30] backdrop-blur-md">
       <div className="min-w-0 flex-1">
         <h1 className="font-headline font-black text-xl sm:text-4xl text-on-surface tracking-tight leading-none mb-1 truncate">
           {title}
