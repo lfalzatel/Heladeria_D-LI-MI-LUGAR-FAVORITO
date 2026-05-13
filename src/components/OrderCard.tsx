@@ -151,7 +151,7 @@ export default function OrderCard({
         </div>
       </div>
 
-      {isActive && onUpdateStatus && (
+      {(isActive || (pedido.status === 'rechazado' && isStaff)) && onUpdateStatus && (
         <div className="border-t border-outline/5 px-4 py-2.5 flex gap-2 bg-surface-container-lowest/40">
           {isStaff ? (
             <>
@@ -179,13 +179,33 @@ export default function OrderCard({
                   <Check className="w-3.5 h-3.5 stroke-[3]" /> Marcar Entregado
                 </button>
               )}
-              <button
-                onClick={(e) => onUpdateStatus(pedido.id, 'rechazado', e)}
-                className="w-10 flex items-center justify-center py-2 rounded-xl bg-red-50 text-red-400 hover:bg-red-100 transition-all active:scale-95 border border-red-100"
-                title="Rechazar pedido"
-              >
-                <X className="w-4 h-4 stroke-[3]" />
-              </button>
+              {pedido.status === 'rechazado' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('¿Deseas revertir el rechazo de este pedido y cambiar su estado a Aceptado (En Preparación)?')) {
+                      onUpdateStatus(pedido.id, 'aceptado', e);
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-amber-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all active:scale-95 shadow-sm"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[3]" /> Revertir Rechazo (Aceptar)
+                </button>
+              )}
+              {pedido.status !== 'rechazado' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('¿Estás seguro de que deseas rechazar este pedido?')) {
+                      onUpdateStatus(pedido.id, 'rechazado', e);
+                    }
+                  }}
+                  className="w-10 flex items-center justify-center py-2 rounded-xl bg-red-50 text-red-400 hover:bg-red-100 transition-all active:scale-95 border border-red-100"
+                  title="Rechazar pedido"
+                >
+                  <X className="w-4 h-4 stroke-[3]" />
+                </button>
+              )}
               <button
                 onClick={onOpen}
                 className="w-10 flex items-center justify-center py-2 rounded-xl bg-surface-container text-secondary hover:bg-surface-container-high transition-all active:scale-95"

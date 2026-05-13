@@ -63,6 +63,7 @@ export default function MovementDetailModal({
 
   if (!data) return null;
 
+  const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
   const isOnlinePedido = !!data.clienteId;
 
@@ -392,7 +393,10 @@ export default function MovementDetailModal({
             </div>
 
             {/* Botones de acción */}
-            {data && data.status !== 'entregado' && data.status !== 'rechazado' && data.status !== 'completed' && (onUpdateStatus || !profile?.isStaff) && (
+            {data && (
+              (data.status !== 'entregado' && data.status !== 'rechazado' && data.status !== 'completed') ||
+              (data.status === 'rechazado' && isStaff)
+            ) && (onUpdateStatus || !isStaff) && (
               <div className="p-4 bg-white border-t border-outline/10 flex gap-2 rounded-b-[2.5rem]">
 
                 {/* STAFF: pendiente → Aceptar + Rechazar */}
@@ -405,12 +409,32 @@ export default function MovementDetailModal({
                       <Check className="w-4 h-4 stroke-[3]" /> Aceptar
                     </button>
                     <button
-                      onClick={(e) => { onUpdateStatus(data.id, 'rechazado', e); onClose(); }}
+                      onClick={(e) => {
+                        if (window.confirm('¿Estás seguro de que deseas rechazar este pedido?')) {
+                          onUpdateStatus(data.id, 'rechazado', e);
+                          onClose();
+                        }
+                      }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-red-50 text-red-500 border border-red-200 text-[11px] font-black uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all active:scale-95"
                     >
                       <X className="w-4 h-4 stroke-[3]" /> Rechazar
                     </button>
                   </>
+                )}
+
+                {/* STAFF: rechazado → Revertir Rechazo (Aceptar) */}
+                {onUpdateStatus && data.status === 'rechazado' && isStaff && (
+                  <button
+                    onClick={(e) => {
+                      if (window.confirm('¿Deseas revertir el rechazo de este pedido y cambiar su estado a Aceptado (En Preparación)?')) {
+                        onUpdateStatus(data.id, 'aceptado', e);
+                        onClose();
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all active:scale-95 shadow-md shadow-amber-200"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" /> Revertir Rechazo (Aceptar)
+                  </button>
                 )}
 
                 {/* STAFF: aceptado → Pedido Enviado (→ celebrado) */}
