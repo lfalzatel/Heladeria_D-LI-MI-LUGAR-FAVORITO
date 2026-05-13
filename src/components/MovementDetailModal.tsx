@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream } from 'lucide-react';
+import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
+import { storage } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -55,12 +58,41 @@ export default function MovementDetailModal({
   onUpdateStatus,
   onToggleItemPrepared
 }: MovementDetailModalProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
   if (!data) return null;
 
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
   const isOnlinePedido = !!data.clienteId;
 
-  return (
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !data?.id || !profile) return;
+
+    setIsUploadingImage(true);
+    try {
+      const storageRef = ref(storage, `chat_images/${data.id}/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const imageUrl = await getDownloadURL(snapshot.ref);
+
+      // Enviar el mensaje con la imagen como texto especial
+      if (setChatMessage && onSendMessage) {
+        setChatMessage(`[IMG]${imageUrl}`);
+        // Pequeño delay para que el estado se actualice
+        setTimeout(() => onSendMessage(), 100);
+      }
+    } catch (err) {
+      console.error('Error subiendo imagen:', err);
+      alert('No se pudo subir la imagen. Revisa los permisos de Firebase Storage.');
+    } finally {
+      setIsUploadingImage(false);
+      // Reset el input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -108,46 +140,74 @@ export default function MovementDetailModal({
 
                      {/* Origen (Cliente, Mesa o POS) */}
                      {(() => {
-                       const cName = data.clienteName || data.userName || data.customerName || data.nombre || data.clientName;
-                       const tName = data.tableName || data.mesa;
-                       
-                       let label = 'Venta Directa POS';
-                       let sub = 'Atención en mostrador';
-                       let icon = <Receipt className="w-3.5 h-3.5 text-secondary/40" />;
-                       let colorClass = "text-secondary/40";
+                        const cName = data.clienteName || data.userName || data.customerName || data.nombre || data.clientName;
+                        const tName = data.tableName || data.mesa;
 
-                       if (cName) {
-                         label = cName;
-                         sub = (data.type === 'online' || data.tableName === 'Pedido Online') ? 'Pedido Online' : (data.tableName ? data.tableName : 'Venta Directa POS');
-                         icon = (data.type === 'online' || data.tableName === 'Pedido Online') ? <Smartphone className="w-3.5 h-3.5 text-purple-600" /> : <Check className="w-3.5 h-3.5 text-primary" />;
-                         colorClass = (data.type === 'online' || data.tableName === 'Pedido Online') ? "text-purple-600" : "text-primary";
-                       } else if (tName && tName !== 'Pedido Online') {
-                         label = tName;
-                         sub = 'Consumo en local';
-                         icon = <Check className="w-3.5 h-3.5 text-blue-600" />;
-                         colorClass = "text-blue-600";
-                       } else if (tName === 'Pedido Online' || data.type === 'online') {
-                         label = 'Pedido Online';
-                         sub = 'Venta por App/Web';
-                         icon = <Smartphone className="w-3.5 h-3.5 text-purple-600" />;
-                         colorClass = "text-purple-600";
-                       }
+                        // Detectar si es pedido a domicilio
+                        const isDelivery = data.type === 'domicilio' || data.orderType === 'domicilio' || (!!data.address && data.address.trim().length > 0);
+                        const isOnline   = data.type === 'online' || data.tableName === 'Pedido Online';
 
-                        return (
-                          <div className="bg-surface-container/30 rounded-2xl px-4 py-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm col-span-2">
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Origen de Venta</p>
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                                 {icon}
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className={cn("font-black text-sm truncate leading-none", colorClass)}>{label}</span>
-                                <span className="text-[8px] text-secondary/50 font-black uppercase tracking-widest mt-0.5">{sub}</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                     })()}
+                        let label = 'Venta Directa POS';
+                        let sub = 'Atención en mostrador';
+                        let icon = <Receipt className="w-3.5 h-3.5 text-secondary/40" />;
+                        let colorClass = "text-secondary/40";
+
+                        if (cName) {
+                          label = cName;
+                          if (isDelivery) {
+                            sub = 'Pedido a Domicilio';
+                            icon = <Truck className="w-3.5 h-3.5 text-blue-600" />;
+                            colorClass = "text-blue-600";
+                          } else if (isOnline) {
+                            sub = 'Pedido Online';
+                            icon = <Smartphone className="w-3.5 h-3.5 text-purple-600" />;
+                            colorClass = "text-purple-600";
+                          } else if (tName && tName !== 'Pedido Online') {
+                            sub = tName;
+                            icon = <Check className="w-3.5 h-3.5 text-primary" />;
+                            colorClass = "text-primary";
+                          } else {
+                            sub = 'Venta Directa POS';
+                            icon = <Check className="w-3.5 h-3.5 text-primary" />;
+                            colorClass = "text-primary";
+                          }
+                        } else if (tName && tName !== 'Pedido Online') {
+                          label = tName;
+                          sub = 'Consumo en local';
+                          icon = <Check className="w-3.5 h-3.5 text-blue-600" />;
+                          colorClass = "text-blue-600";
+                        } else if (tName === 'Pedido Online' || isOnline) {
+                          label = 'Pedido Online';
+                          sub = 'Venta por App/Web';
+                          icon = <Smartphone className="w-3.5 h-3.5 text-purple-600" />;
+                          colorClass = "text-purple-600";
+                        }
+
+                         return (
+                           <div className="bg-surface-container/30 rounded-2xl px-4 py-3 flex flex-col gap-2 border border-outline/5 shadow-sm col-span-2">
+                             {/* Origen de venta */}
+                             <div>
+                               <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Origen de Venta</p>
+                               <div className="flex items-center gap-2 mt-0.5">
+                                 <div className="w-5 h-5 rounded-lg bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                                    {icon}
+                                 </div>
+                                 <div className="flex flex-col min-w-0">
+                                   <span className={cn("font-black text-sm truncate leading-none", colorClass)}>{label}</span>
+                                   <span className="text-[8px] text-secondary/50 font-black uppercase tracking-widest mt-0.5">{sub}</span>
+                                 </div>
+                               </div>
+                             </div>
+                             {/* Atendido por — en su propia fila para no desbordar */}
+                             {(data.sellerName || data.staffName || data.vendorName || data.atendidoPor) && (
+                               <div className="border-t border-outline/10 pt-2">
+                                 <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Atendido por</p>
+                                 <p className="font-bold text-xs text-on-surface mt-0.5">{data.sellerName || data.staffName || data.vendorName || data.atendidoPor}</p>
+                               </div>
+                             )}
+                           </div>
+                         );
+                      })()}
                      {/* Fecha y hora */}
                      <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm">
                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
@@ -292,13 +352,31 @@ export default function MovementDetailModal({
                        ) : (
                          data.messages!.map((msg: any, i: number) => {
                            const isMe = msg.from === profile?.uid;
+                           const isImage = msg.text?.startsWith('[IMG]');
+                           const imgUrl = isImage ? msg.text.replace('[IMG]', '') : null;
                            return (
                              <div key={i} className={cn("flex flex-col gap-1 max-w-[85%]", isMe ? "self-end items-end" : "self-start")}>
-                                <div className={cn("px-4 py-2.5 rounded-2xl text-[11px] font-bold shadow-sm leading-relaxed", 
-                                  isMe ? "bg-primary text-white rounded-br-none" : "bg-white text-on-surface border border-outline/10 rounded-bl-none"
-                                )}>
-                                   {msg.text}
-                                </div>
+                                {isImage ? (
+                                  <a href={imgUrl} target="_blank" rel="noopener noreferrer" className="block">
+                                    <img 
+                                      src={imgUrl} 
+                                      alt="Comprobante de pago" 
+                                      className={cn(
+                                        "max-w-[220px] rounded-2xl shadow-md border-2 object-cover cursor-zoom-in hover:opacity-90 transition-opacity",
+                                        isMe ? "rounded-br-none border-primary/30" : "rounded-bl-none border-outline/20"
+                                      )} 
+                                    />
+                                    <span className="text-[9px] text-secondary/60 font-bold mt-1 flex items-center gap-1">
+                                      <ImageIcon className="w-3 h-3" /> Toca para ver en grande
+                                    </span>
+                                  </a>
+                                ) : (
+                                  <div className={cn("px-4 py-2.5 rounded-2xl text-[11px] font-bold shadow-sm leading-relaxed", 
+                                    isMe ? "bg-primary text-white rounded-br-none" : "bg-white text-on-surface border border-outline/10 rounded-bl-none"
+                                  )}>
+                                     {msg.text}
+                                  </div>
+                                )}
                                 <div className="px-2 flex items-center gap-1 opacity-40">
                                    <span className="text-[8px] font-black uppercase tracking-tighter">{msg.fromName || 'Usuario'}</span>
                                    <span className="text-[8px]">•</span>
@@ -313,45 +391,104 @@ export default function MovementDetailModal({
                )}
             </div>
 
-            {/* Action buttons for staff inside modal */}
-            {onUpdateStatus && data && (
+            {/* Botones de acción */}
+            {data && data.status !== 'entregado' && data.status !== 'rechazado' && data.status !== 'completed' && (onUpdateStatus || !profile?.isStaff) && (
               <div className="p-4 bg-white border-t border-outline/10 flex gap-2 rounded-b-[2.5rem]">
-                {data.status === 'pendiente' && (
+
+                {/* STAFF: pendiente → Aceptar + Rechazar */}
+                {onUpdateStatus && data.status === 'pendiente' && (
+                  <>
+                    <button
+                      onClick={(e) => { onUpdateStatus(data.id, 'aceptado', e); onClose(); }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[11px] font-black uppercase tracking-wider hover:bg-emerald-500 hover:text-white transition-all active:scale-95"
+                    >
+                      <Check className="w-4 h-4 stroke-[3]" /> Aceptar
+                    </button>
+                    <button
+                      onClick={(e) => { onUpdateStatus(data.id, 'rechazado', e); onClose(); }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-red-50 text-red-500 border border-red-200 text-[11px] font-black uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all active:scale-95"
+                    >
+                      <X className="w-4 h-4 stroke-[3]" /> Rechazar
+                    </button>
+                  </>
+                )}
+
+                {/* STAFF: aceptado → Pedido Enviado (→ celebrado) */}
+                {onUpdateStatus && data.status === 'aceptado' && (
                   <button
-                    onClick={(e) => { onUpdateStatus(data.id, 'aceptado', e); onClose(); }}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-blue-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-blue-600 transition-all active:scale-95 shadow-md"
+                    onClick={(e) => { onUpdateStatus(data.id, 'celebrado', e); onClose(); }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-blue-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-200"
                   >
-                    <Check className="w-4 h-4 stroke-[3]" /> Aceptar Pedido
+                    <Truck className="w-4 h-4" /> Pedido En Camino
                   </button>
                 )}
-                {(data.status === 'aceptado' || data.status === 'celebrado') && (
+
+                {/* STAFF: celebrado → Marcar Entregado */}
+                {onUpdateStatus && data.status === 'celebrado' && (
                   <button
                     onClick={(e) => { onUpdateStatus(data.id, 'entregado', e); onClose(); }}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-600 transition-all active:scale-95 shadow-md shadow-emerald-200"
                   >
-                    <Truck className="w-4 h-4" /> Marcar Entregado
+                    <Check className="w-4 h-4 stroke-[3]" /> Marcar Entregado
+                  </button>
+                )}
+
+                {/* CLIENTE: puede confirmar entrega cuando está aceptado o celebrado */}
+                {!onUpdateStatus && (data.status === 'aceptado' || data.status === 'celebrado') && (
+                  <button
+                    onClick={(e) => onClose()}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all active:scale-95",
+                      data.status === 'celebrado'
+                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 hover:bg-emerald-600"
+                        : "bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100"
+                    )}
+                  >
+                    <Check className="w-4 h-4" /> {data.status === 'celebrado' ? 'Confirmar Recibido' : 'En Preparación...'}
                   </button>
                 )}
               </div>
             )}
 
+
             {/* Chat footer */}
             {isOnlinePedido && setChatMessage && onSendMessage && (
-              <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-3 rounded-b-[2.5rem]">
+              <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-2 rounded-b-[2.5rem]">
+                 {/* Botón adjuntar imagen */}
+                 <input
+                   ref={fileInputRef}
+                   type="file"
+                   accept="image/*"
+                   className="hidden"
+                   onChange={handleImageUpload}
+                 />
+                 <button
+                   onClick={() => fileInputRef.current?.click()}
+                   disabled={isUploadingImage || isSending}
+                   title="Adjuntar comprobante de pago"
+                   className="w-11 h-11 rounded-2xl bg-surface-container border border-outline/20 flex items-center justify-center text-secondary hover:text-primary hover:border-primary/30 transition-all active:scale-90 disabled:opacity-40 flex-shrink-0"
+                 >
+                   {isUploadingImage ? (
+                     <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                   ) : (
+                     <Paperclip className="w-4 h-4" />
+                   )}
+                 </button>
+
                  <div className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl flex items-center px-4 py-2 group focus-within:ring-2 ring-primary/20 transition-all">
                     <input
                       type="text"
                       value={chatMessage}
                       onChange={e => setChatMessage(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && onSendMessage()}
+                      onKeyDown={e => e.key === 'Enter' && !chatMessage.startsWith('[IMG]') && onSendMessage()}
                       placeholder="Escribe un mensaje..."
                       className="flex-1 bg-transparent text-xs font-bold py-2 outline-none placeholder:text-secondary/30"
                     />
                  </div>
                  <button 
                    onClick={onSendMessage}
-                   disabled={!chatMessage.trim() || isSending}
-                   className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-all disabled:opacity-30"
+                   disabled={!chatMessage.trim() || isSending || isUploadingImage}
+                   className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-all disabled:opacity-30 flex-shrink-0"
                  >
                    <Send className="w-5 h-5" />
                  </button>
@@ -373,4 +510,7 @@ export default function MovementDetailModal({
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }
+

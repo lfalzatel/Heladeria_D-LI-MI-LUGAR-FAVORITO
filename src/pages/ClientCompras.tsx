@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Product, ProductVariant, CartItem } from '../types';
@@ -9,11 +9,12 @@ import {
   ShoppingCart, X, Plus, Minus, Search, IceCream, 
   Utensils, GlassWater, CupSoda, Package, MapPin,
   Navigation, Banknote, Smartphone, CreditCard, Hash,
-  CheckCircle2, ChevronRight, Trash2, Edit2
+  CheckCircle2, ChevronRight, Trash2, Edit2, Phone
 } from 'lucide-react';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { HeaderSearch } from '../components/AppHeader';
 import OrderConfigModal from '../components/OrderConfigModal';
+import MovementDetailModal from '../components/MovementDetailModal';
 import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
 
@@ -35,7 +36,7 @@ const PAYMENT_OPTIONS = [
 ];
 
 export default function ClientCompras() {
-  const { profile } = useAuthStore();
+  const { profile, updateProfile } = useAuthStore();
   const { setHeader, clearHeader } = useHeaderStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -53,6 +54,13 @@ export default function ClientCompras() {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
+  const [phone, setPhone] = useState(profile?.phone || '');
+
+  // Modal del pedido recién creado
+  const [newOrderData, setNewOrderData]   = useState<any>(null);
+  const [newOrderOpen, setNewOrderOpen]   = useState(false);
+  const [chatMessage,  setChatMessage]    = useState('');
+  const [sendingChat,  setSendingChat]    = useState(false);
 
   useEffect(() => {
     localStorage.setItem('dli_heladeria_cart', JSON.stringify(cart));
@@ -216,19 +224,56 @@ export default function ClientCompras() {
 
     setPlacing(true);
     try {
-      await addDoc(collection(db, 'pedidos'), {
+      const isTransfer = paymentMethod === 'transferencia';
+
+      // Crear el mensaje inicial (para transferencias, instrucciones de pago)
+      const initialMessages = isTransfer ? [{
+        from: 'system',
+        fromName: "D'LI - Lugar Favorito",
+        text: `¡Hola ${profile.name}! 🍦 Recibimos tu pedido. Para comenzar a prepararlo necesitamos que realices la transferencia a:\n\n📱 Nequi: 300 119 8206\n💰 Total a pagar: $${cartTotal.toLocaleString()}\n\nUna vez realizada, por favor adjunta el comprobante aquí usando el botón del clip 📎.`,
+        timestamp: Date.now(),
+      }] : [];
+
+      const docRef = await addDoc(collection(db, 'pedidos'), {
         clienteId: profile.uid,
         clienteName: profile.name,
         items: cart,
         total: cartTotal,
         paymentMethod,
         address: address.trim(),
+        phone: phone.trim(),
         note: note.trim(),
         status: 'pendiente',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        messages: [],
+        messages: initialMessages,
       });
+
+      // Construir objeto local para abrir el modal inmediatamente
+      const pedidoLocal = {
+        id: docRef.id,
+        clienteId: profile.uid,
+        clienteName: profile.name,
+        items: cart,
+        total: cartTotal,
+        paymentMethod,
+        address: address.trim(),
+        phone: phone.trim(),
+        note: note.trim(),
+        status: 'pendiente',
+        createdAt: new Date(),
+        messages: initialMessages,
+      };
+      setNewOrderData(pedidoLocal);
+      setNewOrderOpen(true);
+
+      // Actualizar el perfil del usuario con la última dirección y teléfono
+      if (profile) {
+        await updateProfile({
+          address: address.trim(),
+          phone: phone.trim()
+        });
+      }
 
       // Actualizar conteo de ventas de productos (Opcional, puede fallar por permisos en el cliente)
       try {
@@ -242,7 +287,7 @@ export default function ClientCompras() {
         console.warn('No se pudo actualizar salesCount (probablemente falta de permisos), pero el pedido fue enviado.', err);
       }
 
-      toast.success('¡Pedido enviado! Pronto te confirmaremos.');
+      toast.success('¡Pedido enviado! Te lo mostramos para que adjuntes tu comprobante.');
       notifyAdmins(
         "🆕 Nuevo pedido online",
         `De ${profile.name} por $${cartTotal.toLocaleString()} - ${paymentMethod}`
@@ -257,6 +302,32 @@ export default function ClientCompras() {
       toast.error(`Error al enviar: ${err.message || 'Error desconocido'}`);
     } finally {
       setPlacing(false);
+    }
+  };
+
+  const handleSendChat = async () => {
+    if (!chatMessage.trim() || !newOrderData?.id || !profile) return;
+    setSendingChat(true);
+    try {
+      const newMsg = {
+        from: profile.uid,
+        fromName: profile.name,
+        text: chatMessage,
+        timestamp: Date.now(),
+      };
+      await updateDoc(doc(db, 'pedidos', newOrderData.id), {
+        messages: arrayUnion(newMsg),
+        updatedAt: serverTimestamp(),
+      });
+      setNewOrderData((prev: any) => ({
+        ...prev,
+        messages: [...(prev.messages || []), newMsg],
+      }));
+      setChatMessage('');
+    } catch (err) {
+      toast.error('No se pudo enviar el mensaje');
+    } finally {
+      setSendingChat(false);
     }
   };
 
@@ -602,6 +673,10 @@ export default function ClientCompras() {
                    <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Ubicación</h4>
                    <div className="flex flex-col gap-3">
                       <div className="relative">
+                        <Phone className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
+                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Número de teléfono..." className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" />
+                      </div>
+                      <div className="relative">
                         <MapPin className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
                         <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Dirección de entrega..." rows={2} className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-14 text-sm font-bold text-on-surface outline-none resize-none" />
                         <button onClick={getGPS} disabled={gpsLoading} className="absolute top-3.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg">
@@ -623,6 +698,19 @@ export default function ClientCompras() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal que se abre automáticamente al crear el pedido */}
+      <MovementDetailModal
+        isOpen={newOrderOpen}
+        onClose={() => setNewOrderOpen(false)}
+        data={newOrderData}
+        profile={profile}
+        chatMessage={chatMessage}
+        setChatMessage={setChatMessage}
+        onSendMessage={handleSendChat}
+        isSending={sendingChat}
+      />
+
       </main>
     );
 }

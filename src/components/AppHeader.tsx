@@ -18,7 +18,7 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
   const { leftExtra, rightExtra, showBell } = useHeaderStore();
 
   return (
-    <header className="flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-[40] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
+    <header className="flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-[60] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}

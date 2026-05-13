@@ -33,6 +33,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Link, useLocation } from 'react-router-dom';
 import { PageTitle } from '../components/AppHeader';
 import { useHeaderStore } from '../stores/useHeaderStore';
+import { generateDailyReportPDF } from '../utils/pdfGenerator';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -72,6 +73,23 @@ export default function Dashboard() {
   const [supplies, setSupplies] = useState<any[]>([]);
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Generador de PDF
+  const handleGeneratePDF = async () => {
+    setIsGeneratingPDF(true);
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
+    const sellerName = profile?.name || 'Vendedor';
+    
+    const success = await generateDailyReportPDF('dashboard-pdf-container', sellerName, dateStr);
+    
+    setIsGeneratingPDF(false);
+    if (success) {
+      alert('Reporte de cierre de caja descargado con éxito.');
+    } else {
+      alert('Error generando PDF. Por favor ejecuta: npm install jspdf html2canvas');
+    }
+  };
   const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
   const [historyFilter, setHistoryFilter] = useState<'today' | 'week' | 'month'>('today');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -247,7 +265,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="p-4 sm:p-8 max-w-7xl w-full flex flex-col gap-6 sm:gap-8 pb-32 relative">
+      <div id="dashboard-pdf-container" className="p-4 sm:p-8 max-w-7xl w-full flex flex-col gap-6 sm:gap-8 pb-32 relative bg-surface-container-lowest">
         {/* Tab Switcher for Sellers */}
         {profile?.role === 'vendedor' && (
           <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner max-w-sm">
@@ -344,6 +362,13 @@ export default function Dashboard() {
                     <p className="text-secondary text-[10px] uppercase font-bold tracking-widest mt-1">Corte de hoy</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleGeneratePDF}
+                      disabled={isGeneratingPDF}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-full text-[10px] font-black uppercase shadow-sm hover:scale-105 active:scale-95 transition-all no-print disabled:opacity-50"
+                    >
+                      <Download className="w-3.5 h-3.5" /> {isGeneratingPDF ? 'Generando...' : 'Cerrar Caja'}
+                    </button>
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/5 rounded-full ring-1 ring-success/20">
                         <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                         <span className="text-[10px] font-black text-success uppercase">En Vivo</span>

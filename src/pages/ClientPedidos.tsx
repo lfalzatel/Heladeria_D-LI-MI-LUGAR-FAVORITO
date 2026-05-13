@@ -73,11 +73,17 @@ export default function ClientPedidos() {
     e?.stopPropagation();
     setUpdatingId(pedidoId);
     try {
-      // 1. Update Pedido Status
-      await updateDoc(doc(db, 'pedidos', pedidoId), { 
+      const updates: any = { 
         status: newStatus,
         updatedAt: serverTimestamp()
-      });
+      };
+
+      if (isStaff && profile) {
+         updates.sellerId = profile.uid;
+         updates.sellerName = profile.name;
+      }
+
+      await updateDoc(doc(db, 'pedidos', pedidoId), updates);
       
       // 2. If delivered, record as SALE
       if (newStatus === 'entregado' && profile) {

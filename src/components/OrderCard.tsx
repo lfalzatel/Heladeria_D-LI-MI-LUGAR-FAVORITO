@@ -16,6 +16,7 @@ interface OrderCardProps {
     paymentMethod: string;
     clienteName?: string;
     clienteId?: string;
+    sellerName?: string;
   };
   isStaff: boolean;
   userId: string;
@@ -142,6 +143,9 @@ export default function OrderCard({
             {isStaff && pedido.clienteName && (
               <span className="text-[9px] text-secondary/50 font-bold">· {pedido.clienteName}</span>
             )}
+            {pedido.sellerName && (
+              <span className="text-[9px] text-secondary/50 font-bold">· Atendido por: {pedido.sellerName}</span>
+            )}
           </div>
           <span className="text-[9px] font-mono text-secondary/25 font-bold">#{pedido.id.slice(-6).toUpperCase()}</span>
         </div>
@@ -159,12 +163,20 @@ export default function OrderCard({
                   <Check className="w-3.5 h-3.5 stroke-[3]" /> Aceptar
                 </button>
               )}
-              {(pedido.status === 'aceptado' || pedido.status === 'celebrado') && (
+              {pedido.status === 'aceptado' && (
+                <button
+                  onClick={(e) => onUpdateStatus(pedido.id, 'celebrado', e)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-blue-600 transition-all active:scale-95"
+                >
+                  <Truck className="w-3.5 h-3.5" /> En Camino
+                </button>
+              )}
+              {pedido.status === 'celebrado' && (
                 <button
                   onClick={(e) => onUpdateStatus(pedido.id, 'entregado', e)}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-600 transition-all active:scale-95"
                 >
-                  <Truck className="w-3.5 h-3.5" /> Marcar Entregado
+                  <Check className="w-3.5 h-3.5 stroke-[3]" /> Marcar Entregado
                 </button>
               )}
               <button
