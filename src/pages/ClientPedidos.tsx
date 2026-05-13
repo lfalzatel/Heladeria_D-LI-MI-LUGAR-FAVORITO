@@ -280,6 +280,23 @@ export default function ClientPedidos() {
             ? handleUpdateStatus
             : undefined
         }
+        onToggleItemPrepared={isStaff ? async (itemId, currentPrepared) => {
+          if (!selectedPedido) return;
+          try {
+            const updatedItems = selectedPedido.items.map((item: any) => 
+              item.id === itemId || (!item.id && item.productId === itemId) ? { ...item, prepared: !currentPrepared } : item
+            );
+            
+            // Update Firebase (local state will update via listener)
+            const { doc, updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'pedidos', selectedPedido.id), {
+              items: updatedItems
+            });
+          } catch (error) {
+            console.error("Error updating item preparation state:", error);
+            toast.error("Error al actualizar el estado de preparación");
+          }
+        } : undefined}
       />
 
     </>

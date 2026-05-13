@@ -93,8 +93,12 @@ export default function Seed() {
         { name: "Salsa Chocolate",          category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
         { name: "Salsa Arequipe",           category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
         { name: "Barquillos",               category: "Galletas",       unit: "Caja",    currentStock: 10, minLimit: 2 },
-        { name: "Vasos 10/12 ONZ",           category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Cucharas",                 category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 },
+        { name: "Obleas delgadas",          category: "Galletas",       unit: "Paquete", currentStock: 10, minLimit: 2 },
+        { name: "Conos",                    category: "Galletas",       unit: "Caja",    currentStock: 10, minLimit: 2 },
+        { name: "Vasos 10/12 ONZ",          category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Tapas",                    category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
+        { name: "Cucharas grandes",         category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 },
+        { name: "Cucharas pequeñas",        category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 },
         { name: "Servilletas",              category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 }
       ];
 

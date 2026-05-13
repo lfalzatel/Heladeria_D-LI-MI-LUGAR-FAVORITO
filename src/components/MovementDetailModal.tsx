@@ -31,6 +31,7 @@ interface MovementDetailModalProps {
   onSendMessage?: () => void;
   isSending?: boolean;
   onUpdateStatus?: (id: string, status: string, e?: React.MouseEvent) => void;
+  onToggleItemPrepared?: (itemId: string, currentPrepared: boolean) => void;
 }
 
 const STATUS_CONFIG: Record<string, any> = {
@@ -51,7 +52,8 @@ export default function MovementDetailModal({
   setChatMessage,
   onSendMessage,
   isSending = false,
-  onUpdateStatus
+  onUpdateStatus,
+  onToggleItemPrepared
 }: MovementDetailModalProps) {
   if (!data) return null;
 
@@ -174,15 +176,41 @@ export default function MovementDetailModal({
                  </div>
                )}
 
-               {/* Products List */}
                <section>
-                  <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-secondary/50 mb-3 ml-1">Productos ({data.items?.length || 0})</h4>
+                  <div className="flex items-center justify-between mb-3 ml-1">
+                    <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-secondary/50">Productos ({data.items?.length || 0})</h4>
+                    {onToggleItemPrepared && data.items?.length > 0 && (
+                      <span className="text-[10px] font-bold text-secondary">
+                        {data.items.filter((i: any) => i.prepared).length} / {data.items.length} preparados
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-2">
                     {data.items?.map((item: any, idx: number) => (
-                      <div key={item.id || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-outline/10 bg-white shadow-sm hover:border-primary/20 transition-colors">
+                      <div key={item.id || idx} className={cn(
+                        "flex justify-between items-center p-2.5 rounded-2xl border transition-colors shadow-sm",
+                        item.prepared ? "bg-surface border-success/30 opacity-70" : "bg-white border-outline/10 hover:border-primary/20"
+                      )}>
                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {onToggleItemPrepared && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleItemPrepared(item.id, !!item.prepared);
+                                }}
+                                className={cn(
+                                  "w-6 h-6 rounded-lg border-2 flex flex-shrink-0 items-center justify-center transition-colors",
+                                  item.prepared ? "bg-success border-success text-white" : "border-outline/20 bg-surface-container"
+                                )}
+                              >
+                                {item.prepared && <Check className="w-4 h-4" />}
+                              </button>
+                            )}
                             <div className="relative flex-shrink-0">
-                               <div className="w-10 h-10 rounded-xl bg-surface-container overflow-hidden flex items-center justify-center border border-outline/5">
+                               <div className={cn(
+                                 "w-10 h-10 rounded-xl bg-surface-container overflow-hidden flex items-center justify-center border border-outline/5 transition-all",
+                                 item.prepared && "grayscale"
+                               )}>
                                   {item.image ? (
                                     <img src={item.image} alt="" className="w-full h-full object-cover" />
                                   ) : (
@@ -194,8 +222,11 @@ export default function MovementDetailModal({
                                </div>
                             </div>
                             <div className="flex flex-col min-w-0 pr-2">
-                               <span className="font-bold text-xs text-on-surface leading-tight">{item.productName}</span>
-                               <div className="flex flex-wrap gap-1 mt-1">
+                               <span className={cn(
+                                 "font-bold text-xs leading-tight transition-all",
+                                 item.prepared ? "text-secondary line-through" : "text-on-surface"
+                               )}>{item.productName}</span>
+                               <div className={cn("flex flex-wrap gap-1 mt-1", item.prepared && "opacity-60")}>
                                   {item.variantLabel && (
                                     <span className="px-1.5 py-0.5 rounded-md bg-surface-container text-secondary text-[8px] font-black uppercase tracking-wider">
                                       {item.variantLabel}

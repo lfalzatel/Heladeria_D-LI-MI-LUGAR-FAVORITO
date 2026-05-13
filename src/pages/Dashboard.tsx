@@ -739,6 +739,27 @@ export default function Dashboard() {
         onClose={() => setSelectedSale(null)}
         data={selectedSale}
         profile={profile}
+        onToggleItemPrepared={async (itemId, currentPrepared) => {
+          if (!selectedSale) return;
+          try {
+            const collectionName = selectedSale.type === 'online' ? 'pedidos' : 'sales';
+            const updatedItems = selectedSale.items.map((item: any) => 
+              item.id === itemId || (!item.id && item.productId === itemId) ? { ...item, prepared: !currentPrepared } : item
+            );
+            
+            // Update local state for immediate feedback
+            setSelectedSale({ ...selectedSale, items: updatedItems });
+            
+            // Update Firebase
+            const { doc, updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, collectionName, selectedSale.id), {
+              items: updatedItems
+            });
+          } catch (error) {
+            console.error("Error updating item preparation state:", error);
+            toast.error("Error al actualizar el estado de preparación");
+          }
+        }}
       />
 
       {/* ── MODAL DE STOCK CRÍTICO ── */}

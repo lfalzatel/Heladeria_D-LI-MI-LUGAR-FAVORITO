@@ -31,6 +31,8 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   BellRing,
   MenuSquare,
   IceCream,
@@ -133,6 +135,8 @@ export default function Management() {
   const [supplyToEdit, setSupplyToEdit] = useState<SupplyType | null>(null);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [supplySearch, setSupplySearch] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   // ── Productos State (from Inventory.tsx) ─────────────────────────────────
   const [products, setProducts] = useState<Product[]>([]);
@@ -543,6 +547,15 @@ export default function Management() {
   const criticalSupplies = supplies.filter((s: any) => (s.currentStock || 0) <= (s.minLimit || 0));
   const lowStock = criticalSupplies.length;
 
+  const groupedSupplies = supplies
+    .filter(s => s.name.toLowerCase().includes(supplySearch.toLowerCase()) || (s.category || '').toLowerCase().includes(supplySearch.toLowerCase()))
+    .reduce((acc, supply) => {
+      const cat = supply.category || 'Varios';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(supply);
+      return acc;
+    }, {} as Record<string, Supply[]>);
+
   const categories = [
     { id: 'all', label: 'Todos', icon: <MenuSquare className="w-4 h-4" /> },
     { id: 'helados', label: 'Helados', icon: <IceCream className="w-4 h-4" /> },
@@ -629,58 +642,129 @@ export default function Management() {
                   {/* ── Sub-tab: INSUMOS (Solo Catálogo) ────────────────────────── */}
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
-                      <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-                        className="w-full py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                        <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo al Catálogo
-                      </button>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {supplies.map((s: any) => {
-                          const isLow = s.currentStock <= s.minLimit;
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                          className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                          <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo
+                        </button>
+                        <div className="flex-1 flex items-center bg-white rounded-3xl px-4 py-2 border border-outline/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
+                          <Search className="w-5 h-5 text-secondary/50 mr-3 flex-shrink-0" />
+                          <input 
+                            type="text" 
+                            placeholder="Buscar insumo o categoría..." 
+                            value={supplySearch}
+                            onChange={(e) => setSupplySearch(e.target.value)}
+                            className="bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-secondary/40 text-on-surface"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        {Object.entries(groupedSupplies).map(([category, items]) => {
+                          const isExpanded = expandedCategory === category || supplySearch !== '';
+                          const categoryCritical = items.filter(s => (s.currentStock || 0) <= (s.minLimit || 0)).length;
+                          
                           return (
-                            <div key={s.id} className={cn('bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30', isLow && 'border-orange-200')}>
-                              <div className="flex justify-between items-start mb-3">
-                                <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
-                                  {isLow && '⚠ '}{s.category || 'Varios'}
-                                </span>
-                                <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
-                                  className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
-                                  <Edit3 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
-                              {s.portionsPerUnit > 0 && (
-                                <div className="mt-2 mb-4 p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center justify-between">
-                                  <div>
-                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento</p>
-                                    <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} porciones</p>
+                            <div key={category} className="bg-white rounded-[2rem] border border-outline/50 shadow-sm overflow-hidden transition-all">
+                              <button 
+                                onClick={() => setExpandedCategory(isExpanded && supplySearch === '' ? null : category)}
+                                className="w-full flex items-center justify-between p-5 sm:p-6 bg-surface-container/30 hover:bg-surface-container/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shadow-inner', 
+                                    categoryCritical > 0 ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary'
+                                  )}>
+                                    {category.substring(0, 2).toUpperCase()}
                                   </div>
-                                  {s.lastPurchasePrice > 0 && (
-                                    <div className="text-right">
-                                      <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Costo x Porción</p>
-                                      <p className="text-[10px] font-black text-emerald-700 leading-tight">{formatCurrency(s.lastPurchasePrice / s.portionsPerUnit)}</p>
-                                    </div>
+                                  <div className="text-left">
+                                    <h3 className="font-headline font-black text-lg text-on-surface uppercase tracking-tight">{category}</h3>
+                                    <p className="text-xs font-bold text-secondary">{items.length} insumos registrados</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  {categoryCritical > 0 && (
+                                    <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                      <AlertTriangle className="w-3 h-3" /> {categoryCritical} alertas
+                                    </span>
                                   )}
+                                  <div className={cn("p-2 rounded-xl transition-all", isExpanded ? "bg-primary text-white" : "bg-surface-container text-secondary")}>
+                                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                  </div>
                                 </div>
-                              )}
-                              {s.yieldDetails && !s.portionsPerUnit && (
-                                <div className="mt-2 mb-4 p-2.5 bg-primary/5 rounded-xl border border-primary/10">
-                                  <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
-                                  <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
-                                </div>
-                              )}
-                              <div className="flex border-t border-outline/10 pt-4">
-                                <div className="flex-1">
-                                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
-                                  <p className={cn('text-xl font-black', isLow ? 'text-orange-500' : 'text-on-surface')}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
-                                </div>
-                                <div className="flex-1 text-right border-l border-outline/10 pl-4">
-                                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
-                                  <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
-                                </div>
-                              </div>
+                              </button>
+
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="border-t border-outline/10"
+                                  >
+                                    <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      {items.map((s: any) => {
+                                        const isLow = s.currentStock <= s.minLimit;
+                                        return (
+                                          <div key={s.id} className={cn('bg-surface-container/30 rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30 hover:shadow-md hover:bg-white', isLow && 'border-orange-200 bg-orange-50/30')}>
+                                            <div className="flex justify-between items-start mb-3">
+                                              <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
+                                                {isLow && '⚠ '}{s.category || 'Varios'}
+                                              </span>
+                                              <button onClick={(e) => { e.stopPropagation(); setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                                                className="w-9 h-9 rounded-xl bg-white border border-outline/20 flex items-center justify-center text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm">
+                                                <Edit3 className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                            <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
+                                            
+                                            {s.portionsPerUnit > 0 && (
+                                              <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
+                                                <div>
+                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento</p>
+                                                  <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} porc.</p>
+                                                </div>
+                                                {s.lastPurchasePrice > 0 && (
+                                                  <div className="text-right">
+                                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Costo x Porción</p>
+                                                    <p className="text-[10px] font-black text-emerald-700 leading-tight">{formatCurrency(s.lastPurchasePrice / s.portionsPerUnit)}</p>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+                                            {s.yieldDetails && !s.portionsPerUnit && (
+                                              <div className="mt-2 mb-4 p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                                                <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
+                                                <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
+                                              </div>
+                                            )}
+
+                                            <div className="flex border-t border-outline/10 pt-4 mt-auto">
+                                              <div className="flex-1">
+                                                <p className="text-[9px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                                                <p className={cn('text-xl font-black mt-0.5', isLow ? 'text-orange-600' : 'text-on-surface')}>{s.currentStock} <span className="text-xs font-bold opacity-60 uppercase">{s.unit}</span></p>
+                                              </div>
+                                              <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                                                <p className="text-[9px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                                                <p className="text-sm font-bold text-secondary mt-1.5">{s.minLimit ?? 0} <span className="text-[10px] uppercase">{s.unit}</span></p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
                           );
                         })}
+                        {Object.keys(groupedSupplies).length === 0 && (
+                          <div className="py-24 flex flex-col items-center justify-center opacity-40 bg-white rounded-[2rem] border border-dashed border-outline/50">
+                            <Search className="w-16 h-16 mb-4 text-secondary" />
+                            <p className="text-lg font-bold text-on-surface">No se encontraron insumos</p>
+                            <p className="text-xs text-secondary mt-1">Prueba con otra búsqueda</p>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -1334,6 +1418,25 @@ export default function Management() {
                   setChatMessage={setChatMessage}
                   onSendMessage={handleSendMessage}
                   isSending={sending}
+                  onToggleItemPrepared={async (itemId, currentPrepared) => {
+                    if (!selectedSaleDetail) return;
+                    try {
+                      const collectionName = selectedSaleDetail.type === 'online' ? 'pedidos' : 'sales';
+                      const updatedItems = selectedSaleDetail.items.map((item: any) => 
+                        item.id === itemId || (!item.id && item.productId === itemId) ? { ...item, prepared: !currentPrepared } : item
+                      );
+                      
+                      setSelectedSaleDetail({ ...selectedSaleDetail, items: updatedItems });
+                      
+                      const { doc, updateDoc } = await import('firebase/firestore');
+                      await updateDoc(doc(db, collectionName, selectedSaleDetail.id), {
+                        items: updatedItems
+                      });
+                    } catch (error) {
+                      console.error("Error updating item preparation state:", error);
+                      toast.error("Error al actualizar el estado de preparación");
+                    }
+                  }}
                 />
               </motion.div>
             </div>

@@ -818,6 +818,25 @@ export default function Reports() {
         setChatMessage={setChatMsg}
         onSendMessage={async () => {}}
         isSending={false}
+        onToggleItemPrepared={async (itemId, currentPrepared) => {
+          if (!selectedSale) return;
+          try {
+            const collectionName = selectedSale.type === 'online' || selectedSale.isDirectPedido ? 'pedidos' : 'sales';
+            const updatedItems = selectedSale.items.map((item: any) => 
+              item.id === itemId || (!item.id && item.productId === itemId) ? { ...item, prepared: !currentPrepared } : item
+            );
+            
+            setSelectedSale({ ...selectedSale, items: updatedItems });
+            
+            const { doc, updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, collectionName, selectedSale.id), {
+              items: updatedItems
+            });
+          } catch (error) {
+            console.error("Error updating item preparation state:", error);
+            toast.error("Error al actualizar el estado de preparación");
+          }
+        }}
       />
       
       <CalendarModal 

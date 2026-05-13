@@ -25,6 +25,8 @@ export interface Product {
   requiresFlavors?: boolean;
   requiresFruitChoice?: boolean;
   requiresSauces?: boolean;
+  requiresToppings?: boolean;
+  requiresBaseFlavor?: boolean;
   fruitOptions?: string[];
   scoops?: number;
   isActive: boolean;
@@ -63,6 +65,7 @@ export interface CartItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  prepared?: boolean;
 }
 
 export interface Sale {

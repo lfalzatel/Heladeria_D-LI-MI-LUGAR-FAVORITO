@@ -43,19 +43,17 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
   const [selectedIncludedToppings, setSelectedIncludedToppings] = useState<string[]>([]);
   const [selectedAdditions, setSelectedAdditions] = useState<{id: string, name: string, price: number}[]>([]);
-  const [containerChoice, setContainerChoice] = useState<'Cono' | 'Vaso' | null>(null);
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
   
-  const isBasicIceCream = ['cono-vaso', 'cucurucho', 'conchita'].includes(product.id);
-  const isSalpicon = product.requiresSalpiconBase || product.id === 'copa-salpicon';
+  const isBasicIceCream = ['cono', 'vaso', 'cucurucho', 'conchita'].includes(product.id);
+  const isSalpicon = product.requiresBaseFlavor || product.id === 'copa-salpicon' || product.id === 'vaso-salpicon';
 
   // Dynamic step calculation
   const steps: string[] = [];
   // For Cono o Vaso, we must choose container FIRST
-  if (product.id === 'cono-vaso') steps.push('containerChoice');
-  // Only show variant step if there are 2+ variants to choose from
+  // Removed because Cono and Vaso are now separate products
   if (product.variants && product.variants.length > 1) steps.push('variants');
   // For Salpicon, choose base first
   if (isSalpicon) steps.push('salpiconBase');
@@ -72,7 +70,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   
   // Sauces: only for helados and copas, OR basic ice cream included sauces
   if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
-  if (isBasicIceCream) steps.push('includedToppings');
+  if (product.requiresToppings || isBasicIceCream) steps.push('includedToppings');
   
   const totalSteps = steps.length;
   const currentStepType = steps[step - 1];
@@ -209,7 +207,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
-        setContainerChoice(null);
         setNotes('');
         setQuantity(1);
       }
@@ -237,12 +234,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       toast.error('Selecciona una opción');
       return;
     }
-    
-    if (effectiveCurrentStepType === 'containerChoice' && !containerChoice) {
-      toast.error('Selecciona si deseas Cono o Vaso');
-      return;
-    }
-    
     if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length === 0) {
       toast.error('Selecciona al menos un sabor');
       return;
@@ -306,7 +297,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
       const configParts = [
         variantLabel,
-        containerChoice ? `Envase: ${containerChoice}` : '',
         formattedFlavors,
         selectedFrutas.length > 0 ? (isSalpicon ? `Base: ${selectedFrutas.join(', ')}` : `Fruta: ${selectedFrutas.join(', ')}`) : '',
         allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
@@ -379,13 +369,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
   const getStepTitle = () => {
     switch (effectiveCurrentStepType) {
-      case 'containerChoice': return '¿Cono o Vaso?';
       case 'variants': return 'Presentación';
       case 'salpiconBase': return 'Base del Salpicón';
       case 'flavors': return `Selecciona ${maxScoops === 1 ? 'el Sabor' : 'los Sabores'}`;
       case 'fruits': return 'Elige la Fruta';
       case 'sauces': return isBasicIceCream ? 'Salsas (Incluidas)' : 'Salsas (Opcional)';
-      case 'includedToppings': return 'Toppings (Incluidos)';
+      case 'includedToppings': return (product.requiresToppings || isBasicIceCream) ? 'Toppings (Incluidos)' : 'Toppings';
       case 'additions': return 'Adiciones (Costo Extra)';
       default: return '';
     }
@@ -519,33 +508,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                           </div>
                           <div className="text-right pr-1">
                             <p className="font-brand font-black text-xl text-primary">{formatCurrency(variant.price)}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {effectiveCurrentStepType === 'containerChoice' && (
-                    <div className="grid grid-cols-2 gap-3">
-                      {['Cono', 'Vaso'].map(container => (
-                        <button
-                          key={container}
-                          onClick={() => setContainerChoice(container as 'Cono' | 'Vaso')}
-                          className={cn(
-                            "relative flex items-center justify-center p-4 rounded-[1.5rem] transition-all border-2 text-center",
-                            containerChoice === container
-                              ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
-                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                          )}
-                        >
-                          <div className="flex flex-col items-center gap-2">
-                            <div className={cn(
-                               "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                               containerChoice === container ? "bg-primary text-white rotate-3" : "bg-surface-container text-secondary"
-                            )}>
-                              {container === 'Cono' ? <IceCream className="w-5 h-5" /> : <GlassWater className="w-5 h-5" />}
-                            </div>
-                            <span className="font-black text-sm tracking-tight uppercase">{container}</span>
                           </div>
                         </button>
                       ))}

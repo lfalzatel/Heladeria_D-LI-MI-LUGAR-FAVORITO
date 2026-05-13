@@ -2,34 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
-import { Product, ProductVariant } from '../types';
+import { Product, ProductVariant, CartItem } from '../types';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingCart, X, Plus, Minus, Search, IceCream, 
   Utensils, GlassWater, CupSoda, Package, MapPin,
   Navigation, Banknote, Smartphone, CreditCard, Hash,
-  CheckCircle2, ChevronRight, Trash2
+  CheckCircle2, ChevronRight, Trash2, Edit2
 } from 'lucide-react';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { HeaderSearch } from '../components/AppHeader';
 import OrderConfigModal from '../components/OrderConfigModal';
 import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
-
-interface CartItem {
-  id: string;
-  productId: string;
-  productName: string;
-  variantLabel?: string;
-  description?: string;
-  flavors?: string[];
-  fruitChoices?: string[];
-  additions?: string[];
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-}
 
 const CATEGORIES = [
   { id: 'all',       label: 'Todos',     icon: <Package className="w-4 h-4" /> },
@@ -59,6 +45,7 @@ export default function ClientCompras() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [detailsProduct, setDetailsProduct] = useState<Product | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
@@ -123,17 +110,41 @@ export default function ClientCompras() {
   const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
 
   const addToCart = (item: CartItem) => {
+    let wasEdited = false;
     setCart(prev => {
-      const existing = prev.find(c => c.id === item.id);
-      if (existing) {
-        return prev.map(c => c.id === item.id
-          ? { ...c, quantity: c.quantity + item.quantity, subtotal: c.unitPrice * (c.quantity + item.quantity) }
-          : c
-        );
+      let currentCart = [...prev];
+      const existingByIdIndex = currentCart.findIndex(c => c.id === item.id);
+      
+      if (existingByIdIndex > -1) {
+        // Es una edición: removemos el item original antes de reevaluar agrupación
+        currentCart.splice(existingByIdIndex, 1);
+        wasEdited = true;
       }
-      return [...prev, item];
+
+      // Buscar si ya existe un producto exactamente igual
+      const existingIndex = currentCart.findIndex(c => 
+        c.productId === item.productId && 
+        c.variantLabel === item.variantLabel && 
+        JSON.stringify(c.flavors || []) === JSON.stringify(item.flavors || []) &&
+        JSON.stringify(c.fruitChoices || []) === JSON.stringify(item.fruitChoices || []) &&
+        JSON.stringify(c.additions || []) === JSON.stringify(item.additions || [])
+      );
+
+      if (existingIndex > -1) {
+        const existing = currentCart[existingIndex];
+        currentCart[existingIndex] = {
+          ...existing,
+          quantity: existing.quantity + item.quantity,
+          subtotal: existing.unitPrice * (existing.quantity + item.quantity)
+        };
+        return currentCart;
+      }
+      
+      return [...currentCart, item];
     });
-    toast.success(`${item.productName} agregado`);
+    setTimeout(() => {
+      toast.success(`${item.productName} ${wasEdited ? 'actualizado' : 'agregado'}`);
+    }, 0);
   };
 
   const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
@@ -445,7 +456,11 @@ export default function ClientCompras() {
         <OrderConfigModal
           product={selectedProduct}
           isOpen={!!selectedProduct}
-          onClose={() => setSelectedProduct(null)}
+          initialItem={editingItem || undefined}
+          onClose={() => {
+            setSelectedProduct(null);
+            setEditingItem(null);
+          }}
           onAdd={addToCart}
         />
       )}
@@ -539,7 +554,19 @@ export default function ClientCompras() {
                            <div className="flex-1 min-w-0">
                               <p className="font-bold text-sm text-on-surface truncate">{item.productName}</p>
                               {item.variantLabel && <p className="text-[10px] font-bold text-secondary italic mb-0.5">{item.variantLabel}</p>}
-                              <p className="text-primary font-black text-xs">{formatCurrency(item.unitPrice)}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-primary font-black text-xs">{formatCurrency(item.unitPrice)}</p>
+                                <button 
+                                  onClick={() => {
+                                    setEditingItem(item);
+                                    const prod = products.find(p => p.id === item.productId);
+                                    if (prod) setSelectedProduct(prod);
+                                  }}
+                                  className="flex items-center gap-1 text-[9px] font-black uppercase text-secondary hover:text-primary transition-colors bg-surface-container px-2 py-0.5 rounded-md"
+                                >
+                                  <Edit2 className="w-3 h-3" /> Editar
+                                </button>
+                              </div>
                            </div>
                            <div className="flex items-center gap-2.5 bg-surface-container rounded-full p-1">
                               <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-secondary shadow-sm"><Minus className="w-3.5 h-3.5" /></button>

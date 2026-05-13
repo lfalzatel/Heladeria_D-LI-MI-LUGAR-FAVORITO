@@ -1,12 +1,36 @@
 {
   "products": [
     {
-      "id": "cono-vaso",
-      "name": "Cono o Vaso",
+      "id": "cono",
+      "name": "Cono",
       "category": "helados",
-      "description": "Helado artesanal Mimo's servido en cono de galleta o vaso desechable. Sencillo para un antojo rápido, doble para el que no se decide por uno solo.",
+      "description": "Helado artesanal Mimo's servido en cono de galleta. Sencillo para un antojo rápido, doble para el que no se decide por uno solo.",
       "requiresFlavors": true,
-      "requiresFruitChoice": false,
+      "requiresSauces": true,
+      "requiresToppings": true,
+      "isActive": true,
+      "imageUrl": "/Images/products/vaso-cono.jpg",
+      "variants": [
+        {
+          "label": "Sencillo",
+          "price": 3500,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 5500,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "vaso",
+      "name": "Vaso",
+      "category": "helados",
+      "description": "Helado artesanal Mimo's servido en vaso desechable. Sencillo para un antojo rápido, doble para el que no se decide por uno solo.",
+      "requiresFlavors": true,
+      "requiresSauces": true,
+      "requiresToppings": true,
       "isActive": true,
       "imageUrl": "/Images/products/vaso-cono.jpg",
       "variants": [
@@ -137,8 +161,8 @@
         "queso"
       ],
       "requiresFlavors": true,
-      "requiresFruitChoice": true,
-      "requiresSalpiconBase": true,
+      "requiresFruitChoice": false,
+      "requiresBaseFlavor": true,
       "isActive": true,
       "imageUrl": "/Images/products/copa-salpicon.jpeg",
       "variants": [
@@ -161,7 +185,8 @@
         "barquillo"
       ],
       "requiresFlavors": true,
-      "requiresFruitChoice": true,
+      "requiresFruitChoice": false,
+      "requiresBaseFlavor": true,
       "isActive": true,
       "imageUrl": "/Images/products/vaso-salpicon.jpeg",
       "variants": [
@@ -233,14 +258,9 @@
       "id": "oblea-tradicional",
       "name": "Oblea Tradicional",
       "category": "obleas",
-      "description": "Dos crujientes obleas de maíz unidas por una capa generosa de arequipe, crema y queso. La versión con fruta añade fresa, mango o durazno fresco para un toque especial. Un clásico colombiano que nunca falla.",
+      "description": "Dos crujientes obleas unidas por una capa generosa de arequipe, crema y queso. La versión con fruta añade fresa, mango o durazno fresco. La versión mixta combina estas frutas.",
       "requiresFlavors": false,
-      "requiresFruitChoice": true,
-      "availableFruits": [
-        "fresa",
-        "mango",
-        "durazno"
-      ],
+      "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
       "variants": [
@@ -250,7 +270,12 @@
           "hasFruit": false
         },
         {
-          "label": "Arequipe, crema, queso y fruta",
+          "label": "Con Fruta (Elige 1 sabor)",
+          "price": 9000,
+          "hasFruit": true
+        },
+        {
+          "label": "Mixta (Varias frutas)",
           "price": 9000,
           "hasFruit": true
         }
@@ -260,7 +285,7 @@
       "id": "oblea-cuchareable",
       "name": "Oblea Cuchareable",
       "category": "obleas",
-      "description": "La versión moderna de la oblea tradicional: trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly, todo servido en recipiente para disfrutar con cuchara. También disponible con una bola de helado Mimo's.",
+      "description": "Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca y chantilly, servido en recipiente. Disponible también con helado Mimo's.",
       "ingredients": [
         "oblea",
         "arequipe",
@@ -269,26 +294,37 @@
         "fruta",
         "chantilly"
       ],
-      "requiresFlavors": true,
-      "requiresFruitChoice": true,
-      "availableFruits": [
-        "fresa",
-        "mango",
-        "durazno"
-      ],
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
       "variants": [
         {
-          "label": "Sin helado",
+          "label": "Con Fruta (Elige 1 sabor)",
           "price": 13000,
           "hasIceCream": false,
+          "hasFruit": true,
           "scoops": 0
         },
         {
-          "label": "Con helado",
+          "label": "Mixta (Varias frutas)",
+          "price": 13000,
+          "hasIceCream": false,
+          "hasFruit": true,
+          "scoops": 0
+        },
+        {
+          "label": "Con helado y Fruta (1 sabor)",
           "price": 15000,
           "hasIceCream": true,
+          "hasFruit": true,
+          "scoops": 1
+        },
+        {
+          "label": "Con helado y Mixta",
+          "price": 15000,
+          "hasIceCream": true,
+          "hasFruit": true,
           "scoops": 1
         }
       ]

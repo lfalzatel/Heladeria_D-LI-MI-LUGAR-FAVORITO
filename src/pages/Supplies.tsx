@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers } from 'lucide-react';
+import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
@@ -138,6 +138,8 @@ export default function Supplies() {
   const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!profile) return;
@@ -152,6 +154,22 @@ export default function Supplies() {
   const activeDays = new Set(filtered.map(p => toDateS(p.createdAt)?.toDateString()).filter(Boolean)).size;
   const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
   const lowStock = supplies.filter(s => s.currentStock <= s.minLimit).length;
+
+  const filteredSupplies = supplies.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (s.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const groupedSupplies = filteredSupplies.reduce((acc, curr) => {
+    const cat = curr.category || 'Varios';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(curr);
+    return acc;
+  }, {} as Record<string, Supply[]>);
+
+  const toggleCategory = (cat: string) => {
+    setExpandedCategories(prev => ({ ...prev, [cat]: prev[cat] === false })); // Default is true basically, or we can assume true if undefined.
+  };
 
   const handleConfirmPurchase = async (provider: string, items: PurchaseItem[]) => {
     const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
@@ -292,31 +310,77 @@ export default function Supplies() {
                 className="w-full py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
                 <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo Base
               </button>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {supplies.map(s => {
-                  const isLow = s.currentStock <= s.minLimit;
+
+              <div className="relative">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-secondary/50" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar insumo o categoría..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-outline/10 rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold placeholder:text-secondary/50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {Object.keys(groupedSupplies).sort().map(category => {
+                  const items = groupedSupplies[category];
+                  const isExpanded = expandedCategories[category] !== false; // Default expanded
+                  const hasLowStock = items.some(s => s.currentStock <= s.minLimit);
+
                   return (
-                    <div key={s.id} className={cn("bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30", isLow && "border-orange-200")}>
-                      <div className="flex justify-between items-start mb-3">
-                        <span className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
-                          {isLow && '⚠ '}{s.category || 'Varios'}
-                        </span>
-                        <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
-                          className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
-                      <div className="flex border-t border-outline/10 pt-4">
-                        <div className="flex-1">
-                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
-                          <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
+                    <div key={category} className="bg-white rounded-[2rem] border border-outline/10 shadow-sm overflow-hidden transition-all">
+                      <button 
+                        onClick={() => toggleCategory(category)}
+                        className={cn("w-full px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors", isExpanded ? "border-b border-outline/5" : "")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-headline font-black text-lg text-on-surface">{category}</h3>
+                          <span className="px-2 py-0.5 bg-surface-container rounded-lg text-[10px] font-bold text-secondary">
+                            {items.length}
+                          </span>
+                          {hasLowStock && (
+                            <span className="px-2 py-0.5 bg-orange-100 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" /> Stock Bajo
+                            </span>
+                          )}
                         </div>
-                        <div className="flex-1 text-right border-l border-outline/10 pl-4">
-                          <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
-                          <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
+                        {isExpanded ? <ChevronDown className="w-5 h-5 text-secondary" /> : <ChevronRight className="w-5 h-5 text-secondary" />}
+                      </button>
+                      
+                      {isExpanded && (
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-container-lowest">
+                          {items.map(s => {
+                            const isLow = s.currentStock <= s.minLimit;
+                            return (
+                              <div key={s.id} className={cn("bg-white rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30", isLow && "border-orange-200")}>
+                                <div className="flex justify-between items-start mb-3">
+                                  <span className={cn("px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", isLow ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary")}>
+                                    {isLow && '⚠ '}{s.category || 'Varios'}
+                                  </span>
+                                  <button onClick={() => { setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                                    className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary hover:bg-primary hover:text-white transition-all">
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
+                                <div className="flex border-t border-outline/10 pt-4">
+                                  <div className="flex-1">
+                                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                                    <p className={cn("text-xl font-black", isLow ? "text-orange-500" : "text-on-surface")}>{s.currentStock} <span className="text-sm font-bold opacity-60">{s.unit}</span></p>
+                                  </div>
+                                  <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                                    <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                                    <p className="text-sm font-bold text-secondary mt-1">{s.minLimit ?? 0} {s.unit}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })}

@@ -16,6 +16,7 @@ export interface CartItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  prepared?: boolean;
 }
 
 interface TableCart {

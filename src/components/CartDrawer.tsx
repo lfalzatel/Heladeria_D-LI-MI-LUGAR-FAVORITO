@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -123,15 +123,21 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                 </div>
               ) : (
                 cart.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 p-4 rounded-2xl bg-white border border-outline/30 shadow-sm group">
+                  <div key={item.id} className={cn(
+                    "flex gap-4 p-4 rounded-2xl bg-white border shadow-sm group transition-all",
+                    item.prepared ? "border-success/30 opacity-70 grayscale-[0.5]" : "border-outline/30"
+                  )}>
                     <div className="flex-1">
-                      <h4 className="font-bold text-sm text-on-surface leading-tight">
+                      <h4 className={cn(
+                        "font-bold text-sm leading-tight transition-all",
+                        item.prepared ? "text-success line-through" : "text-on-surface"
+                      )}>
                         {item.productName}
                         {item.variantLabel && <span className="text-xs text-primary ml-2 uppercase">({item.variantLabel})</span>}
                       </h4>
                       
                       {/* Configuration Details */}
-                      <div className="mt-2 flex flex-wrap gap-1.5">
+                      <div className={cn("mt-2 flex flex-wrap gap-1.5 transition-all", item.prepared && "opacity-50 grayscale")}>
                         {(item.flavors || []).map((f, i) => (
                           <span key={i} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
                             {f}
@@ -182,6 +188,16 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 transition-all">
+                      <button 
+                        onClick={() => useTableCartStore.getState().updateItem(activeTable, item.id, { prepared: !item.prepared })}
+                        className={cn(
+                          "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
+                          item.prepared ? "bg-success/20 text-success hover:bg-success/30" : "bg-outline/5 text-outline hover:bg-success/10 hover:text-success"
+                        )}
+                        title={item.prepared ? "Marcar como pendiente" : "Marcar como preparado"}
+                      >
+                        {item.prepared ? <Check className="w-5 h-5" /> : <CheckSquare className="w-4 h-4" />}
+                      </button>
                       <button 
                         onClick={() => onEdit?.(item)}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors"

@@ -6,9 +6,8 @@ import {
   signInWithPopup 
 } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
-import { seedDatabase } from '../services/seedService';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Settings2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -20,8 +19,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [seeding, setSeeding] = useState(false);
-  const [showConfig, setShowConfig] = useState(false);
   const [showCredentials, setShowCredentials] = useState(false);
 
   const { user, profile } = useAuthStore();
@@ -95,139 +92,11 @@ export default function Login() {
     }
   };
 
-  const seedUsers = async () => {
-    setSeeding(true);
-    const usersToCreate = [
-      { email: 'admin@dli.com', password: 'Admin123#', role: 'admin', name: 'Admin D\'LI' },
-      { email: 'prope@dli.com', password: 'Prope123#', role: 'propietario', name: 'Propietario D\'LI' },
-      { email: 'vendedor@dli.com', password: 'Vendedor123#', role: 'vendedor', name: 'Vendedor D\'LI' },
-    ];
-
-    try {
-      for (const u of usersToCreate) {
-        try {
-          let uid = '';
-          try {
-            const userCred = await createUserWithEmailAndPassword(auth, u.email, u.password);
-            uid = userCred.user.uid;
-            toast.success(`Usuario ${u.role} creado`);
-          } catch (err: any) {
-            if (err.code === 'auth/email-already-in-use') {
-              // Forced login to get the UID and update Firestore
-              const loginCred = await signInWithEmailAndPassword(auth, u.email, u.password);
-              uid = loginCred.user.uid;
-              toast.info(`Actualizando perfil de ${u.role}...`);
-            } else {
-              throw err;
-            }
-          }
-
-          if (uid) {
-            await setDoc(doc(db, 'users', uid), {
-              email: u.email,
-              role: u.role,
-              name: u.name,
-              updatedAt: serverTimestamp(),
-              // Ensure createdAt is at least present
-              createdAt: serverTimestamp() 
-            }, { merge: true });
-          }
-        } catch (itemError: any) {
-          console.error(`Error with user ${u.email}:`, itemError);
-          toast.error(`Error con ${u.email}: ${itemError.message}`);
-        }
-      }
-      setShowConfig(false);
-      toast.success('Configuración de prueba completada');
-    } catch (error: any) {
-      console.error('Seed error:', error);
-      toast.error('Error al configurar: ' + error.message);
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-surface relative overflow-hidden">
       {/* Decorative Blobs */}
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary-container/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-
-      <div className="absolute top-6 right-6 z-10">
-        <button 
-          onClick={() => setShowConfig(!showConfig)}
-          className="p-3 rounded-full glass-panel hover:bg-white transition-all text-secondary hover:text-primary shadow-sm"
-        >
-          <Settings2 className="w-5 h-5" />
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {showConfig && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm"
-          >
-            <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-outline">
-              <h3 className="font-headline font-bold text-xl text-on-surface mb-2">Entorno de Prueba</h3>
-              <p className="text-sm text-secondary mb-6 leading-relaxed">
-                Carga los perfiles iniciales en tu Firebase Auth para comenzar las pruebas locales.
-              </p>
-              
-              <div className="space-y-2 mb-8">
-                <CredentialInfo email="admin@dli.com" pass="Admin123#" role="Admin" />
-                <CredentialInfo email="vendedor@dli.com" pass="Vendedor123#" role="Vendedor" />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={seedUsers}
-                  disabled={seeding}
-                  className="w-full py-4 rounded-xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {seeding ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Inicializar Usuarios Auth'}
-                </button>
-
-                <button 
-                  onClick={async () => {
-                    setSeeding(true);
-                    try {
-                      // Autenticar primero como admin para obtener permisos de escritura
-                      await signInWithEmailAndPassword(auth, 'admin@dli.com', 'Admin123#');
-                      
-                      await seedDatabase();
-                      toast.success('¡Menú, Precios e Inventario cargados!');
-                      setShowConfig(false);
-                    } catch (error: any) {
-                      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                        toast.error('Primero debes Inicializar Usuarios Auth');
-                      } else {
-                        toast.error('Error al cargar datos: ' + error.message);
-                      }
-                    } finally {
-                      setSeeding(false);
-                    }
-                  }}
-                  disabled={seeding}
-                  className="w-full py-4 rounded-xl border-2 border-primary text-primary font-bold flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors disabled:opacity-50"
-                >
-                  {seeding ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Cargar Menú y Precios Reales'}
-                </button>
-              </div>
-              
-              <button 
-                onClick={() => setShowConfig(false)}
-                className="w-full mt-3 py-3 text-xs font-bold text-secondary hover:text-on-surface transition-colors uppercase tracking-widest"
-                disabled={seeding}
-              >
-                Cerrar
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <motion.main 
         initial={{ opacity: 0, y: 10 }}
@@ -349,18 +218,6 @@ export default function Login() {
       <div className="absolute bottom-8 text-[10px] text-secondary font-bold uppercase tracking-widest opacity-40">
         D'LI Management POS v1.0
       </div>
-    </div>
-  );
-}
-
-function CredentialInfo({ email, pass, role }: { email: string, pass: string, role: string }) {
-  return (
-    <div className="p-3 bg-surface rounded-xl border border-outline/30">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{role}</span>
-        <span className="text-[10px] font-mono text-secondary/60">{pass}</span>
-      </div>
-      <p className="text-xs font-medium text-on-surface">{email}</p>
     </div>
   );
 }
