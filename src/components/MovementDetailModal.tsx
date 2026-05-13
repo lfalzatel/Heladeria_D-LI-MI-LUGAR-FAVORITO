@@ -3,8 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
-import { storage } from '../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { compressImage } from '../utils/imageCompressor';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -73,19 +72,18 @@ export default function MovementDetailModal({
 
     setIsUploadingImage(true);
     try {
-      const storageRef = ref(storage, `chat_images/${data.id}/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const imageUrl = await getDownloadURL(snapshot.ref);
+      // Comprimir la imagen localmente a un string Base64 liviano (máximo 800px, calidad 0.6)
+      const base64Image = await compressImage(file, 800, 800, 0.6);
 
-      // Enviar el mensaje con la imagen como texto especial
+      // Enviar el mensaje con la imagen en base64
       if (setChatMessage && onSendMessage) {
-        setChatMessage(`[IMG]${imageUrl}`);
+        setChatMessage(`[IMG]${base64Image}`);
         // Pequeño delay para que el estado se actualice
         setTimeout(() => onSendMessage(), 100);
       }
     } catch (err) {
-      console.error('Error subiendo imagen:', err);
-      alert('No se pudo subir la imagen. Revisa los permisos de Firebase Storage.');
+      console.error('Error procesando imagen:', err);
+      alert('No se pudo procesar la imagen.');
     } finally {
       setIsUploadingImage(false);
       // Reset el input

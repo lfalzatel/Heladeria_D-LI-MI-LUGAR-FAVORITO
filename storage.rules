@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Regla para imágenes adjuntas en los pedidos (comprobantes de pago)
+    match /chat_images/{pedidoId}/{imageName} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Regla para fotos de perfil de usuarios
+    match /profiles/{userId}/{imageName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

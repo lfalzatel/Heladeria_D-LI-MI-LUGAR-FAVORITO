@@ -21,8 +21,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../lib/firebase';
+import { compressImage } from '../utils/imageCompressor';
 import { Camera, Loader2 } from 'lucide-react';
 
 export default function Profile() {
@@ -49,22 +48,18 @@ export default function Profile() {
       return toast.error('Por favor, selecciona una imagen válida');
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      return toast.error('La imagen es muy pesada (máximo 2MB)');
-    }
-
     setIsUploading(true);
-    const storageRef = ref(storage, `profiles/${user.uid}/${Date.now()}_${file.name}`);
 
     try {
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      await updateProfile({ imageUrl: downloadURL });
-      setFormData(prev => ({ ...prev, imageUrl: downloadURL }));
+      // Comprimir la imagen de perfil localmente a un Base64 súper liviano (máximo 300px, calidad 0.5)
+      const base64Image = await compressImage(file, 300, 300, 0.5);
+      
+      await updateProfile({ imageUrl: base64Image });
+      setFormData(prev => ({ ...prev, imageUrl: base64Image }));
       toast.success('Foto de perfil actualizada');
     } catch (error) {
-      console.error("Error uploading file:", error);
-      toast.error('Error al subir la imagen');
+      console.error("Error compressing/uploading file:", error);
+      toast.error('Error al actualizar la foto de perfil');
     } finally {
       setIsUploading(false);
     }
