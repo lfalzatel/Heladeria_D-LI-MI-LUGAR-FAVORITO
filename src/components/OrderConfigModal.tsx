@@ -568,7 +568,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
                   {effectiveCurrentStepType === 'flavors' && (
                     <div className="grid grid-cols-2 gap-2">
-                      {allFlavors.filter(f => f.isAvailable).map(flavor => {
+                      {allFlavors.filter(f => f.isAvailable).length === 0 ? (
+                        <div className="col-span-2 text-center py-6 text-on-surface/50 text-sm flex flex-col items-center gap-2">
+                          <IceCream className="w-8 h-8 text-outline/30" />
+                          <span>No hay sabores disponibles</span>
+                        </div>
+                      ) : (
+                        allFlavors.filter(f => f.isAvailable).map(flavor => {
                         const count = selectedFlavors.filter(f => f === flavor.name).length;
                         return (
                           <div
@@ -631,7 +637,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                             )}
                           </div>
                         );
-                      })}
+                        })
+                      )}
                     </div>
                   )}
 
@@ -760,8 +767,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                         {extraFruitsCount > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraFruitsCount} seleccionada{extraFruitsCount > 1 ? 's' : ''} — +{formatCurrency(extraFruitsPrice)}</p>}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {fruitOptions.map(fruta => {
+                        {(isOblea ? Array.from(new Set([...fruitOptions, ...FRUTAS_DEFAULT])) : fruitOptions).map(fruta => {
                           const count = extraFrutas.filter(f => f === fruta).length;
+                          const isIncluded = selectedFrutas.includes(fruta);
                           return (
                             <div
                               key={fruta}
@@ -770,9 +778,14 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                 "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all flex-grow sm:flex-grow-0 min-w-[100px] cursor-pointer select-none",
                                 count > 0 ? "bg-success/10 border-success shadow-sm" : "bg-white border-outline/10 hover:bg-surface-container-low"
                               )}>
-                              <div className="flex items-center gap-1.5 mb-2">
-                                <span className="text-xl shrink-0">{fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}</span>
-                                <span className={cn("text-[11px] font-black leading-tight", count > 0 ? "text-success" : "text-on-surface")}>{fruta}</span>
+                              <div className="flex items-center justify-between gap-1.5 mb-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xl shrink-0">{fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}</span>
+                                  <span className={cn("text-[11px] font-black leading-tight", count > 0 ? "text-success" : "text-on-surface")}>{fruta}</span>
+                                </div>
+                                {isIncluded && (
+                                  <span className="text-[8px] font-black bg-secondary/10 text-secondary px-1.5 py-0.5 rounded-full uppercase shrink-0">Incluida</span>
+                                )}
                               </div>
                               
                               {/* Contenedor de altura fija para evitar saltos */}
