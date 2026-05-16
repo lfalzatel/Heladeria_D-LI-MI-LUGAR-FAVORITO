@@ -46,6 +46,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
+
+  // Extra additions states
+  const [extraFlavors, setExtraFlavors] = useState<string[]>([]);
+  const [extraFrutas, setExtraFrutas] = useState<string[]>([]);
+  const [extraSauces, setExtraSauces] = useState<string[]>([]);
   
   const isBasicIceCream = ['cono', 'vaso', 'cucurucho', 'conchita'].includes(product.id);
   const isSalpicon = product.requiresBaseFlavor || product.id === 'copa-salpicon' || product.id === 'vaso-salpicon';
@@ -54,12 +59,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const steps: string[] = [];
   if (product.variants && product.variants.length > 1) steps.push('variants');
   if (isSalpicon) steps.push('salpiconBase');
-  
-  // Additions step - moved earlier to allow configuring choices based on additions
-  steps.push('additions');
-
-  // Max scoops: reads from selected variant, then label, then product-level, plus ice cream additions
-  const iceCreamAdditionsCount = selectedAdditions.filter(a => a.name.toLowerCase().includes('helado') || a.name.toLowerCase().includes('bola')).length;
   
   const getMaxScoops = () => {
     let base = 0;
@@ -71,69 +70,50 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       else if (label.includes('sencill')) base = 1;
       else base = product.scoops || (product.requiresFlavors ? 1 : 0);
     }
-    return base + iceCreamAdditionsCount;
+    return base;
   };
   const maxScoops = getMaxScoops();
 
-  // Flavors: show if product requires it OR if they added ice cream
+  // Base options
   if (product.requiresFlavors || maxScoops > 0) steps.push('flavors');
   
-  // Fruits step: Always show so users can add fruits to any product
-  steps.push('fruits');
+  const hasBaseFruits = product.category === 'ensaladas' || isSalpicon || isOblea;
+  if (hasBaseFruits) steps.push('fruits');
   
-  // Sauces: only for helados and copas, OR basic ice cream included sauces
   if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
   if (product.requiresToppings || isBasicIceCream) steps.push('includedToppings');
   
-  const totalSteps = steps.length;
-  const currentStepType = steps[step - 1];
+  // Additions intent
+  steps.push('additions');
 
-  // For Oblea Cuchareable: skip flavors step when "Sin Helado" variant selected
+  // Extras selections
+  const hasFruitAdd = selectedAdditions.some(a => a.name.toLowerCase().includes('fruta'));
+  const hasIceCreamAdd = selectedAdditions.some(a => a.name.toLowerCase().includes('helado') || a.name.toLowerCase().includes('bola'));
+  const hasSauceAdd = selectedAdditions.some(a => a.name.toLowerCase().includes('salsa'));
+
+  if (hasFruitAdd) steps.push('fruits_extra');
+  if (hasIceCreamAdd) steps.push('flavors_extra');
+  if (hasSauceAdd) steps.push('sauces_extra');
+  
   const effectiveSteps = steps.filter(s => {
     if (s === 'flavors') {
-      // Skip if the selected variant explicitly has no ice cream AND no ice cream additions were added
-      if (selectedVariant?.hasIceCream === false && iceCreamAdditionsCount === 0) return false;
+      if (selectedVariant?.hasIceCream === false) return false;
     }
     return true;
   });
   const effectiveTotalSteps = effectiveSteps.length;
   const effectiveCurrentStepType = effectiveSteps[step - 1];
 
-
-
-  // Fruit logic helpers
-  const getIncludedSaucesCount = () => {
-    let count = 0;
-    if (isBasicIceCream) count = 1;
-    if (product.id === 'adicion-salsa') count = 1;
-    
-    return count;
+  // Prices for extras
+  const getAdditionPrice = (keyword: string, fallback: number) => {
+    const add = availableAdditions.find(a => a.name.toLowerCase().includes(keyword));
+    return add?.variants?.[0]?.price || fallback;
   };
 
-  const getIncludedFruitsCount = () => {
-    let count = 0;
-    if (product.category === 'ensaladas' || product.category === 'salpicon') return 99;
-    
-    // Check if variant includes fruit (by flag or name)
-    const variantHasFruit = selectedVariant?.hasFruit || 
-                           selectedVariant?.label.toLowerCase().includes('fruta') ||
-                           selectedVariant?.label.toLowerCase().includes('fresa') ||
-                           selectedVariant?.label.toLowerCase().includes('mango') ||
-                           selectedVariant?.label.toLowerCase().includes('durazno');
-
-    if (variantHasFruit) count = 1;
-    if (product.id === 'oblea-cuchareable' || product.category === 'ensaladas') count = 1;
-    
-    return count;
-  };
-
-  const includedSaucesCount = getIncludedSaucesCount();
-  const extraSaucesCount = Math.max(0, (selectedSauces?.length || 0) - includedSaucesCount);
-  const extraSaucesPrice = extraSaucesCount * 1000;
-
-  const includedFruitsCount = getIncludedFruitsCount();
-  const extraFruitsCount = Math.max(0, (selectedFrutas?.length || 0) - includedFruitsCount);
+  const extraFruitsCount = extraFrutas.length;
   const extraFruitsPrice = extraFruitsCount * 3500;
+  const extraFlavorsPrice = extraFlavors.length * getAdditionPrice('helado', 3500);
+  const extraSaucesPrice = extraSauces.length * getAdditionPrice('salsa', 1000);
 
   // Fetch additions
   useEffect(() => {
@@ -159,18 +139,38 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         ) || product.variants?.[0] || null;
         
         setSelectedVariant(variant);
-        setSelectedFlavors(initialItem.flavors || []);
-        setSelectedFrutas(initialItem.fruitChoices || []);
+        
+        // Compute base scoops to split flavors
+        let bScoops = 0;
+        if (variant?.scoops !== undefined) bScoops = variant.scoops;
+        else {
+          const lbl = (variant?.label || '').toLowerCase();
+          if (lbl.includes('triple')) bScoops = 3;
+          else if (lbl.includes('doble')) bScoops = 2;
+          else if (lbl.includes('sencill')) bScoops = 1;
+          else bScoops = product.scoops || (product.requiresFlavors ? 1 : 0);
+        }
+        
+        const initialFlavors = initialItem.flavors || [];
+        setSelectedFlavors(initialFlavors.slice(0, bScoops));
+        setExtraFlavors(initialFlavors.slice(bScoops));
+
+        const initialFruits = initialItem.fruitChoices || [];
+        const hasBaseFruits = product.category === 'ensaladas' || isSalpicon || isOblea;
+        const bFruitsCount = hasBaseFruits ? (isOblea ? 1 : 99) : 0;
+        setSelectedFrutas(initialFruits.slice(0, bFruitsCount));
+        setExtraFrutas(initialFruits.slice(bFruitsCount));
+
         const TOPPINGS = ['Maní', 'Bolitas de colores'];
         
-        // Parse sauces from additions
         const sauceAdditions = (initialItem.additions || []).filter(a => SALSAS.includes(a));
-        setSelectedSauces(sauceAdditions);
+        const bSaucesCount = isBasicIceCream ? 1 : (product.requiresSauces ? 99 : 0);
+        setSelectedSauces(sauceAdditions.slice(0, bSaucesCount));
+        setExtraSauces(sauceAdditions.slice(bSaucesCount));
 
         const includedToppings = (initialItem.additions || []).filter(a => TOPPINGS.includes(a));
         setSelectedIncludedToppings(includedToppings);
         
-        // Reconstruct selectedAdditions using the IDs and names from the item
         const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a) && !TOPPINGS.includes(a));
         
         if (initialItem.additionIds && initialItem.additionIds.length > 0) {
@@ -182,7 +182,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             setSelectedAdditions(mapped);
           }
         } else {
-          // Fallback if no IDs (legacy items)
+          // Fallback
           const mapped = otherAdds.map(name => {
             const prod = availableAdditions.find(p => p.name === name);
             return prod ? { id: prod.id, name: prod.name, price: prod.variants?.[0]?.price || 0 } : { id: '', name, price: 0 };
@@ -195,13 +195,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setStep(initialStep || 1);
       } else {
         setStep(initialStep || 1);
-        // Auto-select if only 1 variant
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
-        setSelectedFrutas([]);
+        setSelectedFrutas(product.category === 'ensaladas' || product.category === 'salpicon' ? fruitOptions : []);
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
+        setExtraFlavors([]);
+        setExtraFrutas([]);
+        setExtraSauces([]);
         setNotes('');
         setQuantity(1);
       }
@@ -238,47 +240,48 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     } else {
       // Build cart item
       const variantLabel = selectedVariant?.label || '';
-      
-      // Calculate prices excluding manual fruit and sauce additions (will be handled by extra prices)
-      const otherAdditionsPrices = selectedAdditions
-        .reduce((sum, a) => sum + a.price, 0);
-        
-      const unitPrice = (selectedVariant?.price || product.basePrice || 0) + 
-                       otherAdditionsPrices + 
-                       extraFruitsPrice + 
-                       extraSaucesPrice;
-      
-      // Combine additions names
+
+      // Consolidate all flavors (base + extra)
+      const allFlavorsConsolidated = [...selectedFlavors, ...extraFlavors];
+      // Consolidate all fruits (base + extra)
+      const allFruitsConsolidated = [...selectedFrutas, ...extraFrutas];
+      // Consolidate all sauces (base + extra)
+      const allSaucesConsolidated = [...selectedSauces, ...extraSauces];
+
+      const otherAdditionsPrices = selectedAdditions.reduce((sum, a) => sum + a.price, 0);
+
+      const unitPrice = (selectedVariant?.price || product.basePrice || 0)
+        + otherAdditionsPrices
+        + extraFruitsPrice
+        + extraFlavorsPrice
+        + extraSaucesPrice;
+
       const allAdditionsNames = [
-        ...selectedSauces,
+        ...allSaucesConsolidated,
         ...selectedIncludedToppings,
-        ...selectedAdditions.filter(a => !a.name.toLowerCase().includes('fruta')).map(a => a.name)
+        ...selectedAdditions.map(a => a.name),
       ];
 
-      // Addition IDs for inventory
-      const allAdditionIds = [
-        ...selectedAdditions.map(a => a.id)
-      ];
+      if (extraFrutas.length > 0) allAdditionsNames.push(`Adición Fruta x${extraFrutas.length}`);
+      if (extraFlavors.length > 0) allAdditionsNames.push(`Adición Helado x${extraFlavors.length}`);
 
-      // Add "virtual" fruit additions to the list if they exist
-      if (extraFruitsCount > 0) {
-        allAdditionsNames.push(`Adición Fruta (x${extraFruitsCount})`);
-      }
+      const allAdditionIds = selectedAdditions.map(a => a.id);
 
-      // Format flavors with counts
-      const flavorCounts = selectedFlavors.reduce((acc, f) => {
+      const flavorCounts = allFlavorsConsolidated.reduce((acc, f) => {
         acc[f] = (acc[f] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
-      const formattedFlavors = Object.entries(flavorCounts).map(([flavor, count]) => {
-        return count > 1 ? `${flavor} (x${count})` : flavor;
-      }).join(', ');
+      const formattedFlavors = Object.entries(flavorCounts).map(([flavor, count]) =>
+        count > 1 ? `${flavor} (x${count})` : flavor
+      ).join(', ');
 
       const configParts = [
         variantLabel,
         formattedFlavors,
-        selectedFrutas.length > 0 ? (isSalpicon ? `Base: ${selectedFrutas.join(', ')}` : `Fruta: ${selectedFrutas.join(', ')}`) : '',
+        allFruitsConsolidated.length > 0
+          ? (isSalpicon ? `Base: ${allFruitsConsolidated.join(', ')}` : `Fruta: ${allFruitsConsolidated.join(', ')}`)
+          : '',
         allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
         notes ? `Notas: ${notes}` : ''
       ].filter(Boolean);
@@ -289,8 +292,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         productName: product.name,
         variantLabel,
         description: configParts.join(' | '),
-        flavors: selectedFlavors,
-        fruitChoices: selectedFrutas,
+        flavors: allFlavorsConsolidated,
+        fruitChoices: allFruitsConsolidated,
         additions: allAdditionsNames,
         additionIds: allAdditionIds,
         notes,
@@ -356,6 +359,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       case 'sauces': return isBasicIceCream ? 'Salsas (Incluidas)' : 'Salsas (Opcional)';
       case 'includedToppings': return (product.requiresToppings || isBasicIceCream) ? 'Toppings (Incluidos)' : 'Toppings';
       case 'additions': return 'Adiciones (Costo Extra)';
+      case 'fruits_extra': return '🍓 Adición de Fruta';
+      case 'flavors_extra': return '🍦 Adición de Helado';
+      case 'sauces_extra': return '🍫 Adición de Salsa';
       default: return '';
     }
   };
@@ -527,7 +533,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'includedToppings' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-2">
                       {['Maní', 'Bolitas de colores'].map(topping => {
                         const isSelected = selectedIncludedToppings.includes(topping);
                         return (
@@ -541,21 +547,19 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               }
                             }}
                             className={cn(
-                              "relative flex items-center p-4 rounded-[1.5rem] transition-all border-2 text-left",
+                              "relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all border-2 w-full text-left",
                               isSelected
-                                ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
+                                ? "bg-primary border-primary text-white shadow-md"
                                 : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
                             )}
                           >
-                            <div className="flex items-center gap-3 w-full">
-                              <div className={cn(
-                                "w-6 h-6 rounded-md flex items-center justify-center transition-all",
-                                isSelected ? "bg-primary text-white" : "border-2 border-outline/20 bg-surface-container"
-                              )}>
-                                {isSelected && <Check className="w-4 h-4" />}
-                              </div>
-                              <span className="font-bold text-base flex-1">{topping}</span>
-                            </div>
+                            <div className={cn("w-2 h-2 rounded-full shrink-0", isSelected ? "bg-white" : "bg-primary")} />
+                            <span className="font-black text-sm flex-1">{topping}</span>
+                            {isSelected && (
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
+                                <Check className="w-3 h-3 text-primary stroke-[4]" />
+                              </motion.div>
+                            )}
                           </button>
                         );
                       })}
@@ -563,26 +567,25 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'flavors' && (
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-2">
                       {allFlavors.filter(f => f.isAvailable).map(flavor => {
                         const count = selectedFlavors.filter(f => f === flavor.name).length;
                         return (
                           <div
                             key={flavor.id}
                             className={cn(
-                              "relative flex flex-col p-3 rounded-[1.5rem] transition-all border-2",
+                              "relative flex flex-col p-2.5 rounded-2xl transition-all border-2",
                               count > 0
                                 ? "bg-primary/5 border-primary shadow-sm"
                                 : "bg-white border-outline/10 hover:bg-surface-container-low"
                             )}
                           >
-                            <div className="flex items-center gap-2 mb-3">
-                              <IceCream className={cn("w-5 h-5", count > 0 ? "text-primary" : "text-secondary")} />
-                              <span className={cn("text-sm font-black leading-tight", count > 0 ? "text-primary" : "text-on-surface")}>{flavor.name}</span>
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <IceCream className={cn("w-4 h-4 shrink-0", count > 0 ? "text-primary" : "text-secondary")} />
+                              <span className={cn("text-xs font-black leading-tight", count > 0 ? "text-primary" : "text-on-surface")}>{flavor.name}</span>
                             </div>
-                            
                             {count > 0 ? (
-                              <div className="flex items-center justify-between bg-white rounded-xl border border-outline/20 p-1 shadow-sm">
+                              <div className="flex items-center justify-between bg-white rounded-xl border border-outline/20 p-0.5 shadow-sm">
                                 <button 
                                   onClick={() => {
                                     const index = selectedFlavors.indexOf(flavor.name);
@@ -592,11 +595,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                       setSelectedFlavors(newFlavors);
                                     }
                                   }}
-                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-secondary"
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-secondary"
                                 >
-                                  <span className="text-lg font-bold leading-none">−</span>
+                                  <span className="text-base font-bold leading-none">−</span>
                                 </button>
-                                <span className="font-brand font-black text-primary text-lg w-6 text-center">{count}</span>
+                                <span className="font-brand font-black text-primary text-base w-5 text-center">{count}</span>
                                 <button 
                                   onClick={() => {
                                     if (selectedFlavors.length < maxScoops) {
@@ -606,9 +609,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                     }
                                   }}
                                   disabled={selectedFlavors.length >= maxScoops}
-                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-container active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-container active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
                                 >
-                                  <Plus className="w-4 h-4 stroke-[3]" />
+                                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
                                 </button>
                               </div>
                             ) : (
@@ -621,7 +624,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                   }
                                 }}
                                 disabled={selectedFlavors.length >= maxScoops}
-                                className="w-full py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-bold text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                                className="w-full py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-bold text-[10px] uppercase tracking-widest transition-all disabled:opacity-50"
                               >
                                 Agregar
                               </button>
@@ -676,22 +679,22 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'sauces' && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2">
                       {SALSAS.map(sauce => (
                         <button
                           key={sauce}
                           onClick={() => toggleSauce(sauce)}
                           className={cn(
-                            "relative flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border-2 flex-grow sm:flex-grow-0 justify-center",
+                            "relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all border-2 w-full text-left",
                             selectedSauces.includes(sauce)
-                              ? "bg-primary border-primary text-white shadow-md scale-[1.02] z-10"
+                              ? "bg-primary border-primary text-white shadow-md"
                               : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
                           )}
                         >
-                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", selectedSauces.includes(sauce) ? "bg-white" : "bg-primary")} />
-                          <span className="text-[11px] font-black leading-none">{sauce}</span>
+                          <div className={cn("w-2 h-2 rounded-full shrink-0", selectedSauces.includes(sauce) ? "bg-white" : "bg-primary")} />
+                          <span className="font-black text-sm flex-1">{sauce}</span>
                           {selectedSauces.includes(sauce) && (
-                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
                               <Check className="w-3 h-3 text-primary stroke-[4]" />
                             </motion.div>
                           )}
@@ -705,12 +708,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                       <div className="grid grid-cols-2 gap-2">
                         {availableAdditions
                           .filter(add => {
-                            // Hide redundant additions if product already has dedicated steps
-                            // Since fruits are ALWAYS a step now, ALWAYS hide manual fruit additions
-                            if (add.name.toLowerCase().includes('fruta')) return false;
-                            
-                            const isSauceStepActive = product.requiresSauces || isBasicIceCream;
-                            if (isSauceStepActive && add.name.toLowerCase().includes('salsa')) return false;
                             return true;
                           })
                           .map(add => {
@@ -755,6 +752,166 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                       </div>
                     </div>
                   )}
+                  {/* PANTALLA: FRUTA EXTRA */}
+                  {effectiveCurrentStepType === 'fruits_extra' && (
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-primary/10 border border-primary/20 p-3 rounded-2xl">
+                        <p className="text-xs font-black text-primary uppercase tracking-wider">+{formatCurrency(3500)} por cada fruta adicional</p>
+                        {extraFruitsCount > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraFruitsCount} seleccionada{extraFruitsCount > 1 ? 's' : ''} — +{formatCurrency(extraFruitsPrice)}</p>}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {fruitOptions.map(fruta => {
+                          const count = extraFrutas.filter(f => f === fruta).length;
+                          return (
+                            <div
+                              key={fruta}
+                              onClick={() => setExtraFrutas([...extraFrutas, fruta])}
+                              className={cn(
+                                "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all flex-grow sm:flex-grow-0 min-w-[100px] cursor-pointer select-none",
+                                count > 0 ? "bg-success/10 border-success shadow-sm" : "bg-white border-outline/10 hover:bg-surface-container-low"
+                              )}>
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <span className="text-xl shrink-0">{fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}</span>
+                                <span className={cn("text-[11px] font-black leading-tight", count > 0 ? "text-success" : "text-on-surface")}>{fruta}</span>
+                              </div>
+                              
+                              {/* Contenedor de altura fija para evitar saltos */}
+                              <div className="relative w-full h-[28px]">
+                                <div
+                                  onClick={e => e.stopPropagation()}
+                                  className={cn(
+                                    "absolute inset-0 flex items-center gap-1 bg-white rounded-xl border border-outline/20 p-0.5 w-full justify-center",
+                                    count === 0 ? "invisible" : ""
+                                  )}
+                                >
+                                  <button
+                                    onClick={() => { const idx = extraFrutas.indexOf(fruta); if (idx > -1) { const nf = [...extraFrutas]; nf.splice(idx, 1); setExtraFrutas(nf); }}}
+                                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-surface-container text-secondary text-sm font-bold"
+                                  >−</button>
+                                  <span className="font-black text-success text-sm w-4 text-center">{count}</span>
+                                  <button
+                                    onClick={() => setExtraFrutas([...extraFrutas, fruta])}
+                                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-success text-white"
+                                  >
+                                    <Plus className="w-3 h-3 stroke-[3]" />
+                                  </button>
+                                </div>
+                                
+                                {count === 0 && (
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-surface-container text-secondary font-bold text-[10px] uppercase tracking-wider">
+                                    Agregar
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PANTALLA: HELADO EXTRA */}
+                  {effectiveCurrentStepType === 'flavors_extra' && (
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-primary/10 border border-primary/20 p-3 rounded-2xl">
+                        <p className="text-xs font-black text-primary uppercase tracking-wider">+{formatCurrency(getAdditionPrice('helado', 3500))} por cada bola adicional</p>
+                        {extraFlavors.length > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraFlavors.length} seleccionada{extraFlavors.length > 1 ? 's' : ''} — +{formatCurrency(extraFlavorsPrice)}</p>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {allFlavors.filter(f => f.isAvailable).map(flavor => {
+                          const count = extraFlavors.filter(f => f === flavor.name).length;
+                          const isIncluded = selectedFlavors.includes(flavor.name);
+                          return (
+                            <div
+                              key={flavor.id}
+                              onClick={() => setExtraFlavors([...extraFlavors, flavor.name])}
+                              className={cn(
+                                "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none",
+                                count > 0
+                                  ? "bg-primary/5 border-primary shadow-sm"
+                                  : isIncluded
+                                    ? "bg-success/10 border-success/40 hover:bg-success/15"
+                                    : "bg-white border-outline/10 hover:bg-surface-container-low"
+                              )}
+                            >
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <IceCream className={cn("w-4 h-4 shrink-0", count > 0 ? "text-primary" : isIncluded ? "text-success" : "text-secondary")} />
+                                <span className={cn("text-xs font-black leading-tight", count > 0 ? "text-primary" : isIncluded ? "text-success" : "text-on-surface")}>{flavor.name}</span>
+                              </div>
+                              {/* Controles siempre presentes — invisible cuando count=0 para mantener altura */}
+                              <div className="relative w-full h-[32px]">
+                                <div
+                                  onClick={e => e.stopPropagation()}
+                                  className={cn(
+                                    "absolute inset-0 flex items-center justify-between bg-white rounded-xl border border-outline/20 p-0.5",
+                                    count === 0 ? "invisible" : ""
+                                  )}
+                                >
+                                  <button onClick={() => { const idx = extraFlavors.indexOf(flavor.name); if (idx > -1) { const nf = [...extraFlavors]; nf.splice(idx, 1); setExtraFlavors(nf); }}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface-container text-secondary">
+                                    <span className="text-base font-bold leading-none">−</span>
+                                  </button>
+                                  <span className="font-brand font-black text-primary text-base w-5 text-center">{count}</span>
+                                  <button onClick={() => setExtraFlavors([...extraFlavors, flavor.name])} className="w-7 h-7 flex items-center justify-center rounded-lg bg-primary text-white">
+                                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                  </button>
+                                </div>
+                                
+                                {count === 0 && (
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-surface-container text-secondary font-bold text-[10px] uppercase tracking-wider">
+                                    Agregar
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PANTALLA: SALSA EXTRA */}
+                  {effectiveCurrentStepType === 'sauces_extra' && (
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-primary/10 border border-primary/20 p-3 rounded-2xl">
+                        <p className="text-xs font-black text-primary uppercase tracking-wider">+{formatCurrency(getAdditionPrice('salsa', 1000))} por cada salsa adicional</p>
+                        {extraSauces.length > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraSauces.length} seleccionada{extraSauces.length > 1 ? 's' : ''} — +{formatCurrency(extraSaucesPrice)}</p>}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {SALSAS.map(sauce => {
+                          const count = extraSauces.filter(s => s === sauce).length;
+                          return (
+                            <div 
+                              key={sauce}
+                              onClick={() => setExtraSauces([...extraSauces, sauce])}
+                              className={cn(
+                                "relative flex flex-col items-center p-3 rounded-2xl border-2 transition-all flex-grow sm:flex-grow-0 min-w-[90px] cursor-pointer select-none",
+                                count > 0 ? "bg-primary/10 border-primary shadow-sm" : "bg-white border-outline/10 hover:bg-surface-container-low"
+                              )}>
+                              <Droplets className={cn("w-6 h-6 mb-1", count > 0 ? "text-primary" : "text-secondary")} />
+                              <span className="text-[11px] font-black text-center mb-2">{sauce}</span>
+                              {count > 0 ? (
+                                <div 
+                                  onClick={e => e.stopPropagation()}
+                                  className="flex items-center gap-1 bg-white rounded-xl border border-outline/20 p-0.5"
+                                >
+                                  <button onClick={() => { const idx = extraSauces.indexOf(sauce); if (idx > -1) { const ns = [...extraSauces]; ns.splice(idx, 1); setExtraSauces(ns); }}} className="w-6 h-6 flex items-center justify-center rounded-lg bg-surface-container text-secondary text-sm font-bold">−</button>
+                                  <span className="font-black text-primary text-sm w-4 text-center">{count}</span>
+                                  <button onClick={() => setExtraSauces([...extraSauces, sauce])} className="w-6 h-6 flex items-center justify-center rounded-lg bg-primary text-white">
+                                    <Plus className="w-3 h-3 stroke-[3]" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="w-full py-1 rounded-xl bg-surface-container text-secondary font-bold text-[10px] uppercase tracking-wider text-center">
+                                  Agregar
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -783,7 +940,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   <p className="text-2xl font-brand font-black text-on-surface leading-tight">
                     {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + 
                       selectedAdditions.reduce((s, a) => s + a.price, 0) + 
-                      extraFruitsPrice + extraSaucesPrice) * quantity)}
+                      extraFruitsPrice + extraFlavorsPrice + extraSaucesPrice) * quantity)}
                   </p>
                 </div>
               </div>
