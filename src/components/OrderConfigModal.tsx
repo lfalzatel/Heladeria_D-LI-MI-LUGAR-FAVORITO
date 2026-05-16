@@ -52,21 +52,34 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
   // Dynamic step calculation
   const steps: string[] = [];
-  // For Cono o Vaso, we must choose container FIRST
-  // Removed because Cono and Vaso are now separate products
   if (product.variants && product.variants.length > 1) steps.push('variants');
-  // For Salpicon, choose base first
   if (isSalpicon) steps.push('salpiconBase');
   
-  // Flavors: only show if product requires it
-  if (product.requiresFlavors) steps.push('flavors');
-
   // Additions step - moved earlier to allow configuring choices based on additions
   steps.push('additions');
+
+  // Max scoops: reads from selected variant, then label, then product-level, plus ice cream additions
+  const iceCreamAdditionsCount = selectedAdditions.filter(a => a.name.toLowerCase().includes('helado') || a.name.toLowerCase().includes('bola')).length;
   
-  // Fruits step: show if product requires it OR if a fruit addition was selected
-  const hasFruitAddition = selectedAdditions.some(a => a.name.toLowerCase().includes('fruta'));
-  if (product.requiresFruitChoice || hasFruitAddition) steps.push('fruits');
+  const getMaxScoops = () => {
+    let base = 0;
+    if (selectedVariant?.scoops !== undefined) base = selectedVariant.scoops;
+    else {
+      const label = (selectedVariant?.label || '').toLowerCase();
+      if (label.includes('triple')) base = 3;
+      else if (label.includes('doble')) base = 2;
+      else if (label.includes('sencill')) base = 1;
+      else base = product.scoops || (product.requiresFlavors ? 1 : 0);
+    }
+    return base + iceCreamAdditionsCount;
+  };
+  const maxScoops = getMaxScoops();
+
+  // Flavors: show if product requires it OR if they added ice cream
+  if (product.requiresFlavors || maxScoops > 0) steps.push('flavors');
+  
+  // Fruits step: Always show so users can add fruits to any product
+  steps.push('fruits');
   
   // Sauces: only for helados and copas, OR basic ice cream included sauces
   if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
@@ -78,31 +91,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   // For Oblea Cuchareable: skip flavors step when "Sin Helado" variant selected
   const effectiveSteps = steps.filter(s => {
     if (s === 'flavors') {
-      // Skip if the selected variant explicitly has no ice cream
-      if (selectedVariant?.hasIceCream === false) return false;
-    }
-    if (s === 'fruits') {
-      const hasFruitAddition = selectedAdditions.some(a => a.name.toLowerCase().includes('fruta'));
-      // Skip if it's an oblea variant without fruit AND no fruit addition was added
-      if (product.id === 'oblea-tradicional' && selectedVariant?.hasFruit === false && !hasFruitAddition) return false;
+      // Skip if the selected variant explicitly has no ice cream AND no ice cream additions were added
+      if (selectedVariant?.hasIceCream === false && iceCreamAdditionsCount === 0) return false;
     }
     return true;
   });
   const effectiveTotalSteps = effectiveSteps.length;
   const effectiveCurrentStepType = effectiveSteps[step - 1];
-
-  // Max scoops: reads from selected variant, then label, then product-level
-  const getMaxScoops = () => {
-    if (selectedVariant?.scoops !== undefined) return selectedVariant.scoops;
-    
-    const label = (selectedVariant?.label || '').toLowerCase();
-    if (label.includes('triple')) return 3;
-    if (label.includes('doble')) return 2;
-    if (label.includes('sencill')) return 1;
-    
-    return product.scoops || (product.requiresFlavors ? 1 : 0);
-  };
-  const maxScoops = getMaxScoops();
 
 
 
@@ -176,15 +171,16 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedIncludedToppings(includedToppings);
         
         // Reconstruct selectedAdditions using the IDs and names from the item
-        // If additionIds exists, use it, otherwise fallback to names
         const otherAdds = (initialItem.additions || []).filter(a => !SALSAS.includes(a) && !TOPPINGS.includes(a));
         
         if (initialItem.additionIds && initialItem.additionIds.length > 0) {
-          const mapped = initialItem.additionIds.map(id => {
-            const prod = availableAdditions.find(p => p.id === id);
-            return prod ? { id: prod.id, name: prod.name, price: prod.variants?.[0]?.price || 0 } : null;
-          }).filter(Boolean) as {id: string, name: string, price: number}[];
-          setSelectedAdditions(mapped);
+          if (availableAdditions.length > 0) {
+            const mapped = initialItem.additionIds.map(id => {
+              const prod = availableAdditions.find(p => p.id === id);
+              return prod ? { id: prod.id, name: prod.name, price: prod.variants?.[0]?.price || 0 } : null;
+            }).filter(Boolean) as {id: string, name: string, price: number}[];
+            setSelectedAdditions(mapped);
+          }
         } else {
           // Fallback if no IDs (legacy items)
           const mapped = otherAdds.map(name => {
@@ -195,7 +191,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         }
         
         setNotes(initialItem.notes || '');
-
         setQuantity(initialItem.quantity);
         setStep(initialStep || 1);
       } else {
@@ -211,22 +206,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setQuantity(1);
       }
     }
-  }, [isOpen, initialItem, product.variants, product.requiresFlavors]);
-
-  // When variant changes, reset dependent selections
-  useEffect(() => {
-    if (selectedVariant) {
-      // Reset flavors if scoops changed
-      setSelectedFlavors([]);
-      
-      // Smart pre-selection of fruit based on variant label
-      const label = selectedVariant.label.toLowerCase();
-      if (label.includes('fresa')) setSelectedFrutas(['Fresa']);
-      else if (label.includes('mango')) setSelectedFrutas(['Mango']);
-      else if (label.includes('durazno')) setSelectedFrutas(['Durazno']);
-      else if (!label.includes('fruta')) setSelectedFrutas([]); // Reset if it's a plain variant
-    }
-  }, [selectedVariant?.label]);
+  }, [isOpen, initialItem, product.variants, product.requiresFlavors, availableAdditions]);
 
   const handleNext = () => {
     // Validation for current step
@@ -486,7 +466,17 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                       {product.variants?.map(variant => (
                         <button
                           key={variant.label}
-                          onClick={() => setSelectedVariant(variant)}
+                          onClick={() => {
+                            if (selectedVariant?.label !== variant.label) {
+                              setSelectedVariant(variant);
+                              setSelectedFlavors([]);
+                              const label = variant.label.toLowerCase();
+                              if (label.includes('fresa')) setSelectedFrutas(['Fresa']);
+                              else if (label.includes('mango')) setSelectedFrutas(['Mango']);
+                              else if (label.includes('durazno')) setSelectedFrutas(['Durazno']);
+                              else if (!label.includes('fruta')) setSelectedFrutas([]);
+                            }
+                          }}
                           className={cn(
                             "relative flex items-center justify-between p-4 rounded-[1.5rem] transition-all border-2 text-left group",
                             selectedVariant?.label === variant.label
@@ -716,10 +706,10 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                         {availableAdditions
                           .filter(add => {
                             // Hide redundant additions if product already has dedicated steps
-                            const isFruitStepActive = product.requiresFruitChoice || product.category === 'obleas';
-                            const isSauceStepActive = product.requiresSauces || isBasicIceCream;
+                            // Since fruits are ALWAYS a step now, ALWAYS hide manual fruit additions
+                            if (add.name.toLowerCase().includes('fruta')) return false;
                             
-                            if (isFruitStepActive && add.name.toLowerCase().includes('fruta')) return false;
+                            const isSauceStepActive = product.requiresSauces || isBasicIceCream;
                             if (isSauceStepActive && add.name.toLowerCase().includes('salsa')) return false;
                             return true;
                           })

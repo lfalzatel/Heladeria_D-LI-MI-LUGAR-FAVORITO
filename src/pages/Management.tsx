@@ -1036,6 +1036,7 @@ export default function Management() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {users
                     .filter((u) => {
+                      if (currentUser?.role === 'propietario' && u.role === 'admin') return false;
                       const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
                       const isStaff = ['admin', 'propietario', 'vendedor'].includes(u.role);
                       const matchesTab = personasSubTab === 'equipo' ? isStaff : u.role === 'cliente';
