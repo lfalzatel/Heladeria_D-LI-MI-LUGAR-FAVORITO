@@ -7,7 +7,8 @@ import {
   where,
   doc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  addDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -16,7 +17,15 @@ import {
   History,
   ArrowLeft,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Receipt,
+  BarChart3,
+  CreditCard,
+  Wifi,
+  Utensils,
+  ShoppingBag,
+  Play
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -33,21 +42,51 @@ export default function ClientHistorial() {
   const { setHeader, clearHeader } = useHeaderStore();
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
   
+  const [activeTab, setActiveTab] = useState<'gastos' | 'historial' | 'reportes'>('gastos');
   const [userSales, setUserSales] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
+  const [isGastoModalOpen, setIsGastoModalOpen] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
     setHeader({
-      title: "Mi Historial",
-      subtitle: "Actividad Reciente"
+      title: "Gastos",
+      subtitle: activeTab === 'gastos' ? "Mis Gastos" : activeTab === 'historial' ? "Historial de Pedidos" : "Reportes"
     });
     return () => clearHeader();
-  }, [setHeader, clearHeader, profile]);
+  }, [setHeader, clearHeader, profile, activeTab]);
+
+  useEffect(() => {
+    if (!profile || activeTab !== 'gastos') return;
+
+    const gastosQ = query(
+      collection(db, 'gastos'),
+      where('userId', '==', profile.uid),
+      orderBy('date', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(gastosQ, (snapshot) => {
+      const data = snapshot.docs.map(doc => {
+        const item = doc.data();
+        const dateObj = item.date ? (item.date.toDate ? item.date.toDate() : new Date(item.date)) : new Date();
+        return {
+          id: doc.id,
+          ...item,
+          dateObj
+        };
+      });
+      setExpenses(data);
+    }, (error) => {
+      console.error("Error fetching expenses:", error);
+    });
+
+    return () => unsubscribe();
+  }, [profile, activeTab]);
 
   useEffect(() => {
     if (!profile) return;
@@ -132,124 +171,333 @@ export default function ClientHistorial() {
     }
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'netflix': return <Play className="w-5 h-5" />;
+      case 'facturas': return <CreditCard className="w-5 h-5" />;
+      case 'servicios publicos': return <Wifi className="w-5 h-5" />;
+      case 'alimentación': return <Utensils className="w-5 h-5" />;
+      default: return <ShoppingBag className="w-5 h-5" />;
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto w-full relative">
         <div className="p-4 sm:p-6 lg:p-8">
 
-          {/* CONTENIDO (CALENDARIO + LISTA) */}
+          {/* TABS */}
+          <div className="flex gap-2 mb-6 bg-surface-container-low p-1.5 rounded-full w-fit mx-auto border border-outline/5">
+            {[
+              { id: 'gastos', label: 'Mis Gastos', icon: <Receipt className="w-4 h-4" /> },
+              { id: 'historial', label: 'Historial', icon: <History className="w-4 h-4" /> },
+              { id: 'reportes', label: 'Reportes', icon: <BarChart3 className="w-4 h-4" /> }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all",
+                  activeTab === tab.id
+                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                    : "text-secondary hover:bg-surface-container-high"
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* CONTENIDO */}
           <div className="bg-surface-container-lowest rounded-[2.5rem] px-6 sm:px-8 py-8 relative z-10 border border-outline/10">
             
-            {/* HEATMAP CALENDAR */}
-            {(() => {
-                const currentMonth = viewDate.getMonth();
-                const currentYear = viewDate.getFullYear();
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-
-                const activityMap: Record<number, number> = {};
-                userSales.forEach(sale => {
-                  const ts = sale.createdAt;
-                  if (!ts) return;
-                  const date = ts.toDate ? ts.toDate() : new Date(ts);
-                  if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
-                    const day = date.getDate();
-                    activityMap[day] = (activityMap[day] || 0) + 1;
-                  }
-                });
-
-                const daysOfWeek = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-                const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-                
-                const days = Array.from({ length: firstDayAdjusted }, () => null).concat(
-                   Array.from({ length: daysInMonth }, (_, i) => i + 1)
-                );
-
-                const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
-                const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
-
-                return (
-                  <div className="mb-12 max-w-sm mx-auto">
-                    {/* Calendar Header with Controls */}
-                    <div className="flex items-center justify-between mb-6 px-2">
-                       <button onClick={handlePrevMonth} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary">
-                          <ChevronLeft className="w-4 h-4" />
-                       </button>
-                       <div className="text-center">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Calendario</p>
-                          <h4 className="text-sm font-bold text-on-surface">
-                             {monthNames[currentMonth]} {currentYear}
-                          </h4>
-                       </div>
-                       <button 
-                          onClick={handleNextMonth} 
-                          disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()}
-                          className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20"
-                       >
-                          <ChevronRight className="w-4 h-4" />
-                       </button>
-                    </div>
-
-                    <div className="flex flex-col items-center">
-                       <div className="grid grid-cols-7 gap-1 w-fit">
-                          {daysOfWeek.map(day => (
-                             <div key={day} className="w-8 h-8 flex items-center justify-center">
-                                <span className="text-[10px] font-black text-secondary/40 uppercase">{day}</span>
-                             </div>
-                          ))}
-                          {days.map((day, i) => {
-                             const count = day ? activityMap[day] : 0;
-                             const hasActivity = count > 0;
-                             const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
-
-                             return (
-                                <div 
-                                   key={i} 
-                                   className={cn(
-                                      "w-7 h-9 rounded-lg flex flex-col items-center justify-center text-[9px] font-bold transition-all relative",
-                                      hasActivity ? "bg-primary text-white shadow-md shadow-primary/20" : 
-                                      day ? "bg-surface-container text-on-surface" : "opacity-0",
-                                      isToday && !hasActivity && "ring-1 ring-primary ring-inset"
-                                   )}
-                                >
-                                   <span>{day}</span>
-                                   {hasActivity && (
-                                      <span className="text-[6px] font-black opacity-60 leading-none mt-0.5">{count}</span>
-                                   )}
-                                </div>
-                             );
-                          })}
-                       </div>
-                    </div>
-                  </div>
-                );
-            })()}
-
-            {/* MOVEMENTS LIST */}
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] px-2 mb-6">Pedidos Recientes</h4>
-              
-              {isLoading ? (
-                <div className="flex justify-center p-12"><div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" /></div>
-              ) : userSales.length === 0 ? (
-                <div className="text-center py-16 opacity-30">
-                   <History className="w-12 h-12 mx-auto mb-4" />
-                   <p className="uppercase font-black text-[10px] tracking-widest">No tienes pedidos en tu historial aún</p>
+            {activeTab === 'gastos' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] px-2">Mis Gastos Personales</h4>
+                  <button
+                    onClick={() => setIsGastoModalOpen(true)}
+                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Registrar Gasto
+                  </button>
                 </div>
-              ) : (
-                userSales.map((sale) => (
-                  <OrderCard 
-                    key={sale.id}
-                    pedido={sale}
-                    isStaff={false}
-                    userId={profile.uid}
-                    onOpen={() => setSelectedSaleDetail(sale)}
-                  />
-                ))
-              )}
-            </div>
+
+                {expenses.length === 0 ? (
+                  <div className="text-center py-16 opacity-30">
+                     <Receipt className="w-12 h-12 mx-auto mb-4" />
+                     <p className="uppercase font-black text-[10px] tracking-widest">No has registrado gastos aún</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {expenses.map((gasto) => (
+                      <div key={gasto.id} className="bg-surface-container rounded-2xl p-4 flex items-center justify-between border border-outline/5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            {getCategoryIcon(gasto.category)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-on-surface">{gasto.description || gasto.category}</p>
+                            <p className="text-xs text-secondary">{gasto.dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-sm text-primary">
+                            ${gasto.amount.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
+                          </p>
+                          <p className="text-[10px] font-black text-secondary/60 uppercase">{gasto.category}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'historial' && (
+              <>
+                {/* HEATMAP CALENDAR */}
+                {(() => {
+                    const currentMonth = viewDate.getMonth();
+                    const currentYear = viewDate.getFullYear();
+                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                    const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+
+                    const activityMap: Record<number, number> = {};
+                    userSales.forEach(sale => {
+                      const ts = sale.createdAt;
+                      if (!ts) return;
+                      const date = ts.toDate ? ts.toDate() : new Date(ts);
+                      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                        const day = date.getDate();
+                        activityMap[day] = (activityMap[day] || 0) + 1;
+                      }
+                    });
+
+                    const daysOfWeek = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+                    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                    
+                    const days = Array.from({ length: firstDayAdjusted }, () => null).concat(
+                       Array.from({ length: daysInMonth }, (_, i) => i + 1)
+                    );
+
+                    const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
+                    const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
+
+                    return (
+                      <div className="mb-12 max-w-sm mx-auto">
+                        {/* Calendar Header with Controls */}
+                        <div className="flex items-center justify-between mb-6 px-2">
+                           <button onClick={handlePrevMonth} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary">
+                              <ChevronLeft className="w-4 h-4" />
+                           </button>
+                           <div className="text-center">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Calendario</p>
+                              <h4 className="text-sm font-bold text-on-surface">
+                                 {monthNames[currentMonth]} {currentYear}
+                              </h4>
+                           </div>
+                           <button 
+                              onClick={handleNextMonth} 
+                              disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()}
+                              className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20"
+                           >
+                              <ChevronRight className="w-4 h-4" />
+                           </button>
+                        </div>
+
+                        <div className="flex flex-col items-center">
+                           <div className="grid grid-cols-7 gap-1 w-fit">
+                              {daysOfWeek.map(day => (
+                                 <div key={day} className="w-8 h-8 flex items-center justify-center">
+                                    <span className="text-[10px] font-black text-secondary/40 uppercase">{day}</span>
+                                 </div>
+                              ))}
+                              {days.map((day, i) => {
+                                 const count = day ? activityMap[day] : 0;
+                                 const hasActivity = count > 0;
+                                 const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
+
+                                 return (
+                                    <div 
+                                       key={i} 
+                                       className={cn(
+                                          "w-7 h-9 rounded-lg flex flex-col items-center justify-center text-[9px] font-bold transition-all relative",
+                                          hasActivity ? "bg-primary text-white shadow-md shadow-primary/20" : 
+                                          day ? "bg-surface-container text-on-surface" : "opacity-0",
+                                          isToday && !hasActivity && "ring-1 ring-primary ring-inset"
+                                       )}
+                                    >
+                                       <span>{day}</span>
+                                       {hasActivity && (
+                                          <span className="text-[6px] font-black opacity-60 leading-none mt-0.5">{count}</span>
+                                       )}
+                                    </div>
+                                 );
+                              })}
+                           </div>
+                        </div>
+                      </div>
+                    );
+                })()}
+
+                {/* MOVEMENTS LIST */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] px-2 mb-6">Pedidos Recientes</h4>
+                  
+                  {isLoading ? (
+                    <div className="flex justify-center p-12"><div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" /></div>
+                  ) : userSales.length === 0 ? (
+                    <div className="text-center py-16 opacity-30">
+                       <History className="w-12 h-12 mx-auto mb-4" />
+                       <p className="uppercase font-black text-[10px] tracking-widest">No tienes pedidos en tu historial aún</p>
+                    </div>
+                  ) : (
+                    userSales.map((sale) => (
+                      <OrderCard 
+                        key={sale.id}
+                        pedido={sale}
+                        isStaff={false}
+                        userId={profile.uid}
+                        onOpen={() => setSelectedSaleDetail(sale)}
+                      />
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+
+            {activeTab === 'reportes' && (
+              <div className="text-center py-16 opacity-30">
+                 <BarChart3 className="w-12 h-12 mx-auto mb-4" />
+                 <p className="uppercase font-black text-[10px] tracking-widest">Próximamente: Gráficos y Reportes</p>
+              </div>
+            )}
+
          </div>
         </div>
+
+        {/* MODAL REGISTRAR GASTO */}
+        <AnimatePresence>
+          {isGastoModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-surface-container-lowest rounded-[2rem] w-full max-width-md p-6 border border-outline/10 shadow-2xl"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Finanzas</p>
+                    <h3 className="text-lg font-headline font-bold text-on-surface">Registrar Gasto</h3>
+                  </div>
+                  <button
+                    onClick={() => setIsGastoModalOpen(false)}
+                    className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form className="space-y-4" onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const description = (form.elements.namedItem('description') as HTMLInputElement).value;
+                  const amount = parseFloat((form.elements.namedItem('amount') as HTMLInputElement).value);
+                  const category = (form.elements.namedItem('category') as HTMLSelectElement).value;
+                  const customCategory = (form.elements.namedItem('customCategory') as HTMLInputElement)?.value;
+                  const finalCategory = category === 'otra' ? customCategory : category;
+
+                  if (!amount || !finalCategory) return;
+
+                  try {
+                    await addDoc(collection(db, 'gastos'), {
+                      userId: profile.uid,
+                      description,
+                      amount,
+                      category: finalCategory,
+                      date: new Date().toISOString(),
+                      createdAt: serverTimestamp()
+                    });
+                    setIsGastoModalOpen(false);
+                  } catch (error) {
+                    console.error("Error adding expense:", error);
+                  }
+                }}>
+                  <div>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Descripción</label>
+                    <input
+                      name="description"
+                      type="text"
+                      placeholder="Ej. Netflix, Factura Luz..."
+                      className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Monto</label>
+                    <input
+                      name="amount"
+                      type="number"
+                      placeholder="0"
+                      required
+                      className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Categoría</label>
+                    <select
+                      name="category"
+                      required
+                      className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
+                      onChange={(e) => {
+                        const customInput = document.getElementById('custom-category-container');
+                        if (e.target.value === 'otra') {
+                          customInput?.classList.remove('hidden');
+                        } else {
+                          customInput?.classList.add('hidden');
+                        }
+                      }}
+                    >
+                      <option value="Facturas">Facturas</option>
+                      <option value="Netflix">Netflix</option>
+                      <option value="Servicios Publicos">Servicios Públicos</option>
+                      <option value="Alimentación">Alimentación</option>
+                      <option value="otra">Otra...</option>
+                    </select>
+                  </div>
+
+                  <div id="custom-category-container" className="hidden">
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Nueva Categoría</label>
+                    <input
+                      name="customCategory"
+                      type="text"
+                      placeholder="Ej. Transporte"
+                      className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 mt-6"
+                  >
+                    Guardar Gasto
+                  </button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <MovementDetailModal 
           isOpen={!!selectedSaleDetail}
           onClose={() => setSelectedSaleDetail(null)}
@@ -261,5 +509,5 @@ export default function ClientHistorial() {
           isSending={sending}
         />
     </div>
-    );
+  );
 }

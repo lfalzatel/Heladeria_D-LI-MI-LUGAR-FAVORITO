@@ -766,7 +766,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                         <p className="text-xs font-black text-primary uppercase tracking-wider">+{formatCurrency(3500)} por cada fruta adicional</p>
                         {extraFruitsCount > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraFruitsCount} seleccionada{extraFruitsCount > 1 ? 's' : ''} — +{formatCurrency(extraFruitsPrice)}</p>}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {(isOblea ? Array.from(new Set([...fruitOptions, ...FRUTAS_DEFAULT])) : fruitOptions).map(fruta => {
                           const count = extraFrutas.filter(f => f === fruta).length;
                           const isIncluded = selectedFrutas.includes(fruta);
@@ -775,7 +775,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               key={fruta}
                               onClick={() => setExtraFrutas([...extraFrutas, fruta])}
                               className={cn(
-                                "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all flex-grow sm:flex-grow-0 min-w-[100px] cursor-pointer select-none",
+                                "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none",
                                 count > 0 ? "bg-success/10 border-success shadow-sm" : "bg-white border-outline/10 hover:bg-surface-container-low"
                               )}>
                               <div className="flex items-center justify-between gap-1.5 mb-2">

@@ -77,7 +77,7 @@ export default function AdminSidebar() {
     { to: '/cliente/pedidos', icon: <Receipt className="w-5 h-5" />, label: isCliente ? 'Mis Pedidos' : 'Pedidos', show: true },
     
     // History & Profile (Client)
-    { to: '/cliente/historial', icon: <History className="w-5 h-5" />, label: 'Historial', show: isCliente },
+    { to: '/cliente/historial', icon: <Receipt className="w-5 h-5" />, label: 'Gastos', show: isCliente },
     { to: '/profile',         icon: <User className="w-5 h-5" />, label: 'Mi Perfil', show: isCliente || isVendedor },
   ].filter(item => item.show);
 

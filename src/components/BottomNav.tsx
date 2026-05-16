@@ -105,8 +105,8 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
             />
             <NavItem 
               to="/cliente/historial"
-              icon={<History />}
-              label="Historial"
+              icon={<Receipt />}
+              label="Gastos"
               active={location.pathname === '/cliente/historial'}
             />
             <NavItem 
