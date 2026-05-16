@@ -181,6 +181,27 @@ export default function ClientHistorial() {
     }
   };
 
+  const combinedActivities = [
+    ...expenses.map(g => ({
+      id: g.id,
+      type: 'gasto',
+      description: g.description || g.category,
+      amount: g.amount,
+      category: g.category,
+      date: g.dateObj,
+      raw: g
+    })),
+    ...userSales.map(p => ({
+      id: p.id,
+      type: 'pedido',
+      description: `Pedido #${p.id.slice(-6).toUpperCase()}`,
+      amount: p.total || 0,
+      category: 'Heladería',
+      date: p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt),
+      raw: p
+    }))
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
   return (
     <div className="max-w-4xl mx-auto w-full relative">
         <div className="p-4 sm:p-6 lg:p-8">
@@ -224,29 +245,35 @@ export default function ClientHistorial() {
                   </button>
                 </div>
 
-                {expenses.length === 0 ? (
+                {combinedActivities.length === 0 ? (
                   <div className="text-center py-16 opacity-30">
                      <Receipt className="w-12 h-12 mx-auto mb-4" />
-                     <p className="uppercase font-black text-[10px] tracking-widest">No has registrado gastos aún</p>
+                     <p className="uppercase font-black text-[10px] tracking-widest">No hay gastos o compras registradas</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {expenses.map((gasto) => (
-                      <div key={gasto.id} className="bg-surface-container rounded-2xl p-4 flex items-center justify-between border border-outline/5">
+                    {combinedActivities.map((activity) => (
+                      <div key={activity.id} className="bg-surface-container rounded-2xl p-4 flex items-center justify-between border border-outline/5">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            {getCategoryIcon(gasto.category)}
+                          <div className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center",
+                            activity.type === 'pedido' ? "bg-secondary/10 text-secondary" : "bg-primary/10 text-primary"
+                          )}>
+                            {activity.type === 'pedido' ? <ShoppingBag className="w-5 h-5" /> : getCategoryIcon(activity.category)}
                           </div>
                           <div>
-                            <p className="font-bold text-sm text-on-surface">{gasto.description || gasto.category}</p>
-                            <p className="text-xs text-secondary">{gasto.dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</p>
+                            <p className="font-bold text-sm text-on-surface">{activity.description}</p>
+                            <p className="text-xs text-secondary">{activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-sm text-primary">
-                            ${gasto.amount.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
+                          <p className={cn(
+                            "font-bold text-sm",
+                            activity.type === 'pedido' ? "text-secondary" : "text-primary"
+                          )}>
+                            ${activity.amount.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
                           </p>
-                          <p className="text-[10px] font-black text-secondary/60 uppercase">{gasto.category}</p>
+                          <p className="text-[10px] font-black text-secondary/60 uppercase">{activity.category}</p>
                         </div>
                       </div>
                     ))}
@@ -412,11 +439,12 @@ export default function ClientHistorial() {
                   const form = e.target as HTMLFormElement;
                   const description = (form.elements.namedItem('description') as HTMLInputElement).value;
                   const amount = parseFloat((form.elements.namedItem('amount') as HTMLInputElement).value);
+                  const date = (form.elements.namedItem('date') as HTMLInputElement).value;
                   const category = (form.elements.namedItem('category') as HTMLSelectElement).value;
                   const customCategory = (form.elements.namedItem('customCategory') as HTMLInputElement)?.value;
                   const finalCategory = category === 'otra' ? customCategory : category;
 
-                  if (!amount || !finalCategory) return;
+                  if (!amount || !finalCategory || !date) return;
 
                   try {
                     await addDoc(collection(db, 'gastos'), {
@@ -424,7 +452,7 @@ export default function ClientHistorial() {
                       description,
                       amount,
                       category: finalCategory,
-                      date: new Date().toISOString(),
+                      date: date,
                       createdAt: serverTimestamp()
                     });
                     setIsGastoModalOpen(false);
@@ -448,6 +476,17 @@ export default function ClientHistorial() {
                       name="amount"
                       type="number"
                       placeholder="0"
+                      required
+                      className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Fecha</label>
+                    <input
+                      name="date"
+                      type="date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
                       required
                       className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
                     />
