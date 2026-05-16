@@ -25,7 +25,8 @@ import {
   Wifi,
   Utensils,
   ShoppingBag,
-  Play
+  Play,
+  Search
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -51,6 +52,9 @@ export default function ClientHistorial() {
   const [sending, setSending] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
   const [isGastoModalOpen, setIsGastoModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedExpenseDetail, setSelectedExpenseDetail] = useState<any | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -202,6 +206,21 @@ export default function ClientHistorial() {
     }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
+  const filteredActivities = combinedActivities.filter(act => {
+    const matchesSearch = act.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         act.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesMonth = act.date.getMonth() === selectedMonth.getMonth() && 
+                         act.date.getFullYear() === selectedMonth.getFullYear();
+    return matchesSearch && matchesMonth;
+  });
+
+  const totalSum = filteredActivities.reduce((acc, act) => acc + act.amount, 0);
+
+  const formatMonth = (date: Date) => {
+    const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    return `${months[date.getMonth()]} de ${date.getFullYear()}`;
+  };
+
   return (
     <div className="max-w-4xl mx-auto w-full relative">
         <div className="p-4 sm:p-6 lg:p-8">
@@ -234,46 +253,95 @@ export default function ClientHistorial() {
             
             {activeTab === 'gastos' && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] px-2">Mis Gastos Personales</h4>
+                {/* Header Card */}
+                <div className="bg-[#0B1528] text-white rounded-[1.5rem] p-5 mb-5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
+                  <div className="relative z-10 flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Tus Gastos</p>
+                      <p className="text-3xl font-headline font-black">${totalSum.toLocaleString('es-CO')}</p>
+                    </div>
+                    {profile?.uid && (
+                      <div className="bg-[#14213d] rounded-lg px-3 py-1.5 flex items-center gap-2 border border-white/5">
+                        <CreditCard className="w-3 h-3 text-primary" />
+                        <span className="font-bold text-xs text-white">{profile.uid.slice(-6).toUpperCase()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Filters */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-surface-container rounded-full px-4 py-2.5 flex items-center gap-2 border border-outline/5 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                      <Search className="w-4 h-4 text-secondary/50" />
+                      <input
+                        type="text"
+                        placeholder="Buscar..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-transparent outline-none text-sm text-on-surface placeholder:text-secondary/30 w-full"
+                      />
+                    </div>
+                    <div className="bg-surface-container rounded-full px-4 py-2.5 flex items-center gap-2 border border-outline/5 cursor-pointer hover:bg-surface-container-high transition-colors">
+                      <Calendar className="w-4 h-4 text-secondary/50" />
+                      <span className="text-xs font-bold text-on-surface uppercase">{formatMonth(selectedMonth)}</span>
+                    </div>
+                  </div>
+                  
                   <button
                     onClick={() => setIsGastoModalOpen(true)}
-                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-full text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                   >
                     <Plus className="w-4 h-4" />
                     Registrar Gasto
                   </button>
                 </div>
 
-                {combinedActivities.length === 0 ? (
+                {filteredActivities.length === 0 ? (
                   <div className="text-center py-16 opacity-30">
                      <Receipt className="w-12 h-12 mx-auto mb-4" />
                      <p className="uppercase font-black text-[10px] tracking-widest">No hay gastos o compras registradas</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {combinedActivities.map((activity) => (
-                      <div key={activity.id} className="bg-surface-container rounded-2xl p-4 flex items-center justify-between border border-outline/5">
-                        <div className="flex items-center gap-4">
+                    {filteredActivities.map((activity) => (
+                      <div 
+                        key={activity.id} 
+                        onClick={() => {
+                          if (activity.type === 'pedido') {
+                            setSelectedSaleDetail(activity.raw);
+                          } else {
+                            setSelectedExpenseDetail(activity);
+                          }
+                        }}
+                        className="bg-white rounded-[2rem] p-4 flex items-center justify-between border border-outline/10 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
                           <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center",
+                            "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
                             activity.type === 'pedido' ? "bg-secondary/10 text-secondary" : "bg-primary/10 text-primary"
                           )}>
                             {activity.type === 'pedido' ? <ShoppingBag className="w-5 h-5" /> : getCategoryIcon(activity.category)}
                           </div>
-                          <div>
-                            <p className="font-bold text-sm text-on-surface">{activity.description}</p>
-                            <p className="text-xs text-secondary">{activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</p>
+                          <div className="min-w-0">
+                            <p className="font-black text-on-surface text-sm leading-tight truncate">{activity.description}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[9px] text-secondary/50 font-bold">{activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</span>
+                              <span className="text-[9px] font-black uppercase tracking-widest text-secondary/40">{activity.category}</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0 ml-4">
                           <p className={cn(
-                            "font-bold text-sm",
+                            "font-brand font-black text-lg leading-none",
                             activity.type === 'pedido' ? "text-secondary" : "text-primary"
                           )}>
-                            ${activity.amount.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
+                            ${activity.amount.toLocaleString('es-CO')}
                           </p>
-                          <p className="text-[10px] font-black text-secondary/60 uppercase">{activity.category}</p>
+                          <div className="flex items-center justify-end gap-1 mt-1 text-secondary/50">
+                            <span className="text-[9px] font-bold uppercase">{activity.type === 'pedido' ? 'Compra' : 'Gasto'}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -532,6 +600,74 @@ export default function ClientHistorial() {
                     Guardar Gasto
                   </button>
                 </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* MODAL DETALLE GASTO */}
+        <AnimatePresence>
+          {selectedExpenseDetail && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedExpenseDetail(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-[2.5rem] w-full max-w-lg p-6 border border-outline/10 shadow-2xl flex flex-col gap-4"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
+                      <Receipt className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-headline font-black text-xl text-on-surface leading-none">Detalle del Gasto</h3>
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-1">Ref: #{selectedExpenseDetail.id.slice(-6).toUpperCase()}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedExpenseDetail(null)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90"
+                  >
+                    <X className="w-5 h-5 text-secondary" />
+                  </button>
+                </div>
+
+                <div className="bg-surface-container/30 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 border border-outline/5 shadow-sm">
+                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Monto del Gasto</p>
+                  <p className="text-3xl font-headline font-black text-primary">${selectedExpenseDetail.amount.toLocaleString('es-CO')}</p>
+                </div>
+
+                <div className="bg-surface-container/30 rounded-2xl p-4 flex flex-col gap-3 border border-outline/5 shadow-sm">
+                  <div>
+                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Descripción</p>
+                    <p className="font-bold text-sm text-on-surface">{selectedExpenseDetail.description}</p>
+                  </div>
+                  <div className="border-t border-outline/10 pt-2 flex justify-between">
+                    <div>
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Categoría</p>
+                      <p className="font-bold text-xs text-on-surface">{selectedExpenseDetail.category}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Fecha</p>
+                      <p className="font-bold text-xs text-on-surface">{selectedExpenseDetail.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setSelectedExpenseDetail(null)}
+                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all mt-2"
+                >
+                  Cerrar Detalle
+                </button>
               </motion.div>
             </motion.div>
           )}
