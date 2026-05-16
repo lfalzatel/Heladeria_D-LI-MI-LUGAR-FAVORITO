@@ -444,17 +444,33 @@
       ]
     },
     {
-      "id": "adicion-cono-cucurucho",
-      "name": "Adición Cono o Cucurucho",
+      "id": "adicion-cono",
+      "name": "Adición Cono",
       "category": "adiciones",
-      "description": "Un cono o cucurucho extra para compartir o llevar más.",
+      "description": "Un cono extra para compartir o llevar más.",
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
       "variants": [
         {
-          "label": "Cono o Cucurucho",
+          "label": "Cono",
+          "price": 1000
+        }
+      ]
+    },
+    {
+      "id": "adicion-cucurucho",
+      "name": "Adición Cucurucho",
+      "category": "adiciones",
+      "description": "Un cucurucho extra para compartir o llevar más.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
+      "variants": [
+        {
+          "label": "Cucurucho",
           "price": 1000
         }
       ]

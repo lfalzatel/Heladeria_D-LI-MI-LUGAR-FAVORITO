@@ -917,19 +917,19 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             </div>
 
             {/* ── FOOTER: BOTONES DE ACCIÓN (MÁS COMPACTO) ── */}
-            <footer className="p-5 sm:p-6 bg-surface border-t border-outline/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] flex flex-col gap-4">
+            <footer className="p-3 sm:p-4 bg-surface border-t border-outline/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] flex flex-col gap-2">
               <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-4 bg-surface-container/50 p-1.5 rounded-2xl border border-outline/5">
+                <div className="flex items-center gap-4 bg-surface-container/50 p-1 rounded-2xl border border-outline/5">
                   <button 
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-white text-on-surface hover:bg-surface-container-high transition-all active:scale-90 border border-outline/10 shadow-sm"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-white text-on-surface hover:bg-surface-container-high transition-all active:scale-90 border border-outline/10 shadow-sm"
                   >
                     <span className="text-xl font-bold leading-none">−</span>
                   </button>
-                  <span className="text-2xl font-brand font-black text-primary w-6 text-center">{quantity}</span>
+                  <span className="text-xl font-brand font-black text-primary w-6 text-center">{quantity}</span>
                   <button 
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary text-white hover:bg-primary-container transition-all active:scale-90 shadow-lg shadow-primary/20"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-primary text-white hover:bg-primary-container transition-all active:scale-90 shadow-lg shadow-primary/20"
                   >
                     <Plus className="w-5 h-5 stroke-[3]" />
                   </button>
@@ -937,7 +937,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
                 <div className="text-right">
                   <span className="text-[8px] font-black text-secondary uppercase tracking-[0.2em] block mb-0.5">Precio Total</span>
-                  <p className="text-2xl font-brand font-black text-on-surface leading-tight">
+                  <p className="text-xl font-brand font-black text-on-surface leading-tight">
                     {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + 
                       selectedAdditions.reduce((s, a) => s + a.price, 0) + 
                       extraFruitsPrice + extraFlavorsPrice + extraSaucesPrice) * quantity)}
@@ -949,7 +949,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 {step > 1 && (
                   <button 
                     onClick={() => setStep(step - 1)}
-                    className="w-14 h-14 flex shrink-0 items-center justify-center rounded-2xl bg-surface-container text-on-surface hover:bg-surface-container-high transition-all active:scale-90 border border-outline/10"
+                    className="w-12 h-12 flex shrink-0 items-center justify-center rounded-2xl bg-surface-container text-on-surface hover:bg-surface-container-high transition-all active:scale-90 border border-outline/10"
                   >
                     <ChevronLeft className="w-6 h-6 stroke-[3]" />
                   </button>
@@ -957,7 +957,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 
                 <button 
                   onClick={handleNext}
-                  className="flex-1 h-14 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3 overflow-hidden relative group"
+                  className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3 overflow-hidden relative group"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                   
