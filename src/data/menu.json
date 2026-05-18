@@ -1,10 +1,29 @@
 {
   "products": [
     {
-      "id": "cono-vaso",
-      "name": "Cono o Vaso",
+      "id": "cono",
+      "name": "Cono",
       "category": "helados",
-      "description": "Helado artesanal Mimo's servido en cono de galleta o vaso desechable. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
+      "description": "Helado artesanal Mimo's servido en cono de galleta. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
+      "includedExtras": {
+        "sauces": ["arequipe", "mora", "chocolate", "lecherita"],
+        "toppings": ["maní", "bolitas de colores"],
+        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
+      },
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/vaso-cono.jpg",
+      "variants": [
+        { "label": "Sencillo", "price": 3500, "scoops": 1 },
+        { "label": "Doble", "price": 5500, "scoops": 2 }
+      ]
+    },
+    {
+      "id": "vaso",
+      "name": "Vaso",
+      "category": "helados",
+      "description": "Helado artesanal Mimo's servido en vaso desechable. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
       "includedExtras": {
         "sauces": ["arequipe", "mora", "chocolate", "lecherita"],
         "toppings": ["maní", "bolitas de colores"],
