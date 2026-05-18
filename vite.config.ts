@@ -16,6 +16,9 @@ export default defineConfig({
         type: 'classic'
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+      },
       manifest: {
         name: "D'LI Heladería — Mi Lugar Favorito",
         short_name: "D'LI",
