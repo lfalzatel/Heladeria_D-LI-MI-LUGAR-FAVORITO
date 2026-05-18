@@ -137,32 +137,76 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       </h4>
                       
                       {/* Configuration Details */}
-                      <div className={cn("mt-2 flex flex-wrap gap-1.5 transition-all", item.prepared && "opacity-50 grayscale")}>
-                        {(item.flavors || []).map((f, i) => (
-                          <span key={i} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
-                            {f}
-                          </span>
-                        ))}
-                        {(item.fruitChoices || []).map((f, i) => (
-                          <button 
-                            key={i} 
-                            onClick={() => onEdit?.(item, 4)} // Try to land on fruits
-                            className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 hover:bg-success/10 transition-colors"
-                          >
-                            {f}
-                          </button>
-                        ))}
-                        {(item.additions || []).map((a, i) => (
-                          <button 
-                            key={i} 
-                            onClick={() => onEdit?.(item, 3)} // Try to land on additions
-                            className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10 hover:bg-orange-500/10 transition-colors"
-                          >
-                            +{a}
-                          </button>
-                        ))}
+                      <div className={cn("mt-2 flex flex-col gap-1 transition-all", item.prepared && "opacity-50 grayscale")}>
+                        {/* Cosas Incluidas */}
+                        <div className="flex flex-wrap gap-1">
+                          {(item.includedFlavors || item.flavors || []).map((f, i) => (
+                            <span key={i} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
+                              {f}
+                            </span>
+                          ))}
+                          {(item.includedFruits || item.fruitChoices || []).map((f, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => onEdit?.(item, 4)}
+                              className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 hover:bg-success/10 transition-colors"
+                            >
+                              {f}
+                            </button>
+                          ))}
+                          {(item.includedSauces || []).map((s, i) => (
+                            <span key={i} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Adiciones */}
+                        <div className="flex flex-col gap-0.5 mt-0.5">
+                          {item.extraFruits && item.extraFruits.length > 0 && (
+                            <button 
+                              onClick={() => onEdit?.(item, 4)}
+                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                            >
+                              adición de fruta: [{item.extraFruits.join(', ')}]
+                            </button>
+                          )}
+                          {item.extraFlavors && item.extraFlavors.length > 0 && (
+                            <button 
+                              onClick={() => onEdit?.(item, 2)} // Assuming 2 is flavors
+                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                            >
+                              adición de helado: [{item.extraFlavors.join(', ')}]
+                            </button>
+                          )}
+                          {item.extraSauces && item.extraSauces.length > 0 && (
+                            <button 
+                              onClick={() => onEdit?.(item, 3)} // Assuming 3 is additions
+                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                            >
+                              adición de salsa: [{item.extraSauces.join(', ')}]
+                            </button>
+                          )}
+                          {/* Otras adiciones (queso, etc) */}
+                          {(item.additions || []).filter(a => 
+                            !a.includes('Adición Fruta') && 
+                            !a.includes('Adición Helado') &&
+                            !a.includes('Adición Salsa') &&
+                            !(item.includedSauces || []).includes(a) &&
+                            !(item.extraSauces || []).includes(a)
+                          ).map((a, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => onEdit?.(item, 3)}
+                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                            >
+                              +{a}
+                            </button>
+                          ))}
+                        </div>
+
                         {item.notes && (
-                          <span className="text-[10px] bg-red-500/5 text-red-600 px-1.5 py-0.5 rounded-md font-black border border-red-500/10">
+                          <span className="text-[10px] bg-red-500/5 text-red-600 px-1.5 py-0.5 rounded-md font-black border border-red-500/10 mt-0.5">
                             Nota: {item.notes}
                           </span>
                         )}

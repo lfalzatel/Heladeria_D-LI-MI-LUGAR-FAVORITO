@@ -304,6 +304,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         quantity,
         unitPrice,
         subtotal: unitPrice * quantity,
+        includedFlavors: selectedFlavors,
+        includedFruits: selectedFrutas,
+        includedSauces: selectedSauces,
+        extraFlavors: extraFlavors,
+        extraFruits: extraFrutas,
+        extraSauces: extraSauces,
       });
       onClose();
     }

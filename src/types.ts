@@ -82,6 +82,12 @@ export interface CartItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  includedFlavors?: string[];
+  includedFruits?: string[];
+  includedSauces?: string[];
+  extraFlavors?: string[];
+  extraFruits?: string[];
+  extraSauces?: string[];
 }
 
 export interface Sale {
