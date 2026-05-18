@@ -25,6 +25,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
   const [cardColor, setCardColor] = useState<string>('');
   const [expandedVariantIndex, setExpandedVariantIndex] = useState<number | null>(null);
   
+  const [description, setDescription] = useState('');
+
   // Toggles
   const [reqFlavors, setReqFlavors] = useState(false);
   const [reqSauces, setReqSauces] = useState(false);
@@ -40,6 +42,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setReqSauces(!!productToEdit.requiresSauces);
         setReqFruit(!!productToEdit.requiresFruitChoice);
         setCardColor(productToEdit.cardColor || '');
+        setDescription(productToEdit.description || '');
 
         if (productToEdit.variants && productToEdit.variants.length > 0) {
           setIsVariantBased(true);
@@ -56,6 +59,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setName('');
         setCategory('helados');
         setImageUrl('');
+        setDescription('');
         setIsVariantBased(false);
         setBasePrice('');
         setBaseScoops(1);
@@ -107,10 +111,25 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         requiresSauces: reqSauces,
         requiresFruitChoice: reqFruit,
         cardColor: cardColor || null as any,
+        description: description.trim() || null,
       };
 
       if (isVariantBased) {
-        data.variants = variants;
+        data.variants = variants.map(v => {
+          const cleanedVariant = { ...v };
+          if (cleanedVariant.steps) {
+            cleanedVariant.steps = cleanedVariant.steps.map(step => {
+              const cleanedStep = { ...step };
+              Object.keys(cleanedStep).forEach(key => {
+                if ((cleanedStep as any)[key] === undefined) {
+                  delete (cleanedStep as any)[key];
+                }
+              });
+              return cleanedStep;
+            });
+          }
+          return cleanedVariant;
+        });
         data.basePrice = null as any;
         data.scoops = null as any;
       } else {
@@ -209,6 +228,16 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                   <option value="adiciones">Adiciones y Extras</option>
                 </select>
               </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Descripción / Receta Sugerida</label>
+              <textarea
+                placeholder="Ej. Mezcla de manzana, mango, fresa... Acompañada de queso rallado..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-3 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface min-h-[100px] resize-y"
+              />
             </div>
 
             <div className="h-px bg-outline/10 w-full my-2" />
@@ -467,7 +496,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                                  type="button"
                                  onClick={() => {
                                    const currentSteps = v.steps || [];
-                                   handleUpdateVariant(i, 'steps', [...currentSteps, { type: type as any, scoops: type === 'flavors' ? 1 : undefined }]);
+                                   const newStep: any = { type };
+                                   if (type === 'flavors') newStep.scoops = 1;
+                                   handleUpdateVariant(i, 'steps', [...currentSteps, newStep]);
                                  }}
                                  className="px-3 py-1.5 bg-surface-container rounded-lg text-xs font-bold text-on-surface hover:bg-outline/10 transition-colors flex items-center gap-1"
                                >

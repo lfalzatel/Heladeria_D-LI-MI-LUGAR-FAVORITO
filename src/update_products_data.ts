@@ -1,4 +1,7 @@
-{
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from './lib/firebase';
+
+const data = {
   "products": [
     {
       "id": "cono-vaso",
@@ -13,7 +16,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/vaso-cono.jpg",
+      "imageUrl": null,
       "variants": [
         { "label": "Sencillo", "price": 3500, "scoops": 1 },
         { "label": "Doble", "price": 5500, "scoops": 2 }
@@ -32,7 +35,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/cucurucho.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Sencillo", "price": 4000, "scoops": 1 },
         { "label": "Doble", "price": 6000, "scoops": 2 },
@@ -52,7 +55,7 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/conchita.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Sencilla", "price": 4500, "scoops": 1 },
         { "label": "Doble", "price": 6500, "scoops": 2 },
@@ -69,11 +72,10 @@
         "toppings": [],
         "note": "No incluye salsas ni toppings por defecto. Las adiciones son opcionales y tienen costo adicional."
       },
-      "ingredients": ["manzana", "mango", "fresa", "banano", "papaya", "uvas", "kiwi", "queso", "helado", "crema de leche", "lechera", "barquillo"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Mini", "price": 10000, "scoops": 1 },
         { "label": "Pequeña", "price": 17000, "scoops": 2 },
@@ -86,15 +88,10 @@
       "name": "Copa de Salpicón Sabor Mango",
       "category": "salpicon",
       "description": "Refrescante salpicón de banano, papaya y mango fresco con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa. Las adiciones extras tienen costo adicional.",
-      "includedExtras": {
-        "queso": true,
-        "note": "La copa incluye queso rallado. Las adiciones extras son opcionales."
-      },
-      "ingredients": ["banano", "papaya", "mango", "queso", "helado", "lechera", "barquillo"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/copa-salpicon.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Copa Salpicón Mango", "price": 11000, "scoops": 1 }
       ]
@@ -104,15 +101,10 @@
       "name": "Copa de Salpicón Sabor Fresa",
       "category": "salpicon",
       "description": "Salpicón de banano, papaya y fresa natural con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa. Las adiciones extras tienen costo adicional.",
-      "includedExtras": {
-        "queso": true,
-        "note": "La copa incluye queso rallado. Las adiciones extras son opcionales."
-      },
-      "ingredients": ["banano", "papaya", "fresa", "queso", "helado", "lechera", "barquillo"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/copa-salpicon.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Copa Salpicón Fresa", "price": 11000, "scoops": 1 }
       ]
@@ -122,15 +114,10 @@
       "name": "Vaso de Salpicón con Helado",
       "category": "salpicon",
       "description": "Frutas frescas (banano, papaya y mango o fresa) con helado Mimo's, lechera y barquillo, servidas en vaso para llevar. Sin queso incluido — puede agregarse como adición. Las adiciones extras tienen costo adicional.",
-      "includedExtras": {
-        "queso": false,
-        "note": "El vaso NO incluye queso (solo la copa lo incluye). Puede agregarse como adición con costo."
-      },
-      "ingredients": ["banano", "papaya", "fruta seleccionada", "helado", "lechera", "barquillo"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/vaso-salpicon.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Pequeño", "price": 7000, "scoops": 1 },
         { "label": "Mediano", "price": 9000, "scoops": 1 },
@@ -142,16 +129,10 @@
       "name": "Copa D'LI",
       "category": "copas",
       "description": "Nuestra copa insignia. Base generosa de arequipe, 3 bolas de helado Mimo's a elección, queso rallado, chantilly y cucurucho. Bañada con salsa de arequipe. Sin toppings secos adicionales.",
-      "includedExtras": {
-        "sauces": ["arequipe"],
-        "toppings": [],
-        "note": "Lleva arequipe como base y como salsa. Sin toppings secos por defecto."
-      },
-      "ingredients": ["arequipe", "helado", "queso", "chantilly", "cucurucho", "salsa arequipe"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/copa-dli.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Copa D'LI", "price": 13000, "scoops": 3 }
       ]
@@ -161,16 +142,10 @@
       "name": "Copa Explosión de Sabores",
       "category": "copas",
       "description": "Para los verdaderos amantes del helado. Base de arequipe, 7 sabores de helado Mimo's a elección, cubiertos con chantilly y barquillo. Bañada con salsa de arequipe. Grande, vistosa e irresistible.",
-      "includedExtras": {
-        "sauces": ["arequipe"],
-        "toppings": [],
-        "note": "Lleva arequipe como base y como salsa sobre la chantilly."
-      },
-      "ingredients": ["arequipe", "helado", "chantilly", "barquillo", "salsa arequipe"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/copa-explosion.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Copa Explosión", "price": 16000, "scoops": 7 }
       ]
@@ -183,7 +158,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": true,
       "isActive": true,
-      "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Arequipe, crema y queso", "price": 6000 },
         { "label": "Arequipe, crema, queso y fruta", "price": 9000 }
@@ -194,118 +169,14 @@
       "name": "Oblea Cuchareable",
       "category": "obleas",
       "description": "Versión moderna de la oblea para disfrutar con cuchara. Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly. Decorada con trozos de oblea y arequipe extra encima. También disponible con una bola de helado Mimo's.",
-      "includedExtras": {
-        "decoration": ["trozos de oblea", "arequipe"],
-        "note": "Se decora con trozos de oblea y arequipe sobre la chantilly. Sin toppings secos ni salsas adicionales por defecto."
-      },
-      "ingredients": ["oblea", "arequipe", "queso", "crema de leche", "fruta", "chantilly", "trozos de oblea (decoración)", "arequipe (decoración)"],
       "requiresFlavors": true,
       "requiresFruitChoice": true,
       "isActive": true,
-      "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
+      "imageUrl": null,
       "variants": [
         { "label": "Sin helado", "price": 13000, "scoops": 0 },
         { "label": "Con helado", "price": 15000, "scoops": 1 }
       ]
-    },
-    {
-      "id": "adicion-queso",
-      "name": "Adición Queso",
-      "category": "adiciones",
-      "description": "Porción adicional de queso rallado fresco para complementar cualquier producto.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1552767059-ce182ead6c1b?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Queso", "price": 4000 }]
-    },
-    {
-      "id": "adicion-fruta",
-      "name": "Adición Fruta",
-      "category": "adiciones",
-      "description": "Porción extra de fruta fresca. Puedes pedir fresa, mango o durazno.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Fruta", "price": 3500 }]
-    },
-    {
-      "id": "adicion-helado",
-      "name": "Adición Helado",
-      "category": "adiciones",
-      "description": "Una bola adicional de helado Mimo's al sabor que prefieras.",
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1576506295286-5cda18df43e7?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Helado", "price": 3000, "scoops": 1 }]
-    },
-    {
-      "id": "adicion-chantilly",
-      "name": "Adición Chantilly",
-      "category": "adiciones",
-      "description": "Crema chantilly extra para los más golosos.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "/Images/products/chantilly.jpg",
-      "variants": [{ "label": "Chantilly", "price": 4000 }]
-    },
-    {
-      "id": "adicion-chips-chocolate",
-      "name": "Adición Chips de Chocolate",
-      "category": "adiciones",
-      "description": "Trocitos de chocolate crujiente para agregar textura y sabor.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "/Images/products/chips_chocolate.jpeg",
-      "variants": [{ "label": "Chips de Chocolate", "price": 3000 }]
-    },
-    {
-      "id": "adicion-salsa",
-      "name": "Adición Salsa",
-      "category": "adiciones",
-      "description": "Salsa adicional: arequipe, mora, chocolate o lecherita. Los helados clásicos ya incluyen una salsa de cortesía — esta adición es para quien quiere más.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "/Images/products/adicion-salsa.jpg",
-      "variants": [{ "label": "Salsa", "price": 1000 }]
-    },
-    {
-      "id": "adicion-barquillo",
-      "name": "Adición Barquillo",
-      "category": "adiciones",
-      "description": "Barquillo crujiente adicional para acompañar tu postre.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "/Images/products/barquillos.jpeg",
-      "variants": [{ "label": "Barquillo", "price": 500 }]
-    },
-    {
-      "id": "adicion-cono",
-      "name": "Adición Cono",
-      "category": "adiciones",
-      "description": "Un cono extra.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Cono", "price": 1000 }]
-    },
-    {
-      "id": "adicion-cucurucho",
-      "name": "Adición Cucurucho",
-      "category": "adiciones",
-      "description": "Un cucurucho extra.",
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Cucurucho", "price": 1000 }]
     }
   ],
   "icecreamFlavors": [
@@ -326,17 +197,38 @@
     { "id": "veteado-mora", "name": "Veteado de Mora", "isAvailable": true },
     { "id": "veteado-caramelo", "name": "Veteado de Caramelo", "isAvailable": true }
   ],
-  "categories": [
-    { "id": "helados", "label": "Helados", "icon": "icecream", "order": 1 },
-    { "id": "ensaladas", "label": "Ensaladas de Frutas", "icon": "lunch_dining", "order": 2 },
-    { "id": "salpicon", "label": "Salpicón", "icon": "local_bar", "order": 3 },
-    { "id": "copas", "label": "Copas Especiales", "icon": "wine_bar", "order": 4 },
-    { "id": "obleas", "label": "Obleas", "icon": "cookie", "order": 5 },
-    { "id": "adiciones", "label": "Adiciones", "icon": "add_circle", "order": 6 }
-  ],
   "tables": [
     { "id": "1", "label": "Mesa 1", "status": "free", "openedAt": null, "currentCartSnapshot": null },
     { "id": "2", "label": "Mesa 2", "status": "free", "openedAt": null, "currentCartSnapshot": null },
     { "id": "3", "label": "Mesa 3", "status": "free", "openedAt": null, "currentCartSnapshot": null }
   ]
+};
+
+async function updateData() {
+  console.log("Iniciando actualización de datos...");
+
+  // Actualizar productos
+  for (const product of data.products) {
+    const docRef = doc(db, 'products', product.id);
+    await setDoc(docRef, product, { merge: true });
+    console.log(`Producto actualizado: ${product.name}`);
+  }
+
+  // Actualizar sabores
+  for (const flavor of data.icecreamFlavors) {
+    const docRef = doc(db, 'icecreamFlavors', flavor.id);
+    await setDoc(docRef, flavor, { merge: true });
+    console.log(`Sabor actualizado: ${flavor.name}`);
+  }
+
+  // Actualizar mesas
+  for (const table of data.tables) {
+    const docRef = doc(db, 'tables', table.id);
+    await setDoc(docRef, table, { merge: true });
+    console.log(`Mesa actualizada: ${table.label}`);
+  }
+
+  console.log("¡Actualización completada!");
 }
+
+updateData().catch(console.error);

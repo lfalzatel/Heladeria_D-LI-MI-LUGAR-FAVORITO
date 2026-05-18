@@ -75,7 +75,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const maxScoops = getMaxScoops();
 
   // Base options
-  if (product.requiresFlavors || maxScoops > 0) steps.push('flavors');
+  if (maxScoops > 0) steps.push('flavors');
   
   const hasBaseFruits = product.category === 'ensaladas' || isSalpicon || isOblea;
   if (hasBaseFruits) steps.push('fruits');
@@ -248,7 +248,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       // Consolidate all sauces (base + extra)
       const allSaucesConsolidated = [...selectedSauces, ...extraSauces];
 
-      const otherAdditionsPrices = selectedAdditions.reduce((sum, a) => sum + a.price, 0);
+      const otherAdditionsPrices = selectedAdditions.filter(a => 
+        !a.name.toLowerCase().includes('fruta') && 
+        !a.name.toLowerCase().includes('helado') && 
+        !a.name.toLowerCase().includes('salsa')
+      ).reduce((sum, a) => sum + a.price, 0);
 
       const unitPrice = (selectedVariant?.price || product.basePrice || 0)
         + otherAdditionsPrices
@@ -952,7 +956,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   <span className="text-[8px] font-black text-secondary uppercase tracking-[0.2em] block mb-0.5">Precio Total</span>
                   <p className="text-xl font-brand font-black text-on-surface leading-tight">
                     {formatCurrency(((selectedVariant?.price || product.basePrice || 0) + 
-                      selectedAdditions.reduce((s, a) => s + a.price, 0) + 
+                      selectedAdditions.filter(a => 
+                        !a.name.toLowerCase().includes('fruta') && 
+                        !a.name.toLowerCase().includes('helado') && 
+                        !a.name.toLowerCase().includes('salsa')
+                      ).reduce((s, a) => s + a.price, 0) + 
                       extraFruitsPrice + extraFlavorsPrice + extraSaucesPrice) * quantity)}
                   </p>
                 </div>

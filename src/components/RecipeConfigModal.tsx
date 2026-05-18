@@ -156,6 +156,14 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
             </div>
           )}
 
+          {/* Descripción del Producto */}
+          {product.description && (
+            <div className="bg-surface-container/50 p-4 rounded-2xl border border-outline/10">
+              <p className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Descripción / Receta Sugerida:</p>
+              <p className="text-xs text-on-surface font-medium whitespace-pre-wrap">{product.description}</p>
+            </div>
+          )}
+
           {/* Buscador y Resumen de Costo */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
