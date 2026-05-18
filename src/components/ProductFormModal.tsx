@@ -4,6 +4,7 @@ import { X, Plus, Trash2, Save, IceCream, Link as LinkIcon, Info } from 'lucide-
 import { Product, ProductVariant } from '../types';
 import { toast } from 'sonner';
 import { getAssetUrl, cn } from '../lib/utils';
+import { ProductImageUploader } from './ProductImageUploader';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
   const [baseScoops, setBaseScoops] = useState<number>(1);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [cardColor, setCardColor] = useState<string>('');
+  const [expandedVariantIndex, setExpandedVariantIndex] = useState<number | null>(null);
   
   // Toggles
   const [reqFlavors, setReqFlavors] = useState(false);
@@ -67,7 +69,14 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
   }, [isOpen, productToEdit]);
 
   const handleAddVariant = () => {
-    setVariants([...variants, { label: '', price: 0, scoops: 1 }]);
+    const newVariants = [...variants, { 
+      label: '', 
+      price: 0, 
+      scoops: 1,
+      steps: [] 
+    }];
+    setVariants(newVariants);
+    setExpandedVariantIndex(newVariants.length - 1);
   };
 
   const handleUpdateVariant = (index: number, field: keyof ProductVariant, value: any) => {
@@ -163,43 +172,12 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
           <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
             
-            {/* Imagen URL */}
+            {/* Imagen del Producto */}
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-secondary">
-                URL de la Imagen (Link externo)
+                Imagen del Producto
               </label>
-              <div className="relative flex items-center">
-                <LinkIcon className="absolute left-4 w-5 h-5 text-secondary/50" />
-                <input
-                  type="text"
-                  placeholder="Ej: /images/products/... o https://..."
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full pl-12 pr-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-medium text-sm"
-                />
-              </div>
-              
-              {/* Previsualización de Imagen */}
-              {imageUrl && (
-                <div className="mt-2 relative w-full h-40 rounded-2xl overflow-hidden bg-surface-container-low border border-outline/10">
-                  <img 
-                    src={getAssetUrl(imageUrl)} 
-                    alt="Vista previa" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400';
-                    }}
-                  />
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[8px] text-white font-black uppercase tracking-widest">
-                    Vista Previa
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mt-1 text-secondary/70">
-                 <Info className="w-4 h-4" />
-                 <p className="text-xs">Para no incurrir en costos de Firebase, usa links de imágenes (ej. Google Images o Unsplash).</p>
-              </div>
+              <ProductImageUploader currentUrl={imageUrl} onUpload={setImageUrl} />
             </div>
 
             {/* Fila: Nombre y Categoría */}
@@ -235,17 +213,31 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
 
             <div className="h-px bg-outline/10 w-full my-2" />
 
-            {/* Requerimientos (Toggles) */}
-            <div>
-               <label className="text-[11px] font-black uppercase tracking-widest text-secondary mb-3 block">
-                 ¿Qué le debe preguntar el cajero al cliente?
-               </label>
-               <div className="flex flex-wrap gap-3">
+            {/* Requerimientos (Toggles) — solo para productos SIN variantes */}
+            {!isVariantBased && (
+              <div>
+                <label className="text-[11px] font-black uppercase tracking-widest text-secondary mb-3 block">
+                  ¿Qué le debe preguntar el cajero al cliente?
+                </label>
+                <div className="flex flex-wrap gap-3">
                   <FormToggle isActive={reqFlavors} onClick={() => setReqFlavors(!reqFlavors)} label="Elegir Sabores (Bolas)" />
                   <FormToggle isActive={reqSauces} onClick={() => setReqSauces(!reqSauces)} label="Elegir Salsas" />
                   <FormToggle isActive={reqFruit} onClick={() => setReqFruit(!reqFruit)} label="Elegir Frutas" />
-               </div>
-            </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mensaje explicativo cuando SÍ tiene variantes */}
+            {isVariantBased && (
+              <div className="flex items-start gap-3 bg-primary/5 p-4 rounded-2xl border border-primary/20">
+                <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-primary font-bold leading-relaxed">
+                  Los pasos del cajero se configuran por cada variante. 
+                  Toca el botón <strong>ⓘ</strong> en cada variante para definir 
+                  si pide sabores, frutas, adiciones, etc.
+                </p>
+              </div>
+            )}
 
             {/* Selector de Color de Tarjeta */}
             <div className="flex flex-col gap-3">
@@ -346,41 +338,153 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
               <div className="flex flex-col gap-3">
                 <label className="text-[11px] font-black uppercase tracking-widest text-secondary block">Variantes de Venta *</label>
                 {variants.map((v, i) => (
-                  <div key={i} className="flex flex-wrap gap-2 items-center bg-surface-container/30 p-3 rounded-2xl border border-outline/20 relative group">
-                     <input
-                        type="text"
-                        placeholder="Nombre (ej. Doble)"
-                        value={v.label}
-                        onChange={(e) => handleUpdateVariant(i, 'label', e.target.value)}
-                        className="flex-1 min-w-[120px] h-12 bg-white rounded-xl px-4 border border-outline/10 font-bold outline-none focus:ring-1 focus:ring-primary"
-                     />
-                     <div className="relative w-32">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-secondary text-sm">$</span>
+                  <div key={i} className="flex flex-col gap-2 bg-surface-container/30 p-3 rounded-2xl border border-outline/20 relative group">
+                     <div className="flex flex-wrap gap-2 items-center">
                         <input
-                          type="number"
-                          placeholder="Precio"
-                          value={v.price || ''}
-                          onChange={(e) => handleUpdateVariant(i, 'price', Number(e.target.value))}
-                          className="w-full pl-7 pr-3 h-12 bg-white rounded-xl font-black text-on-surface border border-outline/10 outline-none focus:ring-1"
+                           type="text"
+                           placeholder="Nombre (ej. Doble)"
+                           value={v.label}
+                           onChange={(e) => handleUpdateVariant(i, 'label', e.target.value)}
+                           className="flex-1 min-w-[120px] h-12 bg-white rounded-xl px-4 border border-outline/10 font-bold outline-none focus:ring-1 focus:ring-primary"
                         />
+                        <div className="relative w-32">
+                           <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-secondary text-sm">$</span>
+                           <input
+                             type="number"
+                             placeholder="Precio"
+                             value={v.price || ''}
+                             onChange={(e) => handleUpdateVariant(i, 'price', Number(e.target.value))}
+                             className="w-full pl-7 pr-3 h-12 bg-white rounded-xl font-black text-on-surface border border-outline/10 outline-none focus:ring-1"
+                           />
+                        </div>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setExpandedVariantIndex(expandedVariantIndex === i ? null : i)}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                            expandedVariantIndex === i ? 'bg-primary text-white' : 'bg-surface-container text-on-surface hover:bg-outline/10'
+                          }`}
+                          title="Configurar Pasos"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVariant(i)}
+                          className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors ml-auto sm:ml-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                      </div>
-                     {reqFlavors && (
-                        <input
-                          type="number"
-                          placeholder="Bolas"
-                          title="Bolas de helado"
-                          value={v.scoops || ''}
-                          onChange={(e) => handleUpdateVariant(i, 'scoops', Number(e.target.value))}
-                          className="w-16 h-12 bg-white text-center rounded-xl font-bold border border-outline/10 outline-none focus:ring-1"
-                        />
+
+                     {expandedVariantIndex === i && (
+                       <div className="mt-2 p-4 bg-white rounded-xl border border-outline/10 flex flex-col gap-3">
+                         <p className="text-xs font-black uppercase tracking-widest text-secondary">Pasos de Configuración</p>
+                         
+                         {/* List of active steps */}
+                         <div className="flex flex-col gap-2">
+                           {(v.steps || []).map((step, stepIndex) => (
+                             <div key={step.type} className="flex items-center justify-between bg-surface-container/50 p-2 rounded-lg">
+                               <div className="flex items-center gap-2">
+                                 <span className="font-bold text-sm text-on-surface">
+                                   {step.type === 'flavors' ? 'Sabores' : 
+                                    step.type === 'fruits' ? 'Frutas' : 
+                                    step.type === 'additions' ? 'Adiciones' : 'Salsas'}
+                                 </span>
+                                 {step.type === 'flavors' && (
+                                   <div className="flex items-center gap-1">
+                                     <span className="text-xs text-secondary font-bold">Bolas:</span>
+                                     <input
+                                       type="number"
+                                       min={1}
+                                       value={step.scoops || 1}
+                                       onChange={(e) => {
+                                         const currentSteps = [...(v.steps || [])];
+                                         currentSteps[stepIndex] = { ...step, scoops: Number(e.target.value) };
+                                         handleUpdateVariant(i, 'steps', currentSteps);
+                                       }}
+                                       className="w-12 h-8 bg-white text-center rounded-lg font-bold border border-outline/10 outline-none focus:ring-1"
+                                     />
+                                   </div>
+                                 )}
+                               </div>
+                               <div className="flex items-center gap-1">
+                                 {/* Move Up */}
+                                 <button
+                                   type="button"
+                                   disabled={stepIndex === 0}
+                                   onClick={() => {
+                                     const currentSteps = [...(v.steps || [])];
+                                     const temp = currentSteps[stepIndex];
+                                     currentSteps[stepIndex] = currentSteps[stepIndex - 1];
+                                     currentSteps[stepIndex - 1] = temp;
+                                     handleUpdateVariant(i, 'steps', currentSteps);
+                                   }}
+                                   className="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-outline/10 disabled:opacity-50 font-bold"
+                                 >
+                                   ↑
+                                 </button>
+                                 {/* Move Down */}
+                                 <button
+                                   type="button"
+                                   disabled={stepIndex === (v.steps || []).length - 1}
+                                   onClick={() => {
+                                     const currentSteps = [...(v.steps || [])];
+                                     const temp = currentSteps[stepIndex];
+                                     currentSteps[stepIndex] = currentSteps[stepIndex + 1];
+                                     currentSteps[stepIndex + 1] = temp;
+                                     handleUpdateVariant(i, 'steps', currentSteps);
+                                   }}
+                                   className="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-outline/10 disabled:opacity-50 font-bold"
+                                 >
+                                   ↓
+                                 </button>
+                                 {/* Remove */}
+                                 <button
+                                   type="button"
+                                   onClick={() => {
+                                     const currentSteps = (v.steps || []).filter((_, idx) => idx !== stepIndex);
+                                     handleUpdateVariant(i, 'steps', currentSteps);
+                                   }}
+                                   className="w-6 h-6 flex items-center justify-center rounded-full bg-red-50 text-red-500 border border-red-100"
+                                 >
+                                   <X className="w-3 h-3" />
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+
+                         {/* Add Step Buttons */}
+                         <div className="flex flex-wrap gap-2 mt-2">
+                           {['flavors', 'fruits', 'additions', 'sauces'].map((type) => {
+                             const isAdded = (v.steps || []).some(s => s.type === type);
+                             if (isAdded) return null;
+                             return (
+                               <button
+                                 key={type}
+                                 type="button"
+                                 onClick={() => {
+                                   const currentSteps = v.steps || [];
+                                   handleUpdateVariant(i, 'steps', [...currentSteps, { type: type as any, scoops: type === 'flavors' ? 1 : undefined }]);
+                                 }}
+                                 className="px-3 py-1.5 bg-surface-container rounded-lg text-xs font-bold text-on-surface hover:bg-outline/10 transition-colors flex items-center gap-1"
+                               >
+                                 <Plus className="w-3 h-3" />
+                                 {type === 'flavors' ? 'Sabores' : 
+                                  type === 'fruits' ? 'Frutas' : 
+                                  type === 'additions' ? 'Adiciones' : 'Salsas'}
+                               </button>
+                             );
+                           })}
+                         </div>
+                         
+                         <p className="text-[10px] text-secondary font-bold italic mt-1">
+                           * El orden de los pasos será el que se muestra aquí.
+                         </p>
+                       </div>
                      )}
-                     <button
-                       type="button"
-                       onClick={() => handleRemoveVariant(i)}
-                       className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors ml-auto sm:ml-0"
-                     >
-                       <Trash2 className="w-4 h-4" />
-                     </button>
                   </div>
                 ))}
                 

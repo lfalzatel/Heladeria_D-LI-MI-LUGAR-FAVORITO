@@ -19,6 +19,15 @@ export interface RecipeItem {
   quantity: number;
 }
 
+
+export type StepType = 'flavors' | 'fruits' | 'additions' | 'sauces' | 'bases';
+
+export interface VariantStep {
+  type: StepType;
+  scoops?: number;
+  options?: string[];
+}
+
 export interface ProductVariant {
   label: string;
   price: number;
@@ -27,7 +36,9 @@ export interface ProductVariant {
   hasFruit?: boolean;
   hasIceCream?: boolean;
   recipe?: RecipeItem[];
+  steps?: VariantStep[];
 }
+
 
 export interface Product {
   id: string;

@@ -34,6 +34,10 @@ service cloud.firestore {
       );
     }
 
+    function isPropietario() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'propietario';
+    }
+
     function isStaff() {
       return isSignedIn() && (
         isAdmin() || 
@@ -73,10 +77,11 @@ service cloud.firestore {
     // Users: Profiles
     match /users/{userId} {
       allow get: if isSignedIn();
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isPropietario();
       allow create: if isSignedIn() && isValidUser(incoming()); 
-      allow update: if (isOwner(userId) || isAdmin()) && (
-        isAdmin() || !incoming().diff(existing()).affectedKeys().hasAny(['role'])
+      allow update: if (isOwner(userId) || isAdmin() || isPropietario()) && (
+        isAdmin() || 
+        (isPropietario() && existing().role != 'admin' && (!incoming().diff(existing()).affectedKeys().hasAny(['role']) || incoming().role != 'admin'))
       );
     }
 
