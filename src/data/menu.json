@@ -101,39 +101,21 @@
       ]
     },
     {
-      "id": "copa-salpicon-mango",
-      "name": "Copa de Salpicón Sabor Mango",
+      "id": "copa-salpicon",
+      "name": "Copa de Salpicón",
       "category": "salpicon",
-      "description": "Refrescante salpicón de banano, papaya y mango fresco con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa. Las adiciones extras tienen costo adicional.",
+      "description": "Refrescante salpicón de banano, papaya y fruta fresca (fresa o mango) con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa.",
       "includedExtras": {
         "queso": true,
-        "note": "La copa incluye queso rallado. Las adiciones extras son opcionales."
+        "note": "La copa incluye queso rallado."
       },
-      "ingredients": ["banano", "papaya", "mango", "queso", "helado", "lechera", "barquillo"],
+      "ingredients": ["banano", "papaya", "fresa/mango", "queso", "helado", "lechera", "barquillo"],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/copa-salpicon.jpeg",
       "variants": [
-        { "label": "Copa Salpicón Mango", "price": 11000, "scoops": 1 }
-      ]
-    },
-    {
-      "id": "copa-salpicon-fresa",
-      "name": "Copa de Salpicón Sabor Fresa",
-      "category": "salpicon",
-      "description": "Salpicón de banano, papaya y fresa natural con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa. Las adiciones extras tienen costo adicional.",
-      "includedExtras": {
-        "queso": true,
-        "note": "La copa incluye queso rallado. Las adiciones extras son opcionales."
-      },
-      "ingredients": ["banano", "papaya", "fresa", "queso", "helado", "lechera", "barquillo"],
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": "/Images/products/copa-salpicon.jpeg",
-      "variants": [
-        { "label": "Copa Salpicón Fresa", "price": 11000, "scoops": 1 }
+        { "label": "Copa Salpicón", "price": 11000, "scoops": 1 }
       ]
     },
     {

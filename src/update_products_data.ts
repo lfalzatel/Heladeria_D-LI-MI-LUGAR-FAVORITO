@@ -84,29 +84,16 @@ const data = {
       ]
     },
     {
-      "id": "copa-salpicon-mango",
-      "name": "Copa de Salpicón Sabor Mango",
+      "id": "copa-salpicon",
+      "name": "Copa de Salpicón",
       "category": "salpicon",
-      "description": "Refrescante salpicón de banano, papaya y mango fresco con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa. Las adiciones extras tienen costo adicional.",
+      "description": "Refrescante salpicón de banano, papaya y fruta fresca (fresa o mango) con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa.",
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": null,
       "variants": [
-        { "label": "Copa Salpicón Mango", "price": 11000, "scoops": 1 }
-      ]
-    },
-    {
-      "id": "copa-salpicon-fresa",
-      "name": "Copa de Salpicón Sabor Fresa",
-      "category": "salpicon",
-      "description": "Salpicón de banano, papaya y fresa natural con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa. Las adiciones extras tienen costo adicional.",
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "imageUrl": null,
-      "variants": [
-        { "label": "Copa Salpicón Fresa", "price": 11000, "scoops": 1 }
+        { "label": "Copa Salpicón", "price": 11000, "scoops": 1 }
       ]
     },
     {

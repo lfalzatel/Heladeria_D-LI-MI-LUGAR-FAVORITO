@@ -37,7 +37,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedFrutas, setSelectedFrutas] = useState<string[]>(() => {
     if (initialItem?.fruitChoices) return initialItem.fruitChoices;
     // For Ensaladas and Salpicón, pre-select all fruits by default
-    if (product.category === 'ensaladas' || product.category === 'salpicon') return fruitOptions;
+    const cat = product.category?.toLowerCase();
+    if (cat === 'ensaladas' || cat === 'salpicon') return fruitOptions;
     return [];
   });
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
@@ -77,7 +78,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   // Base options
   if (maxScoops > 0) steps.push('flavors');
   
-  const hasBaseFruits = product.category === 'ensaladas' || isSalpicon || isOblea;
+  const hasBaseFruits = product.category === 'ensaladas' || isOblea;
   if (hasBaseFruits) steps.push('fruits');
   
   if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
@@ -197,7 +198,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setStep(initialStep || 1);
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
-        setSelectedFrutas(product.category === 'ensaladas' || product.category === 'salpicon' ? fruitOptions : []);
+        const cat = product.category?.toLowerCase();
+        setSelectedFrutas(cat === 'ensaladas' || cat === 'salpicon' ? fruitOptions : []);
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
@@ -487,10 +489,22 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               setSelectedVariant(variant);
                               setSelectedFlavors([]);
                               const label = variant.label.toLowerCase();
-                              if (label.includes('fresa')) setSelectedFrutas(['Fresa']);
-                              else if (label.includes('mango')) setSelectedFrutas(['Mango']);
-                              else if (label.includes('durazno')) setSelectedFrutas(['Durazno']);
-                              else if (!label.includes('fruta')) setSelectedFrutas([]);
+                              const cat = product.category?.toLowerCase();
+                              if (cat === 'ensaladas' || cat === 'salpicon') {
+                                let fruits = [...fruitOptions];
+                                if (label.includes('mini')) {
+                                  fruits = fruits.filter(f => f.toLowerCase() !== 'kiwi');
+                                }
+                                setSelectedFrutas(fruits);
+                              } else if (label.includes('fresa')) {
+                                setSelectedFrutas(['Fresa']);
+                              } else if (label.includes('mango')) {
+                                setSelectedFrutas(['Mango']);
+                              } else if (label.includes('durazno')) {
+                                setSelectedFrutas(['Durazno']);
+                              } else if (!label.includes('fruta')) {
+                                setSelectedFrutas([]);
+                              }
                             }
                           }}
                           className={cn(
