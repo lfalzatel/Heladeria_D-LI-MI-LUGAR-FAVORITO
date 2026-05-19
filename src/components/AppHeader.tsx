@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
 import { useHeaderStore } from '../stores/useHeaderStore';
+import { motion, AnimatePresence } from 'motion/react';
+import { createPortal } from 'react-dom';
 
 interface AppHeaderProps {
   /** Muestra botón de regreso */
@@ -16,14 +18,18 @@ interface AppHeaderProps {
 export default function AppHeader({ backTo }: AppHeaderProps) {
   const navigate = useNavigate();
   const { leftExtra, rightExtra, showBell } = useHeaderStore();
+  const [showLargeLogo, setShowLargeLogo] = useState(false);
 
   return (
-    <header className="flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-[60] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
+    <header className={`flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 border-b border-white/40 sticky top-0 z-[60] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all ${showLargeLogo ? '' : 'backdrop-blur-2xl'}`}>
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}
         {!backTo && (
-          <div className="relative flex items-center justify-center w-10 h-10 flex-shrink-0">
+          <div 
+            onClick={() => setShowLargeLogo(true)}
+            className="relative flex items-center justify-center w-10 h-10 flex-shrink-0 cursor-pointer"
+          >
             {/* Anillo exterior (Gira a la derecha) */}
             <div className="absolute inset-0 rounded-full border-t-[1.5px] border-r-[1.5px] border-primary/80 animate-[spin_2.5s_linear_infinite]" />
             
@@ -78,6 +84,43 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
         {showBell && <NotificationBell />}
         <UserMenu />
       </div>
+
+      {/* Modal de Logo Grande */}
+      <AnimatePresence>
+        {showLargeLogo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowLargeLogo(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-64 h-64 flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Anillo exterior (Gira a la derecha) */}
+              <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-primary animate-[spin_3s_linear_infinite]" />
+              
+              {/* Anillo interior (Gira a la izquierda) */}
+              <div className="absolute inset-[10%] rounded-full border-b-2 border-l-2 border-emerald-400 animate-[spin_2s_linear_infinite_reverse]" />
+
+              {/* Contenedor central circular de la imagen */}
+              <div className="w-[75%] h-[75%] flex items-center justify-center relative bg-white rounded-full overflow-hidden shadow-xl p-1 z-10 border border-outline/10">
+                <img 
+                  src="/pwa-192x192.png" 
+                  alt="D'LI" 
+                  className="w-full h-full object-contain rounded-full"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

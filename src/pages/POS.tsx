@@ -479,12 +479,21 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
       style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
     >
       {/* Zone 1: Image defaults to open details if passed */}
-      <div 
+      <motion.div 
         onClick={(e) => {
           e.stopPropagation();
           onDetailClick ? onDetailClick() : onClick();
         }}
         className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300"
+        animate={{
+          rotate: [0, -10, 10, -10, 0, 0, 0, 0, 0, 0],
+          scale: [1, 1.1, 0.9, 1.1, 1, 1, 1, 1, 1, 1],
+        }}
+        transition={{
+          duration: 3.5,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       >
         {product.imageUrl && !imgError ? (
            <img 
@@ -504,7 +513,7 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
             <span className="text-xl font-black text-primary drop-shadow-md">{totalQuantity}</span>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Zone 2: Content & Quick Add Controls */}
       <div className="flex-1 flex flex-col min-w-0">

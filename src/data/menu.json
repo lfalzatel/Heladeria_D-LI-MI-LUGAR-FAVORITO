@@ -294,7 +294,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
+      "imageUrl": "/Images/products/vaso-cono-1.jpg",
       "variants": [{ "label": "Cono", "price": 1000 }]
     },
     {
