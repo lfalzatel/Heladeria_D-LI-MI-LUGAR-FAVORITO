@@ -23,15 +23,24 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}
         {!backTo && (
-          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-            <img 
-              src="/pwa-192x192.png" 
-              alt="D'LI" 
-              className="w-full h-full object-contain drop-shadow-sm rounded-xl"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+          <div className="relative flex items-center justify-center w-10 h-10 flex-shrink-0">
+            {/* Anillo exterior (Gira a la derecha) */}
+            <div className="absolute inset-0 rounded-full border-t-[1.5px] border-r-[1.5px] border-primary/80 animate-[spin_2.5s_linear_infinite]" />
+            
+            {/* Anillo interior (Gira a la izquierda) */}
+            <div className="absolute inset-[10%] rounded-full border-b-[1.5px] border-l-[1.5px] border-emerald-400/80 animate-[spin_1.5s_linear_infinite_reverse]" />
+
+            {/* Contenedor central circular de la imagen */}
+            <div className="w-[75%] h-[75%] flex items-center justify-center flex-shrink-0 relative bg-white rounded-full overflow-hidden shadow-sm p-0.5 z-10 border border-outline/10">
+              <img 
+                src="/pwa-192x192.png" 
+                alt="D'LI" 
+                className="w-full h-full object-contain rounded-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
           </div>
         )}
 
