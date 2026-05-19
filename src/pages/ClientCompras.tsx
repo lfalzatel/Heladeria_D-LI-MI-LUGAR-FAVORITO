@@ -31,8 +31,6 @@ const CATEGORIES = [
 const PAYMENT_OPTIONS = [
   { id: 'efectivo',      label: 'Efectivo',       icon: <Banknote className="w-4 h-4" /> },
   { id: 'transferencia', label: 'Transferencia',  icon: <Smartphone className="w-4 h-4" /> },
-  { id: 'datafono',      label: 'Datáfono',       icon: <CreditCard className="w-4 h-4" /> },
-  { id: 'credito',       label: 'A Crédito',      icon: <Hash className="w-4 h-4" /> },
 ];
 
 export default function ClientCompras() {
@@ -689,22 +687,56 @@ export default function ClientCompras() {
                               </h4>
                               
                               {/* Detalles */}
-                              <div className="mt-2 flex flex-wrap gap-1">
-                                {(item.flavors || []).map((f: any, idx: number) => (
-                                  <span key={idx} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
-                                    {typeof f === 'object' ? f.name || f.label : f}
-                                  </span>
-                                ))}
-                                {(item.fruitChoices || []).map((f: any, idx: number) => (
-                                  <span key={idx} className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10">
-                                    {typeof f === 'object' ? f.name || f.label : f}
-                                  </span>
-                                ))}
-                                {(item.additions || []).map((a: any, idx: number) => (
-                                  <span key={idx} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
-                                    {typeof a === 'object' ? a.name || a.label : a}
-                                  </span>
-                                ))}
+                              <div className="mt-2 flex flex-col gap-1">
+                                {/* Cosas Incluidas (Chips) */}
+                                <div className="flex flex-wrap gap-1">
+                                  {(item.includedFlavors || item.flavors || []).map((f: any, idx: number) => (
+                                    <span key={idx} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
+                                      {typeof f === 'object' ? f.name || f.label : f}
+                                    </span>
+                                  ))}
+                                  {(item.includedFruits || item.fruitChoices || []).map((f: any, idx: number) => (
+                                    <span key={idx} className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10">
+                                      {typeof f === 'object' ? f.name || f.label : f}
+                                    </span>
+                                  ))}
+                                  {(item.includedSauces || []).map((s: any, idx: number) => (
+                                    <span key={idx} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
+                                      {s}
+                                    </span>
+                                  ))}
+                                </div>
+
+                                {/* Adiciones (Líneas de texto) */}
+                                <div className="flex flex-col gap-0.5 mt-0.5">
+                                  {(item.extraFruits || []).length > 0 && (
+                                    <span className="text-[10px] text-orange-600 font-bold text-left">
+                                      adición de fruta: [{(item.extraFruits || []).join(', ')}]
+                                    </span>
+                                  )}
+                                  {(item.extraFlavors || []).length > 0 && (
+                                    <span className="text-[10px] text-orange-600 font-bold text-left">
+                                      adición de helado: [{(item.extraFlavors || []).join(', ')}]
+                                    </span>
+                                  )}
+                                  {(item.extraSauces || []).length > 0 && (
+                                    <span className="text-[10px] text-orange-600 font-bold text-left">
+                                      adición de salsa: [{(item.extraSauces || []).join(', ')}]
+                                    </span>
+                                  )}
+                                  {/* Otras adiciones */}
+                                  {(item.additions || []).filter((a: string) => 
+                                    !a.toLowerCase().includes('adición fruta') && 
+                                    !a.toLowerCase().includes('adición helado') &&
+                                    !a.toLowerCase().includes('adición salsa') &&
+                                    !(item.includedSauces || []).includes(a) &&
+                                    !(item.extraSauces || []).includes(a)
+                                  ).map((a: string, i: number) => (
+                                    <span key={i} className="text-[10px] text-orange-600 font-bold text-left">
+                                      +{a}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
 
                               <div className="flex items-center gap-4 mt-3">

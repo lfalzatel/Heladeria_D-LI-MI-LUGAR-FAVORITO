@@ -189,9 +189,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                           )}
                           {/* Otras adiciones (queso, etc) */}
                           {(item.additions || []).filter(a => 
-                            !a.includes('Adición Fruta') && 
-                            !a.includes('Adición Helado') &&
-                            !a.includes('Adición Salsa') &&
+                            !a.toLowerCase().includes('adición fruta') && 
+                            !a.toLowerCase().includes('adición helado') &&
+                            !a.toLowerCase().includes('adición salsa') &&
                             !(item.includedSauces || []).includes(a) &&
                             !(item.extraSauces || []).includes(a)
                           ).map((a, i) => (
