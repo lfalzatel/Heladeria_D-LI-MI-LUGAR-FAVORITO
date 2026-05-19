@@ -21,7 +21,7 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
   const [showLargeLogo, setShowLargeLogo] = useState(false);
 
   return (
-    <header className={`flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 border-b border-white/40 sticky top-0 z-[60] shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all ${showLargeLogo ? '' : 'backdrop-blur-2xl'}`}>
+    <header className={`flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 border-b border-white/40 sticky top-0 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all ${showLargeLogo ? 'z-[200]' : 'z-[60] backdrop-blur-2xl'}`}>
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}
