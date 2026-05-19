@@ -484,11 +484,12 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
           e.stopPropagation();
           onDetailClick ? onDetailClick() : onClick();
         }}
-        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5 transition-transform group-hover:scale-105 duration-300"
+        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5"
         animate={{
-          rotate: [0, -10, 10, -10, 0, 0, 0, 0, 0, 0],
-          scale: [1, 1.1, 0.9, 1.1, 1, 1, 1, 1, 1, 1],
+          rotate: [0, -12, 12, -12, 0, 0, 0, 0, 0, 0],
+          scale: [1, 1.12, 0.88, 1.12, 1, 1, 1, 1, 1, 1],
         }}
+        whileHover={{ scale: 1.05 }}
         transition={{
           duration: 3.5,
           repeat: Infinity,
