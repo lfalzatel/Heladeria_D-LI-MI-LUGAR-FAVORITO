@@ -612,8 +612,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               "relative flex flex-col p-2.5 rounded-2xl transition-all border-2",
                               count > 0
                                 ? "bg-primary/5 border-primary shadow-sm"
-                                : "bg-white border-outline/10 hover:bg-surface-container-low"
+                                : "bg-white border-outline/10 hover:bg-surface-container-low cursor-pointer"
                             )}
+                            onClick={count === 0 ? () => {
+                              if (selectedFlavors.length < maxScoops) {
+                                setSelectedFlavors([...selectedFlavors, flavor.name]);
+                              } else {
+                                toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
+                              }
+                            } : undefined}
                           >
                             <div className="flex items-center gap-1.5 mb-2">
                               <IceCream className={cn("w-4 h-4 shrink-0", count > 0 ? "text-primary" : "text-secondary")} />
@@ -650,19 +657,14 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                 </button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => {
-                                  if (selectedFlavors.length < maxScoops) {
-                                    setSelectedFlavors([...selectedFlavors, flavor.name]);
-                                  } else {
-                                    toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
-                                  }
-                                }}
-                                disabled={selectedFlavors.length >= maxScoops}
-                                className="w-full py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-bold text-[10px] uppercase tracking-widest transition-all disabled:opacity-50"
+                              <div
+                                className={cn(
+                                  "w-full py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-bold text-[10px] uppercase tracking-widest transition-all text-center",
+                                  selectedFlavors.length >= maxScoops ? "opacity-50" : ""
+                                )}
                               >
                                 Agregar
-                              </button>
+                              </div>
                             )}
                           </div>
                         );
