@@ -169,6 +169,11 @@ export default function Management() {
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
+  // ── Sabores State ────────────────────────────────────────────────────────
+  const [isFlavorModalOpen, setIsFlavorModalOpen] = useState(false);
+  const [newFlavorName, setNewFlavorName] = useState('');
+  const [isSavingFlavor, setIsSavingFlavor] = useState(false);
+
   // ── Header Actions ──────────────────────────────────────────────────────
   useEffect(() => {
     // Solo mostrar acciones si es admin o propietario
@@ -402,6 +407,25 @@ export default function Management() {
       toast.success(`Sabor ${!currentStatus ? 'activado' : 'desactivado'}`);
     } catch {
       toast.error('Error al actualizar estado del sabor');
+    }
+  };
+
+  const handleCreateFlavor = async () => {
+    if (!newFlavorName.trim()) return;
+    setIsSavingFlavor(true);
+    try {
+      await addDoc(collection(db, 'icecreamFlavors'), {
+        name: newFlavorName.trim(),
+        isAvailable: true
+      });
+      toast.success('Sabor creado correctamente');
+      setIsFlavorModalOpen(false);
+      setNewFlavorName('');
+    } catch (error) {
+      console.error('Error creating flavor:', error);
+      toast.error('Error al crear el sabor');
+    } finally {
+      setIsSavingFlavor(false);
     }
   };
 
@@ -944,7 +968,18 @@ export default function Management() {
 
                   {/* ── Sub-tab: SABORES ──────────────────────────────────── */}
                   {inventarioSubTab === 'sabores' && (
-                    <motion.div key="sabores" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <motion.div key="sabores" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-4">
+                      {/* Add flavor button */}
+                      <button
+                        onClick={() => setIsFlavorModalOpen(true)}
+                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
+                      >
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </div>
+                        <span className="truncate">Añadir Nuevo Sabor</span>
+                      </button>
+
                       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                         {availableFlavors.map((flavor) => (
                           <motion.div
@@ -1527,6 +1562,38 @@ export default function Management() {
             </div>
           )}
         </AnimatePresence>
+
+        {/* New Flavor Modal */}
+        <AnimatePresence>
+          {isFlavorModalOpen && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsFlavorModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
+                <h2 className="text-2xl font-black mb-6">Añadir Nuevo Sabor</h2>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Nombre del Sabor</label>
+                    <input 
+                      type="text" 
+                      value={newFlavorName} 
+                      onChange={(e) => setNewFlavorName(e.target.value)} 
+                      className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" 
+                      placeholder="Ej: Chocolate, Vainilla..." 
+                    />
+                  </div>
+                </div>
+                <button 
+                  onClick={handleCreateFlavor} 
+                  disabled={isSavingFlavor || !newFlavorName.trim()}
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black mt-8 uppercase shadow-xl disabled:opacity-50"
+                >
+                  {isSavingFlavor ? 'Guardando...' : 'Crear Sabor'}
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       <StockCriticoModal
         isOpen={isStockModalOpen}
         onClose={() => setIsStockModalOpen(false)}

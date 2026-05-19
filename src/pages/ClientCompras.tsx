@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Product, ProductVariant, CartItem } from '../types';
@@ -55,6 +55,7 @@ export default function ClientCompras() {
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
   const [phone, setPhone] = useState(profile?.phone || '');
+  const [checkoutStep, setCheckoutStep] = useState(1); // 1: Resumen, 2: Datos de entrega
 
   // Modal del pedido recién creado
   const [newOrderData, setNewOrderData]   = useState<any>(null);
@@ -65,6 +66,22 @@ export default function ClientCompras() {
   useEffect(() => {
     localStorage.setItem('dli_heladeria_cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Listener para sincronizar el carrito desde Firestore
+  useEffect(() => {
+    if (!profile?.uid) return;
+
+    const unsub = onSnapshot(doc(db, 'carts', profile.uid), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.currentCart) {
+          setCart(data.currentCart);
+        }
+      }
+    });
+
+    return unsub;
+  }, [profile?.uid]);
 
   useEffect(() => {
     setHeader({
@@ -138,6 +155,7 @@ export default function ClientCompras() {
         JSON.stringify(c.additions || []) === JSON.stringify(item.additions || [])
       );
 
+      let updatedCart: CartItem[];
       if (existingIndex > -1) {
         const existing = currentCart[existingIndex];
         currentCart[existingIndex] = {
@@ -145,21 +163,56 @@ export default function ClientCompras() {
           quantity: existing.quantity + item.quantity,
           subtotal: existing.unitPrice * (existing.quantity + item.quantity)
         };
-        return currentCart;
+        updatedCart = currentCart;
+      } else {
+        updatedCart = [...currentCart, item];
       }
-      
-      return [...currentCart, item];
+
+      // Sync to Firestore
+      if (profile?.uid) {
+        setDoc(doc(db, 'carts', profile.uid), { currentCart: updatedCart }, { merge: true })
+          .catch(err => console.error("Error saving cart:", err));
+      }
+
+      return updatedCart;
     });
     setTimeout(() => {
       toast.success(`${item.productName} ${wasEdited ? 'actualizado' : 'agregado'}`);
     }, 0);
   };
 
-  const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
+  const removeFromCart = (id: string) => {
+    setCart(prev => {
+      const updatedCart = prev.filter(c => c.id !== id);
+      if (profile?.uid) {
+        setDoc(doc(db, 'carts', profile.uid), { currentCart: updatedCart }, { merge: true })
+          .catch(err => console.error("Error removing from cart:", err));
+      }
+      return updatedCart;
+    });
+  };
 
   const updateQty = (id: string, qty: number) => {
-    if (qty <= 0) { removeFromCart(id); return; }
-    setCart(prev => prev.map(c => c.id === id ? { ...c, quantity: qty, subtotal: c.unitPrice * qty } : c));
+    if (qty <= 0) { 
+      removeFromCart(id); 
+      return; 
+    }
+    setCart(prev => {
+      const updatedCart = prev.map(c => c.id === id ? { ...c, quantity: qty, subtotal: c.unitPrice * qty } : c);
+      if (profile?.uid) {
+        setDoc(doc(db, 'carts', profile.uid), { currentCart: updatedCart }, { merge: true })
+          .catch(err => console.error("Error updating quantity:", err));
+      }
+      return updatedCart;
+    });
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    if (profile?.uid) {
+      setDoc(doc(db, 'carts', profile.uid), { currentCart: [] }, { merge: true })
+        .catch(err => console.error("Error clearing cart:", err));
+    }
   };
 
   const getGPS = () => {
@@ -292,7 +345,7 @@ export default function ClientCompras() {
         "🆕 Nuevo pedido online",
         `De ${profile.name} por $${cartTotal.toLocaleString()} - ${paymentMethod}`
       );
-      setCart([]);
+      clearCart();
       setShowCheckout(false);
       setAddress('');
       setNote('');
@@ -592,7 +645,10 @@ export default function ClientCompras() {
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowCheckout(false)}
+              onClick={() => {
+                setShowCheckout(false);
+                setCheckoutStep(1);
+              }}
               className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
             />
             <motion.div
@@ -601,22 +657,29 @@ export default function ClientCompras() {
             >
               <div className="px-6 pt-4 pb-3 flex items-start justify-between border-b border-outline/10">
                 <div>
-                  <h3 className="font-headline font-black text-xl text-on-surface">Finalizar Pedido</h3>
-                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mt-0.5">Confirma tu selección y entrega</p>
+                  <h3 className="font-headline font-black text-xl text-on-surface">
+                    {checkoutStep === 1 ? 'Mi Lista de Compra' : 'Finalizar Pedido'}
+                  </h3>
+                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mt-0.5">
+                    {checkoutStep === 1 ? 'Confirma tu selección' : 'Confirma tu entrega y pago'}
+                  </p>
                 </div>
-                <button onClick={() => setShowCheckout(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
+                <button 
+                  onClick={() => {
+                    setShowCheckout(false);
+                    setCheckoutStep(1);
+                  }} 
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90"
+                >
                   <X className="w-5 h-5 text-secondary" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-8">
-                {/* Resumen */}
-                <section>
-                   <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface">Mi Pedido</h4>
-                      <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">{cartCount} items</span>
-                   </div>
-                   <div className="flex flex-col gap-3">
+              <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-6">
+                {checkoutStep === 1 ? (
+                  <>
+                    {/* Paso 1: Resumen de Pedido */}
+                    <div className="flex flex-col gap-3">
                       {cart.map(item => (
                         <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-surface-container-lowest border border-outline/5">
                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
@@ -625,6 +688,26 @@ export default function ClientCompras() {
                            <div className="flex-1 min-w-0">
                               <p className="font-bold text-sm text-on-surface truncate">{item.productName}</p>
                               {item.variantLabel && <p className="text-[10px] font-bold text-secondary italic mb-0.5">{item.variantLabel}</p>}
+                              
+                              {/* Detalles */}
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {(item.flavors || []).map((f: any, idx: number) => (
+                                  <span key={idx} className="px-1.5 py-0.5 bg-surface-container rounded text-[9px] font-medium text-secondary">
+                                    {typeof f === 'object' ? f.name || f.label : f}
+                                  </span>
+                                ))}
+                                {(item.fruitChoices || []).map((f: any, idx: number) => (
+                                  <span key={idx} className="px-1.5 py-0.5 bg-surface-container rounded text-[9px] font-medium text-secondary">
+                                    {typeof f === 'object' ? f.name || f.label : f}
+                                  </span>
+                                ))}
+                                {(item.additions || []).map((a: any, idx: number) => (
+                                  <span key={idx} className="px-1.5 py-0.5 bg-surface-container rounded text-[9px] font-medium text-secondary">
+                                    {typeof a === 'object' ? a.name || a.label : a}
+                                  </span>
+                                ))}
+                              </div>
+
                               <div className="flex items-center gap-2 mt-1">
                                 <p className="text-primary font-black text-xs">{formatCurrency(item.unitPrice)}</p>
                                 <button 
@@ -646,53 +729,95 @@ export default function ClientCompras() {
                            </div>
                         </div>
                       ))}
-                   </div>
-                </section>
+                    </div>
 
-                <div className="bg-on-surface rounded-3xl p-6 flex items-center justify-between shadow-xl">
-                  <div>
-                    <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">Total</p>
-                    <p className="text-3xl font-brand font-black text-white">{formatCurrency(cartTotal)}</p>
-                  </div>
-                  <ShoppingCart className="w-10 h-10 text-white/10 rotate-12" />
-                </div>
-
-                <section>
-                   <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Forma de Pago</h4>
-                   <div className="grid grid-cols-2 gap-3">
-                     {PAYMENT_OPTIONS.slice(0, 3).map(opt => (
-                       <button key={opt.id} onClick={() => setPaymentMethod(opt.id)} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all", paymentMethod === opt.id ? "bg-primary/5 border-primary text-primary" : "border-outline/10 text-secondary")}>
-                         {opt.icon}
-                         <span className="text-[10px] font-black uppercase tracking-wider">{opt.label}</span>
-                       </button>
-                     ))}
-                   </div>
-                </section>
-
-                <section>
-                   <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Ubicación</h4>
-                   <div className="flex flex-col gap-3">
-                      <div className="relative">
-                        <Phone className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
-                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Número de teléfono..." className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" />
+                    <div className="bg-on-surface rounded-3xl p-6 flex items-center justify-between shadow-xl mt-auto">
+                      <div>
+                        <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">Total</p>
+                        <p className="text-3xl font-brand font-black text-white">{formatCurrency(cartTotal)}</p>
                       </div>
-                      <div className="relative">
-                        <MapPin className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
-                        <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Dirección de entrega..." rows={2} className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-14 text-sm font-bold text-on-surface outline-none resize-none" />
-                        <button onClick={getGPS} disabled={gpsLoading} className="absolute top-3.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg">
-                           {gpsLoading ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Navigation className="w-4 h-4" />}
-                        </button>
+                      <ShoppingCart className="w-10 h-10 text-white/10 rotate-12" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Paso 2: Datos de Entrega y Pago */}
+                    <div className="bg-on-surface rounded-3xl p-6 flex items-center justify-between shadow-xl mb-2">
+                      <div>
+                        <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
+                        <p className="text-2xl font-brand font-black text-white">{formatCurrency(cartTotal)}</p>
                       </div>
-                      <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Indicaciones adicionales..." rows={2} className="w-full bg-surface-container rounded-2xl p-4 text-xs font-bold text-on-surface outline-none resize-none" />
-                   </div>
-                </section>
+                      <ShoppingCart className="w-8 h-8 text-white/10 rotate-12" />
+                    </div>
+
+                    <section>
+                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Forma de Pago</h4>
+                       <div className="grid grid-cols-2 gap-3">
+                         {PAYMENT_OPTIONS.slice(0, 3).map(opt => (
+                           <button key={opt.id} onClick={() => setPaymentMethod(opt.id)} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all", paymentMethod === opt.id ? "bg-primary/5 border-primary text-primary" : "border-outline/10 text-secondary")}>
+                             {opt.icon}
+                             <span className="text-[10px] font-black uppercase tracking-wider">{opt.label}</span>
+                           </button>
+                         ))}
+                       </div>
+                    </section>
+
+                    <section>
+                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Ubicación</h4>
+                       <div className="flex flex-col gap-3">
+                          <div className="relative">
+                            <Phone className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
+                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Número de teléfono..." className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" />
+                          </div>
+                          <div className="relative">
+                            <MapPin className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
+                            <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Dirección de entrega..." rows={2} className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-14 text-sm font-bold text-on-surface outline-none resize-none" />
+                            <button onClick={getGPS} disabled={gpsLoading} className="absolute top-3.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg">
+                               {gpsLoading ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Navigation className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Indicaciones adicionales..." rows={2} className="w-full bg-surface-container rounded-2xl p-4 text-xs font-bold text-on-surface outline-none resize-none" />
+                       </div>
+                    </section>
+                  </>
+                )}
               </div>
 
-              <div className="px-6 py-6 bg-surface-container-low border-t border-outline/10">
-                <button onClick={handlePlaceOrder} disabled={!address.trim() || cart.length === 0 || placing} className="w-full py-5 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20">
-                  {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> Enviar Mi Pedido </>}
-                </button>
-                {!address.trim() && cart.length > 0 && <p className="text-center text-[10px] text-primary font-black uppercase tracking-widest mt-3 animate-pulse">Falta tu dirección de entrega</p>}
+              <div className="px-6 py-6 bg-surface-container-low border-t border-outline/10 flex flex-col gap-3">
+                {checkoutStep === 1 ? (
+                  <>
+                    <button 
+                      onClick={() => setCheckoutStep(2)} 
+                      disabled={cart.length === 0}
+                      className="w-full py-5 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                    >
+                      Continuar con el pedido <ChevronRight className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={clearCart} 
+                      className="text-center text-[10px] text-secondary font-black uppercase tracking-widest mt-1 hover:text-primary transition-colors"
+                    >
+                      VACIAR LISTA
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={handlePlaceOrder} 
+                      disabled={!address.trim() || cart.length === 0 || placing} 
+                      className="w-full py-5 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                    >
+                      {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> Confirmar Pedido </>}
+                    </button>
+                    <button 
+                      onClick={() => setCheckoutStep(1)} 
+                      className="text-center text-[10px] text-secondary font-black uppercase tracking-widest mt-1 hover:text-primary transition-colors"
+                    >
+                      Volver
+                    </button>
+                    {!address.trim() && cart.length > 0 && <p className="text-center text-[10px] text-primary font-black uppercase tracking-widest mt-1 animate-pulse">Falta tu dirección de entrega</p>}
+                  </>
+                )}
               </div>
             </motion.div>
           </div>

@@ -110,6 +110,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Carritos: Sincronización de carrito de compras
+    match /carts/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
     // Pedidos: Checkout Cliente (PWA)
     match /pedidos/{pedidoId} {
       allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isStaff());

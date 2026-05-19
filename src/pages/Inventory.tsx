@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, updateDoc, doc, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
 import { 
@@ -34,6 +34,10 @@ export default function Inventory() {
   const [activeTab, setActiveTab] = useState<'productos' | 'sabores'>('productos');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+  
+  const [isFlavorModalOpen, setIsFlavorModalOpen] = useState(false);
+  const [newFlavorName, setNewFlavorName] = useState('');
+  const [isSavingFlavor, setIsSavingFlavor] = useState(false);
   
   const { availableFlavors } = useFlavorsStore();
 
@@ -93,6 +97,25 @@ export default function Inventory() {
     }
   };
 
+  const handleCreateFlavor = async () => {
+    if (!newFlavorName.trim()) return;
+    setIsSavingFlavor(true);
+    try {
+      await addDoc(collection(db, 'icecreamFlavors'), {
+        name: newFlavorName.trim(),
+        isAvailable: true
+      });
+      toast.success('Sabor creado correctamente');
+      setIsFlavorModalOpen(false);
+      setNewFlavorName('');
+    } catch (error) {
+      console.error('Error creating flavor:', error);
+      toast.error('Error al crear el sabor');
+    } finally {
+      setIsSavingFlavor(false);
+    }
+  };
+
   const handleSaveProduct = async (productData: Partial<Product>) => {
     if (productToEdit) {
       await updateDoc(doc(db, 'products', productToEdit.id), {
@@ -136,13 +159,22 @@ export default function Inventory() {
       <main className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-6 sm:gap-8 w-full overflow-x-hidden">
         {/* Floating Add Product Button */}
         <button 
-          onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
+          onClick={() => { 
+            if (activeTab === 'productos') {
+              setProductToEdit(null); 
+              setIsProductModalOpen(true); 
+            } else {
+              setIsFlavorModalOpen(true);
+            }
+          }}
           className="w-full py-4 sm:py-5 bg-on-surface text-white rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all px-4"
         >
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
             <span className="text-lg sm:text-xl leading-none font-light">+</span>
           </div>
-          <span className="truncate">Añadir Nuevo Producto</span>
+          <span className="truncate">
+            {activeTab === 'productos' ? 'Añadir Nuevo Producto' : 'Añadir Nuevo Sabor'}
+          </span>
         </button>
 
         <div className="flex bg-surface-container rounded-2xl p-1 mb-2">
@@ -344,6 +376,39 @@ export default function Inventory() {
           productToEdit={productToEdit}
           onSave={handleSaveProduct}
         />
+      )}
+
+      {isFlavorModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] p-6 max-w-md w-full shadow-2xl">
+            <h2 className="font-brand font-black text-2xl text-on-surface mb-4">Añadir Nuevo Sabor</h2>
+            <div className="mb-4">
+              <label className="text-[10px] font-black uppercase tracking-widest text-secondary block mb-2">Nombre del Sabor</label>
+              <input 
+                type="text" 
+                value={newFlavorName}
+                onChange={(e) => setNewFlavorName(e.target.value)}
+                className="w-full bg-surface-container rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="Ej. Chocolate, Fresa..."
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button 
+                onClick={() => { setIsFlavorModalOpen(false); setNewFlavorName(''); }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-secondary hover:bg-surface-container transition-all"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleCreateFlavor}
+                disabled={!newFlavorName.trim() || isSavingFlavor}
+                className="px-4 py-2 bg-on-surface text-white rounded-xl text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
+              >
+                {isSavingFlavor ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <BottomNav />
