@@ -642,7 +642,7 @@ export default function ClientCompras() {
       {/* Unified Checkout Modal */}
       <AnimatePresence>
         {showCheckout && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[70] flex items-center justify-center sm:p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => {
@@ -653,7 +653,7 @@ export default function ClientCompras() {
             />
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-white w-[94%] max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90dvh] sm:h-auto sm:max-h-[85vh] overflow-hidden"
+              className="relative bg-white w-full h-full sm:w-[94%] sm:max-w-2xl sm:rounded-[2.5rem] shadow-2xl flex flex-col sm:h-auto sm:max-h-[85vh] overflow-hidden"
             >
               <div className="px-6 pt-4 pb-3 flex items-start justify-between border-b border-outline/10">
                 <div>
@@ -675,63 +675,72 @@ export default function ClientCompras() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-6">
+              <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
                 {checkoutStep === 1 ? (
                   <>
                     {/* Paso 1: Resumen de Pedido */}
                     <div className="flex flex-col gap-3">
                       {cart.map(item => (
-                        <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-surface-container-lowest border border-outline/5">
-                           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-                              <IceCream className="w-6 h-6 text-primary/40" />
-                           </div>
-                           <div className="flex-1 min-w-0">
-                              <p className="font-bold text-sm text-on-surface truncate">{item.productName}</p>
-                              {item.variantLabel && <p className="text-[10px] font-bold text-secondary italic mb-0.5">{item.variantLabel}</p>}
+                        <div key={item.id} className="flex gap-4 p-4 rounded-2xl bg-white border border-outline/30 shadow-sm group transition-all">
+                           <div className="flex-1">
+                              <h4 className="font-bold text-sm leading-tight text-on-surface">
+                                {item.productName}
+                                {item.variantLabel && <span className="text-xs text-primary ml-2 uppercase">({item.variantLabel})</span>}
+                              </h4>
                               
                               {/* Detalles */}
-                              <div className="flex flex-wrap gap-1 mt-0.5">
+                              <div className="mt-2 flex flex-wrap gap-1">
                                 {(item.flavors || []).map((f: any, idx: number) => (
-                                  <span key={idx} className="px-1.5 py-0.5 bg-surface-container rounded text-[9px] font-medium text-secondary">
+                                  <span key={idx} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
                                     {typeof f === 'object' ? f.name || f.label : f}
                                   </span>
                                 ))}
                                 {(item.fruitChoices || []).map((f: any, idx: number) => (
-                                  <span key={idx} className="px-1.5 py-0.5 bg-surface-container rounded text-[9px] font-medium text-secondary">
+                                  <span key={idx} className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10">
                                     {typeof f === 'object' ? f.name || f.label : f}
                                   </span>
                                 ))}
                                 {(item.additions || []).map((a: any, idx: number) => (
-                                  <span key={idx} className="px-1.5 py-0.5 bg-surface-container rounded text-[9px] font-medium text-secondary">
+                                  <span key={idx} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
                                     {typeof a === 'object' ? a.name || a.label : a}
                                   </span>
                                 ))}
                               </div>
 
-                              <div className="flex items-center gap-2 mt-1">
-                                <p className="text-primary font-black text-xs">{formatCurrency(item.unitPrice)}</p>
-                                <button 
-                                  onClick={() => {
-                                    setEditingItem(item);
-                                    const prod = products.find(p => p.id === item.productId);
-                                    if (prod) setSelectedProduct(prod);
-                                  }}
-                                  className="flex items-center gap-1 text-[9px] font-black uppercase text-secondary hover:text-primary transition-colors bg-surface-container px-2 py-0.5 rounded-md"
-                                >
-                                  <Edit2 className="w-3 h-3" /> Editar
-                                </button>
+                              <div className="flex items-center gap-4 mt-3">
+                                <div className="flex items-center bg-surface-container-low rounded-full px-2 py-1 ring-1 ring-outline/10">
+                                  <button onClick={() => updateQty(item.id, item.quantity - 1)} className="p-1 text-primary hover:bg-primary/10 rounded-full"><Minus className="w-3 h-3" /></button>
+                                  <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
+                                  <button onClick={() => updateQty(item.id, item.quantity + 1)} className="p-1 text-primary hover:bg-primary/10 rounded-full"><Plus className="w-3 h-3" /></button>
+                                </div>
+                                <span className="text-sm font-bold text-primary">{formatCurrency(item.subtotal)}</span>
                               </div>
                            </div>
-                           <div className="flex items-center gap-2.5 bg-surface-container rounded-full p-1">
-                              <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-secondary shadow-sm"><Minus className="w-3.5 h-3.5" /></button>
-                              <span className="font-black text-sm w-4 text-center">{item.quantity}</span>
-                              <button onClick={() => updateQty(item.id, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-secondary shadow-sm"><Plus className="w-3.5 h-3.5" /></button>
+                           <div className="flex flex-col gap-2">
+                             <button 
+                               onClick={() => {
+                                 setEditingItem(item);
+                                 const prod = products.find(p => p.id === item.productId);
+                                 if (prod) setSelectedProduct(prod);
+                               }}
+                               className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors"
+                               title="Editar"
+                             >
+                               <Edit2 className="w-4 h-4" />
+                             </button>
+                             <button 
+                               onClick={() => removeFromCart(item.id)}
+                               className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-outline hover:bg-red-500 hover:text-white transition-colors"
+                               title="Eliminar"
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </button>
                            </div>
                         </div>
                       ))}
                     </div>
 
-                    <div className="bg-on-surface rounded-3xl p-6 flex items-center justify-between shadow-xl mt-auto">
+                    <div className="bg-on-surface rounded-2xl p-4 flex items-center justify-between shadow-xl mt-auto">
                       <div>
                         <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">Total</p>
                         <p className="text-3xl font-brand font-black text-white">{formatCurrency(cartTotal)}</p>
@@ -742,7 +751,7 @@ export default function ClientCompras() {
                 ) : (
                   <>
                     {/* Paso 2: Datos de Entrega y Pago */}
-                    <div className="bg-on-surface rounded-3xl p-6 flex items-center justify-between shadow-xl mb-2">
+                    <div className="bg-on-surface rounded-2xl p-4 flex items-center justify-between shadow-xl mb-2">
                       <div>
                         <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
                         <p className="text-2xl font-brand font-black text-white">{formatCurrency(cartTotal)}</p>
@@ -751,10 +760,10 @@ export default function ClientCompras() {
                     </div>
 
                     <section>
-                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Forma de Pago</h4>
+                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-2">Forma de Pago</h4>
                        <div className="grid grid-cols-2 gap-3">
                          {PAYMENT_OPTIONS.slice(0, 3).map(opt => (
-                           <button key={opt.id} onClick={() => setPaymentMethod(opt.id)} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all", paymentMethod === opt.id ? "bg-primary/5 border-primary text-primary" : "border-outline/10 text-secondary")}>
+                           <button key={opt.id} onClick={() => setPaymentMethod(opt.id)} className={cn("flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition-all", paymentMethod === opt.id ? "bg-primary/5 border-primary text-primary" : "border-outline/10 text-secondary")}>
                              {opt.icon}
                              <span className="text-[10px] font-black uppercase tracking-wider">{opt.label}</span>
                            </button>
@@ -763,33 +772,33 @@ export default function ClientCompras() {
                     </section>
 
                     <section>
-                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-4">Ubicación</h4>
+                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-2">Ubicación</h4>
                        <div className="flex flex-col gap-3">
                           <div className="relative">
-                            <Phone className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
-                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Número de teléfono..." className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" />
+                            <Phone className="absolute top-3 left-4 w-5 h-5 text-secondary/40" />
+                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Número de teléfono..." className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" />
                           </div>
                           <div className="relative">
-                            <MapPin className="absolute top-4 left-4 w-5 h-5 text-secondary/40" />
-                            <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Dirección de entrega..." rows={2} className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-4 pl-12 pr-14 text-sm font-bold text-on-surface outline-none resize-none" />
-                            <button onClick={getGPS} disabled={gpsLoading} className="absolute top-3.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg">
+                            <MapPin className="absolute top-3 left-4 w-5 h-5 text-secondary/40" />
+                            <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Dirección de entrega..." rows={2} className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-14 text-sm font-bold text-on-surface outline-none resize-none" />
+                            <button onClick={getGPS} disabled={gpsLoading} className="absolute top-2.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg">
                                {gpsLoading ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Navigation className="w-4 h-4" />}
                             </button>
                           </div>
-                          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Indicaciones adicionales..." rows={2} className="w-full bg-surface-container rounded-2xl p-4 text-xs font-bold text-on-surface outline-none resize-none" />
+                          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Indicaciones adicionales..." rows={2} className="w-full bg-surface-container rounded-2xl p-3 text-xs font-bold text-on-surface outline-none resize-none" />
                        </div>
                     </section>
                   </>
                 )}
               </div>
 
-              <div className="px-6 py-6 bg-surface-container-low border-t border-outline/10 flex flex-col gap-3">
+              <div className="px-6 py-4 bg-surface-container-low border-t border-outline/10 flex flex-col gap-3">
                 {checkoutStep === 1 ? (
                   <>
                     <button 
                       onClick={() => setCheckoutStep(2)} 
                       disabled={cart.length === 0}
-                      className="w-full py-5 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
                     >
                       Continuar con el pedido <ChevronRight className="w-5 h-5" />
                     </button>
@@ -805,16 +814,24 @@ export default function ClientCompras() {
                     <button 
                       onClick={handlePlaceOrder} 
                       disabled={!address.trim() || cart.length === 0 || placing} 
-                      className="w-full py-5 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
                     >
                       {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> Confirmar Pedido </>}
                     </button>
-                    <button 
-                      onClick={() => setCheckoutStep(1)} 
-                      className="text-center text-[10px] text-secondary font-black uppercase tracking-widest mt-1 hover:text-primary transition-colors"
-                    >
-                      Volver
-                    </button>
+                    <div className="flex justify-between items-center mt-1">
+                      <button 
+                        onClick={() => setCheckoutStep(1)} 
+                        className="text-[10px] text-secondary font-black uppercase tracking-widest hover:text-primary transition-colors"
+                      >
+                        Volver
+                      </button>
+                      <button 
+                        onClick={() => { setShowCheckout(false); setCheckoutStep(1); }} 
+                        className="text-[10px] text-red-500 font-black uppercase tracking-widest hover:text-red-700 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                     {!address.trim() && cart.length > 0 && <p className="text-center text-[10px] text-primary font-black uppercase tracking-widest mt-1 animate-pulse">Falta tu dirección de entrega</p>}
                   </>
                 )}
