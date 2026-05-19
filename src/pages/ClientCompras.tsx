@@ -472,7 +472,8 @@ export default function ClientCompras() {
                     transition={{
                       duration: 3.5,
                       repeat: Infinity,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
+                      delay: (product.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 20) / 10
                     }}
                   >
                     {product.imageUrl ? (
