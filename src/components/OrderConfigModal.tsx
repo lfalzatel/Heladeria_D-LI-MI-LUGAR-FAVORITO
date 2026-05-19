@@ -18,7 +18,7 @@ interface OrderConfigModalProps {
 }
 
 // Frutas por defecto y específicas para Obleas
-const FRUTAS_DEFAULT = ['Fresa', 'Mango', 'Papaya', 'Manzana', 'Banano', 'Uva'];
+const FRUTAS_DEFAULT = ['Fresa', 'Mango', 'Papaya', 'Manzana', 'Banano', 'Uva', 'Kiwi'];
 const OBLEA_FRUITS = ['Fresa', 'Mango', 'Durazno'];
 
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -199,7 +199,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
         const cat = product.category?.toLowerCase();
-        setSelectedFrutas(cat === 'ensaladas' || cat === 'salpicon' ? fruitOptions : []);
+        let fruits = cat === 'ensaladas' || cat === 'salpicon' ? [...fruitOptions] : [];
+        const defVariant = product.variants?.length === 1 ? product.variants[0] : null;
+        if (defVariant && defVariant.label.toLowerCase().includes('mini')) {
+          fruits = fruits.filter(f => f.toLowerCase() !== 'kiwi');
+        }
+        setSelectedFrutas(fruits);
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
@@ -695,7 +700,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                           )}
                         >
                           <span className="text-sm">
-                            {fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}
+                            {fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : fruta === 'Kiwi' ? '🥝' : '🍍'}
                           </span>
                           <span className="text-[11px] font-black leading-none">{fruta}</span>
                           {selectedFrutas.includes(fruta) && (
