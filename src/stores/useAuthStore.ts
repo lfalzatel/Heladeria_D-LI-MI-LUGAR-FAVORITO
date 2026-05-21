@@ -56,10 +56,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
             if (docSnap.exists()) {
               const data = docSnap.data();
               
-              // Sincronizar imagen si falta en Firestore pero existe en Google
-              if (!data.imageUrl && user.photoURL) {
-                setDoc(userRef, { imageUrl: user.photoURL }, { merge: true }).catch(console.error);
-              }
+              // Usar imagen de Google si falta en Firestore localmente (sin forzar setDoc para evitar loops optimistas)
+              // if (!data.imageUrl && user.photoURL) {
+              //   setDoc(userRef, { imageUrl: user.photoURL }, { merge: true }).catch(console.error);
+              // }
 
               set({ 
                 profile: { 

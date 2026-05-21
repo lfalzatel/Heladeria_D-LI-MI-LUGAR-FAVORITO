@@ -235,11 +235,11 @@
       "id": "adicion-helado",
       "name": "Adición Helado",
       "category": "adiciones",
-      "description": "Una bola adicional de helado Mimo's al sabor que prefieras.",
+      "description": "Varias bolas adicionales de helado Mimo's al sabor que prefieras.",
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1576506295286-5cda18df43e7?auto=format&fit=crop&q=80&w=500",
+      "imageUrl": "https://images.unsplash.com/photo-1563805042-7684c8e9e5cb?auto=format&fit=crop&q=80&w=500",
       "variants": [{ "label": "Helado", "price": 3000, "scoops": 1 }]
     },
     {
@@ -290,22 +290,22 @@
       "id": "adicion-cono",
       "name": "Adición Cono",
       "category": "adiciones",
-      "description": "Un cono extra.",
+      "description": "Un cono de galleta extra.",
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/vaso-cono-1.jpg",
+      "imageUrl": "https://images.unsplash.com/photo-1582315183403-122e23072ce1?auto=format&fit=crop&q=80&w=500",
       "variants": [{ "label": "Cono", "price": 1000 }]
     },
     {
       "id": "adicion-cucurucho",
       "name": "Adición Cucurucho",
       "category": "adiciones",
-      "description": "Un cucurucho extra.",
+      "description": "Un barquillo o cucurucho extra.",
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&q=80&w=500",
+      "imageUrl": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&q=80&w=500",
       "variants": [{ "label": "Cucurucho", "price": 1000 }]
     }
   ],
