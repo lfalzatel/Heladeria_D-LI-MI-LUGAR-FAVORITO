@@ -19,6 +19,7 @@ import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import OrderConfigModal from '../components/OrderConfigModal';
 import CartDrawer from '../components/CartDrawer';
+import ProductDetailsCarousel from '../components/ProductDetailsCarousel';
 import { toast } from 'sonner';
 import { useLocation } from 'react-router-dom';
 
@@ -175,63 +176,41 @@ export default function POS() {
         )}
       </AnimatePresence>
 
-      {/* Product Details Modal (Image & Info) */}
-      <AnimatePresence>
-        {detailsProduct && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setDetailsProduct(null)}
-              className="absolute inset-0 bg-on-surface/60 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm bg-white rounded-[2.5rem] overflow-hidden shadow-2xl"
-            >
-              <div className="relative w-full aspect-square bg-surface-container-low">
-                {detailsProduct.imageUrl ? (
-                  <img src={getAssetUrl(detailsProduct.imageUrl)} alt={detailsProduct.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-secondary/30">
-                    <IceCream className="w-24 h-24" />
-                  </div>
-                )}
-                <button
-                  onClick={() => setDetailsProduct(null)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-surface-container rounded-lg text-[9px] font-black uppercase tracking-widest text-secondary">
-                    {detailsProduct.category}
-                  </span>
-                </div>
-                <h3 className="text-2xl font-headline font-black text-on-surface leading-tight mb-2">
-                  {detailsProduct.name}
-                </h3>
-                <p className="text-sm text-secondary font-medium leading-relaxed mb-6">
-                  {detailsProduct.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Precio Base</p>
-                  <p className="text-xl font-black text-primary">
-                    {detailsProduct.variants && detailsProduct.variants.length > 1 
-                      ? `Desde ${formatCurrency(Math.min(...detailsProduct.variants.map(v => v.price)))}` 
-                      : formatCurrency(detailsProduct.variants?.[0]?.price || detailsProduct.basePrice || 0)}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ProductDetailsCarousel
+        products={filteredProducts}
+        initialProductId={detailsProduct?.id || null}
+        isOpen={!!detailsProduct}
+        onClose={() => setDetailsProduct(null)}
+        onAddToCart={(product) => {
+          setDetailsProduct(null);
+          const isComplex = (product.variants && product.variants.length > 1) || 
+                            product.requiresFlavors || 
+                            product.requiresFruitChoice || 
+                            product.requiresSauces || 
+                            product.requiresToppings || 
+                            product.requiresSalpiconBase;
+          if (isComplex) {
+            setSelectedProduct(product);
+          } else {
+            const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
+            const item: CartItem = {
+              id: Math.random().toString(36).substr(2, 9),
+              productId: product.id,
+              productName: product.name,
+              variantLabel: product.variants?.[0]?.label || '',
+              description: '',
+              flavors: [],
+              fruitChoices: [],
+              additions: [],
+              quantity: 1,
+              unitPrice: minPrice,
+              subtotal: minPrice,
+            };
+            handleAddItem(item);
+            toast.success(`${product.name} agregado`);
+          }
+        }}
+      />
       
       <CartDrawer 
         isOpen={isCartOpen} 
