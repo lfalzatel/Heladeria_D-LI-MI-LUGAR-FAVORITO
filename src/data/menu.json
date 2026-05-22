@@ -180,14 +180,16 @@
       "id": "oblea-tradicional",
       "name": "Oblea Tradicional",
       "category": "obleas",
-      "description": "Dos crujientes obleas de maíz unidas con arequipe, crema y queso. La versión con fruta añade fresa, mango o durazno fresco. Sin salsas líquidas incluidas — solo los ingredientes clásicos que la hacen irresistible.",
+      "description": "Dos crujientes obleas de maíz unidas con arequipe, crema y queso. Sin salsas líquidas incluidas — solo los ingredientes clásicos que la hacen irresistible.",
       "requiresFlavors": false,
-      "requiresFruitChoice": true,
+      "requiresFruitChoice": false,
+      "requiresSauces": false,
+      "requiresToppings": false,
       "isActive": true,
       "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
       "variants": [
-        { "label": "Arequipe, crema y queso", "price": 6000 },
-        { "label": "Arequipe, crema, queso y fruta", "price": 9000 }
+        { "label": "Arequipe, crema y queso", "price": 6000, "hasFruit": false },
+        { "label": "Arequipe, crema, queso y fruta", "price": 9000, "hasFruit": true }
       ]
     },
     {

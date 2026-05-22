@@ -73,9 +73,9 @@ export default function ProductDetailsCarousel({
 
   const variants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
+      x: direction > 0 ? '100%' : '-100%',
       opacity: 0,
-      scale: 0.9,
+      scale: 0.95,
     }),
     center: {
       zIndex: 1,
@@ -85,9 +85,9 @@ export default function ProductDetailsCarousel({
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 300 : -300,
+      x: direction < 0 ? '100%' : '-100%',
       opacity: 0,
-      scale: 0.9,
+      scale: 0.95,
     })
   };
 
@@ -125,7 +125,7 @@ export default function ProductDetailsCarousel({
             </button>
           )}
 
-          <div className="relative w-full max-h-[95vh] overflow-hidden rounded-[2.5rem] shadow-2xl bg-white">
+          <div className="relative w-full max-h-[95vh] grid overflow-hidden rounded-[2.5rem] shadow-2xl bg-white">
             <AnimatePresence initial={false} custom={direction}>
               <motion.div
                 key={currentIndex}
@@ -135,12 +135,12 @@ export default function ProductDetailsCarousel({
                 animate="center"
                 exit="exit"
                 transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  x: { type: "spring", stiffness: 250, damping: 25 },
                   opacity: { duration: 0.2 }
                 }}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={1}
+                dragElastic={0.8}
                 onDragEnd={(e, { offset, velocity }) => {
                   const swipe = swipePower(offset.x, velocity.x);
                   if (swipe < -swipeConfidenceThreshold) {
@@ -149,7 +149,7 @@ export default function ProductDetailsCarousel({
                     handlePrev();
                   }
                 }}
-                className="w-full max-h-[95vh] overflow-y-auto flex flex-col [&::-webkit-scrollbar]:hidden pb-8"
+                className="w-full max-h-[95vh] col-start-1 row-start-1 overflow-y-auto flex flex-col [&::-webkit-scrollbar]:hidden pb-8"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {/* Image Area */}

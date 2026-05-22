@@ -78,7 +78,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   // Base options
   if (maxScoops > 0) steps.push('flavors');
   
-  const hasBaseFruits = product.category === 'ensaladas' || isOblea;
+  const variantRequiresFruit = selectedVariant?.hasFruit ?? false;
+  const hasBaseFruits = product.requiresFruitChoice || variantRequiresFruit || product.category === 'ensaladas';
+  
   if (hasBaseFruits) steps.push('fruits');
   
   if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
@@ -157,8 +159,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setExtraFlavors(initialFlavors.slice(bScoops));
 
         const initialFruits = initialItem.fruitChoices || [];
-        const hasBaseFruits = product.category === 'ensaladas' || isSalpicon || isOblea;
-        const bFruitsCount = hasBaseFruits ? (isOblea ? 1 : 99) : 0;
+        const baseHasFruits = product.category === 'ensaladas' || isSalpicon || product.requiresFruitChoice || variant?.hasFruit;
+        const bFruitsCount = baseHasFruits ? ((product.requiresFruitChoice || isOblea) ? 1 : 99) : 0;
         setSelectedFrutas(initialFruits.slice(0, bFruitsCount));
         setExtraFrutas(initialFruits.slice(bFruitsCount));
 
@@ -235,8 +237,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
     if (effectiveCurrentStepType === 'fruits' && selectedFrutas.length === 0) {
       // Fruits are optional for some products (like salpicón selection already determined by variant)
-      // Only enforce for obleas
-      if (product.category === 'obleas') {
+      if (product.requiresFruitChoice || selectedVariant?.hasFruit) {
         toast.error('Selecciona una fruta');
         return;
       }
