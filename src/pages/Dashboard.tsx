@@ -74,21 +74,61 @@ export default function Dashboard() {
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
 
-  // Generador de PDF
-  const handleGeneratePDF = async () => {
+  // Generador de Exportaciones
+  const handleExport = async (format: 'pdf' | 'excel' | 'image') => {
     setIsGeneratingPDF(true);
-    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
+    // Solución al uso horario de Colombia
+    const dateStr = selectedDate 
+      ? selectedDate.toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) 
+      : new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota' });
     const sellerName = profile?.name || 'Vendedor';
     
-    const success = await generateDailyReportPDF('dashboard-pdf-container', sellerName, dateStr);
-    
-    setIsGeneratingPDF(false);
-    if (success) {
-      alert('Reporte de cierre de caja descargado con éxito.');
-    } else {
-      alert('Error generando PDF. Por favor ejecuta: npm install jspdf html2canvas');
+    try {
+      if (format === 'pdf') {
+        const success = await generateDailyReportPDF('dashboard-pdf-container', sellerName, dateStr);
+        if (success) toast.success('PDF descargado con éxito');
+        else toast.error('Error generando PDF. Instala jspdf y html2canvas.');
+      } else if (format === 'image') {
+        const html2canvas = (await import('html2canvas')).default;
+        const element = document.getElementById('dashboard-pdf-container');
+        if (element) {
+          const canvas = await html2canvas(element, { scale: 2 });
+          const link = document.createElement('a');
+          link.download = `Cierre_${sellerName}_${dateStr.replace(/\//g, '-')}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          toast.success('Imagen descargada con éxito');
+        }
+      } else if (format === 'excel') {
+        // Basic CSV as fallback for Excel without huge libraries
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Vendedor,Mesa/Pedido,Metodo de Pago,Total,Fecha\n";
+        
+        const sellerSales = sales.filter(s => s.sellerId === profile?.uid);
+        sellerSales.forEach(s => {
+          const sDate = toDateS(s.timestamp || s.updatedAt || s.createdAt);
+          const rowDateStr = sDate ? sDate.toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : dateStr;
+          if (rowDateStr === dateStr) {
+            csvContent += `"${s.sellerName}","${s.tableName}","${s.paymentMethod}",${s.total},"${rowDateStr}"\n`;
+          }
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Cierre_${sellerName}_${dateStr.replace(/\//g, '-')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast.success('CSV (Excel) descargado con éxito');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Ocurrió un error al exportar');
     }
+    setIsGeneratingPDF(false);
   };
   const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
   const [historyFilter, setHistoryFilter] = useState<'today' | 'week' | 'month'>('today');
@@ -257,11 +297,22 @@ export default function Dashboard() {
     if (profile) {
       setHeader({
         title: `Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`,
-        subtitle: profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Heladería hoy"
+        subtitle: profile?.role === 'vendedor' ? "Resumen de tu actividad de hoy" : "Estado de la Heladería hoy",
+        rightExtra: showExportOptions ? (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-2 bg-surface-container-high p-1 rounded-xl shadow-inner border border-outline/10"
+          >
+            <button onClick={() => handleExport('pdf')} className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-lg transition-colors text-[10px] font-black uppercase shadow-sm flex items-center gap-1">PDF</button>
+            <button onClick={() => handleExport('excel')} className="px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-500 hover:text-white rounded-lg transition-colors text-[10px] font-black uppercase shadow-sm flex items-center gap-1">Excel</button>
+            <button onClick={() => handleExport('image')} className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white rounded-lg transition-colors text-[10px] font-black uppercase shadow-sm flex items-center gap-1">IMG</button>
+          </motion.div>
+        ) : undefined
       });
     }
     return () => clearHeader();
-  }, [profile, setHeader, clearHeader]);
+  }, [profile, setHeader, clearHeader, showExportOptions, selectedDate, sales]);
 
   return (
     <>
@@ -363,11 +414,13 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={handleGeneratePDF}
-                      disabled={isGeneratingPDF}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-full text-[10px] font-black uppercase shadow-sm hover:scale-105 active:scale-95 transition-all no-print disabled:opacity-50"
+                      onClick={() => setShowExportOptions(!showExportOptions)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase shadow-sm transition-all no-print",
+                        showExportOptions ? "bg-surface-container-high text-on-surface ring-2 ring-primary" : "bg-primary text-white hover:scale-105 active:scale-95"
+                      )}
                     >
-                      <Download className="w-3.5 h-3.5" /> {isGeneratingPDF ? 'Generando...' : 'Cerrar Caja'}
+                      <Download className="w-3.5 h-3.5" /> Cerrar Caja
                     </button>
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/5 rounded-full ring-1 ring-success/20">
                         <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />

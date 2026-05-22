@@ -23,6 +23,7 @@ interface TableCart {
   items: CartItem[];
   openedAt: string | null;
   note: string;
+  isLocked?: boolean;
 }
 
 interface TableCartState {
@@ -39,6 +40,7 @@ interface TableCartState {
   removeItem: (table: string, itemId: string) => Promise<void>;
   clearCart: (table: string) => Promise<void>;
   updateNote: (table: string, note: string) => Promise<void>;
+  toggleLock: (table: string, locked: boolean) => Promise<void>;
   getTotal: (table: string) => number;
   getItemCount: (table: string) => number;
 }
@@ -47,6 +49,7 @@ const initialTableCart: TableCart = {
   items: [],
   openedAt: null,
   note: '',
+  isLocked: false,
 };
 
 export const useTableCartStore = create<TableCartState>()((set, get) => ({
@@ -176,6 +179,15 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     if (!tableCart) return;
 
     const newCart = { ...tableCart, note };
+    const docRef = doc(db, 'tables', table);
+    await setDoc(docRef, { currentCart: newCart }, { merge: true });
+  },
+
+  toggleLock: async (table, locked) => {
+    const tableCart = get().carts[table];
+    if (!tableCart) return;
+
+    const newCart = { ...tableCart, isLocked: locked };
     const docRef = doc(db, 'tables', table);
     await setDoc(docRef, { currentCart: newCart }, { merge: true });
   },

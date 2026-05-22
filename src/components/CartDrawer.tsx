@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -18,7 +18,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps) {
-  const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote } = useTableCartStore();
+  const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote, toggleLock } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta'>('Efectivo');
@@ -148,8 +148,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                           {(item.includedFruits || item.fruitChoices || []).map((f, i) => (
                             <button 
                               key={i} 
-                              onClick={() => onEdit?.(item, 4)}
-                              className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 hover:bg-success/10 transition-colors"
+                              onClick={() => !cart?.isLocked && onEdit?.(item, 4)}
+                              className={cn("text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 transition-colors", !cart?.isLocked ? "hover:bg-success/10 cursor-pointer" : "cursor-default")}
                             >
                               {f}
                             </button>
@@ -165,24 +165,24 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                         <div className="flex flex-col gap-0.5 mt-0.5">
                           {item.extraFruits && item.extraFruits.length > 0 && (
                             <button 
-                              onClick={() => onEdit?.(item, 4)}
-                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                              onClick={() => !cart?.isLocked && onEdit?.(item, 4)}
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               adición de fruta: [{item.extraFruits.join(', ')}]
                             </button>
                           )}
                           {item.extraFlavors && item.extraFlavors.length > 0 && (
                             <button 
-                              onClick={() => onEdit?.(item, 2)} // Assuming 2 is flavors
-                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                              onClick={() => !cart?.isLocked && onEdit?.(item, 2)} // Assuming 2 is flavors
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               adición de helado: [{item.extraFlavors.join(', ')}]
                             </button>
                           )}
                           {item.extraSauces && item.extraSauces.length > 0 && (
                             <button 
-                              onClick={() => onEdit?.(item, 3)} // Assuming 3 is additions
-                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                              onClick={() => !cart?.isLocked && onEdit?.(item, 3)} // Assuming 3 is additions
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               adición de salsa: [{item.extraSauces.join(', ')}]
                             </button>
@@ -197,8 +197,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                           ).map((a, i) => (
                             <button 
                               key={i} 
-                              onClick={() => onEdit?.(item, 3)}
-                              className="text-[10px] text-orange-600 font-bold hover:underline text-left"
+                              onClick={() => !cart?.isLocked && onEdit?.(item, 3)}
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               +{a}
                             </button>
@@ -213,17 +213,19 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       </div>
                       
                       <div className="flex items-center gap-4 mt-3">
-                        <div className="flex items-center bg-surface-container-low rounded-full px-2 py-1 ring-1 ring-outline/10">
+                        <div className={cn("flex items-center bg-surface-container-low rounded-full px-2 py-1 ring-1 ring-outline/10", cart?.isLocked && "opacity-50 pointer-events-none")}>
                           <button 
-                            onClick={() => updateQuantity(activeTable, item.id, -1)}
-                            className="p-1 text-primary hover:bg-primary/10 rounded-full"
+                            onClick={() => !cart?.isLocked && updateQuantity(activeTable, item.id, -1)}
+                            className="p-1 text-primary hover:bg-primary/10 rounded-full disabled:opacity-50"
+                            disabled={cart?.isLocked}
                           >
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
                           <button 
-                            onClick={() => updateQuantity(activeTable, item.id, 1)}
-                            className="p-1 text-primary hover:bg-primary/10 rounded-full"
+                            onClick={() => !cart?.isLocked && updateQuantity(activeTable, item.id, 1)}
+                            className="p-1 text-primary hover:bg-primary/10 rounded-full disabled:opacity-50"
+                            disabled={cart?.isLocked}
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -242,20 +244,24 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       >
                         {item.prepared ? <Check className="w-5 h-5" /> : <CheckSquare className="w-4 h-4" />}
                       </button>
-                      <button 
-                        onClick={() => onEdit?.(item)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors"
-                        title="Editar pedido"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => removeItem(activeTable, item.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-outline hover:bg-red-500 hover:text-white transition-colors"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {!cart?.isLocked && (
+                        <>
+                          <button 
+                            onClick={() => onEdit?.(item)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors"
+                            title="Editar pedido"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => removeItem(activeTable, item.id)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-outline hover:bg-red-500 hover:text-white transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))
@@ -272,8 +278,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                     rows={2}
                     placeholder="Escribe aquí cualquier nota adicional para toda la orden..."
                     value={cart.note || ''}
+                    readOnly={cart?.isLocked}
                     onChange={(e) => updateNote(activeTable, e.target.value)}
-                    className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 resize-none transition-all"
+                    className={cn("w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 resize-none transition-all", cart?.isLocked && "opacity-60 cursor-not-allowed")}
                   />
                 </div>
               )}
@@ -281,6 +288,36 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
 
             {/* Footer / Checkout */}
             <footer className="p-4 sm:p-8 bg-surface-container-lowest border-t border-surface-container flex flex-col gap-4 sm:gap-6">
+              
+              {/* Lock / Unlock UI */}
+              {cart?.items && cart.items.length > 0 && (
+                cart?.isLocked ? (
+                  <div className="flex items-center justify-between p-3 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+                    <div className="flex items-center gap-2 text-orange-600">
+                      <Lock className="w-5 h-5" />
+                      <span className="font-bold text-sm">Pedido Bloqueado</span>
+                    </div>
+                    {(profile?.role === 'admin' || profile?.role === 'propietario') && (
+                      <button 
+                        onClick={() => toggleLock(activeTable, false)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-white text-orange-600 text-xs font-bold rounded-full shadow-sm hover:bg-orange-50 transition-colors"
+                      >
+                        <Unlock className="w-3 h-3" />
+                        Desbloquear
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => toggleLock(activeTable, true)}
+                    className="w-full py-3 rounded-2xl bg-surface-container border-2 border-primary/20 text-primary font-bold text-sm hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    Tomar Pedido (Bloquear)
+                  </button>
+                )
+              )}
+
               <div className="flex justify-between items-center">
                 <span className="text-secondary font-semibold">Total del Pedido</span>
                 <span className="text-3xl font-black text-primary">{formatCurrency(total)}</span>
