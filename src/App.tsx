@@ -11,7 +11,6 @@ import POS from './pages/POS';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Management from './pages/Management';
-import Reports from './pages/Reports';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import ClientCompras from './pages/ClientCompras';
@@ -182,12 +181,6 @@ export default function App() {
           <Route path="/admin/management" element={
             (profile?.role === 'admin' || profile?.role === 'propietario') 
               ? <Management /> 
-              : <Navigate to="/login" />
-          } />
-
-          <Route path="/admin/reports" element={
-            (profile?.role === 'admin' || profile?.role === 'propietario') 
-              ? <Reports /> 
               : <Navigate to="/login" />
           } />
 

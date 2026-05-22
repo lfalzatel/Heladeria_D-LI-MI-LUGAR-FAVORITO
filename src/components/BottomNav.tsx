@@ -170,12 +170,6 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               active={location.pathname === '/admin/management'} 
             />
             <NavItem 
-              to="/admin/reports" 
-              icon={<BarChart3 />} 
-              label="Reportes" 
-              active={location.pathname === '/admin/reports'} 
-            />
-            <NavItem 
               to="/cliente/pedidos"
               icon={<ShoppingCart />}
               label="Pedidos"

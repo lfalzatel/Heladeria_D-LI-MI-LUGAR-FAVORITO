@@ -1,12 +1,12 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-export async function generateDailyReportPDF(elementId: string, sellerName: string, dateStr: string) {
+export async function generateDailyReportPDF(elementId: string, sellerName: string, dateStr: string, previewOnly = false) {
   try {
     const element = document.getElementById(elementId);
     if (!element) {
       console.error('Elemento no encontrado para PDF:', elementId);
-      return false;
+      return { success: false };
     }
 
     // Ocultar botones o elementos que no deban salir en el PDF
@@ -24,6 +24,8 @@ export async function generateDailyReportPDF(elementId: string, sellerName: stri
     noPrintElements.forEach(el => (el as HTMLElement).style.display = '');
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pngData = canvas.toDataURL('image/png'); // Para exportar solo la imagen
+    
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -49,10 +51,20 @@ export async function generateDailyReportPDF(elementId: string, sellerName: stri
     // Insertar la captura del canvas
     pdf.addImage(imgData, 'JPEG', 15, 55, pdfWidth - 30, (pdfWidth - 30) * (canvas.height / canvas.width));
 
-    pdf.save(`Cierre_Caja_${dateStr.replace(/\//g, '-')}_${sellerName}.pdf`);
-    return true;
+    if (!previewOnly) {
+      pdf.save(`Cierre_Caja_${dateStr.replace(/\//g, '-')}_${sellerName}.pdf`);
+    }
+
+    const blobUrl = URL.createObjectURL(pdf.output('blob'));
+
+    return { 
+      success: true, 
+      pdf, 
+      blobUrl,
+      imgData: pngData 
+    };
   } catch (error) {
     console.error('Error generando PDF:', error);
-    return false;
+    return { success: false };
   }
 }
