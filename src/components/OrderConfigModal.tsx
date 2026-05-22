@@ -62,6 +62,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   if (isSalpicon) steps.push('salpiconBase');
   
   const getMaxScoops = () => {
+    if (selectedVariant?.steps) {
+      const flavorStep = selectedVariant.steps.find((s: any) => s.type === 'flavors');
+      if (flavorStep && flavorStep.scoops !== undefined) {
+         return flavorStep.scoops;
+      }
+    }
     let base = 0;
     if (selectedVariant?.scoops !== undefined) base = selectedVariant.scoops;
     else {
@@ -76,18 +82,22 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const maxScoops = getMaxScoops();
 
   // Base options
-  if (maxScoops > 0) steps.push('flavors');
-  
-  const variantRequiresFruit = selectedVariant?.hasFruit ?? false;
-  const hasBaseFruits = product.requiresFruitChoice || variantRequiresFruit || product.category === 'ensaladas';
-  
-  if (hasBaseFruits) steps.push('fruits');
-  
-  if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
-  if (product.requiresToppings || isBasicIceCream) steps.push('includedToppings');
-  
-  // Additions intent
-  steps.push('additions');
+  if (selectedVariant?.steps && selectedVariant.steps.length > 0) {
+    selectedVariant.steps.forEach((s: any) => steps.push(s.type));
+  } else {
+    if (maxScoops > 0) steps.push('flavors');
+    
+    const variantRequiresFruit = selectedVariant?.hasFruit ?? false;
+    const hasBaseFruits = product.requiresFruitChoice || variantRequiresFruit || product.category === 'ensaladas';
+    
+    if (hasBaseFruits) steps.push('fruits');
+    
+    if (product.requiresSauces || isBasicIceCream) steps.push('sauces');
+    if (product.requiresToppings || isBasicIceCream) steps.push('includedToppings');
+    
+    // Additions intent
+    steps.push('additions');
+  }
 
   // Extras selections
   const hasFruitAdd = selectedAdditions.some(a => a.name.toLowerCase().includes('fruta'));

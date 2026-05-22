@@ -44,6 +44,7 @@ export interface ProductVariant {
   hasIceCream?: boolean;
   fruits?: string[];
   recipe?: RecipeIngredient[];
+  steps?: { type: 'flavors' | 'fruits' | 'additions' | 'sauces', scoops?: number }[];
 }
 
 export interface IceCreamFlavor {
