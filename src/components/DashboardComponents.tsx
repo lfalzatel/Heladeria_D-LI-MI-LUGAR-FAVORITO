@@ -279,6 +279,7 @@ export function CalendarModal({
   onSelectDate: (date: Date) => void 
 }) {
   const [viewDate, setViewDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'days' | 'months'>('days');
   
   if (!isOpen) return null;
 
@@ -287,7 +288,10 @@ export function CalendarModal({
   
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthName = viewDate.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+  
+  const headerTitle = viewMode === 'days' 
+    ? viewDate.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+    : viewDate.getFullYear().toString();
 
   // Pre-calculate sales per day
   const salesByDay: Record<number, number> = {};
@@ -302,9 +306,13 @@ export function CalendarModal({
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const blanks = Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }, (_, i) => i); // Start on Monday
 
-  const changeMonth = (offset: number) => {
+  const changeTime = (offset: number) => {
     const newDate = new Date(viewDate);
-    newDate.setMonth(viewDate.getMonth() + offset);
+    if (viewMode === 'months') {
+      newDate.setFullYear(viewDate.getFullYear() + offset);
+    } else {
+      newDate.setMonth(viewDate.getMonth() + offset);
+    }
     setViewDate(newDate);
   };
 
@@ -320,44 +328,73 @@ export function CalendarModal({
         className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
       >
         <div className="p-6 bg-surface-container-low flex items-center justify-between border-b border-outline/10">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-surface rounded-full transition-all text-secondary"><ChevronLeft /></button>
-          <h3 className="font-black text-xs uppercase tracking-widest text-on-surface capitalize">{monthName}</h3>
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-surface rounded-full transition-all text-secondary"><ChevronRight /></button>
+          <button onClick={() => changeTime(-1)} className="p-2 hover:bg-surface rounded-full transition-all text-secondary"><ChevronLeft /></button>
+          <button 
+            onClick={() => setViewMode(viewMode === 'days' ? 'months' : 'days')} 
+            className="font-black text-xs uppercase tracking-widest text-on-surface capitalize hover:text-primary transition-colors px-4 py-1 rounded-full hover:bg-surface"
+          >
+            {headerTitle}
+          </button>
+          <button onClick={() => changeTime(1)} className="p-2 hover:bg-surface rounded-full transition-all text-secondary"><ChevronRight /></button>
         </div>
 
-        <div className="p-6">
-          <div className="grid grid-cols-7 gap-1 mb-4">
-            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-              <div key={`${d}-${i}`} className="text-center text-[10px] font-black text-secondary/40 py-2">{d}</div>
-            ))}
-            {blanks.map(i => <div key={`b-${i}`} />)}
-            {days.map(d => {
-              const count = salesByDay[d] || 0;
-              const hasActivity = count > 0;
-              return (
-                <button 
-                  key={d} 
+        <div className="p-6 min-h-[320px]">
+          {viewMode === 'days' ? (
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+                <div key={`${d}-${i}`} className="text-center text-[10px] font-black text-secondary/40 py-2">{d}</div>
+              ))}
+              {blanks.map(i => <div key={`b-${i}`} />)}
+              {days.map(d => {
+                const count = salesByDay[d] || 0;
+                const hasActivity = count > 0;
+                return (
+                  <button 
+                    key={d} 
+                    onClick={() => {
+                      const sel = new Date(year, month, d);
+                      onSelectDate(sel);
+                      onClose();
+                    }}
+                    className={cn(
+                      "relative h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 transition-all group border border-transparent",
+                      hasActivity ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-surface"
+                    )}
+                  >
+                    <span className={cn("text-xs font-black", hasActivity ? "text-primary" : "text-secondary")}>{d}</span>
+                    {hasActivity && (
+                      <div className="flex flex-col items-center">
+                        <div className="w-1 h-1 bg-primary rounded-full mb-0.5 shadow-[0_0_8px_rgba(179,0,105,0.6)]" />
+                        <span className="text-[7px] font-black text-primary/60">{count}</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((m, i) => (
+                <button
+                  key={m}
                   onClick={() => {
-                    const sel = new Date(year, month, d);
-                    onSelectDate(sel);
-                    onClose();
+                    const newDate = new Date(viewDate);
+                    newDate.setMonth(i);
+                    setViewDate(newDate);
+                    setViewMode('days');
                   }}
                   className={cn(
-                    "relative h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 transition-all group border border-transparent",
-                    hasActivity ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-surface"
+                    "h-14 rounded-2xl flex items-center justify-center font-black text-sm transition-all border",
+                    i === month 
+                      ? "bg-primary text-white border-primary shadow-md shadow-primary/20" 
+                      : "bg-white text-secondary border-outline/10 hover:bg-surface hover:text-primary hover:border-primary/30"
                   )}
                 >
-                  <span className={cn("text-xs font-black", hasActivity ? "text-primary" : "text-secondary")}>{d}</span>
-                  {hasActivity && (
-                    <div className="flex flex-col items-center">
-                      <div className="w-1 h-1 bg-primary rounded-full mb-0.5 shadow-[0_0_8px_rgba(179,0,105,0.6)]" />
-                      <span className="text-[7px] font-black text-primary/60">{count}</span>
-                    </div>
-                  )}
+                  {m}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

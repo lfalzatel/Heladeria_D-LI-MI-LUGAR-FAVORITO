@@ -21,6 +21,7 @@ export default function ProductDetailsCarousel({
 }: ProductDetailsCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (isOpen && initialProductId) {
@@ -44,6 +45,7 @@ export default function ProductDetailsCarousel({
 
   const handleNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (isAnimating) return;
     if (currentIndex < products.length - 1) {
       setDirection(1);
       setCurrentIndex(prev => prev + 1);
@@ -52,6 +54,7 @@ export default function ProductDetailsCarousel({
 
   const handlePrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (isAnimating) return;
     if (currentIndex > 0) {
       setDirection(-1);
       setCurrentIndex(prev => prev - 1);
@@ -135,9 +138,11 @@ export default function ProductDetailsCarousel({
                 animate="center"
                 exit="exit"
                 transition={{
-                  x: { type: "spring", stiffness: 250, damping: 25 },
+                  x: { type: "spring", stiffness: 350, damping: 30 },
                   opacity: { duration: 0.2 }
                 }}
+                onAnimationStart={() => setIsAnimating(true)}
+                onAnimationComplete={() => setIsAnimating(false)}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.8}

@@ -151,8 +151,8 @@ export default function Dashboard() {
     };
   }, [profile, initialize]);
 
-  // Combined Activity
-  const combinedActivity = React.useMemo(() => {
+  // All Activity unfiltered by date (for calendar colors)
+  const allUnfilteredActivity = React.useMemo(() => {
     const items = [...sales];
     const salesPedidoIds = new Set(sales.map(s => s.pedidoId).filter(Boolean));
     
@@ -162,13 +162,19 @@ export default function Dashboard() {
       }
     });
 
-    return items
-      .filter(item => {
-        // Enforce Seller Role Filtering
-        if (profile?.role === 'vendedor' && item.sellerId !== profile.uid) {
-          return false;
-        }
+    return items.filter(item => {
+      // Enforce Seller Role Filtering
+      if (profile?.role === 'vendedor' && item.sellerId !== profile.uid) {
+        return false;
+      }
+      return true;
+    });
+  }, [sales, pedidosData, profile]);
 
+  // Combined Activity filtered
+  const combinedActivity = React.useMemo(() => {
+    return allUnfilteredActivity
+      .filter(item => {
         const timestamp = item.timestamp || item.updatedAt || item.createdAt;
         return isInPeriod(timestamp, dashboardFilter, selectedDate, selectedMonth);
       })
@@ -177,7 +183,7 @@ export default function Dashboard() {
         const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
         return tB - tA;
       });
-  }, [sales, pedidosData, dashboardFilter, selectedDate, profile]);
+  }, [allUnfilteredActivity, dashboardFilter, selectedDate, selectedMonth]);
 
   // ── COMPUTED METRICS ──
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
@@ -507,7 +513,7 @@ export default function Dashboard() {
       <CalendarModal 
         isOpen={showCalendar}
         onClose={() => setShowCalendar(false)}
-        allActivity={sales}
+        allActivity={allUnfilteredActivity}
         onSelectDate={(date) => {
           setSelectedDate(date);
           setDashboardFilter('today');
