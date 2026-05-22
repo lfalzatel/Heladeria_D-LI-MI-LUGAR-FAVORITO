@@ -17,6 +17,7 @@ export interface CartItem {
   unitPrice: number;
   subtotal: number;
   prepared?: boolean;
+  locked?: boolean;
 }
 
 interface TableCart {
@@ -90,8 +91,9 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     // Ensure we have a valid base for the current table
     const tableCart = carts[table] || { ...initialTableCart };
     
-    // Check if identical item already exists
+    // Check if identical item already exists AND is not locked
     const existingIndex = tableCart.items.findIndex(i => 
+      !i.locked &&
       i.productId === item.productId && 
       i.variantLabel === item.variantLabel && 
       JSON.stringify(i.flavors) === JSON.stringify(item.flavors) &&
@@ -187,7 +189,13 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     const tableCart = get().carts[table];
     if (!tableCart) return;
 
-    const newCart = { ...tableCart, isLocked: locked };
+    // Apply lock to all items in the cart
+    const newItems = tableCart.items.map(item => ({
+      ...item,
+      locked: locked
+    }));
+
+    const newCart = { ...tableCart, items: newItems, isLocked: locked };
     const docRef = doc(db, 'tables', table);
     await setDoc(docRef, { currentCart: newCart }, { merge: true });
   },

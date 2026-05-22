@@ -134,6 +134,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       )}>
                         {item.productName}
                         {item.variantLabel && <span className="text-xs text-primary ml-2 uppercase">({item.variantLabel})</span>}
+                        {item.locked && <Lock className="w-3.5 h-3.5 inline ml-2 mb-0.5 text-orange-500" />}
                       </h4>
                       
                       {/* Configuration Details */}
@@ -148,8 +149,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                           {(item.includedFruits || item.fruitChoices || []).map((f, i) => (
                             <button 
                               key={i} 
-                              onClick={() => !cart?.isLocked && onEdit?.(item, 4)}
-                              className={cn("text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 transition-colors", !cart?.isLocked ? "hover:bg-success/10 cursor-pointer" : "cursor-default")}
+                              onClick={() => !item.locked && onEdit?.(item, 4)}
+                              className={cn("text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 transition-colors", !item.locked ? "hover:bg-success/10 cursor-pointer" : "cursor-default")}
                             >
                               {f}
                             </button>
@@ -165,24 +166,24 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                         <div className="flex flex-col gap-0.5 mt-0.5">
                           {item.extraFruits && item.extraFruits.length > 0 && (
                             <button 
-                              onClick={() => !cart?.isLocked && onEdit?.(item, 4)}
-                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
+                              onClick={() => !item.locked && onEdit?.(item, 4)}
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !item.locked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               adición de fruta: [{item.extraFruits.join(', ')}]
                             </button>
                           )}
                           {item.extraFlavors && item.extraFlavors.length > 0 && (
                             <button 
-                              onClick={() => !cart?.isLocked && onEdit?.(item, 2)} // Assuming 2 is flavors
-                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
+                              onClick={() => !item.locked && onEdit?.(item, 2)} // Assuming 2 is flavors
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !item.locked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               adición de helado: [{item.extraFlavors.join(', ')}]
                             </button>
                           )}
                           {item.extraSauces && item.extraSauces.length > 0 && (
                             <button 
-                              onClick={() => !cart?.isLocked && onEdit?.(item, 3)} // Assuming 3 is additions
-                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
+                              onClick={() => !item.locked && onEdit?.(item, 3)} // Assuming 3 is additions
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !item.locked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               adición de salsa: [{item.extraSauces.join(', ')}]
                             </button>
@@ -197,8 +198,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                           ).map((a, i) => (
                             <button 
                               key={i} 
-                              onClick={() => !cart?.isLocked && onEdit?.(item, 3)}
-                              className={cn("text-[10px] text-orange-600 font-bold text-left", !cart?.isLocked ? "hover:underline cursor-pointer" : "cursor-default")}
+                              onClick={() => !item.locked && onEdit?.(item, 3)}
+                              className={cn("text-[10px] text-orange-600 font-bold text-left", !item.locked ? "hover:underline cursor-pointer" : "cursor-default")}
                             >
                               +{a}
                             </button>
@@ -213,19 +214,19 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       </div>
                       
                       <div className="flex items-center gap-4 mt-3">
-                        <div className={cn("flex items-center bg-surface-container-low rounded-full px-2 py-1 ring-1 ring-outline/10", cart?.isLocked && "opacity-50 pointer-events-none")}>
+                        <div className={cn("flex items-center bg-surface-container-low rounded-full px-2 py-1 ring-1 ring-outline/10", item.locked && "opacity-50 pointer-events-none")}>
                           <button 
-                            onClick={() => !cart?.isLocked && updateQuantity(activeTable, item.id, -1)}
+                            onClick={() => !item.locked && updateQuantity(activeTable, item.id, -1)}
                             className="p-1 text-primary hover:bg-primary/10 rounded-full disabled:opacity-50"
-                            disabled={cart?.isLocked}
+                            disabled={item.locked}
                           >
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
                           <button 
-                            onClick={() => !cart?.isLocked && updateQuantity(activeTable, item.id, 1)}
+                            onClick={() => !item.locked && updateQuantity(activeTable, item.id, 1)}
                             className="p-1 text-primary hover:bg-primary/10 rounded-full disabled:opacity-50"
-                            disabled={cart?.isLocked}
+                            disabled={item.locked}
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -244,7 +245,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                       >
                         {item.prepared ? <Check className="w-5 h-5" /> : <CheckSquare className="w-4 h-4" />}
                       </button>
-                      {!cart?.isLocked && (
+                      {!item.locked && (
                         <>
                           <button 
                             onClick={() => onEdit?.(item)}
@@ -291,7 +292,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
               
               {/* Lock / Unlock UI */}
               {cart?.items && cart.items.length > 0 && (
-                cart?.isLocked ? (
+                !cart.items.some(item => !item.locked) ? (
                   <div className="flex items-center justify-between p-3 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
                     <div className="flex items-center gap-2 text-orange-600">
                       <Lock className="w-5 h-5" />

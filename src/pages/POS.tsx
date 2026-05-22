@@ -412,7 +412,8 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
     if (isComplex) {
       onClick();
     } else {
-      if (totalQuantity === 0) {
+      const unlockedItem = cartItems.find(i => !i.locked);
+      if (!unlockedItem) {
         const item: CartItem = {
           id: Math.random().toString(36).substr(2, 9),
           productId: product.id,
@@ -435,10 +436,33 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
   const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
     e.stopPropagation();
     if (cartItems.length > 0 && !isComplex) {
-      if (delta === -1 && cartItems[0].quantity === 1) {
-        removeItem(activeTable, cartItems[0].id);
-      } else {
-        updateQuantity(activeTable, cartItems[0].id, delta);
+      const unlockedItem = cartItems.find(i => !i.locked);
+      
+      if (delta === 1) {
+        if (unlockedItem) {
+           updateQuantity(activeTable, unlockedItem.id, 1);
+        } else {
+           const item: CartItem = {
+             id: Math.random().toString(36).substr(2, 9),
+             productId: product.id,
+             productName: product.name,
+             variantLabel: product.variants?.[0]?.label || '',
+             description: '',
+             flavors: [],
+             fruitChoices: [],
+             additions: [],
+             quantity: 1,
+             unitPrice: minPrice,
+             subtotal: minPrice,
+           };
+           addItem(activeTable, item);
+        }
+      } else if (delta === -1 && unlockedItem) {
+        if (unlockedItem.quantity === 1) {
+          removeItem(activeTable, unlockedItem.id);
+        } else {
+          updateQuantity(activeTable, unlockedItem.id, -1);
+        }
       }
     }
   };
