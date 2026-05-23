@@ -20,12 +20,19 @@ export interface RecipeItem {
 }
 
 
-export type StepType = 'flavors' | 'fruits' | 'additions' | 'sauces' | 'bases';
+export type StepType = 'flavors' | 'fruits' | 'additions' | 'sauces' | 'bases' | 'custom_options';
 
 export interface VariantStep {
   type: StepType;
   scoops?: number;
   options?: string[];
+}
+
+export interface CustomOption {
+  id: string;
+  name: string;
+  choices: string[];
+  required: boolean;
 }
 
 export interface ProductVariant {
@@ -53,6 +60,8 @@ export interface Product {
   requiresFruitChoice?: boolean;
   requiresSalpiconBase?: boolean;
   requiresSauces?: boolean;
+  customOptions?: CustomOption[];
+  sauceOptions?: string[];
   fruitOptions?: string[];   // override default fruit list
   fruitSelection?: string[]; // alternative fruit list from JSON
   availableFruits?: string[];// alternative fruit list from JSON
@@ -78,6 +87,7 @@ export interface CartItem {
   flavors: string[];
   fruitChoices: string[];
   additions: string[];
+  customSelections?: Record<string, string>;
   notes?: string;
   quantity: number;
   unitPrice: number;

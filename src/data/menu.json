@@ -590,6 +590,23 @@
           "price": 14000,
           "scoops": 2
         }
+      ],
+      "requiresSauces": true,
+      "sauceOptions": [
+        "Arequipe",
+        "Lecherita"
+      ],
+      "customOptions": [
+        {
+          "id": "acompanante",
+          "name": "Acompañante",
+          "choices": [
+            "Brownie",
+            "Chocorramo",
+            "Jet Wafer"
+          ],
+          "required": true
+        }
       ]
     },
     {
@@ -607,6 +624,13 @@
           "price": 12000,
           "scoops": 2
         }
+      ],
+      "requiresSauces": true,
+      "sauceOptions": [
+        "Arequipe",
+        "Lechera",
+        "Mora",
+        "Chocolate"
       ]
     },
     {
@@ -645,6 +669,26 @@
           "label": "Tinto",
           "price": 1500
         }
+      ],
+      "customOptions": [
+        {
+          "id": "intensidad",
+          "name": "Intensidad",
+          "choices": [
+            "Claro",
+            "Oscuro"
+          ],
+          "required": true
+        },
+        {
+          "id": "azucar",
+          "name": "Azúcar",
+          "choices": [
+            "Con azúcar",
+            "Sin azúcar"
+          ],
+          "required": true
+        }
       ]
     },
     {
@@ -660,6 +704,26 @@
         {
           "label": "Aromática",
           "price": 1500
+        }
+      ],
+      "customOptions": [
+        {
+          "id": "tipo",
+          "name": "Tipo de Aromática",
+          "choices": [
+            "Sobre",
+            "Cubo"
+          ],
+          "required": true
+        },
+        {
+          "id": "azucar",
+          "name": "Azúcar",
+          "choices": [
+            "Con azúcar",
+            "Sin azúcar"
+          ],
+          "required": true
         }
       ]
     },
@@ -677,6 +741,17 @@
           "label": "Perico",
           "price": 2000
         }
+      ],
+      "customOptions": [
+        {
+          "id": "azucar",
+          "name": "Azúcar",
+          "choices": [
+            "Con azúcar",
+            "Sin azúcar"
+          ],
+          "required": true
+        }
       ]
     },
     {
@@ -692,6 +767,17 @@
         {
           "label": "Café",
           "price": 2500
+        }
+      ],
+      "customOptions": [
+        {
+          "id": "azucar",
+          "name": "Azúcar",
+          "choices": [
+            "Con azúcar",
+            "Sin azúcar"
+          ],
+          "required": true
         }
       ]
     },

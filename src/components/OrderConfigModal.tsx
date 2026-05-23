@@ -36,7 +36,6 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
   const [selectedFrutas, setSelectedFrutas] = useState<string[]>(() => {
     if (initialItem?.fruitChoices) return initialItem.fruitChoices;
-    // For Ensaladas and Salpicón, pre-select all fruits by default
     const cat = product.category?.toLowerCase();
     if (cat === 'ensaladas' || cat === 'salpicon') return fruitOptions;
     return [];
@@ -44,6 +43,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedSauces, setSelectedSauces] = useState<string[]>([]);
   const [selectedIncludedToppings, setSelectedIncludedToppings] = useState<string[]>([]);
   const [selectedAdditions, setSelectedAdditions] = useState<{id: string, name: string, price: number}[]>([]);
+  const [selectedCustomOptions, setSelectedCustomOptions] = useState<Record<string, string>>({});
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -59,6 +59,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   // Dynamic step calculation
   const steps: string[] = [];
   if (product.variants && product.variants.length > 1) steps.push('variants');
+  if (product.customOptions && product.customOptions.length > 0) steps.push('custom_options');
   if (isSalpicon) steps.push('salpiconBase');
   
   const getMaxScoops = () => {
@@ -203,6 +204,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
           setSelectedAdditions(mapped);
         }
         
+        setSelectedCustomOptions(initialItem.customSelections || {});
         setNotes(initialItem.notes || '');
         setQuantity(initialItem.quantity);
         setStep(initialStep || 1);
@@ -220,6 +222,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
+        setSelectedCustomOptions({});
         setExtraFlavors([]);
         setExtraFrutas([]);
         setExtraSauces([]);
@@ -235,6 +238,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       toast.error('Selecciona una opción');
       return;
     }
+    
+    if (effectiveCurrentStepType === 'custom_options') {
+      const missingRequired = product.customOptions?.some(opt => opt.required && !selectedCustomOptions[opt.name]);
+      if (missingRequired) {
+        toast.error("Por favor selecciona todas las opciones");
+        return;
+      }
+    }
+
     if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length === 0) {
       toast.error('Selecciona al menos un sabor');
       return;
@@ -298,12 +310,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         count > 1 ? `${flavor} (x${count})` : flavor
       ).join(', ');
 
+      const customOptionsStrings = Object.entries(selectedCustomOptions).map(([key, val]) => `${key}: ${val}`);
+
       const configParts = [
         variantLabel,
         formattedFlavors,
         allFruitsConsolidated.length > 0
           ? (isSalpicon ? `Base: ${allFruitsConsolidated.join(', ')}` : `Fruta: ${allFruitsConsolidated.join(', ')}`)
           : '',
+        ...customOptionsStrings,
         allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
         notes ? `Notas: ${notes}` : ''
       ].filter(Boolean);
@@ -318,6 +333,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         fruitChoices: allFruitsConsolidated,
         additions: allAdditionsNames,
         additionIds: allAdditionIds,
+        customSelections: selectedCustomOptions,
         notes,
         quantity,
         unitPrice,
@@ -572,6 +588,38 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                     </div>
                   )}
 
+                  {effectiveCurrentStepType === 'custom_options' && product.customOptions && (
+                    <div className="flex flex-col gap-6">
+                      {product.customOptions.map(opt => (
+                        <div key={opt.id} className="flex flex-col gap-3">
+                          <label className="text-xs font-black uppercase tracking-widest text-secondary flex items-center gap-1">
+                            {opt.name}
+                            {opt.required && <span className="text-red-500">*</span>}
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {opt.choices.map(choice => {
+                              const isSelected = selectedCustomOptions[opt.name] === choice;
+                              return (
+                                <button
+                                  key={choice}
+                                  onClick={() => setSelectedCustomOptions(prev => ({ ...prev, [opt.name]: choice }))}
+                                  className={cn(
+                                    "px-5 py-3 rounded-2xl font-bold text-sm transition-all border-2 flex-1 min-w-[120px]",
+                                    isSelected 
+                                      ? "bg-primary border-primary text-white shadow-md scale-[1.02]" 
+                                      : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                                  )}
+                                >
+                                  {choice}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {effectiveCurrentStepType === 'includedToppings' && (
                     <div className="flex flex-col gap-2">
                       {['Maní', 'Bolitas de colores'].map(topping => {
@@ -736,7 +784,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
                   {effectiveCurrentStepType === 'sauces' && (
                     <div className="flex flex-col gap-2">
-                      {SALSAS.map(sauce => (
+                      {(product.sauceOptions || SALSAS).map(sauce => (
                         <button
                           key={sauce}
                           onClick={() => toggleSauce(sauce)}
