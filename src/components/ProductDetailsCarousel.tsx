@@ -29,18 +29,32 @@ export default function ProductDetailsCarousel({
       setCurrentIndex(idx !== -1 ? idx : 0);
       setDirection(0);
     }
-  }, [isOpen, initialProductId, products]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only run when isOpen changes to prevent bouncing back on products update
 
-  // Lock body scroll when open
+  // Lock body scroll when open and handle hardware back button
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      window.history.pushState({ modal: 'product-carousel' }, '', window.location.pathname + '#carousel');
+      
+      const handlePopState = () => {
+        onClose();
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        document.body.style.overflow = 'auto';
+        window.removeEventListener('popstate', handlePopState);
+        if (window.history.state?.modal === 'product-carousel') {
+          window.history.back();
+        }
+      };
     } else {
       document.body.style.overflow = 'auto';
     }
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleNext = (e?: React.MouseEvent) => {
