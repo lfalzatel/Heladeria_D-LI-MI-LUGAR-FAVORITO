@@ -487,7 +487,7 @@ export default function ClientHistorial() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-surface-container-lowest rounded-[2rem] w-full max-width-md p-6 border border-outline/10 shadow-2xl"
+                className="bg-surface-container-lowest rounded-[2rem] w-full max-w-md max-h-[90vh] overflow-y-auto p-6 border border-outline/10 shadow-2xl"
               >
                 <div className="flex justify-between items-center mb-6">
                   <div>
@@ -620,7 +620,7 @@ export default function ClientHistorial() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-[2.5rem] w-full max-w-lg p-6 border border-outline/10 shadow-2xl flex flex-col gap-4"
+                className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 border border-outline/10 shadow-2xl flex flex-col gap-4"
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
