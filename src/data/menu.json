@@ -6,8 +6,16 @@
       "category": "helados",
       "description": "Helado artesanal Mimo's servido en cono de galleta. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
       "includedExtras": {
-        "sauces": ["arequipe", "mora", "chocolate", "lecherita"],
-        "toppings": ["maní", "bolitas de colores"],
+        "sauces": [
+          "arequipe",
+          "mora",
+          "chocolate",
+          "lecherita"
+        ],
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
       },
       "requiresFlavors": true,
@@ -15,8 +23,16 @@
       "isActive": true,
       "imageUrl": "/Images/products/vaso-cono.jpg",
       "variants": [
-        { "label": "Sencillo", "price": 3500, "scoops": 1 },
-        { "label": "Doble", "price": 5500, "scoops": 2 }
+        {
+          "label": "Sencillo",
+          "price": 3500,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 5500,
+          "scoops": 2
+        }
       ]
     },
     {
@@ -25,17 +41,33 @@
       "category": "helados",
       "description": "Helado artesanal Mimo's servido en vaso desechable. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
       "includedExtras": {
-        "sauces": ["arequipe", "mora", "chocolate", "lecherita"],
-        "toppings": ["maní", "bolitas de colores"],
+        "sauces": [
+          "arequipe",
+          "mora",
+          "chocolate",
+          "lecherita"
+        ],
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
       },
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/vaso-cono.jpg",
+      "imageUrl": "/Images/products/vaso.png",
       "variants": [
-        { "label": "Sencillo", "price": 3500, "scoops": 1 },
-        { "label": "Doble", "price": 5500, "scoops": 2 }
+        {
+          "label": "Sencillo",
+          "price": 3500,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 5500,
+          "scoops": 2
+        }
       ]
     },
     {
@@ -44,8 +76,16 @@
       "category": "helados",
       "description": "El clásico en barquillo crujiente de oblea. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencillo, doble y triple.",
       "includedExtras": {
-        "sauces": ["arequipe", "mora", "chocolate", "lecherita"],
-        "toppings": ["maní", "bolitas de colores"],
+        "sauces": [
+          "arequipe",
+          "mora",
+          "chocolate",
+          "lecherita"
+        ],
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
       },
       "requiresFlavors": true,
@@ -53,9 +93,21 @@
       "isActive": true,
       "imageUrl": "/Images/products/cucurucho.jpeg",
       "variants": [
-        { "label": "Sencillo", "price": 4000, "scoops": 1 },
-        { "label": "Doble", "price": 6000, "scoops": 2 },
-        { "label": "Triple", "price": 8000, "scoops": 3 }
+        {
+          "label": "Sencillo",
+          "price": 4000,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 6000,
+          "scoops": 2
+        },
+        {
+          "label": "Triple",
+          "price": 8000,
+          "scoops": 3
+        }
       ]
     },
     {
@@ -64,8 +116,16 @@
       "category": "helados",
       "description": "Helado servido en una delicada concha de oblea crujiente. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencilla, doble y triple.",
       "includedExtras": {
-        "sauces": ["arequipe", "mora", "chocolate", "lecherita"],
-        "toppings": ["maní", "bolitas de colores"],
+        "sauces": [
+          "arequipe",
+          "mora",
+          "chocolate",
+          "lecherita"
+        ],
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
       },
       "requiresFlavors": true,
@@ -73,9 +133,21 @@
       "isActive": true,
       "imageUrl": "/Images/products/conchita.jpeg",
       "variants": [
-        { "label": "Sencilla", "price": 4500, "scoops": 1 },
-        { "label": "Doble", "price": 6500, "scoops": 2 },
-        { "label": "Triple", "price": 8500, "scoops": 3 }
+        {
+          "label": "Sencilla",
+          "price": 4500,
+          "scoops": 1
+        },
+        {
+          "label": "Doble",
+          "price": 6500,
+          "scoops": 2
+        },
+        {
+          "label": "Triple",
+          "price": 8500,
+          "scoops": 3
+        }
       ]
     },
     {
@@ -88,16 +160,45 @@
         "toppings": [],
         "note": "No incluye salsas ni toppings por defecto. Las adiciones son opcionales y tienen costo adicional."
       },
-      "ingredients": ["manzana", "mango", "fresa", "banano", "papaya", "uvas", "kiwi", "queso", "helado", "crema de leche", "lechera", "barquillo"],
+      "ingredients": [
+        "manzana",
+        "mango",
+        "fresa",
+        "banano",
+        "papaya",
+        "uvas",
+        "kiwi",
+        "queso",
+        "helado",
+        "crema de leche",
+        "lechera",
+        "barquillo"
+      ],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
       "variants": [
-        { "label": "Mini", "price": 10000, "scoops": 1 },
-        { "label": "Pequeña", "price": 17000, "scoops": 2 },
-        { "label": "Mediana", "price": 22000, "scoops": 2 },
-        { "label": "Grande", "price": 27000, "scoops": 2 }
+        {
+          "label": "Mini",
+          "price": 10000,
+          "scoops": 1
+        },
+        {
+          "label": "Pequeña",
+          "price": 17000,
+          "scoops": 2
+        },
+        {
+          "label": "Mediana",
+          "price": 22000,
+          "scoops": 2
+        },
+        {
+          "label": "Grande",
+          "price": 27000,
+          "scoops": 2
+        }
       ]
     },
     {
@@ -109,13 +210,25 @@
         "queso": true,
         "note": "La copa incluye queso rallado."
       },
-      "ingredients": ["banano", "papaya", "fresa/mango", "queso", "helado", "lechera", "barquillo"],
+      "ingredients": [
+        "banano",
+        "papaya",
+        "fresa/mango",
+        "queso",
+        "helado",
+        "lechera",
+        "barquillo"
+      ],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/copa-salpicon.jpeg",
       "variants": [
-        { "label": "Copa Salpicón", "price": 11000, "scoops": 1 }
+        {
+          "label": "Copa Salpicón",
+          "price": 11000,
+          "scoops": 1
+        }
       ]
     },
     {
@@ -127,15 +240,34 @@
         "queso": false,
         "note": "El vaso NO incluye queso (solo la copa lo incluye). Puede agregarse como adición con costo."
       },
-      "ingredients": ["banano", "papaya", "fruta seleccionada", "helado", "lechera", "barquillo"],
+      "ingredients": [
+        "banano",
+        "papaya",
+        "fruta seleccionada",
+        "helado",
+        "lechera",
+        "barquillo"
+      ],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/vaso-salpicon.jpeg",
       "variants": [
-        { "label": "Pequeño", "price": 7000, "scoops": 1 },
-        { "label": "Mediano", "price": 9000, "scoops": 1 },
-        { "label": "Grande", "price": 11000, "scoops": 1 }
+        {
+          "label": "Pequeño",
+          "price": 7000,
+          "scoops": 1
+        },
+        {
+          "label": "Mediano",
+          "price": 9000,
+          "scoops": 1
+        },
+        {
+          "label": "Grande",
+          "price": 11000,
+          "scoops": 1
+        }
       ]
     },
     {
@@ -144,17 +276,30 @@
       "category": "copas",
       "description": "Nuestra copa insignia. Base generosa de arequipe, 3 bolas de helado Mimo's a elección, queso rallado, chantilly y cucurucho. Bañada con salsa de arequipe. Sin toppings secos adicionales.",
       "includedExtras": {
-        "sauces": ["arequipe"],
+        "sauces": [
+          "arequipe"
+        ],
         "toppings": [],
         "note": "Lleva arequipe como base y como salsa. Sin toppings secos por defecto."
       },
-      "ingredients": ["arequipe", "helado", "queso", "chantilly", "cucurucho", "salsa arequipe"],
+      "ingredients": [
+        "arequipe",
+        "helado",
+        "queso",
+        "chantilly",
+        "cucurucho",
+        "salsa arequipe"
+      ],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/copa-dli.jpeg",
       "variants": [
-        { "label": "Copa D'LI", "price": 13000, "scoops": 3 }
+        {
+          "label": "Copa D'LI",
+          "price": 13000,
+          "scoops": 3
+        }
       ]
     },
     {
@@ -163,17 +308,29 @@
       "category": "copas",
       "description": "Para los verdaderos amantes del helado. Base de arequipe, 7 sabores de helado Mimo's a elección, cubiertos con chantilly y barquillo. Bañada con salsa de arequipe. Grande, vistosa e irresistible.",
       "includedExtras": {
-        "sauces": ["arequipe"],
+        "sauces": [
+          "arequipe"
+        ],
         "toppings": [],
         "note": "Lleva arequipe como base y como salsa sobre la chantilly."
       },
-      "ingredients": ["arequipe", "helado", "chantilly", "barquillo", "salsa arequipe"],
+      "ingredients": [
+        "arequipe",
+        "helado",
+        "chantilly",
+        "barquillo",
+        "salsa arequipe"
+      ],
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/copa-explosion.jpeg",
       "variants": [
-        { "label": "Copa Explosión", "price": 16000, "scoops": 7 }
+        {
+          "label": "Copa Explosión",
+          "price": 16000,
+          "scoops": 7
+        }
       ]
     },
     {
@@ -188,8 +345,16 @@
       "isActive": true,
       "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
       "variants": [
-        { "label": "Arequipe, crema y queso", "price": 6000, "hasFruit": false },
-        { "label": "Arequipe, crema, queso y fruta", "price": 9000, "hasFruit": true }
+        {
+          "label": "Arequipe, crema y queso",
+          "price": 6000,
+          "hasFruit": false
+        },
+        {
+          "label": "Arequipe, crema, queso y fruta",
+          "price": 9000,
+          "hasFruit": true
+        }
       ]
     },
     {
@@ -198,17 +363,37 @@
       "category": "obleas",
       "description": "Versión moderna de la oblea para disfrutar con cuchara. Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly. Decorada con trozos de oblea y arequipe extra encima. También disponible con una bola de helado Mimo's.",
       "includedExtras": {
-        "decoration": ["trozos de oblea", "arequipe"],
+        "decoration": [
+          "trozos de oblea",
+          "arequipe"
+        ],
         "note": "Se decora con trozos de oblea y arequipe sobre la chantilly. Sin toppings secos ni salsas adicionales por defecto."
       },
-      "ingredients": ["oblea", "arequipe", "queso", "crema de leche", "fruta", "chantilly", "trozos de oblea (decoración)", "arequipe (decoración)"],
+      "ingredients": [
+        "oblea",
+        "arequipe",
+        "queso",
+        "crema de leche",
+        "fruta",
+        "chantilly",
+        "trozos de oblea (decoración)",
+        "arequipe (decoración)"
+      ],
       "requiresFlavors": true,
       "requiresFruitChoice": true,
       "isActive": true,
       "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
       "variants": [
-        { "label": "Sin helado", "price": 13000, "scoops": 0 },
-        { "label": "Con helado", "price": 15000, "scoops": 1 }
+        {
+          "label": "Sin helado",
+          "price": 13000,
+          "scoops": 0
+        },
+        {
+          "label": "Con helado",
+          "price": 15000,
+          "scoops": 1
+        }
       ]
     },
     {
@@ -219,8 +404,13 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1552767059-ce182ead6c1b?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Queso", "price": 4000 }]
+      "imageUrl": "/Images/products/adicion_queso.png",
+      "variants": [
+        {
+          "label": "Queso",
+          "price": 4000
+        }
+      ]
     },
     {
       "id": "adicion-fruta",
@@ -231,7 +421,12 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Fruta", "price": 3500 }]
+      "variants": [
+        {
+          "label": "Fruta",
+          "price": 3500
+        }
+      ]
     },
     {
       "id": "adicion-helado",
@@ -241,8 +436,14 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1563805042-7684c8e9e5cb?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Helado", "price": 3000, "scoops": 1 }]
+      "imageUrl": "/Images/products/adicion_helado.png",
+      "variants": [
+        {
+          "label": "Helado",
+          "price": 3000,
+          "scoops": 1
+        }
+      ]
     },
     {
       "id": "adicion-chantilly",
@@ -253,7 +454,12 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/chantilly.jpg",
-      "variants": [{ "label": "Chantilly", "price": 4000 }]
+      "variants": [
+        {
+          "label": "Chantilly",
+          "price": 4000
+        }
+      ]
     },
     {
       "id": "adicion-chips-chocolate",
@@ -264,7 +470,12 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/chips_chocolate.jpeg",
-      "variants": [{ "label": "Chips de Chocolate", "price": 3000 }]
+      "variants": [
+        {
+          "label": "Chips de Chocolate",
+          "price": 3000
+        }
+      ]
     },
     {
       "id": "adicion-salsa",
@@ -275,7 +486,12 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/adicion-salsa.jpg",
-      "variants": [{ "label": "Salsa", "price": 1000 }]
+      "variants": [
+        {
+          "label": "Salsa",
+          "price": 1000
+        }
+      ]
     },
     {
       "id": "adicion-barquillo",
@@ -286,7 +502,12 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "/Images/products/barquillos.jpeg",
-      "variants": [{ "label": "Barquillo", "price": 500 }]
+      "variants": [
+        {
+          "label": "Barquillo",
+          "price": 500
+        }
+      ]
     },
     {
       "id": "adicion-cono",
@@ -296,8 +517,13 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1582315183403-122e23072ce1?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Cono", "price": 1000 }]
+      "imageUrl": "/Images/products/adicion_cono.png",
+      "variants": [
+        {
+          "label": "Cono",
+          "price": 1000
+        }
+      ]
     },
     {
       "id": "adicion-cucurucho",
@@ -308,38 +534,324 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "imageUrl": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&q=80&w=500",
-      "variants": [{ "label": "Cucurucho", "price": 1000 }]
+      "variants": [
+        {
+          "label": "Cucurucho",
+          "price": 1000
+        }
+      ]
+    },
+    {
+      "id": "copa-favorita",
+      "name": "Copa Favorita",
+      "category": "copas",
+      "description": "Copa de helado con dos sabores a elección, arequipe, fresas, kiwi, durazno, queso, chantilly y barquillo.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/copa_favorita.png",
+      "variants": [
+        {
+          "label": "Copa Favorita",
+          "price": 16500,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "copa-queso",
+      "name": "Copa Queso",
+      "category": "copas",
+      "description": "Copa de helado con dos sabores a elección, lecherita, doble porción de queso, crema y barquillo.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/copa_queso.png",
+      "variants": [
+        {
+          "label": "Copa Queso",
+          "price": 14000,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "dli-capricho",
+      "name": "D'LI Capricho",
+      "category": "copas",
+      "description": "Copa de helado con dos sabores a elección, brownie, arequipe, chantilly y barquillo.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/dli_capricho.png",
+      "variants": [
+        {
+          "label": "D'LI Capricho",
+          "price": 14000,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "malteada",
+      "name": "Malteada",
+      "category": "bebidas-calientes",
+      "description": "Deliciosa malteada preparada con helado artesanal, leche y salsa a elegir.",
+      "requiresFlavors": true,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/malteada.png",
+      "variants": [
+        {
+          "label": "Malteada",
+          "price": 12000,
+          "scoops": 2
+        }
+      ]
+    },
+    {
+      "id": "fruta-con-crema",
+      "name": "Fruta con crema",
+      "category": "ensaladas",
+      "description": "Porción de fruta fresca acompañada de deliciosa crema.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": true,
+      "isActive": true,
+      "imageUrl": "/Images/products/fruta_con_crema.png",
+      "variants": [
+        {
+          "label": "Fruta con crema",
+          "price": 13000
+        }
+      ]
+    },
+    {
+      "id": "tinto",
+      "name": "Tinto",
+      "category": "bebidas-calientes",
+      "description": "Café negro caliente.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/tinto.png",
+      "variants": [
+        {
+          "label": "Tinto",
+          "price": 1500
+        }
+      ]
+    },
+    {
+      "id": "aromatica",
+      "name": "Aromática",
+      "category": "bebidas-calientes",
+      "description": "Bebida caliente a base de hierbas aromáticas.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/aromatica.png",
+      "variants": [
+        {
+          "label": "Aromática",
+          "price": 1500
+        }
+      ]
+    },
+    {
+      "id": "perico",
+      "name": "Perico",
+      "category": "bebidas-calientes",
+      "description": "Café con leche caliente en presentación pequeña.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/perico.png",
+      "variants": [
+        {
+          "label": "Perico",
+          "price": 2000
+        }
+      ]
+    },
+    {
+      "id": "cafe",
+      "name": "Café",
+      "category": "bebidas-calientes",
+      "description": "Café con leche caliente.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/cafe.png",
+      "variants": [
+        {
+          "label": "Café",
+          "price": 2500
+        }
+      ]
+    },
+    {
+      "id": "agua",
+      "name": "Botella con agua",
+      "category": "bebidas",
+      "description": "Botella de agua natural.",
+      "requiresFlavors": false,
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": null,
+      "variants": [
+        {
+          "label": "Botella con agua",
+          "price": 1500
+        }
+      ]
     }
   ],
   "icecreamFlavors": [
-    { "id": "fresa", "name": "Fresa", "isAvailable": true },
-    { "id": "chicle", "name": "Chicle", "isAvailable": true },
-    { "id": "brownie", "name": "Brownie", "isAvailable": true },
-    { "id": "vainilla", "name": "Vainilla", "isAvailable": true },
-    { "id": "arequipe", "name": "Arequipe", "isAvailable": true },
-    { "id": "maracuya", "name": "Maracuyá", "isAvailable": true },
-    { "id": "chocolate", "name": "Chocolate", "isAvailable": true },
-    { "id": "mandarina", "name": "Mandarina", "isAvailable": true },
-    { "id": "nata-mani", "name": "Nata Maní", "isAvailable": true },
-    { "id": "ron-pasas", "name": "Ron Pasas", "isAvailable": true },
-    { "id": "mango-biche", "name": "Mango Biche", "isAvailable": true },
-    { "id": "frutos-rojos", "name": "Frutos Rojos", "isAvailable": true },
-    { "id": "vainilla-chips", "name": "Vainilla Chips", "isAvailable": true },
-    { "id": "vainilla-pasas", "name": "Vainilla Pasas", "isAvailable": true },
-    { "id": "veteado-mora", "name": "Veteado de Mora", "isAvailable": true },
-    { "id": "veteado-caramelo", "name": "Veteado de Caramelo", "isAvailable": true }
+    {
+      "id": "fresa",
+      "name": "Fresa",
+      "isAvailable": true
+    },
+    {
+      "id": "chicle",
+      "name": "Chicle",
+      "isAvailable": true
+    },
+    {
+      "id": "brownie",
+      "name": "Brownie",
+      "isAvailable": true
+    },
+    {
+      "id": "vainilla",
+      "name": "Vainilla",
+      "isAvailable": true
+    },
+    {
+      "id": "arequipe",
+      "name": "Arequipe",
+      "isAvailable": true
+    },
+    {
+      "id": "maracuya",
+      "name": "Maracuyá",
+      "isAvailable": true
+    },
+    {
+      "id": "chocolate",
+      "name": "Chocolate",
+      "isAvailable": true
+    },
+    {
+      "id": "mandarina",
+      "name": "Mandarina",
+      "isAvailable": true
+    },
+    {
+      "id": "nata-mani",
+      "name": "Nata Maní",
+      "isAvailable": true
+    },
+    {
+      "id": "ron-pasas",
+      "name": "Ron Pasas",
+      "isAvailable": true
+    },
+    {
+      "id": "mango-biche",
+      "name": "Mango Biche",
+      "isAvailable": true
+    },
+    {
+      "id": "frutos-rojos",
+      "name": "Frutos Rojos",
+      "isAvailable": true
+    },
+    {
+      "id": "vainilla-chips",
+      "name": "Vainilla Chips",
+      "isAvailable": true
+    },
+    {
+      "id": "vainilla-pasas",
+      "name": "Vainilla Pasas",
+      "isAvailable": true
+    },
+    {
+      "id": "veteado-mora",
+      "name": "Veteado de Mora",
+      "isAvailable": true
+    },
+    {
+      "id": "veteado-caramelo",
+      "name": "Veteado de Caramelo",
+      "isAvailable": true
+    },
+    {
+      "id": "sin-helado",
+      "name": "Sin Helado",
+      "isAvailable": true
+    }
   ],
   "categories": [
-    { "id": "helados", "label": "Helados", "icon": "icecream", "order": 1 },
-    { "id": "ensaladas", "label": "Ensaladas de Frutas", "icon": "lunch_dining", "order": 2 },
-    { "id": "salpicon", "label": "Salpicón", "icon": "local_bar", "order": 3 },
-    { "id": "copas", "label": "Copas Especiales", "icon": "wine_bar", "order": 4 },
-    { "id": "obleas", "label": "Obleas", "icon": "cookie", "order": 5 },
-    { "id": "adiciones", "label": "Adiciones", "icon": "add_circle", "order": 6 }
+    {
+      "id": "helados",
+      "label": "Helados",
+      "icon": "icecream",
+      "order": 1
+    },
+    {
+      "id": "ensaladas",
+      "label": "Ensaladas de Frutas",
+      "icon": "lunch_dining",
+      "order": 2
+    },
+    {
+      "id": "salpicon",
+      "label": "Salpicón",
+      "icon": "local_bar",
+      "order": 3
+    },
+    {
+      "id": "copas",
+      "label": "Copas Especiales",
+      "icon": "wine_bar",
+      "order": 4
+    },
+    {
+      "id": "obleas",
+      "label": "Obleas",
+      "icon": "cookie",
+      "order": 5
+    },
+    {
+      "id": "adiciones",
+      "label": "Adiciones",
+      "icon": "add_circle",
+      "order": 6
+    }
   ],
   "tables": [
-    { "id": "1", "label": "Mesa 1", "status": "free", "openedAt": null, "currentCartSnapshot": null },
-    { "id": "2", "label": "Mesa 2", "status": "free", "openedAt": null, "currentCartSnapshot": null },
-    { "id": "3", "label": "Mesa 3", "status": "free", "openedAt": null, "currentCartSnapshot": null }
+    {
+      "id": "1",
+      "label": "Mesa 1",
+      "status": "free",
+      "openedAt": null,
+      "currentCartSnapshot": null
+    },
+    {
+      "id": "2",
+      "label": "Mesa 2",
+      "status": "free",
+      "openedAt": null,
+      "currentCartSnapshot": null
+    },
+    {
+      "id": "3",
+      "label": "Mesa 3",
+      "status": "free",
+      "openedAt": null,
+      "currentCartSnapshot": null
+    }
   ]
 }

@@ -26,6 +26,7 @@ const CATEGORIES = [
   { id: 'copas',     label: 'Copas',     icon: <GlassWater className="w-4 h-4" /> },
   { id: 'salpicon',  label: 'Salpicón',  icon: <CupSoda className="w-4 h-4" /> },
   { id: 'obleas',    label: 'Obleas',    icon: <Package className="w-4 h-4" /> },
+  { id: 'bebidas-calientes', label: 'Bebidas Calientes', icon: <Utensils className="w-4 h-4" /> },
   { id: 'adiciones', label: 'Adiciones', icon: <Plus className="w-4 h-4" /> },
 ];
 

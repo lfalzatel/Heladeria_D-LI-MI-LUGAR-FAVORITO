@@ -112,6 +112,7 @@ export default function POS() {
     { id: 'copas', label: 'Copas' },
     { id: 'salpicon', label: 'Salpicón' },
     { id: 'obleas', label: 'Obleas' },
+    { id: 'bebidas-calientes', label: 'Bebidas Calientes' },
     { id: 'adiciones', label: 'Adiciones' },
   ];
 

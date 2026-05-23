@@ -103,12 +103,28 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                   {activeTable === 'paraLlevar' ? 'Pedido para llevar' : `Mesa ${activeTable.replace('mesa', '')}`}
                 </p>
               </div>
-              <button 
-                onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-3">
+                {cart?.items && cart.items.length > 0 && cart.items.some(item => !item.locked) && (
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('¿Estás seguro de que deseas vaciar el carrito por completo?')) {
+                        clearCart(activeTable);
+                      }
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-full shadow-sm hover:bg-red-100 transition-colors"
+                    title="Vaciar todo el carrito"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Vaciar
+                  </button>
+                )}
+                <button 
+                  onClick={onClose}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </header>
 
             {/* Items List */}
@@ -296,7 +312,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                   <div className="flex items-center justify-between p-3 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
                     <div className="flex items-center gap-2 text-orange-600">
                       <Lock className="w-5 h-5" />
-                      <span className="font-bold text-sm">Pedido Bloqueado</span>
+                      <span className="font-bold text-sm">Pedido Fijado</span>
                     </div>
                     {(profile?.role === 'admin' || profile?.role === 'propietario') && (
                       <button 
@@ -304,7 +320,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                         className="flex items-center gap-1 px-3 py-1.5 bg-white text-orange-600 text-xs font-bold rounded-full shadow-sm hover:bg-orange-50 transition-colors"
                       >
                         <Unlock className="w-3 h-3" />
-                        Desbloquear
+                        Desfijar
                       </button>
                     )}
                   </div>
@@ -314,7 +330,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                     className="w-full py-3 rounded-2xl bg-surface-container border-2 border-primary/20 text-primary font-bold text-sm hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
-                    Tomar Pedido (Bloquear)
+                    Fijar Pedido
                   </button>
                 )
               )}

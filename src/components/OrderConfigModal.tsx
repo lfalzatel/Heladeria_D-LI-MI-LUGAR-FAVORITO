@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus, GlassWater } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus, GlassWater, Ban } from 'lucide-react';
 import { Product, ProductVariant, CartItem } from '../types';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
@@ -634,8 +634,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                             } : undefined}
                           >
                             <div className="flex items-center gap-1.5 mb-2">
-                              <IceCream className={cn("w-4 h-4 shrink-0", count > 0 ? "text-primary" : "text-secondary")} />
-                              <span className={cn("text-xs font-black leading-tight", count > 0 ? "text-primary" : "text-on-surface")}>{flavor.name}</span>
+                              {flavor.name.toLowerCase() === 'sin helado' ? (
+                                <Ban className={cn("w-4 h-4 shrink-0", count > 0 ? "text-red-500" : "text-red-400")} />
+                              ) : (
+                                <IceCream className={cn("w-4 h-4 shrink-0", count > 0 ? "text-primary" : "text-secondary")} />
+                              )}
+                              <span className={cn("text-xs font-black leading-tight", 
+                                flavor.name.toLowerCase() === 'sin helado' ? (count > 0 ? "text-red-600" : "text-red-500") : 
+                                (count > 0 ? "text-primary" : "text-on-surface")
+                              )}>{flavor.name}</span>
                             </div>
                             {count > 0 ? (
                               <div className="flex items-center justify-between bg-white rounded-xl border border-outline/20 p-0.5 shadow-sm">
@@ -873,7 +880,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                         {extraFlavors.length > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraFlavors.length} seleccionada{extraFlavors.length > 1 ? 's' : ''} — +{formatCurrency(extraFlavorsPrice)}</p>}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {allFlavors.filter(f => f.isAvailable).map(flavor => {
+                        {allFlavors.filter(f => f.isAvailable && f.name.toLowerCase() !== 'sin helado').map(flavor => {
                           const count = extraFlavors.filter(f => f === flavor.name).length;
                           const isIncluded = selectedFlavors.includes(flavor.name);
                           return (

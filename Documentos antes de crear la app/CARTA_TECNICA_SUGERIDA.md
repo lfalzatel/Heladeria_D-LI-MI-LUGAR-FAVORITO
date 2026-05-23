@@ -12,12 +12,18 @@ El sistema ya cuenta con las siguientes opciones para que el cliente elija (dond
 
 ---
 
+## 1. Categoría: Ensaladas
+
 ### Ensalada de Frutas (Mini, Pequeña, Mediana, Grande)
 *   **Descripción Actual:** Mezcla de manzana, mango, fresa, banano, papaya, uvas y kiwi. Acompañada de queso rallado, helado Mimo's, crema de leche, lechera y barquillo.
 *   **Revisión de Ingredientes:**
     *   ¿Incluye salsas por defecto? (Ej: Arequipe, Mora, Chocolate y Lecherita) **[POR DEFINIR]**
     *   ¿Incluye algún topping seco? (Ej: Maní y Bolitas de colores) **[POR DEFINIR]**
     *   **Nota:** La versión Mini lleva 1 bola de helado; las demás llevan 2.
+
+### Fruta con crema
+*   **Descripción Actual:** Crema, fruta (fresa, mango, durazno o mixta), lecherita o arequipe y 2 barquillos.
+*   **Precio Oficial:** $13.000
 
 ---
 
@@ -34,6 +40,22 @@ El sistema ya cuenta con las siguientes opciones para que el cliente elija (dond
 *   **Revisión de Ingredientes:**
     *   ¿Lleva salsas? **[POR DEFINIR]**
     *   ¿Se le agrega queso o algún otro ingrediente para equilibrar el sabor? **[POR DEFINIR]**
+
+### Copa Favorita
+*   **Descripción Actual:** Lecherita, dos sabores de helado, fresas, kiwi, durazno, queso, chantilly y barquillo.
+*   **Precio Oficial:** $16.500
+
+### Copa Queso
+*   **Descripción Actual:** Lecherita, dos sabores de helado, doble porción de queso, crema y barquillo.
+*   **Precio Oficial:** $14.000
+
+### D'LI Capricho
+*   **Descripción Actual:** Arequipe o chocolate, dos sabores de helado, elige entre trozos de Brownie, Chocorramo o Jet Wafer, chantilly y barquillo.
+*   **Precio Oficial:** $14.000
+
+### Malteada
+*   **Descripción Actual:** Salsa de tu preferencia (arequipe, lechera, mora, chocolate), elige el sabor de helado, chantilly y barquillo.
+*   **Precio Oficial:** $12.000
 
 ---
 
@@ -70,7 +92,26 @@ El sistema ya cuenta con las siguientes opciones para que el cliente elija (dond
 
 ---
 
-## 6. Adiciones Disponibles
+## 6. Categoría: Bebidas Calientes
+
+### Tinto
+*   **Precio Oficial:** $1.500
+
+### Aromática
+*   **Precio Oficial:** $1.500
+
+### Perico
+*   **Precio Oficial:** $2.000
+
+### Café
+*   **Precio Oficial:** $2.500
+
+### Botella con agua
+*   **Precio Oficial:** $1.500
+
+---
+
+## 7. Adiciones Disponibles
 *Actualmente registradas en el sistema:*
 1.  Queso ($4.000)
 2.  Fruta ($3.500)
