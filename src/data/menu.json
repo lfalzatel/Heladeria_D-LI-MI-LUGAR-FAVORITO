@@ -697,7 +697,7 @@
       "requiresFlavors": false,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": null,
+      "imageUrl": "/Images/products/botella_agua.png",
       "variants": [
         {
           "label": "Botella con agua",
