@@ -623,6 +623,13 @@
           "label": "Fruta con crema",
           "price": 13000
         }
+      ],
+      "requiresSauces": true,
+      "fruitOptions": [
+        "Fresa",
+        "Mango",
+        "Durazno",
+        "Mixta"
       ]
     },
     {

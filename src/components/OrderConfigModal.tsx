@@ -816,7 +816,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                         {extraFruitsCount > 0 && <p className="text-[11px] font-bold text-on-surface/70 mt-1">{extraFruitsCount} seleccionada{extraFruitsCount > 1 ? 's' : ''} — +{formatCurrency(extraFruitsPrice)}</p>}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {(isOblea ? Array.from(new Set([...fruitOptions, ...FRUTAS_DEFAULT])) : fruitOptions).map(fruta => {
+                        {Array.from(new Set([...(fruitOptions || []), ...FRUTAS_DEFAULT])).filter(f => f !== 'Mixta').map(fruta => {
                           const count = extraFrutas.filter(f => f === fruta).length;
                           const isIncluded = selectedFrutas.includes(fruta);
                           return (
