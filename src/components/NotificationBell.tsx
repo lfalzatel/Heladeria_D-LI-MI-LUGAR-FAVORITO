@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check, XCircle, MessageCircle, ChevronRight, Clock, Package } from 'lucide-react';
-import { collection, query, where, onSnapshot, updateDoc, doc, addDoc, serverTimestamp, orderBy, increment, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, getDoc, addDoc, serverTimestamp, orderBy, increment, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -61,6 +61,40 @@ export default function NotificationBell() {
   const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
   // El modal se abre cuando hay un pedido seleccionado (independiente del panel)
   const isDetailOpen = !!selectedPedido;
+
+  const [seenMap, setSeenMap] = useState<Record<string, { status: string, messagesCount: number }>>({});
+
+  // Cargar visto al montar e isOpen
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('dli_seen_pedidos');
+      if (stored) {
+        setSeenMap(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [isOpen]);
+
+  // Marcar pedido seleccionado como visto
+  useEffect(() => {
+    if (selectedPedido) {
+      try {
+        const stored = localStorage.getItem('dli_seen_pedidos');
+        const seen = stored ? JSON.parse(stored) : {};
+        
+        seen[selectedPedido.id] = {
+          status: selectedPedido.status,
+          messagesCount: selectedPedido.messages?.length || 0
+        };
+        
+        localStorage.setItem('dli_seen_pedidos', JSON.stringify(seen));
+        setSeenMap(seen);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [selectedId, selectedPedido?.status, selectedPedido?.messages?.length]);
 
   const isCliente = profile?.role === 'cliente';
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
@@ -150,16 +184,32 @@ export default function NotificationBell() {
   const unreadCount = pedidos.filter(p => {
     const lastMsg = p.messages?.[p.messages.length - 1];
     const hasNewMsg = lastMsg && lastMsg.from !== profile?.uid;
+    
+    // Si está seleccionado y actualmente abierto, no lo contamos como no leído
+    if (selectedId === p.id) return false;
+
+    const seen = seenMap[p.id];
 
     if (isStaff) {
-      // Staff: Mientras no sea terminal (entregado/rechazado/cancelado) O tenga mensaje nuevo del cliente
-      const isTerminal = ['entregado', 'rechazado', 'cancelado'].includes(p.status);
-      return !isTerminal || hasNewMsg;
+      if (!seen) {
+        // Pedidos pendientes totalmente nuevos
+        return p.status === 'pendiente';
+      }
+      // Si ya lo vio antes, solo es unread si volvió a pendiente o hay mensajes nuevos
+      const isPendienteNuevo = p.status === 'pendiente' && seen.status !== 'pendiente';
+      const newMessagesCount = p.messages?.length || 0;
+      const hasNewMessages = newMessagesCount > seen.messagesCount && hasNewMsg;
+      return isPendienteNuevo || hasNewMessages;
     } else {
-      // Cliente: Mientras no sea pendiente (ya lo vio el admin) y no esté terminado O tenga mensaje nuevo del staff
-      const isTerminal = ['entregado', 'rechazado', 'cancelado'].includes(p.status);
-      const isAccepted = p.status !== 'pendiente';
-      return (isAccepted && !isTerminal) || hasNewMsg;
+      // Cliente
+      if (!seen) {
+        // El cliente solo lo ve si ya no es pendiente
+        return p.status !== 'pendiente';
+      }
+      const statusChanged = p.status !== seen.status;
+      const newMessagesCount = p.messages?.length || 0;
+      const hasNewMessages = newMessagesCount > seen.messagesCount && hasNewMsg;
+      return statusChanged || hasNewMessages;
     }
   }).length;
 
@@ -212,8 +262,48 @@ export default function NotificationBell() {
             type: 'online'
           };
           
-          await addDoc(collection(db, 'sales'), saleData);
+          const saleDocRef = await addDoc(collection(db, 'sales'), saleData);
           
+          // Fetch client email to send the receipt
+          let clientEmail = '';
+          try {
+            const userSnap = await getDoc(doc(db, 'users', pedido.clienteId));
+            if (userSnap.exists()) {
+              clientEmail = userSnap.data().email || '';
+            }
+          } catch (e) {
+            console.error('Error fetching client email for receipt:', e);
+          }
+
+          if (clientEmail) {
+            const completedSale = {
+              id: saleDocRef.id,
+              items: pedido.items,
+              total: pedido.total,
+              paymentMethod: pedido.paymentMethod || 'Efectivo',
+              tableName: 'Pedido Online',
+              clienteName: pedido.clienteName,
+              date: saleData.date,
+              hour: saleData.hour
+            };
+
+            // Trigger the serverless API endpoint in the background
+            fetch('/api/send-receipt', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: clientEmail, sale: completedSale })
+            }).then(async (res) => {
+              const resData = await res.json();
+              if (res.ok) {
+                if (resData.simulated) {
+                  console.log('Recibo de correo enviado (simulado)');
+                } else {
+                  console.log('Recibo de correo enviado exitosamente');
+                }
+              }
+            }).catch(err => console.error('Error sending receipt:', err));
+          }
+
           // Update product sales stats
           const updatePromises = pedido.items.map(item => 
             updateDoc(doc(db, 'products', item.productId), {

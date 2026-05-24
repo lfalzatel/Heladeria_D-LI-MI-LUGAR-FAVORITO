@@ -1,15 +1,16 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2 } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { CartItem } from '../types';
 import { toast } from 'sonner';
-import { collection, addDoc, serverTimestamp, updateDoc, doc, increment } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, updateDoc, doc, increment, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { notifyAdmins } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
+import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -22,6 +23,71 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta'>('Efectivo');
+
+  interface ClienteOption {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  }
+
+  const [clientes, setClientes] = useState<ClienteOption[]>([]);
+  const [selectedCliente, setSelectedCliente] = useState<ClienteOption | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const [successSale, setSuccessSale] = useState<any | null>(null);
+  const [emailSending, setEmailSending] = useState(false);
+  const [manualPhone, setManualPhone] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
+
+  // Fetch clients
+  useEffect(() => {
+    const fetchClientes = async () => {
+      try {
+        const q = query(collection(db, 'users'), where('role', '==', 'cliente'));
+        const snap = await getDocs(q);
+        const list = snap.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name || 'Cliente sin nombre',
+          email: doc.data().email || '',
+          phone: doc.data().phone || ''
+        }));
+        setClientes(list);
+      } catch (err) {
+        console.error('Error fetching clientes:', err);
+      }
+    };
+    if (isOpen) {
+      fetchClientes();
+    }
+  }, [isOpen]);
+
+  const sendEmailReceipt = async (targetEmail: string, saleObj: any) => {
+    setEmailSending(true);
+    try {
+      const res = await fetch('/api/send-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, sale: saleObj })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.simulated) {
+          toast.info('Recibo guardado (simulado)', { description: 'Los parámetros SMTP no están configurados en desarrollo.' });
+        } else {
+          toast.success('Recibo enviado al correo exitosamente ✓');
+        }
+      } else {
+        throw new Error(data.error || 'Error al enviar');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('No se pudo enviar el correo: ' + err.message);
+    } finally {
+      setEmailSending(false);
+    }
+  };
   
   const cart = carts[activeTable];
   const total = getTotal(activeTable);
@@ -31,7 +97,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
     
     setIsProcessing(true);
     try {
-      const saleData = {
+      const saleData: any = {
         items: cart.items,
         total,
         sellerId: profile.uid,
@@ -48,7 +114,14 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
       };
 
-      await addDoc(collection(db, 'sales'), saleData);
+      if (selectedCliente) {
+        saleData.clienteId = selectedCliente.id;
+        saleData.clienteName = selectedCliente.name;
+        saleData.clienteEmail = selectedCliente.email;
+        saleData.clientePhone = selectedCliente.phone || '';
+      }
+
+      const docRef = await addDoc(collection(db, 'sales'), saleData);
       
       // Actualizar conteo de ventas de productos
       const updatePromises = cart.items.map(item => 
@@ -66,8 +139,31 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         "🍦 Nueva venta realizada",
         `Venta manual por ${formatCurrency(total)} - ${paymentMethod}`
       );
+
+      const completedSale = {
+        id: docRef.id,
+        items: cart.items,
+        total,
+        paymentMethod,
+        tableName: saleData.tableName,
+        clienteName: selectedCliente ? selectedCliente.name : undefined,
+        clienteEmail: selectedCliente ? selectedCliente.email : undefined,
+        clientePhone: selectedCliente ? selectedCliente.phone : undefined,
+        date: saleData.date,
+        hour: saleData.hour
+      };
+
+      // Limpiar carrito local
       clearCart(activeTable);
-      onClose();
+      
+      // Activar modal de éxito con los datos finales
+      setSuccessSale(completedSale);
+
+      // Si el cliente tiene correo, disparar recibo automático
+      if (selectedCliente && selectedCliente.email) {
+        sendEmailReceipt(selectedCliente.email, completedSale);
+      }
+
     } catch (error: any) {
       console.error("Error finalizing sale:", error);
       toast.error('Error al procesar la venta: ' + error.message);
@@ -77,7 +173,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
   };
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200]">
           <motion.div 
@@ -295,11 +392,69 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
               )}
               
               {cart?.items && cart.items.length > 0 && (
-                <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">
-                  <label htmlFor="order-note" className="block text-sm font-semibold text-on-surface mb-2 flex items-center gap-2">
-                    <Pencil className="w-4 h-4 text-primary" />
-                    Nota general del pedido (opcional)
-                  </label>
+                <>
+                  {/* Selector de Cliente para POS */}
+                  <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">
+                    <label className="block text-sm font-semibold text-on-surface mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4 text-primary" />
+                      Asociar Cliente (Recibo Digital)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar cliente por nombre o correo..."
+                        value={selectedCliente ? selectedCliente.name : searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          if (selectedCliente) setSelectedCliente(null);
+                          setShowDropdown(true);
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 font-bold"
+                      />
+                      {selectedCliente && (
+                        <button
+                          onClick={() => {
+                            setSelectedCliente(null);
+                            setSearchTerm('');
+                          }}
+                          className="absolute right-3 top-3.5 text-secondary hover:text-primary"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                      {showDropdown && !selectedCliente && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white border border-outline/10 rounded-2xl shadow-xl max-h-40 overflow-y-auto z-[250] text-sm">
+                          {clientes
+                            .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase()))
+                            .map(c => (
+                              <button
+                                key={c.id}
+                                onClick={() => {
+                                  setSelectedCliente(c);
+                                  setShowDropdown(false);
+                                }}
+                                className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors border-b border-outline/5 cursor-pointer block"
+                              >
+                                <div className="font-bold text-on-surface">{c.name}</div>
+                                <div className="text-[10px] text-secondary">
+                                  {c.email || 'Sin correo'} {c.phone ? `• ${c.phone}` : ''}
+                                </div>
+                              </button>
+                            ))}
+                          {clientes.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                            <div className="p-3 text-center text-xs text-secondary opacity-60">No se encontraron clientes</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">
+                    <label htmlFor="order-note" className="block text-sm font-semibold text-on-surface mb-2 flex items-center gap-2">
+                      <Pencil className="w-4 h-4 text-primary" />
+                      Nota general del pedido (opcional)
+                    </label>
                   <textarea
                     id="order-note"
                     rows={2}
@@ -310,7 +465,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                     className={cn("w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 resize-none transition-all", cart?.isLocked && "opacity-60 cursor-not-allowed")}
                   />
                 </div>
-              )}
+              </>
+            )}
             </div>
 
             {/* Footer / Checkout */}
@@ -392,5 +548,124 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
         </div>
       )}
     </AnimatePresence>
+
+    {/* MODAL DE ÉXITO DE VENTA / RECIBO DIGITAL */}
+    <AnimatePresence>
+      {successSale && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setSuccessSale(null);
+              setSelectedCliente(null);
+              setSearchTerm('');
+              setManualPhone('');
+              setManualEmail('');
+              onClose();
+            }}
+            className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-6 sm:p-8 overflow-hidden z-10 flex flex-col text-center"
+          >
+            {/* Celebración */}
+            <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-10 h-10" />
+            </div>
+            
+            <h3 className="font-headline font-black text-2xl text-on-surface mb-1">¡Venta Completada!</h3>
+            <p className="text-[10px] text-secondary font-black uppercase tracking-wider mb-4">
+              Código de venta: #${successSale.id.slice(-6).toUpperCase()}
+            </p>
+            
+            <div className="bg-surface-container rounded-2xl p-4 mb-6 flex flex-col gap-2">
+              <div className="flex justify-between items-center text-sm font-bold">
+                <span className="text-secondary">Método de pago:</span>
+                <span className="text-primary uppercase">{successSale.paymentMethod}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm font-black border-t border-outline/10 pt-2 text-left">
+                <span className="text-on-surface">Total pagado:</span>
+                <span className="text-lg text-primary" style={{ marginLeft: 'auto' }}>{formatCurrency(successSale.total)}</span>
+              </div>
+            </div>
+
+            {/* Opciones de Recibo Digital */}
+            <div className="flex flex-col gap-4 text-left">
+              <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-1">Enviar Recibo Digital</h4>
+              
+              {/* WhatsApp Option */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-success" /> Número de WhatsApp
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="tel"
+                    placeholder="Celular (ej: 3001234567)"
+                    value={successSale.clientePhone || manualPhone}
+                    onChange={(e) => setManualPhone(e.target.value)}
+                    className="flex-1 bg-surface-container border border-outline/10 focus:border-primary rounded-xl px-3 py-2 text-xs font-bold outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const num = successSale.clientePhone || manualPhone;
+                      const link = generateWhatsAppReceiptLink(num, successSale);
+                      window.open(link, '_blank');
+                    }}
+                    disabled={!(successSale.clientePhone || manualPhone)}
+                    className="bg-success text-white hover:bg-success/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40"
+                  >
+                    Enviar
+                  </button>
+                </div>
+              </div>
+
+              {/* Email Option */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5 text-primary" /> Correo Electrónico
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="Correo (ej: cliente@gmail.com)"
+                    value={successSale.clienteEmail || manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    className="flex-1 bg-surface-container border border-outline/10 focus:border-primary rounded-xl px-3 py-2 text-xs font-bold outline-none"
+                  />
+                  <button
+                    onClick={() => sendEmailReceipt(successSale.clienteEmail || manualEmail, successSale)}
+                    disabled={!(successSale.clienteEmail || manualEmail) || emailSending}
+                    className="bg-primary text-white hover:bg-primary/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40 flex items-center gap-1.5"
+                  >
+                    {emailSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enviar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setSuccessSale(null);
+                setSelectedCliente(null);
+                setSearchTerm('');
+                setManualPhone('');
+                setManualEmail('');
+                onClose();
+              }}
+              className="w-full py-4 mt-8 bg-on-surface text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-opacity"
+            >
+              Finalizar y Cerrar
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

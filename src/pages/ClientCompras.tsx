@@ -279,11 +279,10 @@ export default function ClientCompras() {
     try {
       const isTransfer = paymentMethod === 'transferencia';
 
-      // Crear el mensaje inicial (para transferencias, instrucciones de pago)
       const initialMessages = isTransfer ? [{
         from: 'system',
         fromName: "D'LI - Lugar Favorito",
-        text: `¡Hola ${profile.name}! 🍦 Recibimos tu pedido. Para comenzar a prepararlo necesitamos que realices la transferencia a:\n\n📱 Nequi: 300 119 8206\n💰 Total a pagar: $${cartTotal.toLocaleString()}\n\nUna vez realizada, por favor adjunta el comprobante aquí usando el botón del clip 📎.`,
+        text: `¡Hola ${profile.name}! 🍦 Recibimos tu pedido. Para comenzar a prepararlo necesitamos que realices la transferencia a:\n\n📱 Nequi: 300 119 8206\n💰 Total a pagar: $${cartTotal.toLocaleString()}\n\n🛵 *Nota:* El valor del envío a domicilio no está incluido en este total y se cancela por separado al recibir tu pedido.\n\nUna vez realizada, por favor adjunta el comprobante aquí usando el botón del clip 📎.`,
         timestamp: Date.now(),
       }] : [];
 

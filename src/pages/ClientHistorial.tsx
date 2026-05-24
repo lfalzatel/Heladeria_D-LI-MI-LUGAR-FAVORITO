@@ -26,7 +26,10 @@ import {
   Utensils,
   ShoppingBag,
   Play,
-  Search
+  Search,
+  IceCream,
+  Smartphone,
+  Banknote
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -55,6 +58,31 @@ export default function ClientHistorial() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedExpenseDetail, setSelectedExpenseDetail] = useState<any | null>(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
+
+  const handlePrevMonth = () => {
+    const newMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1);
+    setSelectedMonth(newMonth);
+    setSelectedDateFilter(null);
+  };
+
+  const handleNextMonth = () => {
+    const newMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1);
+    setSelectedMonth(newMonth);
+    setSelectedDateFilter(null);
+  };
+
+  const formatCurrency = (val: number) => {
+    return '$' + val.toLocaleString('es-CO');
+  };
+
+  const PaymentIcon = ({ method }: { method: string }) => {
+    const m = (method || '').toLowerCase();
+    if (m.includes('efectivo') || m.includes('cash')) return <Banknote className="w-3 h-3" />;
+    if (m.includes('nequi') || m.includes('daviplata') || m.includes('pse')) return <Smartphone className="w-3 h-3" />;
+    return <CreditCard className="w-3.5 h-3.5 text-secondary" />;
+  };
 
   useEffect(() => {
     if (!profile) return;
@@ -206,12 +234,46 @@ export default function ClientHistorial() {
     }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
+  // Agrupar gastos por día para el mapa de calor
+  const currentMonth = selectedMonth.getMonth();
+  const currentYear = selectedMonth.getFullYear();
+  const dailySpending: Record<number, number> = {};
+  
+  combinedActivities.forEach(act => {
+    if (act.date.getMonth() === currentMonth && act.date.getFullYear() === currentYear) {
+      const day = act.date.getDate();
+      dailySpending[day] = (dailySpending[day] || 0) + act.amount;
+    }
+  });
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  const calendarDays = Array.from({ length: firstDayAdjusted }, () => null).concat(
+    Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  );
+
+  const getHeatmapColor = (amount: number) => {
+    if (amount === 0) return "bg-surface-container text-secondary/30 hover:bg-surface-container-high";
+    if (amount <= 15000) return "bg-primary/10 text-primary border border-primary/10 hover:bg-primary/20";
+    if (amount <= 50000) return "bg-primary/30 text-primary font-black border border-primary/25 hover:bg-primary/45";
+    return "bg-primary text-white shadow-sm shadow-primary/20 hover:opacity-90 font-black";
+  };
+
   const filteredActivities = combinedActivities.filter(act => {
     const matchesSearch = act.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          act.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesMonth = act.date.getMonth() === selectedMonth.getMonth() && 
-                         act.date.getFullYear() === selectedMonth.getFullYear();
-    return matchesSearch && matchesMonth;
+    
+    if (selectedDateFilter) {
+      return matchesSearch && 
+             act.date.getDate() === selectedDateFilter.getDate() &&
+             act.date.getMonth() === selectedDateFilter.getMonth() &&
+             act.date.getFullYear() === selectedDateFilter.getFullYear();
+    } else {
+      return matchesSearch && 
+             act.date.getMonth() === selectedMonth.getMonth() && 
+             act.date.getFullYear() === selectedMonth.getFullYear();
+    }
   });
 
   const totalSum = filteredActivities.reduce((acc, act) => acc + act.amount, 0);
@@ -283,10 +345,21 @@ export default function ClientHistorial() {
                         className="bg-transparent outline-none text-sm text-on-surface placeholder:text-secondary/30 w-full"
                       />
                     </div>
-                    <div className="bg-surface-container rounded-full px-4 py-2.5 flex items-center gap-2 border border-outline/5 cursor-pointer hover:bg-surface-container-high transition-colors">
-                      <Calendar className="w-4 h-4 text-secondary/50" />
-                      <span className="text-xs font-bold text-on-surface uppercase">{formatMonth(selectedMonth)}</span>
-                    </div>
+                    <button
+                      onClick={() => setShowHeatmap(!showHeatmap)}
+                      className={cn(
+                        "bg-surface-container rounded-full px-4 py-2.5 flex items-center gap-2 border hover:bg-surface-container-high transition-all active:scale-95 cursor-pointer",
+                        showHeatmap ? "border-primary/50 ring-2 ring-primary/10" : "border-outline/5"
+                      )}
+                    >
+                      <Calendar className={cn("w-4 h-4", showHeatmap ? "text-primary" : "text-secondary/50")} />
+                      <span className={cn("text-xs font-bold uppercase", showHeatmap ? "text-primary" : "text-on-surface")}>
+                        {selectedDateFilter 
+                          ? selectedDateFilter.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) 
+                          : formatMonth(selectedMonth)
+                        }
+                      </span>
+                    </button>
                   </div>
                   
                   <button
@@ -298,53 +371,266 @@ export default function ClientHistorial() {
                   </button>
                 </div>
 
+                {/* CALENDARIO DE CALOR COLLAPSIBLE */}
+                <AnimatePresence>
+                  {showHeatmap && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                      className="overflow-hidden bg-white/90 backdrop-blur-md rounded-[2rem] p-5 border border-outline/10 shadow-lg relative z-20 mb-6"
+                    >
+                      {/* Cabecera del Calendario */}
+                      <div className="flex items-center justify-between mb-4">
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePrevMonth();
+                          }} 
+                          className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary cursor-pointer"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <div className="text-center">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-0.5">Densidad de Gastos</p>
+                          <h4 className="text-sm font-bold text-on-surface">
+                            {formatMonth(selectedMonth)}
+                          </h4>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNextMonth();
+                          }} 
+                          disabled={selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear()}
+                          className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20 cursor-pointer"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Cuadrícula de Días */}
+                      <div className="flex flex-col items-center">
+                        <div className="grid grid-cols-7 gap-1 w-full max-w-sm">
+                          {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(day => (
+                            <div key={day} className="h-8 flex items-center justify-center">
+                              <span className="text-[10px] font-black text-secondary/40 uppercase">{day}</span>
+                            </div>
+                          ))}
+                          {calendarDays.map((day, i) => {
+                            if (!day) return <div key={`empty-${i}`} className="opacity-0" />;
+                            
+                            const amount = dailySpending[day] || 0;
+                            const isSelected = selectedDateFilter && 
+                                              selectedDateFilter.getDate() === day &&
+                                              selectedDateFilter.getMonth() === currentMonth &&
+                                              selectedDateFilter.getFullYear() === currentYear;
+                            
+                            const isToday = day === new Date().getDate() && 
+                                            currentMonth === new Date().getMonth() && 
+                                            currentYear === new Date().getFullYear();
+
+                            return (
+                              <button
+                                key={`day-${day}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (isSelected) {
+                                    setSelectedDateFilter(null);
+                                  } else {
+                                    setSelectedDateFilter(new Date(currentYear, currentMonth, day));
+                                  }
+                                }}
+                                className={cn(
+                                  "h-9 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all relative border border-transparent cursor-pointer",
+                                  getHeatmapColor(amount),
+                                  isSelected && "ring-2 ring-primary ring-offset-2 scale-[1.08] z-10",
+                                  isToday && !isSelected && "border-primary/50"
+                                )}
+                                title={`Gasto del día ${day}: $${amount.toLocaleString('es-CO')}`}
+                              >
+                                <span>{day}</span>
+                                {amount > 0 && (
+                                  <span className={cn(
+                                    "text-[7px] font-black leading-none mt-0.5 opacity-80",
+                                    amount > 50000 ? "text-white" : "text-primary"
+                                  )}>
+                                    ${amount >= 1000 ? `${Math.round(amount/1000)}k` : amount}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Leyenda y Acciones */}
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4 pt-3 border-t border-outline/5 text-[10px]">
+                        <div className="flex items-center gap-2">
+                          <span className="text-secondary/50 font-bold">Menos</span>
+                          <div className="w-3.5 h-3.5 rounded bg-surface-container" />
+                          <div className="w-3.5 h-3.5 rounded bg-primary/10 border border-primary/10" />
+                          <div className="w-3.5 h-3.5 rounded bg-primary/30 border border-primary/25" />
+                          <div className="w-3.5 h-3.5 rounded bg-primary" />
+                          <span className="text-secondary/50 font-bold">Más</span>
+                        </div>
+                        {selectedDateFilter && (
+                          <button
+                            onClick={() => setSelectedDateFilter(null)}
+                            className="text-primary font-black uppercase hover:underline cursor-pointer tracking-widest text-[9px]"
+                          >
+                            Limpiar Filtro de Día
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {filteredActivities.length === 0 ? (
                   <div className="text-center py-16 opacity-30">
                      <Receipt className="w-12 h-12 mx-auto mb-4" />
                      <p className="uppercase font-black text-[10px] tracking-widest">No hay gastos o compras registradas</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {filteredActivities.map((activity) => (
-                      <div 
-                        key={activity.id} 
-                        onClick={() => {
-                          if (activity.type === 'pedido') {
-                            setSelectedSaleDetail(activity.raw);
-                          } else {
-                            setSelectedExpenseDetail(activity);
-                          }
-                        }}
-                        className="bg-white rounded-[2rem] p-4 flex items-center justify-between border border-outline/10 shadow-sm hover:shadow-md transition-all cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                            activity.type === 'pedido' ? "bg-secondary/10 text-secondary" : "bg-primary/10 text-primary"
-                          )}>
-                            {activity.type === 'pedido' ? <ShoppingBag className="w-5 h-5" /> : getCategoryIcon(activity.category)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-black text-on-surface text-sm leading-tight truncate">{activity.description}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[9px] text-secondary/50 font-bold">{activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</span>
-                              <span className="text-[9px] font-black uppercase tracking-widest text-secondary/40">{activity.category}</span>
+                  <div className="space-y-4">
+                    {filteredActivities.map((activity) => {
+                      if (activity.type === 'pedido') {
+                        const pedidoObj = activity.raw;
+                        const singleItem = pedidoObj.items?.length === 1 ? pedidoObj.items[0] : null;
+                        const multiCount = pedidoObj.items?.length || 0;
+                        
+                        return (
+                          <div 
+                            key={activity.id} 
+                            onClick={() => setSelectedSaleDetail(pedidoObj)}
+                            className="bg-white rounded-[2rem] p-4 sm:p-5 flex flex-col border border-outline/10 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center flex-shrink-0">
+                                <ShoppingBag className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                {singleItem ? (
+                                  <>
+                                    <p className="font-black text-on-surface text-sm leading-tight">
+                                      {singleItem.quantity > 1 && <span className="text-primary mr-1">{singleItem.quantity}×</span>}
+                                      {singleItem.productName}
+                                      {singleItem.variantLabel && <span className="text-secondary font-bold"> · {singleItem.variantLabel}</span>}
+                                    </p>
+                                    {((singleItem.flavors?.length > 0) || (singleItem.additions?.length > 0) || (singleItem.fruitChoices?.length > 0)) && (
+                                      <div className="flex flex-wrap gap-1 mt-1.5">
+                                        {singleItem.flavors?.map((f: string, i: number) => (
+                                          <span key={i} className="px-1.5 py-0.5 rounded-md bg-primary/8 text-primary text-[8px] font-bold">{f}</span>
+                                        ))}
+                                        {singleItem.fruitChoices?.map((f: string, i: number) => (
+                                          <span key={i} className="px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-500 text-[8px] font-bold">{f}</span>
+                                        ))}
+                                        {singleItem.additions?.map((a: string, i: number) => (
+                                          <span key={i} className="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 text-[8px] font-bold">+{a}</span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="font-black text-on-surface text-sm leading-tight">
+                                      Pedido de {multiCount} productos
+                                    </p>
+                                    <p className="text-[10px] text-secondary/60 font-bold mt-1">
+                                      Ver detalle del pedido →
+                                    </p>
+                                  </>
+                                )}
+                              </div>
+                              <div className="text-right flex-shrink-0 ml-4">
+                                <p className="font-brand font-black text-secondary text-lg leading-none">
+                                  ${activity.amount.toLocaleString('es-CO')}
+                                </p>
+                                <div className="flex items-center justify-end gap-1 mt-1.5 text-secondary/50">
+                                  <PaymentIcon method={pedidoObj.paymentMethod} />
+                                  <span className="text-[9px] font-bold capitalize">{pedidoObj.paymentMethod || 'Efectivo'}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bottom Row */}
+                            <div className="flex items-center justify-between pt-3 border-t border-outline/5 mt-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="px-2.5 py-0.5 rounded-full flex items-center gap-1.5 bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200 text-[9px] font-black uppercase tracking-widest">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span>Compra</span>
+                                </div>
+                                <span className="text-[9px] text-secondary/50 font-bold">
+                                  {activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                </span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-secondary/40">
+                                  · {pedidoObj.tableName || 'Pedido Online'}
+                                </span>
+                              </div>
+                              <span className="text-[9px] font-mono text-secondary/25 font-bold">
+                                #{pedidoObj.id.slice(-6).toUpperCase()}
+                              </span>
                             </div>
                           </div>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-4">
-                          <p className={cn(
-                            "font-brand font-black text-lg leading-none",
-                            activity.type === 'pedido' ? "text-secondary" : "text-primary"
-                          )}>
-                            ${activity.amount.toLocaleString('es-CO')}
-                          </p>
-                          <div className="flex items-center justify-end gap-1 mt-1 text-secondary/50">
-                            <span className="text-[9px] font-bold uppercase">{activity.type === 'pedido' ? 'Compra' : 'Gasto'}</span>
+                        );
+                      } else {
+                        return (
+                          <div 
+                            key={activity.id} 
+                            onClick={() => setSelectedExpenseDetail(activity)}
+                            className="bg-white rounded-[2rem] p-4 sm:p-5 flex flex-col border border-outline/10 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                                activity.category.toLowerCase() === 'netflix' ? "bg-red-50 text-red-500" :
+                                activity.category.toLowerCase() === 'facturas' ? "bg-indigo-50 text-indigo-500" :
+                                activity.category.toLowerCase() === 'servicios publicos' ? "bg-cyan-50 text-cyan-600" :
+                                activity.category.toLowerCase() === 'alimentación' ? "bg-emerald-50 text-emerald-600" :
+                                "bg-slate-50 text-slate-500"
+                              )}>
+                                {getCategoryIcon(activity.category)}
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className="font-black text-on-surface text-sm leading-tight">
+                                  {activity.description}
+                                </p>
+                                <p className="text-[10px] text-secondary/60 font-bold mt-1">
+                                  Registrado como gasto manual
+                                </p>
+                              </div>
+                              <div className="text-right flex-shrink-0 ml-4">
+                                <p className="font-brand font-black text-primary text-lg leading-none">
+                                  ${activity.amount.toLocaleString('es-CO')}
+                                </p>
+                                <span className="text-[9px] font-bold text-secondary/40 block mt-1">COP</span>
+                              </div>
+                            </div>
+
+                            {/* Bottom Row */}
+                            <div className="flex items-center justify-between pt-3 border-t border-outline/5 mt-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="px-2.5 py-0.5 rounded-full flex items-center gap-1.5 bg-amber-50 text-amber-600 ring-1 ring-amber-200 text-[9px] font-black uppercase tracking-widest">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  <span>Gasto</span>
+                                </div>
+                                <span className="text-[9px] text-secondary/50 font-bold">
+                                  {activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                </span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-secondary/40">
+                                  · {activity.category}
+                                </span>
+                              </div>
+                              <span className="text-[9px] font-mono text-secondary/25 font-bold">
+                                #{activity.id.slice(-6).toUpperCase()}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      }
+                    })}
                   </div>
                 )}
               </div>

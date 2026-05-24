@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   collection, onSnapshot, query, orderBy, where, doc, updateDoc,
-  addDoc, serverTimestamp, increment, limit
+  getDoc, addDoc, serverTimestamp, increment, limit
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -108,8 +108,48 @@ export default function ClientPedidos() {
             customerName: pedido.clienteName || profile.name // Para saber quién lo marcó como entregado
           };
           
-          await addDoc(collection(db, 'sales'), saleData);
+          const saleDocRef = await addDoc(collection(db, 'sales'), saleData);
           
+          // Fetch client email to send the receipt
+          let clientEmail = '';
+          try {
+            const userSnap = await getDoc(doc(db, 'users', pedido.clienteId));
+            if (userSnap.exists()) {
+              clientEmail = userSnap.data().email || '';
+            }
+          } catch (e) {
+            console.error('Error fetching client email for receipt:', e);
+          }
+
+          if (clientEmail) {
+            const completedSale = {
+              id: saleDocRef.id,
+              items: pedido.items,
+              total: pedido.total,
+              paymentMethod: pedido.paymentMethod || 'Efectivo',
+              tableName: pedido.tableName || 'Pedido Online',
+              clienteName: pedido.clienteName,
+              date: saleData.date,
+              hour: saleData.hour
+            };
+
+            // Trigger the serverless API endpoint in the background
+            fetch('/api/send-receipt', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: clientEmail, sale: completedSale })
+            }).then(async (res) => {
+              const resData = await res.json();
+              if (res.ok) {
+                if (resData.simulated) {
+                  console.log('Recibo de correo enviado (simulado)');
+                } else {
+                  console.log('Recibo de correo enviado exitosamente');
+                }
+              }
+            }).catch(err => console.error('Error sending receipt:', err));
+          }
+
           // Update product sales stats
           const updatePromises = pedido.items.map(item => 
             updateDoc(doc(db, 'products', item.productId), {
