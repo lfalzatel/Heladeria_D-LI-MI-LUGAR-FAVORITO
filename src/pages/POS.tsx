@@ -189,7 +189,8 @@ export default function POS() {
                             product.requiresFruitChoice || 
                             product.requiresSauces || 
                             product.requiresToppings || 
-                            product.requiresSalpiconBase;
+                            product.requiresSalpiconBase ||
+                            (product.customOptions && product.customOptions.length > 0);
           if (isComplex) {
             setSelectedProduct(product);
           } else {
@@ -405,7 +406,8 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
                     product.requiresFruitChoice || 
                     product.requiresSauces || 
                     product.requiresToppings || 
-                    product.requiresSalpiconBase;
+                    product.requiresSalpiconBase ||
+                    (product.customOptions && product.customOptions.length > 0);
   const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
   const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);
 
