@@ -234,7 +234,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
             </div>
 
             {/* SMART YIELD SECTION */}
-            {['kg', 'Litro', 'Bloque', 'Tarro', 'und', 'Lata'].includes(unit) ? (
+            {['kg', 'g', 'Litro', 'Bloque', 'Tarro', 'und', 'Lata'].includes(unit) ? (
               <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                   <Package className="w-4 h-4 text-primary" />
