@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus, GlassWater, Ban } from 'lucide-react';
 import { Product, ProductVariant, CartItem } from '../types';
@@ -50,6 +50,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [showFullImage, setShowFullImage] = useState(false);
+  const openTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      openTimeRef.current = Date.now();
+    }
+  }, [isOpen]);
 
   // Extra additions states
   const [extraFlavors, setExtraFlavors] = useState<string[]>([]);
@@ -446,8 +453,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="relative w-full max-w-lg bg-surface flex flex-col h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl border border-white/20"
           >
-            {/* ── SECCIÓN SUPERIOR: HERO IMAGE + OVERLAY ── */}
-            <div className="relative h-[30%] sm:h-[35%] flex-shrink-0 bg-surface-container-low group cursor-pointer" onClick={() => product.imageUrl && setShowFullImage(true)}>
+            <div 
+              className="relative h-[30%] sm:h-[35%] flex-shrink-0 bg-surface-container-low group cursor-pointer" 
+              onClick={() => {
+                const elapsed = Date.now() - openTimeRef.current;
+                if (elapsed > 700 && product.imageUrl) {
+                  setShowFullImage(true);
+                }
+              }}
+            >
                {product.imageUrl ? (
                    <img 
                      src={getAssetUrl(product.imageUrl)} 

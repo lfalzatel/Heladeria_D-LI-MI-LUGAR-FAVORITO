@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, ChevronRight, IceCream, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
@@ -25,6 +25,13 @@ export default function ProductDetailsCarousel({
   const [activeVariantImage, setActiveVariantImage] = useState<string | null>(null);
   const [showFullImage, setShowFullImage] = useState(false);
   const [canZoom, setCanZoom] = useState(false);
+  const openTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      openTimeRef.current = Date.now();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     setActiveVariantImage(null);
@@ -194,7 +201,12 @@ export default function ProductDetailsCarousel({
                     !canZoom && "pointer-events-none"
                   )}
                   style={currentProduct.cardColor?.startsWith('#') ? { backgroundColor: currentProduct.cardColor } : {}}
-                  onClick={() => canZoom && displayedImage && setShowFullImage(true)}
+                  onClick={() => {
+                    const elapsed = Date.now() - openTimeRef.current;
+                    if (elapsed > 700 && canZoom && displayedImage) {
+                      setShowFullImage(true);
+                    }
+                  }}
                 >
                   {displayedImage ? (
                     <img 
