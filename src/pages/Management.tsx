@@ -10,7 +10,8 @@ import {
   addDoc,
   getDocs,
   serverTimestamp,
-  increment
+  increment,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
@@ -44,7 +45,9 @@ import {
   Construction,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Save,
+  Trash2
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -173,6 +176,10 @@ export default function Management() {
   const [isFlavorModalOpen, setIsFlavorModalOpen] = useState(false);
   const [newFlavorName, setNewFlavorName] = useState('');
   const [isSavingFlavor, setIsSavingFlavor] = useState(false);
+
+  // ── Category Edit State ──────────────────────────────────────────────────
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // ── Header Actions ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -550,6 +557,33 @@ export default function Management() {
     }
   };
 
+  const handleRenameCategory = async (oldName: string) => {
+    if (!newCategoryName.trim() || newCategoryName === oldName || oldName === 'Varios') {
+      setEditingCategory(null);
+      return;
+    }
+    const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === oldName);
+    const batch = writeBatch(db);
+    suppliesToUpdate.forEach(s => {
+      batch.update(doc(db, 'supplies', s.id!), { category: newCategoryName.trim() });
+    });
+    await batch.commit();
+    toast.success('Categoría renombrada');
+    setEditingCategory(null);
+  };
+
+  const handleDeleteCategory = async (catName: string) => {
+    if (catName === 'Varios') return;
+    if (!window.confirm(`¿Estás seguro de eliminar la categoría "${catName}"? Sus insumos pasarán a "Varios".`)) return;
+    const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === catName);
+    const batch = writeBatch(db);
+    suppliesToUpdate.forEach(s => {
+      batch.update(doc(db, 'supplies', s.id!), { category: 'Varios' });
+    });
+    await batch.commit();
+    toast.success('Categoría eliminada');
+  };
+
   const calculateRecipeCost = (recipe?: any[]) => {
     if (!recipe || recipe.length === 0) return 0;
     return recipe.reduce((acc, ing) => {
@@ -700,8 +734,42 @@ export default function Management() {
                                   )}>
                                     {category.substring(0, 2).toUpperCase()}
                                   </div>
-                                  <div className="text-left">
-                                    <h3 className="font-headline font-black text-lg text-on-surface uppercase tracking-tight">{category}</h3>
+                                  <div className="text-left flex-1">
+                                    {editingCategory === category ? (
+                                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                        <input 
+                                          autoFocus
+                                          value={newCategoryName}
+                                          onChange={e => setNewCategoryName(e.target.value)}
+                                          onKeyDown={e => { if (e.key === 'Enter') handleRenameCategory(category); if (e.key === 'Escape') setEditingCategory(null); }}
+                                          className="px-2 py-1 border-2 border-primary/40 rounded-xl outline-none focus:border-primary text-sm font-black bg-white shadow-sm w-full max-w-[200px]"
+                                        />
+                                        <button onClick={(e) => { e.stopPropagation(); handleRenameCategory(category); }} className="p-1 bg-primary text-white rounded-xl"><Save className="w-4 h-4"/></button>
+                                        <button onClick={(e) => { e.stopPropagation(); setEditingCategory(null); }} className="p-1 bg-surface-container text-secondary rounded-xl"><X className="w-4 h-4"/></button>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-2 group/cat">
+                                        <h3 className="font-headline font-black text-lg text-on-surface uppercase tracking-tight">{category}</h3>
+                                        {category !== 'Varios' && (
+                                          <div className="opacity-0 group-hover/cat:opacity-100 flex items-center gap-1 transition-opacity" onClick={e => e.stopPropagation()}>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); setEditingCategory(category); setNewCategoryName(category); }}
+                                              className="p-1 hover:bg-primary/10 hover:text-primary text-secondary rounded-lg transition-colors"
+                                              title="Renombrar"
+                                            >
+                                              <Edit3 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category); }}
+                                              className="p-1 hover:bg-red-500/10 hover:text-red-500 text-secondary rounded-lg transition-colors"
+                                              title="Eliminar"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                     <p className="text-xs font-bold text-secondary">{items.length} insumos registrados</p>
                                   </div>
                                 </div>
