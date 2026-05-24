@@ -20,7 +20,9 @@ import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 
 import { db } from '../lib/firebase';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { generateDailyReportPDF } from '../utils/pdfGenerator';
+import { generateDetailedPDF, captureReportImage } from '../utils/pdfGenerator';
+import { DetailedReportTemplate } from '../components/DetailedReportTemplate';
+import { generateDashboardExcel } from '../utils/excelGenerator';
 import { toast } from 'sonner';
 
 import {
@@ -39,6 +41,7 @@ import {
   DeudaClientesModal
 } from '../components/ReportsModals';
 import MovementDetailModal from '../components/MovementDetailModal';
+import ReportPreviewModal from '../components/ReportPreviewModal';
 
 type DateFilter = 'today' | 'week' | 'month';
 
@@ -96,6 +99,9 @@ export default function Dashboard() {
 
   // Export
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [previewType, setPreviewType] = useState<'pdf' | 'excel' | 'image' | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -236,11 +242,24 @@ export default function Dashboard() {
   const deudaByClient = Object.values(deudaMap).sort((a, b) => b.total - a.total);
   const totalDeuda = creditPedidos.reduce((s, p) => s + (p.total || 0), 0);
 
-  const filterLabel = selectedDate 
-    ? selectedDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'long' }).replace(',', '')
-    : dashboardFilter === 'today' ? 'Hoy' 
-    : dashboardFilter === 'week' ? 'Semana' 
-    : selectedMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+  const filterLabel = (() => {
+    if (selectedDate) {
+      return selectedDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'long' }).replace(',', '');
+    }
+    const now = new Date();
+    if (dashboardFilter === 'today') {
+      return `Hoy (${now.toLocaleDateString('es-CO')})`;
+    }
+    if (dashboardFilter === 'week') {
+      const weekAgo = new Date(now);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return `Últimos 7 días (${weekAgo.toLocaleDateString('es-CO')} al ${now.toLocaleDateString('es-CO')})`;
+    }
+    const m = selectedMonth || now;
+    const firstDay = new Date(m.getFullYear(), m.getMonth(), 1);
+    const lastDay = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+    return `${m.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })} (${firstDay.toLocaleDateString('es-CO')} al ${lastDay.toLocaleDateString('es-CO')})`;
+  })();
 
   useEffect(() => {
     if (profile) {
@@ -261,44 +280,173 @@ export default function Dashboard() {
             >
               <Calendar className="w-5 h-5" />
             </button>
-            <button 
-              onClick={() => handleExport()}
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm",
-                isGeneratingPDF ? "bg-primary/50 text-white cursor-wait" : "bg-white border border-outline/20 text-secondary hover:text-primary hover:border-primary/50"
+            <div className="relative">
+              <button 
+                onClick={() => setShowExportOptions(!showExportOptions)}
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm",
+                  isGeneratingPDF || showExportOptions ? "bg-primary text-white" : "bg-white border border-outline/20 text-secondary hover:text-primary hover:border-primary/50"
+                )}
+                title="Descargar Reporte"
+                disabled={isGeneratingPDF}
+              >
+                <Download className="w-5 h-5" />
+              </button>
+              {showExportOptions && (
+                <div className="absolute top-14 right-0 bg-white rounded-3xl p-2 shadow-2xl border border-outline/10 w-64 z-[100] flex flex-col gap-1">
+                  <div className="px-3 py-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-secondary/60">Formato de Salida</p>
+                  </div>
+                  <button onClick={() => handlePreview('excel')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">XLS</div>
+                    <span className="font-bold text-on-surface">Descargar Excel</span>
+                  </button>
+                  <button onClick={() => handlePreview('pdf')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                    <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-xs">PDF</div>
+                    <span className="font-bold text-on-surface">Descargar PDF</span>
+                  </button>
+                  <button onClick={() => handlePreview('image')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">JPG</div>
+                    <span className="font-bold text-on-surface">Descargar Imagen</span>
+                  </button>
+                </div>
               )}
-              title="Descargar Reporte"
-              disabled={isGeneratingPDF}
-            >
-              <Download className="w-5 h-5" />
-            </button>
+            </div>
           </div>
         )
       });
     }
     return () => clearHeader();
-  }, [profile, setHeader, clearHeader, showCalendar, selectedDate, dashboardFilter, isGeneratingPDF, filterLabel]);
+  }, [profile, setHeader, clearHeader, showCalendar, selectedDate, dashboardFilter, isGeneratingPDF, filterLabel, showExportOptions]);
 
-  const handleExport = async () => {
+  const handlePreview = async (type: 'pdf' | 'excel' | 'image') => {
+    setShowExportOptions(false);
+    setPreviewType(type);
+    setIsPreviewModalOpen(true);
+    setPreviewData(null);
     setIsGeneratingPDF(true);
-    const dateStr = selectedDate 
-      ? selectedDate.toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) 
-      : new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota' });
-    const sellerName = profile?.name || 'Vendedor';
     
+    const dateStr = filterLabel;
+    const sellerName = profile?.name || 'Vendedor';
+
     try {
-      const result = await generateDailyReportPDF('dashboard-pdf-container', sellerName, dateStr, false);
-      if (result.success && result.pdf) {
-        result.pdf.save(`Reporte_${dateStr.replace(/\//g, '-')}_${sellerName}.pdf`);
-        toast.success('PDF descargado con éxito');
-      } else {
-        toast.error('Error generando reporte');
+      const metrics = {
+        totalIngresos,
+        efectivo,
+        tarjeta,
+        transferencia,
+        totalCredito,
+        totalCompras,
+        gananciaNeta
+      };
+
+      if (type === 'excel') {
+        setPreviewData({ type: 'excel', dateStr, sellerName });
+        setIsGeneratingPDF(false);
+      } else if (type === 'pdf') {
+        const result = await generateDetailedPDF(sellerName, dateStr, metrics, combinedActivity, ranking);
+        if (result.success) {
+           setPreviewData({
+             type,
+             pdf: result.pdf,
+             blobUrl: result.blobUrl,
+             imgData: null,
+             dateStr,
+             sellerName
+           });
+        } else {
+           toast.error('Error generando PDF');
+           setIsPreviewModalOpen(false);
+        }
+        setIsGeneratingPDF(false);
+      } else if (type === 'image') {
+        // Usar setTimeout para permitir que React renderice el componente oculto
+        setTimeout(async () => {
+          const imgData = await captureReportImage('hidden-image-report');
+          if (imgData) {
+             setPreviewData({
+               type,
+               pdf: null,
+               blobUrl: null,
+               imgData,
+               dateStr,
+               sellerName
+             });
+          } else {
+             toast.error('Error generando Imagen');
+             setIsPreviewModalOpen(false);
+          }
+          setIsGeneratingPDF(false);
+        }, 100);
       }
     } catch (e) {
-      console.error(e);
       toast.error('Ocurrió un error al procesar');
+      setIsPreviewModalOpen(false);
+      setIsGeneratingPDF(false);
     }
-    setIsGeneratingPDF(false);
+  };
+
+  const handleDownload = () => {
+    if (!previewData) return;
+    const { type, pdf, imgData, dateStr, sellerName } = previewData;
+    const fileName = `Reporte_${dateStr.replace(/\//g, '-')}_${sellerName}`;
+    
+    if (type === 'pdf' && pdf) {
+      pdf.save(`${fileName}.pdf`);
+      toast.success('PDF descargado con éxito');
+    } else if (type === 'image' && imgData) {
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `${fileName}.jpg`;
+      link.click();
+      toast.success('Imagen descargada con éxito');
+    } else if (type === 'excel') {
+      const metrics = {
+        totalIngresos,
+        efectivo,
+        tarjeta,
+        transferencia,
+        totalCredito,
+        totalCompras,
+        gananciaNeta
+      };
+      generateDashboardExcel(sellerName, dateStr, metrics, combinedActivity, ranking);
+      toast.success('Excel descargado con éxito');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!previewData) return;
+    try {
+      const { type, pdf, imgData, dateStr, sellerName } = previewData;
+      const fileName = `Reporte_${dateStr.replace(/\//g, '-')}_${sellerName}`;
+      
+      let fileToShare: File | null = null;
+
+      if (type === 'pdf' && pdf) {
+        const blob = pdf.output('blob');
+        fileToShare = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
+      } else if (type === 'image' && imgData) {
+        const response = await fetch(imgData);
+        const blob = await response.blob();
+        fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+      } else if (type === 'excel') {
+         toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
+         return;
+      }
+
+      if (fileToShare && navigator.share) {
+        await navigator.share({
+          title: `Reporte ${dateStr}`,
+          text: `Adjunto reporte generado por ${sellerName}`,
+          files: [fileToShare]
+        });
+      } else {
+        toast.info('Compartir no está soportado en este navegador');
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const tableStatus = [
@@ -384,6 +532,7 @@ export default function Dashboard() {
             sub={filterLabel}
             accent="emerald"
             onOpen={() => open('ingresos')}
+            index={0}
           />
           <MetricCard
             icon={<CreditCard className="w-5 h-5" />}
@@ -392,6 +541,7 @@ export default function Dashboard() {
             sub={filterLabel}
             accent="orange"
             onOpen={() => open('credito')}
+            index={1}
           />
           {profile?.role !== 'vendedor' && (
             <MetricCard
@@ -401,6 +551,7 @@ export default function Dashboard() {
               sub={filterLabel}
               accent="amber"
               onOpen={() => { /* Implement Egresos Modal if needed */ }}
+              index={2}
             />
           )}
           {profile?.role !== 'vendedor' && (
@@ -409,9 +560,10 @@ export default function Dashboard() {
               label="Ganancia Neta"
               value={formatCurrency(gananciaNeta)}
               sub={filterLabel}
-              badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÉRDIDA', color: gananciaNeta >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}
+              badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÉRDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
               accent="blue"
               onOpen={() => open('ganancia')}
+              index={3}
             />
           )}
           <MetricCard
@@ -421,6 +573,7 @@ export default function Dashboard() {
             sub={`${starProduct?.units || 0} uds`}
             accent="amber"
             onOpen={() => open('ranking')}
+            index={4}
           />
           {profile?.role !== 'vendedor' && (
             <MetricCard
@@ -430,6 +583,7 @@ export default function Dashboard() {
               sub="Total Histórico"
               accent="orange"
               onOpen={() => open('deuda')}
+              index={5}
             />
           )}
           <MetricCard
@@ -437,9 +591,10 @@ export default function Dashboard() {
             label="Stock"
             value={criticalSupplies.length.toString()}
             sub="Items críticos"
-            badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-red-100 text-red-700' } : null}
+            badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-[#fee2e2] text-[#b91c1c]' } : null}
             accent="orange"
             onOpen={() => setIsStockModalOpen(true)}
+            index={6}
           />
         </div>
 
@@ -567,6 +722,34 @@ export default function Dashboard() {
         profile={profile}
         onToggleItemPrepared={() => {}}
       />
+
+      <ReportPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        type={previewType}
+        previewUrl={previewData?.imgData || null}
+        onDownload={handleDownload}
+        onShare={handleShare}
+      />
+
+      <div className="absolute opacity-0 pointer-events-none -z-50" style={{ top: '-10000px', left: '-10000px' }}>
+        <div id="hidden-image-report">
+          <DetailedReportTemplate
+            sellerName={profile?.name || 'Vendedor'}
+            dateStr={filterLabel}
+            metrics={{
+              totalIngresos,
+              efectivo,
+              tarjeta,
+              transferencia,
+              totalCredito,
+              totalCompras,
+              gananciaNeta
+            }}
+            ranking={ranking}
+          />
+        </div>
+      </div>
     </>
   );
 }

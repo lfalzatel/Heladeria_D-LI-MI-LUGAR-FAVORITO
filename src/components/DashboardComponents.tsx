@@ -12,30 +12,30 @@ const toDateS = (ts: any): Date | null => {
 
 // ── COMPONENTS ──
 export function MetricCard({
-  icon, label, value, sub, badge, accent, onOpen
+  icon, label, value, sub, badge, accent, onOpen, index = 0
 }: {
   icon: React.ReactNode; label: string; value: string;
   sub: string; badge?: { text: string; color: string } | null; 
   accent: 'emerald' | 'orange' | 'amber' | 'blue';
   onOpen: () => void;
+  index?: number;
 }) {
   const accentMap = {
-    emerald: 'bg-emerald-50/50 border-emerald-100',
-    orange: 'bg-orange-50/50 border-orange-100',
-    amber: 'bg-amber-50/50 border-amber-100',
-    blue: 'bg-blue-50/50 border-blue-100'
+    emerald: 'bg-[#ecfdf5] border-[#d1fae5]',
+    orange: 'bg-[#fff7ed] border-[#ffedd5]',
+    amber: 'bg-[#fffbeb] border-[#fef3c7]',
+    blue: 'bg-[#eff6ff] border-[#dbeafe]'
   };
 
   return (
     <motion.button
       onClick={onOpen}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "bg-white text-left w-full rounded-3xl p-4 border flex flex-col gap-2 shadow-sm relative group hover:shadow-md transition-all",
+        "bg-white text-left w-full rounded-3xl p-4 border flex flex-col gap-2 shadow-sm relative group hover:shadow-md transition-all animate-card-mix opacity-0",
         accentMap[accent]
       )}
+      style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="flex items-center justify-between">
         <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm text-on-surface">

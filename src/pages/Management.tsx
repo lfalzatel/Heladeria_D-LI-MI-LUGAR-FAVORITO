@@ -853,7 +853,14 @@ export default function Management() {
                                               </div>
                                               <div className="flex-1 text-right border-l border-outline/10 pl-4">
                                                 <p className="text-[9px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
-                                                <p className="text-sm font-bold text-secondary mt-1.5">{s.minLimit ?? 0} <span className="text-[10px] uppercase">{s.unit}</span></p>
+                                                <p className="text-sm font-bold text-secondary mt-1.5">
+                                                  {s.minLimitUnit === 'internal' 
+                                                    ? `${Math.round((s.minLimit || 0) * (s.portionsPerUnit || s.yieldPerUnit || 1))} `
+                                                    : `${s.minLimit ?? 0} `}
+                                                  <span className="text-[10px] uppercase">
+                                                    {s.minLimitUnit === 'internal' ? 'UND' : s.unit}
+                                                  </span>
+                                                </p>
                                               </div>
                                             </div>
                                           </div>
