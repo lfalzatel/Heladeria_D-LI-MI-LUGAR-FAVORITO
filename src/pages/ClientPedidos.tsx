@@ -157,6 +157,43 @@ export default function ClientPedidos() {
     }
   };
 
+  const handleDeletePedido = async (pedidoId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'pedidos', pedidoId));
+      toast.success('Pedido eliminado permanentemente');
+      if (selectedId === pedidoId) setSelectedId(null);
+    } catch (error) {
+      console.error("Error al eliminar pedido:", error);
+      toast.error('Error al eliminar el pedido');
+    }
+  };
+
+  // Auto-cleanup for old rejected/cancelled orders
+  useEffect(() => {
+    if (!isStaff || pedidos.length === 0) return;
+    const now = new Date();
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    
+    pedidos.forEach(async (p) => {
+      if (p.status === 'rechazado' || p.status === 'cancelado') {
+        const timestamp = p.updatedAt || p.createdAt;
+        if (!timestamp) return;
+        const dateObj = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        if (now.getTime() - dateObj.getTime() > oneDayInMs) {
+          try {
+            const { deleteDoc, doc } = await import('firebase/firestore');
+            await deleteDoc(doc(db, 'pedidos', p.id));
+            console.log(`Auto-deleted old ${p.status} order: ${p.id}`);
+          } catch (e) {
+            console.error("Failed to auto-delete old order", p.id, e);
+          }
+        }
+      }
+    });
+  }, [pedidos, isStaff]);
+
   const handleSendMessage = async () => {
     const messageText = chatMessage.trim();
     if (!messageText || !selectedPedido || !profile) return;
@@ -240,6 +277,7 @@ export default function ClientPedidos() {
                   onOpen={() => setSelectedId(pedido.id)}
                   onUpdateStatus={handleUpdateStatus}
                   isUpdating={updatingId === pedido.id}
+                  onDeletePedido={handleDeletePedido}
                 />
               ))
             )}
@@ -265,6 +303,7 @@ export default function ClientPedidos() {
                   onOpen={() => setSelectedId(pedido.id)}
                   onUpdateStatus={handleUpdateStatus}
                   isUpdating={updatingId === pedido.id}
+                  onDeletePedido={handleDeletePedido}
                 />
               ))}
             </AnimatePresence>

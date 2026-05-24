@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   IceCream, ShoppingBag, Banknote, CreditCard, Smartphone, 
-  ChevronRight, Check, X, Truck
+  ChevronRight, Check, X, Truck, Trash2
 } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -58,8 +58,8 @@ function getStatusConfig(status: string) {
 }
 
 export default function OrderCard({
-  pedido, isStaff, userId, onOpen, onUpdateStatus, isUpdating
-}: OrderCardProps) {
+  pedido, isStaff, userId, onOpen, onUpdateStatus, isUpdating, onDeletePedido
+}: OrderCardProps & { onDeletePedido?: (id: string, e?: React.MouseEvent) => void }) {
   const cfg = getStatusConfig(pedido.status);
   const { date, time } = formatOrderDate(pedido.createdAt);
   const singleItem = pedido.items?.length === 1 ? pedido.items[0] : null;
@@ -151,7 +151,7 @@ export default function OrderCard({
         </div>
       </div>
 
-      {(isActive || (pedido.status === 'rechazado' && isStaff)) && onUpdateStatus && (
+      {(isActive || ((pedido.status === 'rechazado' || pedido.status === 'cancelado') && isStaff)) && onUpdateStatus && (
         <div className="border-t border-outline/5 px-4 py-2.5 flex gap-2 bg-surface-container-lowest/40">
           {isStaff ? (
             <>
@@ -192,7 +192,21 @@ export default function OrderCard({
                   <Check className="w-3.5 h-3.5 stroke-[3]" /> Revertir Rechazo (Aceptar)
                 </button>
               )}
-              {pedido.status !== 'rechazado' && (
+              {(pedido.status === 'rechazado' || pedido.status === 'cancelado') && onDeletePedido && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('¿Eliminar permanentemente este pedido? Esta acción no se puede deshacer.')) {
+                      onDeletePedido(pedido.id, e);
+                    }
+                  }}
+                  className="w-10 flex items-center justify-center py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all active:scale-95 border border-red-100"
+                  title="Eliminar permanentemente"
+                >
+                  <Trash2 className="w-4 h-4 stroke-[2]" />
+                </button>
+              )}
+              {pedido.status !== 'rechazado' && pedido.status !== 'cancelado' && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
