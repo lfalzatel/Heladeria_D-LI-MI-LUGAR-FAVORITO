@@ -419,7 +419,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                                  <span className="font-bold text-sm text-on-surface">
                                    {step.type === 'flavors' ? 'Sabores' : 
                                     step.type === 'fruits' ? 'Frutas' : 
-                                    step.type === 'additions' ? 'Adiciones' : 'Salsas'}
+                                    step.type === 'additions' ? 'Adiciones' : 
+                                    step.type === 'bases' ? 'Bases' : 'Salsas'}
                                  </span>
                                  {step.type === 'flavors' && (
                                    <div className="flex items-center gap-1">
@@ -487,7 +488,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
 
                          {/* Add Step Buttons */}
                          <div className="flex flex-wrap gap-2 mt-2">
-                           {['flavors', 'fruits', 'additions', 'sauces'].map((type) => {
+                           {['flavors', 'fruits', 'additions', 'sauces', 'bases'].map((type) => {
                              const isAdded = (v.steps || []).some(s => s.type === type);
                              if (isAdded) return null;
                              return (
@@ -503,9 +504,12 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                                  className="px-3 py-1.5 bg-surface-container rounded-lg text-xs font-bold text-on-surface hover:bg-outline/10 transition-colors flex items-center gap-1"
                                >
                                  <Plus className="w-3 h-3" />
-                                 {type === 'flavors' ? 'Sabores' : 
-                                  type === 'fruits' ? 'Frutas' : 
-                                  type === 'additions' ? 'Adiciones' : 'Salsas'}
+                                 <span>
+                                   {type === 'flavors' ? 'Sabores' : 
+                                    type === 'fruits' ? 'Frutas' : 
+                                    type === 'additions' ? 'Adiciones' : 
+                                    type === 'bases' ? 'Bases' : 'Salsas'}
+                                 </span>
                                </button>
                              );
                            })}

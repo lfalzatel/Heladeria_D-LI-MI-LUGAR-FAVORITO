@@ -176,6 +176,11 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                               {s}
                             </span>
                           ))}
+                          {item.baseChoice && (
+                            <span className="text-[10px] bg-amber-500/10 text-amber-700 px-1.5 py-0.5 rounded-md font-black border border-amber-500/20">
+                              Base: {item.baseChoice}
+                            </span>
+                          )}
                           {Object.entries(item.customSelections || {}).map(([key, val], i) => (
                             <span key={i} className="text-[10px] bg-purple-500/5 text-purple-600 px-1.5 py-0.5 rounded-md font-black border border-purple-500/10">
                               {val}

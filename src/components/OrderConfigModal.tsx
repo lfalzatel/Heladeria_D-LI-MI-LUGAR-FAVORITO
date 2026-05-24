@@ -44,6 +44,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [selectedIncludedToppings, setSelectedIncludedToppings] = useState<string[]>([]);
   const [selectedAdditions, setSelectedAdditions] = useState<{id: string, name: string, price: number}[]>([]);
   const [selectedCustomOptions, setSelectedCustomOptions] = useState<Record<string, string>>({});
+  const [selectedBaseChoice, setSelectedBaseChoice] = useState<string>('');
+  const [availableBases, setAvailableBases] = useState<string[]>(['Brownie', 'Chocorramo', 'Jet Wafer']);
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -129,19 +131,28 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const extraFlavorsPrice = extraFlavors.length * getAdditionPrice('helado', 3500);
   const extraSaucesPrice = extraSauces.length * getAdditionPrice('salsa', 1000);
 
-  // Fetch additions
+  // Fetch additions and bases
   useEffect(() => {
-    const fetchAdditions = async () => {
+    const fetchData = async () => {
       try {
-        const q = query(collection(db, 'products'), where('category', '==', 'adiciones'), where('isActive', '==', true));
-        const snap = await getDocs(q);
-        const adds = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        const qAdditions = query(collection(db, 'products'), where('category', '==', 'adiciones'), where('isActive', '==', true));
+        const snapAdditions = await getDocs(qAdditions);
+        const adds = snapAdditions.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         setAvailableAdditions(adds);
+
+        const qBases = query(collection(db, 'supplies'), where('category', '==', 'Bases'));
+        const snapBases = await getDocs(qBases);
+        if (!snapBases.empty) {
+          const basesNames = snapBases.docs.map(doc => doc.data().name as string);
+          if (basesNames.length > 0) {
+            setAvailableBases(basesNames);
+          }
+        }
       } catch (err) {
-        console.error("Error fetching additions:", err);
+        console.error("Error fetching data:", err);
       }
     };
-    fetchAdditions();
+    fetchData();
   }, []);
 
   // Reset or pre-fill state when modal opens
@@ -205,6 +216,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         }
         
         setSelectedCustomOptions(initialItem.customSelections || {});
+        setSelectedBaseChoice(initialItem.baseChoice || '');
         setNotes(initialItem.notes || '');
         setQuantity(initialItem.quantity);
         setStep(initialStep || 1);
@@ -223,6 +235,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
         setSelectedCustomOptions({});
+        setSelectedBaseChoice('');
         setExtraFlavors([]);
         setExtraFrutas([]);
         setExtraSauces([]);
@@ -249,6 +262,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
     if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length === 0) {
       toast.error('Selecciona al menos un sabor');
+      return;
+    }
+
+    if (effectiveCurrentStepType === 'bases' && !selectedBaseChoice) {
+      toast.error('Selecciona una base');
       return;
     }
 
@@ -314,6 +332,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
       const configParts = [
         variantLabel,
+        selectedBaseChoice ? `Base: ${selectedBaseChoice}` : '',
         formattedFlavors,
         allFruitsConsolidated.length > 0
           ? (isSalpicon ? `Base: ${allFruitsConsolidated.join(', ')}` : `Fruta: ${allFruitsConsolidated.join(', ')}`)
@@ -329,6 +348,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         productName: product.name,
         variantLabel,
         description: configParts.join(' | '),
+        baseChoice: selectedBaseChoice,
         flavors: allFlavorsConsolidated,
         fruitChoices: allFruitsConsolidated,
         additions: allAdditionsNames,
@@ -397,6 +417,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const getStepTitle = () => {
     switch (effectiveCurrentStepType) {
       case 'variants': return 'Presentación';
+      case 'bases': return 'Elige la Base';
       case 'salpiconBase': return 'Base del Salpicón';
       case 'flavors': return `Selecciona ${maxScoops === 1 ? 'el Sabor' : 'los Sabores'}`;
       case 'fruits': return 'Elige la Fruta';
@@ -580,9 +601,35 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                           )}
                         >
                           <span className={cn(
-                            "font-black text-xl",
+                            "font-black text-xl tracking-tight transition-colors",
                             selectedFrutas.includes(base) ? "text-primary" : "text-on-surface"
-                          )}>{base}</span>
+                          )}>
+                            {base}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {effectiveCurrentStepType === 'bases' && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {availableBases.map(base => (
+                        <button
+                          key={base}
+                          onClick={() => setSelectedBaseChoice(base)}
+                          className={cn(
+                            "relative flex items-center p-4 rounded-2xl transition-all border-2 text-left",
+                            selectedBaseChoice === base
+                              ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
+                              : "bg-white border-outline/10 hover:bg-surface-container"
+                          )}
+                        >
+                          <span className={cn(
+                            "font-black text-sm",
+                            selectedBaseChoice === base ? "text-primary" : "text-on-surface"
+                          )}>
+                            {base}
+                          </span>
                         </button>
                       ))}
                     </div>

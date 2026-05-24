@@ -88,6 +88,7 @@ export interface CartItem {
   flavors: string[];
   fruitChoices: string[];
   additions: string[];
+  baseChoice?: string;
   customSelections?: Record<string, string>;
   notes?: string;
   quantity: number;
