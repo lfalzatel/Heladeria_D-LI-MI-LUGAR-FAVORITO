@@ -1190,7 +1190,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-md cursor-pointer"
             onClick={() => setShowFullImage(false)}
           >
             <motion.div
@@ -1199,29 +1199,29 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden max-h-[92vh] flex flex-col cursor-default shadow-2xl"
+              className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-y-auto max-h-screen sm:max-h-[96vh] cursor-default shadow-2xl"
             >
               {/* Drag handle (mobile) */}
-              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="flex justify-center pt-3 pb-1 sm:hidden sticky top-0 z-10 bg-white">
                 <div className="w-10 h-1 bg-outline/20 rounded-full" />
               </div>
 
               {/* Close button */}
               <button
                 onClick={() => setShowFullImage(false)}
-                className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center transition-colors text-white backdrop-blur-sm"
+                className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center transition-colors text-white backdrop-blur-sm"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Hero image */}
-              <div className="relative h-56 sm:h-72 flex-shrink-0">
+              {/* Imagen completa sin recorte */}
+              <div className="relative w-full bg-black">
                 <img
                   src={getAssetUrl(product.imageUrl)}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-4 left-5">
                   <span className="px-2 py-0.5 rounded-full bg-primary/90 text-white text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
                     {product.category}
@@ -1232,8 +1232,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 </div>
               </div>
 
-              {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
+              {/* Contenido: descripción + variantes */}
+              <div className="px-5 py-5 flex flex-col gap-5">
 
                 {/* Descripción */}
                 {product.description && (
@@ -1281,7 +1281,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 {/* Botón cerrar */}
                 <button
                   onClick={() => setShowFullImage(false)}
-                  className="w-full h-12 bg-on-surface text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-opacity mt-1"
+                  className="w-full h-12 bg-on-surface text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-opacity"
                 >
                   Cerrar
                 </button>
