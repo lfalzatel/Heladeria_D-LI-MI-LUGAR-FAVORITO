@@ -8,16 +8,18 @@ interface SupplyFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   supplyToEdit?: Supply | null;
+  existingCategories?: string[];
   onSave: (data: Partial<Supply>) => Promise<void>;
 }
 
 const CATEGORIES = ['Lácteos', 'Frutas', 'Toppings', 'Insumos Venta', 'Helados base', 'Acompañamientos', 'Desechables', 'Limpieza'];
 const UNITS = ['kg', 'Litro', 'und', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata'];
 
-export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave }: SupplyFormModalProps) {
+export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existingCategories = [], onSave }: SupplyFormModalProps) {
+  const mergedCategories = Array.from(new Set([...CATEGORIES, ...existingCategories]));
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState(mergedCategories[0]);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
   const [unit, setUnit] = useState(UNITS[0]);
@@ -30,8 +32,8 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
     if (isOpen) {
       if (supplyToEdit) {
         setName(supplyToEdit.name);
-        const editCat = supplyToEdit.category || CATEGORIES[0];
-        if (CATEGORIES.includes(editCat)) {
+        const editCat = supplyToEdit.category || mergedCategories[0];
+        if (mergedCategories.includes(editCat)) {
           setCategory(editCat);
           setIsCustomCategory(false);
           setCustomCategory('');
@@ -52,7 +54,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
         setYieldDetails(supplyToEdit.yieldDetails || '');
       } else {
         setName('');
-        setCategory(CATEGORIES[0]);
+        setCategory(mergedCategories[0]);
         setIsCustomCategory(false);
         setCustomCategory('');
         setUnit(UNITS[0]);
@@ -169,7 +171,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
                 }}
                 className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
               >
-                {CATEGORIES.map(c => (
+                {mergedCategories.map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
                 <option value="NEW_CATEGORY">+ Nueva categoría...</option>

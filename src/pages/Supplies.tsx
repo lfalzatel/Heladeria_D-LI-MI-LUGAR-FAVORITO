@@ -395,7 +395,13 @@ export default function Supplies() {
           )}
         </main>
 
-        <SupplyFormModal isOpen={isSupplyModalOpen} onClose={() => setIsSupplyModalOpen(false)} supplyToEdit={supplyToEdit} onSave={handleSaveSupply} />
+        <SupplyFormModal 
+          isOpen={isSupplyModalOpen} 
+          onClose={() => setIsSupplyModalOpen(false)} 
+          supplyToEdit={supplyToEdit} 
+          existingCategories={Object.keys(groupedSupplies)}
+          onSave={handleSaveSupply} 
+        />
         <PurchaseModal isOpen={isPurchaseOpen} onClose={() => setIsPurchaseOpen(false)} supplies={supplies} onConfirm={handleConfirmPurchase} />
         <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />
         <BottomNav />
