@@ -36,7 +36,7 @@ export default function ProductDetailsCarousel({
       setCurrentIndex(idx !== -1 ? idx : 0);
       setDirection(0);
       setCanZoom(false);
-      const timer = setTimeout(() => setCanZoom(true), 350);
+      const timer = setTimeout(() => setCanZoom(true), 500);
       return () => clearTimeout(timer);
     } else {
       setCanZoom(false);
@@ -189,7 +189,10 @@ export default function ProductDetailsCarousel({
               >
                 {/* Image Area */}
                 <div 
-                  className="relative w-full h-[35vh] shrink-0 bg-surface-container-low cursor-pointer group"
+                  className={cn(
+                    "relative w-full h-[35vh] shrink-0 bg-surface-container-low cursor-pointer group",
+                    !canZoom && "pointer-events-none"
+                  )}
                   style={currentProduct.cardColor?.startsWith('#') ? { backgroundColor: currentProduct.cardColor } : {}}
                   onClick={() => canZoom && displayedImage && setShowFullImage(true)}
                 >
@@ -207,7 +210,7 @@ export default function ProductDetailsCarousel({
                   
                   <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors z-20"
+                    className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors z-20 pointer-events-auto"
                   >
                     <X className="w-5 h-5" />
                   </button>
