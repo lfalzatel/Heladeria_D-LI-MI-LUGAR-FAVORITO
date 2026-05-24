@@ -23,6 +23,8 @@ export default function ProductDetailsCarousel({
   const [direction, setDirection] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [activeVariantImage, setActiveVariantImage] = useState<string | null>(null);
+  const [showFullImage, setShowFullImage] = useState(false);
+  const [canZoom, setCanZoom] = useState(false);
 
   useEffect(() => {
     setActiveVariantImage(null);
@@ -33,6 +35,11 @@ export default function ProductDetailsCarousel({
       const idx = products.findIndex(p => p.id === initialProductId);
       setCurrentIndex(idx !== -1 ? idx : 0);
       setDirection(0);
+      setCanZoom(false);
+      const timer = setTimeout(() => setCanZoom(true), 350);
+      return () => clearTimeout(timer);
+    } else {
+      setCanZoom(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]); // Only run when isOpen changes to prevent bouncing back on products update
@@ -116,7 +123,9 @@ export default function ProductDetailsCarousel({
   };
 
   return (
+    <>
     <AnimatePresence>
+      {isOpen && (
       <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0 }} 
@@ -180,14 +189,15 @@ export default function ProductDetailsCarousel({
               >
                 {/* Image Area */}
                 <div 
-                  className="relative w-full aspect-square max-h-[38vh] shrink-0 bg-surface-container-low"
+                  className="relative w-full h-[35vh] shrink-0 bg-surface-container-low cursor-pointer group"
                   style={currentProduct.cardColor?.startsWith('#') ? { backgroundColor: currentProduct.cardColor } : {}}
+                  onClick={() => canZoom && displayedImage && setShowFullImage(true)}
                 >
                   {displayedImage ? (
                     <img 
                       src={getAssetUrl(displayedImage)} 
                       alt={currentProduct.name} 
-                      className="w-full h-full object-cover pointer-events-none" 
+                      className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" 
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-secondary/30 pointer-events-none">
@@ -285,7 +295,38 @@ export default function ProductDetailsCarousel({
           </div>
         </div>
       </div>
+      )}
     </AnimatePresence>
+
+    <AnimatePresence>
+      {showFullImage && displayedImage && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm cursor-zoom-out"
+          onClick={() => setShowFullImage(false)}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowFullImage(false); }}
+            className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors text-white backdrop-blur-md"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <motion.img
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            src={getAssetUrl(displayedImage)}
+            alt={currentProduct?.name || 'Producto'}
+            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 

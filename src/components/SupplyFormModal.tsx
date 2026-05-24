@@ -13,7 +13,7 @@ interface SupplyFormModalProps {
 }
 
 const CATEGORIES = ['Lácteos', 'Frutas', 'Toppings', 'Insumos Venta', 'Helados base', 'Acompañamientos', 'Desechables', 'Limpieza'];
-const UNITS = ['kg', 'Litro', 'und', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata'];
+const UNITS = ['kg', 'g', 'Litro', 'und', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata', 'Tarro'];
 
 export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existingCategories = [], onSave }: SupplyFormModalProps) {
   const mergedCategories = Array.from(new Set([...CATEGORIES, ...existingCategories]));
@@ -24,8 +24,13 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
   const [customCategory, setCustomCategory] = useState('');
   const [unit, setUnit] = useState(UNITS[0]);
   const [minLimit, setMinLimit] = useState<number>(5);
+  const [minLimitUnit, setMinLimitUnit] = useState<string>('base');
   const [currentStock, setCurrentStock] = useState<number>(0);
   const [portionsPerUnit, setPortionsPerUnit] = useState<number>(1);
+  const [yieldMini, setYieldMini] = useState<number | ''>('');
+  const [yieldSmall, setYieldSmall] = useState<number | ''>('');
+  const [yieldMedium, setYieldMedium] = useState<number | ''>('');
+  const [yieldLarge, setYieldLarge] = useState<number | ''>('');
   const [yieldDetails, setYieldDetails] = useState('');
 
   useEffect(() => {
@@ -43,14 +48,26 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
           setCustomCategory(editCat);
         }
         // Fallback for custom units not in dropdown
-        if (UNITS.includes(supplyToEdit.unit || supplyToEdit.purchaseUnit)) {
-          setUnit(supplyToEdit.unit || supplyToEdit.purchaseUnit);
-        } else {
-          setUnit(supplyToEdit.unit || supplyToEdit.purchaseUnit || UNITS[0]);
-        }
-        setMinLimit(supplyToEdit.minLimit ?? supplyToEdit.stockMinimum ?? 5);
+        let initialUnit = supplyToEdit.unit || supplyToEdit.purchaseUnit || UNITS[0];
+        if (initialUnit.toLowerCase() === 'kilo') initialUnit = 'kg';
+        if (initialUnit.toLowerCase() === 'unidad') initialUnit = 'und';
+        
+        setUnit(initialUnit);
+        
+        const ppu = supplyToEdit.portionsPerUnit || supplyToEdit.yieldPerUnit || 1;
+        setPortionsPerUnit(ppu);
+
+        const loadedMinLimitUnit = supplyToEdit.minLimitUnit || 'base';
+        setMinLimitUnit(loadedMinLimitUnit);
+        
+        const loadedMinLimit = supplyToEdit.minLimit ?? supplyToEdit.stockMinimum ?? 5;
+        setMinLimit(loadedMinLimitUnit === 'internal' ? loadedMinLimit * ppu : loadedMinLimit);
+        
         setCurrentStock(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0);
-        setPortionsPerUnit(supplyToEdit.portionsPerUnit || supplyToEdit.yieldPerUnit || 1);
+        setYieldMini(supplyToEdit.yieldPerSize?.mini || '');
+        setYieldSmall(supplyToEdit.yieldPerSize?.small || '');
+        setYieldMedium(supplyToEdit.yieldPerSize?.medium || '');
+        setYieldLarge(supplyToEdit.yieldPerSize?.large || '');
         setYieldDetails(supplyToEdit.yieldDetails || '');
       } else {
         setName('');
@@ -61,6 +78,10 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         setMinLimit(5);
         setCurrentStock(0);
         setPortionsPerUnit(1);
+        setYieldMini('');
+        setYieldSmall('');
+        setYieldMedium('');
+        setYieldLarge('');
         setYieldDetails('');
       }
     }
@@ -76,17 +97,26 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
 
     setLoading(true);
     try {
+      const finalMinLimit = minLimitUnit === 'internal' ? minLimit / (portionsPerUnit || 1) : minLimit;
+
       const data: Partial<Supply> = {
         name: name.trim(),
         category: finalCategory,
         unit, // we are mapping this to the UI
-        minLimit,
+        minLimit: finalMinLimit,
+        minLimitUnit,
         currentStock,
         portionsPerUnit,
         yieldPerUnit: portionsPerUnit, // compatibility
+        yieldPerSize: {
+          mini: yieldMini === '' ? null : Number(yieldMini),
+          small: yieldSmall === '' ? null : Number(yieldSmall),
+          medium: yieldMedium === '' ? null : Number(yieldMedium),
+          large: yieldLarge === '' ? null : Number(yieldLarge),
+        },
         yieldDetails,
         // Fallbacks for older structure compatibility
-        stockMinimum: minLimit,
+        stockMinimum: finalMinLimit,
         stockQuantity: currentStock,
         purchaseUnit: unit,
       };
@@ -192,53 +222,89 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Porciones x {unit || 'unidad'} *</label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  value={portionsPerUnit}
-                  onChange={(e) => setPortionsPerUnit(Number(e.target.value))}
-                  className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
-                />
-                <p className="text-[9px] text-secondary/60 font-bold px-1 italic">Para calcular costos.</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Detalle Rendimiento</label>
-                <input
-                  type="text"
-                  placeholder="Ej: 6p P / 5p M"
-                  value={yieldDetails}
-                  onChange={(e) => setYieldDetails(e.target.value)}
-                  className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-xs"
-                />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Unidad de Compra *</label>
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
+              >
+                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
             </div>
+
+            {/* SMART YIELD SECTION */}
+            {['kg', 'Litro', 'Bloque', 'Tarro', 'und', 'Lata'].includes(unit) ? (
+              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-primary" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-primary">Rendimiento por {unit}</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-secondary">Porciones Mini</label>
+                    <input type="number" min={0} value={yieldMini} onChange={e => setYieldMini(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-secondary">Porciones Pequeñas</label>
+                    <input type="number" min={0} value={yieldSmall} onChange={e => setYieldSmall(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-secondary">Porciones Medianas</label>
+                    <input type="number" min={0} value={yieldMedium} onChange={e => setYieldMedium(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-secondary">Porciones Grandes</label>
+                    <input type="number" min={0} value={yieldLarge} onChange={e => setYieldLarge(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <label className="text-[10px] font-bold text-secondary">Rendimiento Estándar (si aplica)</label>
+                  <input type="number" min={1} value={portionsPerUnit} onChange={e => setPortionsPerUnit(Number(e.target.value))} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
+                  <p className="text-[9px] text-secondary/60 italic">Útil para insumos que no varían por tamaño (ej. cerezas).</p>
+                </div>
+              </div>
+            ) : ['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa'].includes(unit) ? (
+              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Unidades por {unit}</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={portionsPerUnit}
+                    onChange={(e) => setPortionsPerUnit(Number(e.target.value))}
+                    className="w-full px-4 h-14 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
+                  />
+                  <p className="text-[9px] text-secondary/60 font-bold px-1 italic">Para calcular el costo por unidad interna.</p>
+                </div>
+              </div>
+            ) : null}
 
             <div className="grid grid-cols-2 gap-4">
                <div className="flex flex-col gap-2">
-                 <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Unidad *</label>
-                 <select
-                   value={unit}
-                   onChange={(e) => setUnit(e.target.value)}
-                   className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
-                 >
-                   {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                 </select>
-               </div>
-               
-               <div className="flex flex-col gap-2">
                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary" title="Alerta naranja cuando llegue a este número"> Límite Crítico *</label>
+               <div className="flex gap-2">
                  <input
                    type="number"
                    required
                    min={0}
+                   step="any"
                    value={minLimit}
                    onChange={(e) => setMinLimit(Number(e.target.value))}
                    className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
                  />
+                 {['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa', 'Lata'].includes(unit) && (
+                   <select
+                     value={minLimitUnit}
+                     onChange={(e) => setMinLimitUnit(e.target.value)}
+                     className="w-1/2 px-2 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary text-sm font-bold text-secondary"
+                   >
+                     <option value="base">{unit}s</option>
+                     <option value="internal">Unidades</option>
+                   </select>
+                 )}
+               </div>
                </div>
             </div>
 

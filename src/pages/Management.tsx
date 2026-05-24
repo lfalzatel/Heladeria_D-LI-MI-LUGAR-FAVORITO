@@ -98,8 +98,15 @@ interface Supply {
   lastPurchasePrice?: number;
   portionsPerUnit?: number;
   yieldPerUnit?: number;
-  costPerUnit?: number;
+  yieldPerSize?: {
+    mini?: number;
+    small?: number;
+    medium?: number;
+    large?: number;
+  };
   yieldDetails?: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -809,23 +816,32 @@ export default function Management() {
                                             </div>
                                             <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
                                             
-                                            {s.portionsPerUnit > 0 && (
+                                            {(s.yieldPerSize?.mini || s.yieldPerSize?.small || s.yieldPerSize?.medium || s.yieldPerSize?.large) ? (
+                                              <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1.5">Rendimiento por Tamaños (1 {s.unit})</p>
+                                                <div className="grid grid-cols-4 gap-1">
+                                                  {s.yieldPerSize.mini && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Mini</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.mini}</p></div>}
+                                                  {s.yieldPerSize.small && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Peq</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.small}</p></div>}
+                                                  {s.yieldPerSize.medium && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Med</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.medium}</p></div>}
+                                                  {s.yieldPerSize.large && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Gde</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.large}</p></div>}
+                                                </div>
+                                              </div>
+                                            ) : s.portionsPerUnit > 0 ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
                                                 <div>
-                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento</p>
-                                                  <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} porc.</p>
+                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento Estándar</p>
+                                                  <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} uds/porc</p>
                                                 </div>
                                                 {s.lastPurchasePrice > 0 && (
                                                   <div className="text-right">
-                                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Costo x Porción</p>
+                                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Costo x Unidad</p>
                                                     <p className="text-[10px] font-black text-emerald-700 leading-tight">{formatCurrency(s.lastPurchasePrice / s.portionsPerUnit)}</p>
                                                   </div>
                                                 )}
                                               </div>
-                                            )}
-                                            {s.yieldDetails && !s.portionsPerUnit && (
+                                            ) : s.yieldDetails && (
                                               <div className="mt-2 mb-4 p-3 bg-primary/5 rounded-2xl border border-primary/10">
-                                                <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado</p>
+                                                <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado (Legado)</p>
                                                 <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
                                               </div>
                                             )}

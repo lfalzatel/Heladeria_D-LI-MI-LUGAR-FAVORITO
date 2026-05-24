@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, Receipt, MapPin } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 
-export interface Supply { id: string; name: string; currentStock: number; unit: string; minLimit: number; category: string; yieldDetails?: string; }
+export interface Supply { id: string; name: string; currentStock: number; unit: string; minLimit: number; category: string; yieldDetails?: string; yieldPerSize?: { mini?: number; small?: number; medium?: number; large?: number; }; }
 export interface PurchaseItem { supplyId: string; name: string; unit: string; quantity: number; cost: number; portions: number; category: string; }
 export interface PurchaseRecord { id: string; provider: string; items: PurchaseItem[]; total: number; createdAt: any; }
 

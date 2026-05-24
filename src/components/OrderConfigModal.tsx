@@ -49,6 +49,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const [availableAdditions, setAvailableAdditions] = useState<Product[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [showFullImage, setShowFullImage] = useState(false);
 
   // Extra additions states
   const [extraFlavors, setExtraFlavors] = useState<string[]>([]);
@@ -432,6 +433,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
@@ -449,12 +451,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             className="relative w-full max-w-lg bg-surface flex flex-col h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl border border-white/20"
           >
             {/* ── SECCIÓN SUPERIOR: HERO IMAGE + OVERLAY ── */}
-            <div className="relative h-[25%] sm:h-[28%] flex-shrink-0 bg-surface-container-low group">
+            <div className="relative h-[30%] sm:h-[35%] flex-shrink-0 bg-surface-container-low group cursor-pointer" onClick={() => product.imageUrl && setShowFullImage(true)}>
                {product.imageUrl ? (
                    <img 
                      src={getAssetUrl(product.imageUrl)} 
                    alt={product.name} 
-                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                   className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" 
                  />
                ) : (
                   <div className="w-full h-full flex items-center justify-center bg-surface-container opacity-20">
@@ -1142,5 +1144,36 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         </div>
       )}
     </AnimatePresence>
+
+      {/* FULL IMAGE MODAL */}
+      <AnimatePresence>
+        {showFullImage && product.imageUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm cursor-zoom-out"
+            onClick={() => setShowFullImage(false)}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowFullImage(false); }}
+              className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors text-white backdrop-blur-md"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              src={getAssetUrl(product.imageUrl)}
+              alt={product.name}
+              className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

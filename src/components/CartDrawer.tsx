@@ -340,7 +340,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                     className="w-full py-3 rounded-2xl bg-surface-container border-2 border-primary/20 text-primary font-bold text-sm hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
-                    Fijar Pedido
+                    Tomar Pedido
                   </button>
                 )
               )}

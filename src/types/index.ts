@@ -99,7 +99,14 @@ export interface Supply {
   lastPurchasePrice?: number;
   stockQuantity: number;
   stockMinimum: number;
+  minLimitUnit?: string;
   yieldPerUnit?: number;
+  yieldPerSize?: {
+    mini?: number;
+    small?: number;
+    medium?: number;
+    large?: number;
+  };
   consumptionUnit?: string;
   notes?: string;
 }
