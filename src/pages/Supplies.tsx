@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, updateDoc, doc, increment } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, updateDoc, doc, increment, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers, Search, ChevronDown, ChevronRight, Trash2, Save, X } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
@@ -140,6 +140,35 @@ export default function Supplies() {
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  const handleRenameCategory = async (oldName: string) => {
+    if (!newCategoryName.trim() || newCategoryName === oldName || oldName === 'Varios') {
+      setEditingCategory(null);
+      return;
+    }
+    const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === oldName);
+    const batch = writeBatch(db);
+    suppliesToUpdate.forEach(s => {
+      batch.update(doc(db, 'supplies', s.id!), { category: newCategoryName.trim() });
+    });
+    await batch.commit();
+    toast.success('Categoría renombrada');
+    setEditingCategory(null);
+  };
+
+  const handleDeleteCategory = async (catName: string) => {
+    if (catName === 'Varios') return;
+    if (!window.confirm(`¿Estás seguro de eliminar la categoría "${catName}"? Sus insumos pasarán a "Varios".`)) return;
+    const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === catName);
+    const batch = writeBatch(db);
+    suppliesToUpdate.forEach(s => {
+      batch.update(doc(db, 'supplies', s.id!), { category: 'Varios' });
+    });
+    await batch.commit();
+    toast.success('Categoría eliminada');
+  };
 
   useEffect(() => {
     if (!profile) return;
@@ -334,10 +363,45 @@ export default function Supplies() {
                     <div key={category} className="bg-white rounded-[2rem] border border-outline/10 shadow-sm overflow-hidden transition-all">
                       <button 
                         onClick={() => toggleCategory(category)}
-                        className={cn("w-full px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors", isExpanded ? "border-b border-outline/5" : "")}
+                        className={cn("w-full px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors group", isExpanded ? "border-b border-outline/5" : "")}
                       >
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-headline font-black text-lg text-on-surface">{category}</h3>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {editingCategory === category ? (
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <input 
+                                autoFocus
+                                value={newCategoryName}
+                                onChange={e => setNewCategoryName(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleRenameCategory(category); if (e.key === 'Escape') setEditingCategory(null); }}
+                                className="px-3 py-1.5 border-2 border-primary/40 rounded-xl outline-none focus:border-primary text-sm font-black bg-white shadow-sm"
+                              />
+                              <button onClick={() => handleRenameCategory(category)} className="p-1.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"><Save className="w-4 h-4"/></button>
+                              <button onClick={() => setEditingCategory(null)} className="p-1.5 bg-surface-container text-secondary rounded-xl hover:bg-surface-container-high transition-colors"><X className="w-4 h-4"/></button>
+                            </div>
+                          ) : (
+                            <>
+                              <h3 className="font-headline font-black text-lg text-on-surface">{category}</h3>
+                              {category !== 'Varios' && (
+                                <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity" onClick={e => e.stopPropagation()}>
+                                  <button 
+                                    onClick={() => { setEditingCategory(category); setNewCategoryName(category); }}
+                                    className="p-1.5 hover:bg-primary/10 hover:text-primary text-secondary rounded-lg transition-colors"
+                                    title="Renombrar categoría"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteCategory(category)}
+                                    className="p-1.5 hover:bg-red-500/10 hover:text-red-500 text-secondary rounded-lg transition-colors"
+                                    title="Eliminar categoría"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          )}
+
                           <span className="px-2 py-0.5 bg-surface-container rounded-lg text-[10px] font-bold text-secondary">
                             {items.length}
                           </span>
@@ -347,7 +411,7 @@ export default function Supplies() {
                             </span>
                           )}
                         </div>
-                        {isExpanded ? <ChevronDown className="w-5 h-5 text-secondary" /> : <ChevronRight className="w-5 h-5 text-secondary" />}
+                        {isExpanded ? <ChevronDown className="w-5 h-5 text-secondary flex-shrink-0" /> : <ChevronRight className="w-5 h-5 text-secondary flex-shrink-0" />}
                       </button>
                       
                       {isExpanded && (
