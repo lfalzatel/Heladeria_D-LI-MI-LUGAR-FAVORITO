@@ -1277,6 +1277,7 @@ export default function Management() {
           isOpen={isSupplyModalOpen}
           onClose={() => setIsSupplyModalOpen(false)}
           supplyToEdit={supplyToEdit}
+          existingCategories={Object.keys(groupedSupplies)}
           onSave={handleSaveSupply}
         />
 
