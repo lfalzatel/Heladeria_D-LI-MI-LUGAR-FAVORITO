@@ -541,11 +541,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               const label = variant.label.toLowerCase();
                               const cat = product.category?.toLowerCase();
                               if (cat === 'ensaladas' || cat === 'salpicon') {
-                                let fruits = [...fruitOptions];
-                                if (label.includes('mini')) {
-                                  fruits = fruits.filter(f => f.toLowerCase() !== 'kiwi');
-                                }
-                                setSelectedFrutas(fruits);
+                                // El cliente elige la fruta en el paso 'salpiconBase', no preseleccionar aquí
+                                setSelectedFrutas([]);
                               } else if (label.includes('fresa')) {
                                 setSelectedFrutas(['Fresa']);
                               } else if (label.includes('mango')) {
