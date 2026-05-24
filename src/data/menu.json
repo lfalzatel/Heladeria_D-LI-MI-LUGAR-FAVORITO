@@ -599,18 +599,6 @@
       "sauceOptions": [
         "Arequipe",
         "Lecherita"
-      ],
-      "customOptions": [
-        {
-          "id": "acompanante",
-          "name": "Acompañante",
-          "choices": [
-            "Brownie",
-            "Chocorramo",
-            "Jet Wafer"
-          ],
-          "required": true
-        }
       ]
     },
     {
