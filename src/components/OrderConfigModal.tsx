@@ -225,13 +225,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setStep(initialStep || 1);
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
-        const cat = product.category?.toLowerCase();
-        let fruits = cat === 'ensaladas' || cat === 'salpicon' ? [...fruitOptions] : [];
-        const defVariant = product.variants?.length === 1 ? product.variants[0] : null;
-        if (defVariant && defVariant.label.toLowerCase().includes('mini')) {
-          fruits = fruits.filter(f => f.toLowerCase() !== 'kiwi');
-        }
-        setSelectedFrutas(fruits);
+        // Salpicón y ensaladas: el cliente elige su(s) fruta(s), no preseleccionar
+        setSelectedFrutas([]);
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
