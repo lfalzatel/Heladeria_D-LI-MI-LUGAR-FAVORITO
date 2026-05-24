@@ -804,10 +804,10 @@ export default function Management() {
                                       {items.map((s: any) => {
                                         const isLow = s.currentStock <= s.minLimit;
                                         return (
-                                          <div key={s.id} className={cn('bg-surface-container/30 rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30 hover:shadow-md hover:bg-white', isLow && 'border-orange-200 bg-orange-50/30')}>
+                                          <div key={s.id} className={cn('bg-surface-container/30 rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30 hover:shadow-md hover:bg-white', isLow && 'border-orange-200 bg-orange-50/30', s.isVirtual && 'border-amber-200 bg-amber-50/30 hover:border-amber-400')}>
                                             <div className="flex justify-between items-start mb-3">
-                                              <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
-                                                {isLow && '⚠ '}{s.category || 'Varios'}
+                                              <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', s.isVirtual ? 'bg-amber-100 text-amber-600' : isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
+                                                {s.isVirtual ? '👻 Virtual' : isLow ? '⚠ ' + (s.category || 'Varios') : (s.category || 'Varios')}
                                               </span>
                                               <button onClick={(e) => { e.stopPropagation(); setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
                                                 className="w-9 h-9 rounded-xl bg-white border border-outline/20 flex items-center justify-center text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm">
@@ -816,7 +816,12 @@ export default function Management() {
                                             </div>
                                             <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
                                             
-                                            {(s.yieldPerSize?.mini || s.yieldPerSize?.small || s.yieldPerSize?.medium || s.yieldPerSize?.large) ? (
+                                            {s.isVirtual ? (
+                                              <div className="mt-2 mb-4 p-3 bg-amber-50 rounded-2xl border border-amber-200">
+                                                <p className="text-[9px] font-black text-amber-600 uppercase tracking-tighter">No se descuenta del inventario</p>
+                                                <p className="text-[10px] text-amber-700 mt-0.5">Insumo organizativo para recetas. Sin stock real.</p>
+                                              </div>
+                                            ) : (s.yieldPerSize?.mini || s.yieldPerSize?.small || s.yieldPerSize?.medium || s.yieldPerSize?.large) ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100">
                                                 <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1.5">Rendimiento por Tamaños (1 {s.unit})</p>
                                                 <div className="grid grid-cols-4 gap-1">
@@ -846,23 +851,25 @@ export default function Management() {
                                               </div>
                                             )}
 
-                                            <div className="flex border-t border-outline/10 pt-4 mt-auto">
-                                              <div className="flex-1">
-                                                <p className="text-[9px] text-secondary font-black uppercase tracking-widest">En Stock</p>
-                                                <p className={cn('text-xl font-black mt-0.5', isLow ? 'text-orange-600' : 'text-on-surface')}>{s.currentStock} <span className="text-xs font-bold opacity-60 uppercase">{s.unit}</span></p>
+                                            {!s.isVirtual && (
+                                              <div className="flex border-t border-outline/10 pt-4 mt-auto">
+                                                <div className="flex-1">
+                                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                                                  <p className={cn('text-xl font-black mt-0.5', isLow ? 'text-orange-600' : 'text-on-surface')}>{s.currentStock} <span className="text-xs font-bold opacity-60 uppercase">{s.unit}</span></p>
+                                                </div>
+                                                <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                                                  <p className="text-[9px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                                                  <p className="text-sm font-bold text-secondary mt-1.5">
+                                                    {s.minLimitUnit === 'internal' 
+                                                      ? `${Math.round((s.minLimit || 0) * (s.portionsPerUnit || s.yieldPerUnit || 1))} `
+                                                      : `${s.minLimit ?? 0} `}
+                                                    <span className="text-[10px] uppercase">
+                                                      {s.minLimitUnit === 'internal' ? 'UND' : s.unit}
+                                                    </span>
+                                                  </p>
+                                                </div>
                                               </div>
-                                              <div className="flex-1 text-right border-l border-outline/10 pl-4">
-                                                <p className="text-[9px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
-                                                <p className="text-sm font-bold text-secondary mt-1.5">
-                                                  {s.minLimitUnit === 'internal' 
-                                                    ? `${Math.round((s.minLimit || 0) * (s.portionsPerUnit || s.yieldPerUnit || 1))} `
-                                                    : `${s.minLimit ?? 0} `}
-                                                  <span className="text-[10px] uppercase">
-                                                    {s.minLimitUnit === 'internal' ? 'UND' : s.unit}
-                                                  </span>
-                                                </p>
-                                              </div>
-                                            </div>
+                                            )}
                                           </div>
                                         );
                                       })}

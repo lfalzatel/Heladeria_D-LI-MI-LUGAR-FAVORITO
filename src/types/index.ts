@@ -109,4 +109,5 @@ export interface Supply {
   };
   consumptionUnit?: string;
   notes?: string;
+  isVirtual?: boolean;
 }

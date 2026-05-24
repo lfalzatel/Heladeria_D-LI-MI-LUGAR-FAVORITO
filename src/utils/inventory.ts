@@ -14,7 +14,8 @@ export async function deductInventory(cartItems: CartItem[]) {
     
     suppliesSnap.docs.forEach(d => {
       const data = d.data();
-      if (data.name) {
+      if (data.name && !data.isVirtual) {
+        // Solo mapear insumos FÍSICOS (no virtuales) — los virtuales son solo etiquetas organizativas
         suppliesMap[data.name.toLowerCase().trim()] = { id: d.id, ...data };
       }
     });
