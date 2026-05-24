@@ -225,8 +225,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setStep(initialStep || 1);
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
-        // Salpicón y ensaladas: el cliente elige su(s) fruta(s), no preseleccionar
-        setSelectedFrutas([]);
+        // Salpicón: Banano y Papaya incluidos por defecto. El cliente elige Fresa o Mango.
+        const catInit = product.category?.toLowerCase();
+        setSelectedFrutas(catInit === 'salpicon' ? ['Banano', 'Papaya'] : []);
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
@@ -266,8 +267,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       return;
     }
 
-    if (effectiveCurrentStepType === 'salpiconBase' && selectedFrutas.length === 0) {
-      toast.error('Selecciona la base del salpicón (Fresa o Mango)');
+    if (effectiveCurrentStepType === 'salpiconBase' && !selectedFrutas.some(f => f === 'Fresa' || f === 'Mango')) {
+      toast.error('Debes elegir una base: Fresa o Mango');
       return;
     }
 
@@ -540,9 +541,9 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               setSelectedFlavors([]);
                               const label = variant.label.toLowerCase();
                               const cat = product.category?.toLowerCase();
-                              if (cat === 'ensaladas' || cat === 'salpicon') {
-                                // El cliente elige la fruta en el paso 'salpiconBase', no preseleccionar aquí
-                                setSelectedFrutas([]);
+                              if (cat === 'salpicon') {
+                                // Resetear a las frutas fijas. El cliente elige Fresa/Mango en el siguiente paso.
+                                setSelectedFrutas(['Banano', 'Papaya']);
                               } else if (label.includes('fresa')) {
                                 setSelectedFrutas(['Fresa']);
                               } else if (label.includes('mango')) {
@@ -582,26 +583,70 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'salpiconBase' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {['Fresa', 'Mango'].map(base => (
-                        <button
-                          key={base}
-                          onClick={() => setSelectedFrutas([base])} // Overwrite, only one base allowed
-                          className={cn(
-                            "relative flex items-center justify-center p-6 rounded-[1.5rem] transition-all border-2 text-center",
-                            selectedFrutas.includes(base)
-                              ? "bg-primary/5 border-primary shadow-sm scale-[1.02]"
-                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
-                          )}
-                        >
-                          <span className={cn(
-                            "font-black text-xl tracking-tight transition-colors",
-                            selectedFrutas.includes(base) ? "text-primary" : "text-on-surface"
-                          )}>
-                            {base}
-                          </span>
-                        </button>
-                      ))}
+                    <div className="flex flex-col gap-5">
+                      {/* ELECCIÓN EXCLUSIVA: Fresa o Mango */}
+                      <div className="flex flex-col gap-2">
+                        <p className="text-[10px] font-black text-secondary uppercase tracking-widest">Elige una base *</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {['Fresa', 'Mango'].map(base => {
+                            const isSelected = selectedFrutas.includes(base);
+                            return (
+                              <button
+                                key={base}
+                                onClick={() => {
+                                  const otherBase = base === 'Fresa' ? 'Mango' : 'Fresa';
+                                  // Reemplazar la base exclusiva, mantener las frutas fijas (Banano, Papaya)
+                                  setSelectedFrutas(prev => [base, ...prev.filter(f => f !== otherBase && f !== 'Fresa' && f !== 'Mango')]);
+                                }}
+                                className={cn(
+                                  "flex flex-col items-center justify-center p-5 rounded-[1.5rem] transition-all border-2 text-center gap-1",
+                                  isSelected
+                                    ? "bg-primary/5 border-primary shadow-md scale-[1.02]"
+                                    : "bg-white border-outline/10 hover:bg-surface-container-low"
+                                )}
+                              >
+                                <span className="text-3xl">{base === 'Fresa' ? '🍓' : '🥭'}</span>
+                                <span className={cn("font-black text-base tracking-tight", isSelected ? "text-primary" : "text-on-surface")}>
+                                  {base}
+                                </span>
+                                {isSelected && <span className="text-[9px] font-black text-primary uppercase tracking-wider">✓ Elegida</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* FRUTAS FIJAS INCLUIDAS: Banano y Papaya (removibles) */}
+                      <div className="flex flex-col gap-2">
+                        <p className="text-[10px] font-black text-secondary uppercase tracking-widest">Frutas incluidas</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {['Banano', 'Papaya'].map(fruit => {
+                            const included = selectedFrutas.includes(fruit);
+                            return (
+                              <button
+                                key={fruit}
+                                onClick={() => setSelectedFrutas(prev =>
+                                  prev.includes(fruit) ? prev.filter(f => f !== fruit) : [...prev, fruit]
+                                )}
+                                className={cn(
+                                  "flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 transition-all text-sm font-bold",
+                                  included
+                                    ? "bg-success/10 border-success text-success"
+                                    : "bg-white border-outline/20 text-secondary/50 line-through"
+                                )}
+                              >
+                                <span className="text-lg">{fruit === 'Banano' ? '🍌' : '🍈'}</span>
+                                <span>{fruit}</span>
+                                {included
+                                  ? <span className="text-[9px] font-black bg-success/20 text-success px-1.5 py-0.5 rounded-full">INCLUIDA</span>
+                                  : <span className="text-[9px] font-black bg-outline/10 text-outline px-1.5 py-0.5 rounded-full">RETIRADA</span>
+                                }
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[10px] text-secondary/60 italic">Toca para incluir o retirar del pedido</p>
+                      </div>
                     </div>
                   )}
 
