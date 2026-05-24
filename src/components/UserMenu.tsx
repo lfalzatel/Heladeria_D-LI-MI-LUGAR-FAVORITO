@@ -500,11 +500,19 @@ export default function UserMenu() {
                     onClick={async () => {
                       setIsOpen(false);
                       toast.loading('Cambiando de cuenta...');
-                      await signOut(auth);
-                      // Let the app redirect to login, where they can click the account,
-                      // or we can just let them go to Login screen which now acts as the switcher
-                      navigate('/login');
-                      toast.dismiss();
+                      try {
+                        const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+                        const provider = new GoogleAuthProvider();
+                        provider.setCustomParameters({ login_hint: acc.email });
+                        await signOut(auth);
+                        await signInWithPopup(auth, provider);
+                        toast.success(`Sesión iniciada como ${acc.name}`);
+                      } catch (err: any) {
+                        console.error("Error al cambiar cuenta", err);
+                        toast.error('Error al cambiar de cuenta. ' + (err.message || ''));
+                      } finally {
+                        toast.dismiss();
+                      }
                     }}
                     className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-surface-container transition-all group text-left w-full"
                   >
