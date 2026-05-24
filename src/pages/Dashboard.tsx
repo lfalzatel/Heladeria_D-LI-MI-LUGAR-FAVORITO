@@ -529,6 +529,8 @@ export default function Dashboard() {
             icon={<DollarSign className="w-5 h-5" />}
             label="Ingresos"
             value={formatCurrency(totalIngresos)}
+            numericValue={totalIngresos}
+            isCurrency={true}
             sub={filterLabel}
             accent="emerald"
             onOpen={() => open('ingresos')}
@@ -538,6 +540,8 @@ export default function Dashboard() {
             icon={<CreditCard className="w-5 h-5" />}
             label="Vtas. a Crédito"
             value={formatCurrency(totalCredito)}
+            numericValue={totalCredito}
+            isCurrency={true}
             sub={filterLabel}
             accent="orange"
             onOpen={() => open('credito')}
@@ -548,6 +552,8 @@ export default function Dashboard() {
               icon={<TrendingDown className="w-5 h-5" />}
               label="Egresos/Compras"
               value={formatCurrency(totalCompras)}
+              numericValue={totalCompras}
+              isCurrency={true}
               sub={filterLabel}
               accent="amber"
               onOpen={() => { /* Implement Egresos Modal if needed */ }}
@@ -559,6 +565,8 @@ export default function Dashboard() {
               icon={<DollarSign className="w-5 h-5" />}
               label="Ganancia Neta"
               value={formatCurrency(gananciaNeta)}
+              numericValue={Math.abs(gananciaNeta)}
+              isCurrency={true}
               sub={filterLabel}
               badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÉRDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
               accent="blue"
@@ -580,6 +588,8 @@ export default function Dashboard() {
               icon={<Users className="w-5 h-5" />}
               label="Deuda Clientes"
               value={formatCurrency(totalDeuda)}
+              numericValue={totalDeuda}
+              isCurrency={true}
               sub="Total Histórico"
               accent="orange"
               onOpen={() => open('deuda')}
@@ -590,6 +600,8 @@ export default function Dashboard() {
             icon={<AlertCircle className="w-5 h-5" />}
             label="Stock"
             value={criticalSupplies.length.toString()}
+            numericValue={criticalSupplies.length}
+            isCurrency={false}
             sub="Items críticos"
             badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-[#fee2e2] text-[#b91c1c]' } : null}
             accent="orange"

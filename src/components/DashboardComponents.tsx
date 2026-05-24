@@ -12,13 +12,15 @@ const toDateS = (ts: any): Date | null => {
 
 // ── COMPONENTS ──
 export function MetricCard({
-  icon, label, value, sub, badge, accent, onOpen, index = 0
+  icon, label, value, sub, badge, accent, onOpen, index = 0, numericValue, isCurrency
 }: {
   icon: React.ReactNode; label: string; value: string;
   sub: string; badge?: { text: string; color: string } | null; 
   accent: 'emerald' | 'orange' | 'amber' | 'blue';
   onOpen: () => void;
   index?: number;
+  numericValue?: number;
+  isCurrency?: boolean;
 }) {
   const accentMap = {
     emerald: 'bg-[#ecfdf5] border-[#d1fae5]',
@@ -26,6 +28,47 @@ export function MetricCard({
     amber: 'bg-[#fffbeb] border-[#fef3c7]',
     blue: 'bg-[#eff6ff] border-[#dbeafe]'
   };
+
+  const [displayValue, setDisplayValue] = React.useState(value);
+
+  React.useEffect(() => {
+    if (numericValue === undefined) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const duration = 1000;
+    const start = 0;
+    const end = numericValue;
+    let startTimestamp: number | null = null;
+    let reqId: number;
+
+    const delay = index * 80; // match animationDelay
+    
+    const startAnim = setTimeout(() => {
+      const step = (timestamp: number) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentVal = Math.floor(easeOut * (end - start) + start);
+        
+        setDisplayValue(isCurrency ? formatCurrency(currentVal) : currentVal.toString());
+        
+        if (progress < 1) {
+          reqId = window.requestAnimationFrame(step);
+        } else {
+          setDisplayValue(value); // Ensure exact final string formatting
+        }
+      };
+      reqId = window.requestAnimationFrame(step);
+    }, delay);
+
+    return () => {
+      clearTimeout(startAnim);
+      if (reqId) window.cancelAnimationFrame(reqId);
+    };
+  }, [numericValue, isCurrency, index, value]);
 
   return (
     <motion.button
@@ -49,9 +92,9 @@ export function MetricCard({
       <div className="flex flex-col gap-0.5 mt-1">
         <p className={cn(
           "font-black text-on-surface leading-tight tracking-tight",
-          value.length > 18 ? "text-xs" : value.length > 14 ? "text-sm" : value.length > 11 ? "text-base" : "text-xl"
+          displayValue.length > 18 ? "text-xs" : displayValue.length > 14 ? "text-sm" : displayValue.length > 11 ? "text-base" : "text-xl"
         )}>
-          {value}
+          {displayValue}
         </p>
         <div className="flex flex-col">
           <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
