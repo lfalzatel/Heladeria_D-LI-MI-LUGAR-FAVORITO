@@ -60,16 +60,31 @@ export const useAuthStore = create<AuthState>((set, get) => {
               // if (!data.imageUrl && user.photoURL) {
               //   setDoc(userRef, { imageUrl: user.photoURL }, { merge: true }).catch(console.error);
               // }
+              
+              const role = isAdminHardcoded ? 'admin' : (data.role || 'cliente');
+              const finalProfile = { 
+                uid: user.uid, 
+                ...data,
+                imageUrl: data.imageUrl || user.photoURL || '',
+                role: role
+              } as UserProfile;
 
               set({ 
-                profile: { 
-                  uid: user.uid, 
-                  ...data,
-                  imageUrl: data.imageUrl || user.photoURL || '',
-                  role: isAdminHardcoded ? 'admin' : (data.role || 'cliente')
-                } as UserProfile,
+                profile: finalProfile,
                 isLoading: false
               });
+
+              // Auto-sync to Saved Accounts Store
+              import('./useSavedAccountsStore').then(({ useSavedAccountsStore }) => {
+                useSavedAccountsStore.getState().addAccount({
+                  uid: user.uid,
+                  email: user.email || '',
+                  name: finalProfile.name || user.displayName || user.email?.split('@')[0] || 'Usuario',
+                  imageUrl: finalProfile.imageUrl || '',
+                  role: finalProfile.role
+                });
+              });
+
             } else {
               // Create default profile if missing
               const isAdminEmail = user.email?.includes('admin') || isAdminHardcoded;

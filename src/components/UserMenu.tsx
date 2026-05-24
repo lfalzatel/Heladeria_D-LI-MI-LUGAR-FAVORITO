@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useSavedAccountsStore } from '../stores/useSavedAccountsStore';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { 
@@ -96,6 +97,7 @@ function MenuItem({
 
 export default function UserMenu() {
   const { profile, user } = useAuthStore();
+  const { accounts } = useSavedAccountsStore();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'system');
@@ -485,6 +487,51 @@ export default function UserMenu() {
                     {t.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Account Switcher */}
+            <div className="px-2 py-3 border-b border-outline/10">
+              <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-2 px-2">Cambiar Cuenta</p>
+              <div className="flex flex-col gap-1">
+                {accounts.filter(a => a.uid !== profile?.uid).map(acc => (
+                  <button
+                    key={acc.uid}
+                    onClick={async () => {
+                      setIsOpen(false);
+                      toast.loading('Cambiando de cuenta...');
+                      await signOut(auth);
+                      // Let the app redirect to login, where they can click the account,
+                      // or we can just let them go to Login screen which now acts as the switcher
+                      navigate('/login');
+                      toast.dismiss();
+                    }}
+                    className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-surface-container transition-all group text-left w-full"
+                  >
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-primary/10 flex-shrink-0">
+                      {acc.imageUrl ? (
+                        <img src={acc.imageUrl} alt={acc.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 m-2 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-on-surface truncate">{acc.name}</p>
+                      <p className="text-[9px] text-secondary truncate">{acc.email}</p>
+                    </div>
+                  </button>
+                ))}
+                
+                <MenuItem
+                  icon={<User className="w-4 h-4" />}
+                  label="Añadir otra cuenta"
+                  sublabel="Iniciar sesión con Google"
+                  onClick={async () => {
+                    setIsOpen(false);
+                    await signOut(auth);
+                    navigate('/login');
+                  }}
+                />
               </div>
             </div>
 
