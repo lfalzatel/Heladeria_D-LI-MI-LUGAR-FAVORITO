@@ -18,6 +18,8 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
   const [unit, setUnit] = useState(UNITS[0]);
   const [minLimit, setMinLimit] = useState<number>(5);
   const [currentStock, setCurrentStock] = useState<number>(0);
@@ -28,7 +30,16 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
     if (isOpen) {
       if (supplyToEdit) {
         setName(supplyToEdit.name);
-        setCategory(supplyToEdit.category || CATEGORIES[0]);
+        const editCat = supplyToEdit.category || CATEGORIES[0];
+        if (CATEGORIES.includes(editCat)) {
+          setCategory(editCat);
+          setIsCustomCategory(false);
+          setCustomCategory('');
+        } else {
+          setCategory('NEW_CATEGORY');
+          setIsCustomCategory(true);
+          setCustomCategory(editCat);
+        }
         // Fallback for custom units not in dropdown
         if (UNITS.includes(supplyToEdit.unit || supplyToEdit.purchaseUnit)) {
           setUnit(supplyToEdit.unit || supplyToEdit.purchaseUnit);
@@ -42,6 +53,8 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
       } else {
         setName('');
         setCategory(CATEGORIES[0]);
+        setIsCustomCategory(false);
+        setCustomCategory('');
         setUnit(UNITS[0]);
         setMinLimit(5);
         setCurrentStock(0);
@@ -56,11 +69,14 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
     if (!name.trim()) return toast.error('El insumo necesita un nombre');
     if (minLimit < 0) return toast.error('El límite mínimo no puede ser negativo');
     
+    const finalCategory = isCustomCategory ? customCategory.trim() : category;
+    if (!finalCategory) return toast.error('La categoría es requerida');
+
     setLoading(true);
     try {
       const data: Partial<Supply> = {
         name: name.trim(),
-        category,
+        category: finalCategory,
         unit, // we are mapping this to the UI
         minLimit,
         currentStock,
@@ -142,14 +158,37 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, onSave 
               <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Categoría *</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === 'NEW_CATEGORY') {
+                    setCategory('NEW_CATEGORY');
+                    setIsCustomCategory(true);
+                  } else {
+                    setCategory(e.target.value);
+                    setIsCustomCategory(false);
+                  }
+                }}
                 className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
               >
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
+                <option value="NEW_CATEGORY">+ Nueva categoría...</option>
               </select>
             </div>
+
+            {isCustomCategory && (
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-primary"> Nombre de la Nueva Categoría *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Bases, Galletas..."
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  className="w-full px-4 h-14 bg-primary/5 rounded-2xl border border-primary/20 outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-primary"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
