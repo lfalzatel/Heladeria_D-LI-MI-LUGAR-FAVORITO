@@ -177,27 +177,31 @@
       "requiresFlavors": true,
       "requiresFruitChoice": false,
       "isActive": true,
-      "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
+      "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
       "variants": [
         {
           "label": "Mini",
           "price": 10000,
-          "scoops": 1
+          "scoops": 1,
+          "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg"
         },
         {
           "label": "Pequeña",
           "price": 17000,
-          "scoops": 2
+          "scoops": 2,
+          "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg"
         },
         {
           "label": "Mediana",
           "price": 22000,
-          "scoops": 2
+          "scoops": 2,
+          "imageUrl": "/Images/products/ensalada-frutas-mediana.png"
         },
         {
           "label": "Grande",
           "price": 27000,
-          "scoops": 2
+          "scoops": 2,
+          "imageUrl": "/Images/products/ensalada-frutas-grande.png"
         }
       ]
     },

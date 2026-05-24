@@ -44,6 +44,7 @@ export interface ProductVariant {
   hasIceCream?: boolean;
   recipe?: RecipeItem[];
   steps?: VariantStep[];
+  imageUrl?: string;
 }
 
 

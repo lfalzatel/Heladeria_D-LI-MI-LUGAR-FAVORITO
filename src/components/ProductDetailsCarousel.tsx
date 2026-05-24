@@ -22,6 +22,11 @@ export default function ProductDetailsCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [activeVariantImage, setActiveVariantImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveVariantImage(null);
+  }, [currentIndex]);
 
   useEffect(() => {
     if (isOpen && initialProductId) {
@@ -79,6 +84,8 @@ export default function ProductDetailsCarousel({
 
   const currentProduct = products[currentIndex];
   if (!currentProduct) return null;
+
+  const displayedImage = activeVariantImage || currentProduct.imageUrl;
 
   const minPrice = currentProduct.variants?.length 
     ? Math.min(...currentProduct.variants.map(v => v.price)) 
@@ -176,9 +183,9 @@ export default function ProductDetailsCarousel({
                   className="relative w-full aspect-square max-h-[38vh] shrink-0 bg-surface-container-low"
                   style={currentProduct.cardColor?.startsWith('#') ? { backgroundColor: currentProduct.cardColor } : {}}
                 >
-                  {currentProduct.imageUrl ? (
+                  {displayedImage ? (
                     <img 
-                      src={getAssetUrl(currentProduct.imageUrl)} 
+                      src={getAssetUrl(displayedImage)} 
                       alt={currentProduct.name} 
                       className="w-full h-full object-cover pointer-events-none" 
                     />
@@ -208,6 +215,36 @@ export default function ProductDetailsCarousel({
                     {currentProduct.name}
                   </h3>
                   
+                  {currentProduct.variants && currentProduct.variants.some(v => v.imageUrl) && (
+                    <div className="flex gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                      {currentProduct.variants.filter(v => v.imageUrl).map((v, i) => {
+                        const isActive = activeVariantImage === v.imageUrl || (!activeVariantImage && currentProduct.imageUrl === v.imageUrl && i === 1); // fallback to peqeña logic or just matching URL
+                        const isMatch = activeVariantImage ? activeVariantImage === v.imageUrl : (currentProduct.imageUrl === v.imageUrl);
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setActiveVariantImage(v.imageUrl!)}
+                            className={cn(
+                              "flex flex-col items-center gap-1.5 shrink-0 transition-all",
+                              isMatch ? "opacity-100 scale-105" : "opacity-50 hover:opacity-100"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-16 h-16 rounded-xl overflow-hidden bg-surface transition-all",
+                              isMatch ? "ring-2 ring-primary ring-offset-1" : "ring-1 ring-outline/20"
+                            )}>
+                              <img src={getAssetUrl(v.imageUrl!)} alt={v.label} className="w-full h-full object-cover" />
+                            </div>
+                            <span className={cn(
+                              "text-[10px] font-black uppercase tracking-widest",
+                              isMatch ? "text-primary" : "text-secondary"
+                            )}>{v.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   <p className="text-sm text-secondary font-medium leading-relaxed mb-6 min-h-[3rem]">
                     {currentProduct.description || "Sin descripción adicional."}
                   </p>
