@@ -1183,32 +1183,110 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       )}
     </AnimatePresence>
 
-      {/* FULL IMAGE MODAL */}
+      {/* PRODUCT DETAIL SHEET (image + descripción + variantes) */}
       <AnimatePresence>
         {showFullImage && product.imageUrl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm cursor-zoom-out"
+            className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer"
             onClick={() => setShowFullImage(false)}
           >
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowFullImage(false); }}
-              className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors text-white backdrop-blur-md"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <motion.img
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              src={getAssetUrl(product.imageUrl)}
-              alt={product.name}
-              className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-            />
+              className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden max-h-[92vh] flex flex-col cursor-default shadow-2xl"
+            >
+              {/* Drag handle (mobile) */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="w-10 h-1 bg-outline/20 rounded-full" />
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => setShowFullImage(false)}
+                className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center transition-colors text-white backdrop-blur-sm"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Hero image */}
+              <div className="relative h-56 sm:h-72 flex-shrink-0">
+                <img
+                  src={getAssetUrl(product.imageUrl)}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-4 left-5">
+                  <span className="px-2 py-0.5 rounded-full bg-primary/90 text-white text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
+                    {product.category}
+                  </span>
+                  <h2 className="font-brand font-black text-2xl text-white drop-shadow-lg mt-1 leading-tight">
+                    {product.name}
+                  </h2>
+                </div>
+              </div>
+
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
+
+                {/* Descripción */}
+                {product.description && (
+                  <div>
+                    <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1.5">Descripción</p>
+                    <p className="text-sm text-on-surface/80 leading-relaxed">{product.description}</p>
+                  </div>
+                )}
+
+                {/* Variantes */}
+                {product.variants && product.variants.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-2">Opciones y Precios</p>
+                    <div className="flex flex-col gap-2">
+                      {product.variants.map((v) => (
+                        <div
+                          key={v.label}
+                          className="flex items-center justify-between px-4 py-3 bg-surface-container rounded-2xl border border-outline/10"
+                        >
+                          <div className="flex items-center gap-2">
+                            {v.scoops != null && v.scoops > 0 && (
+                              <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg">
+                                {v.scoops} {v.scoops === 1 ? 'bola' : 'bolas'}
+                              </span>
+                            )}
+                            <span className="font-bold text-sm text-on-surface">{v.label}</span>
+                          </div>
+                          <span className="font-brand font-black text-base text-primary">
+                            {formatCurrency(v.price)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Precio base (si no tiene variantes) */}
+                {(!product.variants || product.variants.length === 0) && product.basePrice && (
+                  <div className="flex items-center justify-between px-4 py-3 bg-primary/5 rounded-2xl border border-primary/10">
+                    <span className="font-bold text-sm text-on-surface">Precio</span>
+                    <span className="font-brand font-black text-lg text-primary">{formatCurrency(product.basePrice)}</span>
+                  </div>
+                )}
+
+                {/* Botón cerrar */}
+                <button
+                  onClick={() => setShowFullImage(false)}
+                  className="w-full h-12 bg-on-surface text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-opacity mt-1"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
