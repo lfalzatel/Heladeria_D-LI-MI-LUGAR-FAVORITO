@@ -595,21 +595,22 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                 key={base}
                                 onClick={() => {
                                   const otherBase = base === 'Fresa' ? 'Mango' : 'Fresa';
-                                  // Reemplazar la base exclusiva, mantener las frutas fijas (Banano, Papaya)
                                   setSelectedFrutas(prev => [base, ...prev.filter(f => f !== otherBase && f !== 'Fresa' && f !== 'Mango')]);
                                 }}
                                 className={cn(
-                                  "flex flex-col items-center justify-center p-5 rounded-[1.5rem] transition-all border-2 text-center gap-1",
+                                  "flex items-center justify-center gap-2 p-4 rounded-[1.5rem] transition-all border-2 text-center",
                                   isSelected
                                     ? "bg-primary/5 border-primary shadow-md scale-[1.02]"
                                     : "bg-white border-outline/10 hover:bg-surface-container-low"
                                 )}
                               >
-                                <span className="text-3xl">{base === 'Fresa' ? '🍓' : '🥭'}</span>
-                                <span className={cn("font-black text-base tracking-tight", isSelected ? "text-primary" : "text-on-surface")}>
-                                  {base}
-                                </span>
-                                {isSelected && <span className="text-[9px] font-black text-primary uppercase tracking-wider">✓ Elegida</span>}
+                                <span className="text-2xl">{base === 'Fresa' ? '🍓' : '🥭'}</span>
+                                <div className="flex flex-col items-start">
+                                  <span className={cn("font-black text-base tracking-tight", isSelected ? "text-primary" : "text-on-surface")}>
+                                    {base}
+                                  </span>
+                                  {isSelected && <span className="text-[9px] font-black text-primary uppercase tracking-wider">✓ Elegida</span>}
+                                </div>
                               </button>
                             );
                           })}
