@@ -282,6 +282,33 @@ export default function Profile() {
                       className: 'text-center border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700',
                     }
                   );
+                  
+                  // Animación de confeti mejorada (Fucsia/Morado)
+                  const duration = 2500;
+                  const end = Date.now() + duration;
+                  const colors = ['#d946ef', '#c026d3', '#a21caf', '#e879f9', '#fdf4ff'];
+                  
+                  const frame = () => {
+                    confetti({
+                      particleCount: 5,
+                      angle: 60,
+                      spread: 55,
+                      origin: { x: 0, y: 0.8 },
+                      colors: colors
+                    });
+                    confetti({
+                      particleCount: 5,
+                      angle: 120,
+                      spread: 55,
+                      origin: { x: 1, y: 0.8 },
+                      colors: colors
+                    });
+
+                    if (Date.now() < end) {
+                      requestAnimationFrame(frame);
+                    }
+                  };
+                  frame();
                 }}
                 className="text-[10px] font-black text-fuchsia-600 bg-fuchsia-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm border border-fuchsia-200 hover:scale-105 active:scale-95 transition-transform"
               >
@@ -302,6 +329,33 @@ export default function Profile() {
                         className: 'text-center border-amber-200 bg-amber-50',
                       }
                     );
+
+                    // Animación de confeti mejorada (Dorado/Amarillo)
+                    const duration = 2500;
+                    const end = Date.now() + duration;
+                    const colors = ['#f59e0b', '#fbbf24', '#fcd34d', '#b45309', '#fffbeb'];
+                    
+                    const frame = () => {
+                      confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.8 },
+                        colors: colors
+                      });
+                      confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.8 },
+                        colors: colors
+                      });
+
+                      if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                      }
+                    };
+                    frame();
                   }}
                   className="text-[10px] font-black text-amber-600 bg-amber-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm border border-amber-200 hover:scale-105 active:scale-95 transition-transform"
                 >

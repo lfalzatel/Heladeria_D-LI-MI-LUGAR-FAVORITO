@@ -166,6 +166,8 @@ export default function Management() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [showHistoryHeatmap, setShowHistoryHeatmap] = useState(false);
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState<Date | null>(null);
 
   // ── User Edit State ──────────────────────────────────────────────────────
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<UserProfile | null>(null);
@@ -1488,71 +1490,139 @@ export default function Management() {
                             <span className="text-[9px] font-bold truncate">{selectedUserForHistory.address}</span>
                           </div>
                         )}
+                        <div className="flex items-center gap-1 mt-1 text-fuchsia-300 w-full">
+                          <Star className="w-3 h-3 fill-fuchsia-400 text-fuchsia-400" />
+                          <span className="text-[10px] font-bold">
+                            Fidelidad: {selectedUserForHistory.loyaltyPoints || 0}/9 compras
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-surface-container-lowest flex-1 px-6 sm:px-8 py-10 -mt-8 rounded-t-[3rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)] overflow-y-auto custom-scrollbar">
-                  <div className="mb-6 px-2">
-                    <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Registro de Actividad</p>
-                  </div>
-                  {(() => {
-                    const currentMonth = viewDate.getMonth();
-                    const currentYear = viewDate.getFullYear();
-                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                    const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-                    const activityMap: Record<number, number> = {};
-                    userSales.forEach((sale) => {
-                      const ts = sale.timestamp || sale.createdAt;
-                      if (!ts) return;
-                      const date = ts.toDate ? ts.toDate() : new Date(ts);
-                      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
-                        const day = date.getDate();
-                        activityMap[day] = (activityMap[day] || 0) + 1;
-                      }
-                    });
-                    const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-                    return (
-                      <>
-                        <div className="flex items-center justify-between mb-8 px-2">
-                          <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary"><ChevronLeft className="w-4 h-4" /></button>
-                          <div className="text-center">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Actividad</p>
-                            <h4 className="text-sm font-bold text-on-surface">{monthNames[currentMonth]} {currentYear}</h4>
-                          </div>
-                          <button onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()} className="p-2 hover:bg-surface-container rounded-full transition-colors text-secondary disabled:opacity-20"><ChevronRight className="w-4 h-4" /></button>
-                        </div>
-                        <div className="grid grid-cols-7 gap-y-2 gap-x-1 mb-6">
-                          {['L','M','X','J','V','S','D'].map((d) => <div key={d} className="text-[8px] font-black text-secondary/30 text-center uppercase">{d}</div>)}
-                          {Array.from({ length: firstDayAdjusted }).map((_, i) => <div key={`empty-${i}`} />)}
-                          {Array.from({ length: daysInMonth }).map((_, i) => {
-                            const day = i + 1;
-                            const count = activityMap[day] || 0;
-                            return (
-                              <div key={day} className="flex flex-col items-center justify-center">
-                                <div className={cn('w-7 h-9 rounded-xl flex flex-col items-center justify-center transition-all', count > 0 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container text-on-surface', day === new Date().getDate() && currentMonth === new Date().getMonth() && count === 0 && 'ring-1 ring-primary ring-inset')}>
-                                  <span className="text-[9px] font-bold">{day}</span>
-                                  {count > 0 && <span className="text-[6px] font-black opacity-60 mt-0.5">{count}</span>}
+                  <button 
+                    onClick={() => setShowHistoryHeatmap(!showHistoryHeatmap)} 
+                    className="flex items-center gap-2 mb-6 px-2 w-full text-left outline-none group"
+                  >
+                    <Calendar className={cn("w-4 h-4 transition-colors", showHistoryHeatmap ? "text-primary" : "text-secondary/50 group-hover:text-secondary")} />
+                    <span className={cn("text-[9px] font-black uppercase tracking-[0.2em] transition-colors", showHistoryHeatmap ? "text-primary" : "text-secondary group-hover:text-on-surface")}>
+                      Calendario de Actividad
+                    </span>
+                    <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showHistoryHeatmap ? "rotate-90 text-primary" : "text-secondary/50")} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showHistoryHeatmap && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        {(() => {
+                          const currentMonth = viewDate.getMonth();
+                          const currentYear = viewDate.getFullYear();
+                          const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                          const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                          const firstDayAdjusted = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+                          const activityMap: Record<number, number> = {};
+                          userSales.forEach((sale) => {
+                            const ts = sale.timestamp || sale.createdAt;
+                            if (!ts) return;
+                            const date = ts.toDate ? ts.toDate() : new Date(ts);
+                            if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                              const day = date.getDate();
+                              activityMap[day] = (activityMap[day] || 0) + 1;
+                            }
+                          });
+                          const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                          return (
+                            <div className="bg-surface-container/30 rounded-3xl p-4 mb-6 border border-outline/5">
+                              <div className="flex items-center justify-between mb-6 px-2">
+                                <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} className="p-2 hover:bg-white rounded-full transition-colors text-secondary shadow-sm"><ChevronLeft className="w-4 h-4" /></button>
+                                <div className="text-center">
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Actividad</p>
+                                  <h4 className="text-sm font-bold text-on-surface">{monthNames[currentMonth]} {currentYear}</h4>
                                 </div>
+                                <button onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} disabled={currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()} className="p-2 hover:bg-white rounded-full transition-colors text-secondary shadow-sm disabled:opacity-20"><ChevronRight className="w-4 h-4" /></button>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </>
-                    );
-                  })()}
+                              <div className="grid grid-cols-7 gap-y-2 gap-x-1">
+                                {['L','M','X','J','V','S','D'].map((d) => <div key={d} className="text-[8px] font-black text-secondary/30 text-center uppercase mb-1">{d}</div>)}
+                                {Array.from({ length: firstDayAdjusted }).map((_, i) => <div key={`empty-${i}`} />)}
+                                {Array.from({ length: daysInMonth }).map((_, i) => {
+                                  const day = i + 1;
+                                  const count = activityMap[day] || 0;
+                                  const isSelected = selectedHistoryDate?.getDate() === day && selectedHistoryDate?.getMonth() === currentMonth && selectedHistoryDate?.getFullYear() === currentYear;
+                                  
+                                  return (
+                                    <div key={day} className="flex flex-col items-center justify-center">
+                                      <button
+                                        disabled={count === 0}
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            setSelectedHistoryDate(null);
+                                          } else {
+                                            setSelectedHistoryDate(new Date(currentYear, currentMonth, day));
+                                            setShowHistoryHeatmap(false);
+                                          }
+                                        }}
+                                        className={cn('w-7 h-9 rounded-xl flex flex-col items-center justify-center transition-all', 
+                                          count > 0 
+                                            ? isSelected
+                                              ? 'bg-primary text-white shadow-md ring-2 ring-primary ring-offset-1 scale-110'
+                                              : 'bg-primary/80 text-white shadow-sm hover:scale-105 hover:bg-primary cursor-pointer' 
+                                            : 'bg-surface-container text-on-surface cursor-default', 
+                                          day === new Date().getDate() && currentMonth === new Date().getMonth() && count === 0 && 'ring-1 ring-primary ring-inset'
+                                        )}
+                                      >
+                                        <span className="text-[9px] font-bold">{day}</span>
+                                        {count > 0 && <span className="text-[6px] font-black opacity-80 mt-0.5">{count}</span>}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   <div className="space-y-4">
-                    <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] px-2 mb-4">Movimientos Recientes</h4>
+                    <div className="flex items-center justify-between px-2 mb-4">
+                      <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">
+                        Movimientos Recientes
+                      </h4>
+                      {selectedHistoryDate && (
+                        <button 
+                          onClick={() => setSelectedHistoryDate(null)}
+                          className="text-[9px] font-black uppercase text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 flex items-center gap-1"
+                        >
+                          {selectedHistoryDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                     {isLoadingHistory ? (
                       <div className="flex justify-center p-12"><div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" /></div>
                     ) : userSales.length === 0 ? (
                       <div className="text-center py-10 opacity-30 italic text-[10px] uppercase font-black">Sin actividad registrada</div>
                     ) : (
-                      userSales.slice(0, 10).map((sale, index) => {
-                        const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
+                      userSales
+                        .filter(sale => {
+                          if (!selectedHistoryDate) return true;
+                          const ts = sale.timestamp || sale.createdAt;
+                          if (!ts) return false;
+                          const d = ts.toDate ? ts.toDate() : new Date(ts);
+                          return d.getDate() === selectedHistoryDate.getDate() &&
+                                 d.getMonth() === selectedHistoryDate.getMonth() &&
+                                 d.getFullYear() === selectedHistoryDate.getFullYear();
+                        })
+                        .slice(0, 50).map((sale, index) => {
+                          const cName = sale.clienteName || sale.userName || sale.customerName || sale.nombre || sale.clientName;
                         const tName = sale.tableName || sale.mesa;
                         const origin = cName || (tName && tName !== 'Pedido Online' ? `Mesa: ${tName}` : 'Pedido Online');
                         return (
