@@ -87,6 +87,8 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
   setActiveTable: (activeTable) => set({ activeTable }),
 
   addItem: async (table, item) => {
+    // Firebase doesn't allow undefined values, we must clean the object
+    const cleanItem = JSON.parse(JSON.stringify(item));
     const carts = get().carts;
     // Ensure we have a valid base for the current table
     const tableCart = carts[table] || { ...initialTableCart };
@@ -94,11 +96,11 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     // Check if identical item already exists AND is not locked
     const existingIndex = tableCart.items.findIndex(i => 
       !i.locked &&
-      i.productId === item.productId && 
-      i.variantLabel === item.variantLabel && 
-      JSON.stringify(i.flavors) === JSON.stringify(item.flavors) &&
-      JSON.stringify(i.fruitChoices) === JSON.stringify(item.fruitChoices) &&
-      JSON.stringify(i.additions) === JSON.stringify(item.additions)
+      i.productId === cleanItem.productId && 
+      i.variantLabel === cleanItem.variantLabel && 
+      JSON.stringify(i.flavors) === JSON.stringify(cleanItem.flavors) &&
+      JSON.stringify(i.fruitChoices) === JSON.stringify(cleanItem.fruitChoices) &&
+      JSON.stringify(i.additions) === JSON.stringify(cleanItem.additions)
     );
 
     let newItems;
@@ -107,11 +109,11 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
       const existing = newItems[existingIndex];
       newItems[existingIndex] = {
         ...existing,
-        quantity: existing.quantity + item.quantity,
-        subtotal: (existing.quantity + item.quantity) * existing.unitPrice
+        quantity: existing.quantity + cleanItem.quantity,
+        subtotal: (existing.quantity + cleanItem.quantity) * existing.unitPrice
       };
     } else {
-      newItems = [...tableCart.items, item];
+      newItems = [...tableCart.items, cleanItem];
     }
 
     const newCart = {

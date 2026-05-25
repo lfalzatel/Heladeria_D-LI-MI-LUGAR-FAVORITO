@@ -238,7 +238,14 @@
           "label": "Salsa"
         }
       ],
-      "category": "adiciones"
+      "category": "adiciones",
+      "requiresSauces": true,
+      "sauceOptions": [
+        "arequipe",
+        "mora",
+        "chocolate",
+        "lecherita"
+      ]
     },
     {
       "id": "agua",
