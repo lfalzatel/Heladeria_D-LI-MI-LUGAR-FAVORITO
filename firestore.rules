@@ -133,5 +133,13 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
+
+    // Gastos: Finanzas personales y control de gastos
+    match /gastos/{gastoId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
+    }
   }
 }

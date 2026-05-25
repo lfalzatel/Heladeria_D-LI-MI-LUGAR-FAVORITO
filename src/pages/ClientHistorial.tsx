@@ -8,7 +8,8 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  addDoc
+  addDoc,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -29,7 +30,14 @@ import {
   Search,
   IceCream,
   Smartphone,
-  Banknote
+  Banknote,
+  Music,
+  Cloud,
+  MonitorPlay,
+  Droplet,
+  Zap,
+  Flame,
+  Home
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -58,6 +66,8 @@ export default function ClientHistorial() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedExpenseDetail, setSelectedExpenseDetail] = useState<any | null>(null);
+  const [gastoToEdit, setGastoToEdit] = useState<any | null>(null);
+  const [gastoCategory, setGastoCategory] = useState<string>('Facturas');
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
 
@@ -205,11 +215,35 @@ export default function ClientHistorial() {
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'netflix': return <Play className="w-5 h-5" />;
+      case 'netflix': return <MonitorPlay className="w-5 h-5" />;
+      case 'youtube music': return <Music className="w-5 h-5" />;
+      case 'google one': return <Cloud className="w-5 h-5" />;
+      case 'agua': return <Droplet className="w-5 h-5" />;
+      case 'luz': return <Zap className="w-5 h-5" />;
+      case 'gas': return <Flame className="w-5 h-5" />;
+      case 'claro hogar': return <Home className="w-5 h-5" />;
+      case 'claro movil': return <Smartphone className="w-5 h-5" />;
       case 'facturas': return <CreditCard className="w-5 h-5" />;
       case 'servicios publicos': return <Wifi className="w-5 h-5" />;
       case 'alimentación': return <Utensils className="w-5 h-5" />;
-      default: return <ShoppingBag className="w-5 h-5" />;
+      default: return <Receipt className="w-5 h-5" />;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'netflix': 
+      case 'youtube music': 
+      case 'claro hogar': 
+      case 'claro movil': return "bg-red-50 text-red-500";
+      case 'google one': 
+      case 'agua': return "bg-blue-50 text-blue-500";
+      case 'luz': return "bg-yellow-50 text-yellow-500";
+      case 'gas': return "bg-orange-50 text-orange-500";
+      case 'facturas': return "bg-indigo-50 text-indigo-500";
+      case 'servicios publicos': return "bg-cyan-50 text-cyan-600";
+      case 'alimentación': return "bg-emerald-50 text-emerald-600";
+      default: return "bg-slate-50 text-slate-500";
     }
   };
 
@@ -234,15 +268,15 @@ export default function ClientHistorial() {
     }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  // Agrupar gastos por día para el mapa de calor
+  // Agrupar actividades por día para el mapa de calor (conteo de transacciones)
   const currentMonth = selectedMonth.getMonth();
   const currentYear = selectedMonth.getFullYear();
-  const dailySpending: Record<number, number> = {};
+  const dailyActivityCount: Record<number, number> = {};
   
   combinedActivities.forEach(act => {
     if (act.date.getMonth() === currentMonth && act.date.getFullYear() === currentYear) {
       const day = act.date.getDate();
-      dailySpending[day] = (dailySpending[day] || 0) + act.amount;
+      dailyActivityCount[day] = (dailyActivityCount[day] || 0) + 1;
     }
   });
 
@@ -253,10 +287,10 @@ export default function ClientHistorial() {
     Array.from({ length: daysInMonth }, (_, i) => i + 1)
   );
 
-  const getHeatmapColor = (amount: number) => {
-    if (amount === 0) return "bg-surface-container text-secondary/30 hover:bg-surface-container-high";
-    if (amount <= 15000) return "bg-primary/10 text-primary border border-primary/10 hover:bg-primary/20";
-    if (amount <= 50000) return "bg-primary/30 text-primary font-black border border-primary/25 hover:bg-primary/45";
+  const getHeatmapColor = (count: number) => {
+    if (count === 0) return "bg-surface-container text-secondary/30 hover:bg-surface-container-high";
+    if (count === 1) return "bg-primary/10 text-primary border border-primary/10 hover:bg-primary/20";
+    if (count <= 3) return "bg-primary/30 text-primary font-black border border-primary/25 hover:bg-primary/45";
     return "bg-primary text-white shadow-sm shadow-primary/20 hover:opacity-90 font-black";
   };
 
@@ -363,7 +397,11 @@ export default function ClientHistorial() {
                   </div>
                   
                   <button
-                    onClick={() => setIsGastoModalOpen(true)}
+                    onClick={() => {
+                      setGastoToEdit(null);
+                      setGastoCategory('Facturas');
+                      setIsGastoModalOpen(true);
+                    }}
                     className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-full text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                   >
                     <Plus className="w-4 h-4" />
@@ -374,13 +412,15 @@ export default function ClientHistorial() {
                 {/* CALENDARIO DE CALOR COLLAPSIBLE */}
                 <AnimatePresence>
                   {showHeatmap && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                      className="overflow-hidden bg-white/90 backdrop-blur-md rounded-[2rem] p-5 border border-outline/10 shadow-lg relative z-20 mb-6"
-                    >
+                    <>
+                      <div className="fixed inset-0 z-[15]" onClick={() => setShowHeatmap(false)} />
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="overflow-hidden bg-white/90 backdrop-blur-md rounded-[2rem] p-5 border border-outline/10 shadow-lg relative z-[20] mb-6"
+                      >
                       {/* Cabecera del Calendario */}
                       <div className="flex items-center justify-between mb-4">
                         <button 
@@ -421,7 +461,7 @@ export default function ClientHistorial() {
                           {calendarDays.map((day, i) => {
                             if (!day) return <div key={`empty-${i}`} className="opacity-0" />;
                             
-                            const amount = dailySpending[day] || 0;
+                            const count = dailyActivityCount[day] || 0;
                             const isSelected = selectedDateFilter && 
                                               selectedDateFilter.getDate() === day &&
                                               selectedDateFilter.getMonth() === currentMonth &&
@@ -443,20 +483,20 @@ export default function ClientHistorial() {
                                   }
                                 }}
                                 className={cn(
-                                  "h-9 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all relative border border-transparent cursor-pointer",
-                                  getHeatmapColor(amount),
-                                  isSelected && "ring-2 ring-primary ring-offset-2 scale-[1.08] z-10",
+                                  "h-9 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all relative border border-transparent cursor-pointer z-[21]",
+                                  getHeatmapColor(count),
+                                  isSelected && "ring-2 ring-primary ring-offset-2 scale-[1.08] z-[22]",
                                   isToday && !isSelected && "border-primary/50"
                                 )}
-                                title={`Gasto del día ${day}: $${amount.toLocaleString('es-CO')}`}
+                                title={`Día ${day}: ${count} movimiento${count !== 1 ? 's' : ''}`}
                               >
                                 <span>{day}</span>
-                                {amount > 0 && (
+                                {count > 0 && (
                                   <span className={cn(
                                     "text-[7px] font-black leading-none mt-0.5 opacity-80",
-                                    amount > 50000 ? "text-white" : "text-primary"
+                                    count > 3 ? "text-white" : "text-primary"
                                   )}>
-                                    ${amount >= 1000 ? `${Math.round(amount/1000)}k` : amount}
+                                    {count}
                                   </span>
                                 )}
                               </button>
@@ -484,7 +524,8 @@ export default function ClientHistorial() {
                           </button>
                         )}
                       </div>
-                    </motion.div>
+                      </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
 
@@ -585,11 +626,7 @@ export default function ClientHistorial() {
                             <div className="flex items-start gap-3">
                               <div className={cn(
                                 "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                                activity.category.toLowerCase() === 'netflix' ? "bg-red-50 text-red-500" :
-                                activity.category.toLowerCase() === 'facturas' ? "bg-indigo-50 text-indigo-500" :
-                                activity.category.toLowerCase() === 'servicios publicos' ? "bg-cyan-50 text-cyan-600" :
-                                activity.category.toLowerCase() === 'alimentación' ? "bg-emerald-50 text-emerald-600" :
-                                "bg-slate-50 text-slate-500"
+                                getCategoryColor(activity.category)
                               )}>
                                 {getCategoryIcon(activity.category)}
                               </div>
@@ -767,7 +804,7 @@ export default function ClientHistorial() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -792,26 +829,49 @@ export default function ClientHistorial() {
                   e.preventDefault();
                   const form = e.target as HTMLFormElement;
                   const description = (form.elements.namedItem('description') as HTMLInputElement).value;
-                  const amount = parseFloat((form.elements.namedItem('amount') as HTMLInputElement).value);
+                  const amountRaw = (form.elements.namedItem('amount') as HTMLInputElement).value;
+                  const amount = parseFloat(amountRaw);
                   const date = (form.elements.namedItem('date') as HTMLInputElement).value;
-                  const category = (form.elements.namedItem('category') as HTMLSelectElement).value;
+                  const category = (form.elements.namedItem('category') as HTMLInputElement).value;
                   const customCategory = (form.elements.namedItem('customCategory') as HTMLInputElement)?.value;
                   const finalCategory = category === 'otra' ? customCategory : category;
 
-                  if (!amount || !finalCategory || !date) return;
+                  if (isNaN(amount) || amount <= 0) {
+                    alert('Por favor, ingresa un monto válido mayor a 0.');
+                    return;
+                  }
+                  if (!finalCategory) {
+                    alert('Por favor, especifica una categoría.');
+                    return;
+                  }
+                  if (!date) {
+                    alert('Por favor, selecciona una fecha.');
+                    return;
+                  }
 
                   try {
-                    await addDoc(collection(db, 'gastos'), {
-                      userId: profile.uid,
-                      description,
-                      amount,
-                      category: finalCategory,
-                      date: date,
-                      createdAt: serverTimestamp()
-                    });
+                    if (gastoToEdit) {
+                      await updateDoc(doc(db, 'gastos', gastoToEdit.id), {
+                        description,
+                        amount,
+                        category: finalCategory,
+                        date: date
+                      });
+                    } else {
+                      await addDoc(collection(db, 'gastos'), {
+                        userId: profile?.uid || '',
+                        description,
+                        amount,
+                        category: finalCategory,
+                        date: date,
+                        createdAt: serverTimestamp()
+                      });
+                    }
                     setIsGastoModalOpen(false);
-                  } catch (error) {
-                    console.error("Error adding expense:", error);
+                    setGastoToEdit(null);
+                  } catch (error: any) {
+                    console.error("Error adding/updating expense:", error);
+                    alert("Error al guardar el gasto: " + error.message);
                   }
                 }}>
                   <div>
@@ -819,6 +879,7 @@ export default function ClientHistorial() {
                     <input
                       name="description"
                       type="text"
+                      defaultValue={gastoToEdit?.description || ''}
                       placeholder="Ej. Netflix, Factura Luz..."
                       className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
                     />
@@ -829,6 +890,7 @@ export default function ClientHistorial() {
                     <input
                       name="amount"
                       type="number"
+                      defaultValue={gastoToEdit?.amount || ''}
                       placeholder="0"
                       required
                       className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
@@ -840,7 +902,7 @@ export default function ClientHistorial() {
                     <input
                       name="date"
                       type="date"
-                      defaultValue={new Date().toISOString().split('T')[0]}
+                      defaultValue={gastoToEdit?.date || new Date().toISOString().split('T')[0]}
                       required
                       className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
                     />
@@ -848,32 +910,48 @@ export default function ClientHistorial() {
 
                   <div>
                     <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Categoría</label>
-                    <select
-                      name="category"
-                      required
-                      className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
-                      onChange={(e) => {
-                        const customInput = document.getElementById('custom-category-container');
-                        if (e.target.value === 'otra') {
-                          customInput?.classList.remove('hidden');
-                        } else {
-                          customInput?.classList.add('hidden');
-                        }
-                      }}
-                    >
-                      <option value="Facturas">Facturas</option>
-                      <option value="Netflix">Netflix</option>
-                      <option value="Servicios Publicos">Servicios Públicos</option>
-                      <option value="Alimentación">Alimentación</option>
-                      <option value="otra">Otra...</option>
-                    </select>
+                    <input type="hidden" name="category" value={gastoCategory} />
+                    <div className="flex overflow-x-auto pb-2 -mx-2 px-2 gap-2 hide-scrollbar">
+                      {['Facturas', 'Netflix', 'Youtube Music', 'Google One', 'Agua', 'Luz', 'Gas', 'Claro Hogar', 'Claro Movil', 'Alimentación', 'otra'].map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            setGastoCategory(cat);
+                            if (cat !== 'otra') {
+                              const customInput = document.getElementById('custom-category-container');
+                              customInput?.classList.add('hidden');
+                            } else {
+                              const customInput = document.getElementById('custom-category-container');
+                              customInput?.classList.remove('hidden');
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center gap-2 px-4 py-3 rounded-xl border whitespace-nowrap transition-all flex-shrink-0",
+                            gastoCategory === cat 
+                              ? "bg-primary/10 border-primary text-primary" 
+                              : "bg-surface-container-low border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
+                          )}
+                        >
+                          {cat !== 'otra' && (
+                            <div className={gastoCategory === cat ? "text-primary" : "opacity-60"}>
+                              {getCategoryIcon(cat)}
+                            </div>
+                          )}
+                          <span className={cn("text-xs font-bold", gastoCategory === cat ? "text-primary font-black" : "")}>
+                            {cat === 'otra' ? 'Otra...' : cat}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div id="custom-category-container" className="hidden">
+                  <div id="custom-category-container" className={gastoCategory === 'otra' ? '' : 'hidden'}>
                     <label className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 block">Nueva Categoría</label>
                     <input
                       name="customCategory"
                       type="text"
+                      defaultValue={gastoToEdit && !['Facturas', 'Netflix', 'Youtube Music', 'Google One', 'Agua', 'Luz', 'Gas', 'Claro Hogar', 'Claro Movil', 'Alimentación'].includes(gastoToEdit.category) ? gastoToEdit.category : ''}
                       placeholder="Ej. Transporte"
                       className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
                     />
@@ -883,7 +961,7 @@ export default function ClientHistorial() {
                     type="submit"
                     className="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 mt-6"
                   >
-                    Guardar Gasto
+                    {gastoToEdit ? 'Actualizar Gasto' : 'Guardar Gasto'}
                   </button>
                 </form>
               </motion.div>
@@ -898,7 +976,7 @@ export default function ClientHistorial() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
               onClick={() => setSelectedExpenseDetail(null)}
             >
               <motion.div
@@ -954,6 +1032,37 @@ export default function ClientHistorial() {
                 >
                   Cerrar Detalle
                 </button>
+
+                <div className="flex gap-2 mt-4">
+                  <button 
+                    onClick={() => {
+                      setGastoToEdit(selectedExpenseDetail);
+                      const knownCategories = ['Facturas', 'Netflix', 'Youtube Music', 'Google One', 'Agua', 'Luz', 'Gas', 'Claro Hogar', 'Claro Movil', 'Alimentación'];
+                      setGastoCategory(knownCategories.includes(selectedExpenseDetail.category) ? selectedExpenseDetail.category : 'otra');
+                      setSelectedExpenseDetail(null);
+                      setIsGastoModalOpen(true);
+                    }}
+                    className="flex-1 py-3 rounded-2xl bg-primary/10 text-primary font-headline font-black text-xs uppercase tracking-widest active:scale-[0.98] transition-all"
+                  >
+                    Editar
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm('¿Estás seguro de eliminar este gasto? Esta acción no se puede deshacer.')) {
+                        try {
+                          await deleteDoc(doc(db, 'gastos', selectedExpenseDetail.id));
+                          setSelectedExpenseDetail(null);
+                        } catch (error) {
+                          console.error("Error al eliminar gasto:", error);
+                          alert("Hubo un error al eliminar el gasto.");
+                        }
+                      }
+                    }}
+                    className="flex-1 py-3 rounded-2xl bg-red-50 text-red-600 font-headline font-black text-xs uppercase tracking-widest active:scale-[0.98] transition-all"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}

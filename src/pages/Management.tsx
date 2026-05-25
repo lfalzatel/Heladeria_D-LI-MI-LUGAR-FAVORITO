@@ -190,8 +190,8 @@ export default function Management() {
 
   // ── Header Actions ──────────────────────────────────────────────────────
   useEffect(() => {
-    // Solo mostrar acciones si es admin o propietario
-    const canAdmin = currentUser?.role === 'admin' || currentUser?.role === 'propietario';
+    // Solo mostrar acciones si es admin
+    const canAdmin = currentUser?.role === 'admin';
     
     setHeader({
       title: "Gestión D'LI",
@@ -564,6 +564,16 @@ export default function Management() {
     }
   };
 
+  const handleDeleteSupply = async (supplyId: string) => {
+    if (window.confirm('¿Estás seguro de eliminar este insumo?')) {
+      try {
+        await deleteDoc(doc(db, 'supplies', supplyId));
+      } catch (error) {
+        console.error("Error deleting supply:", error);
+      }
+    }
+  };
+
   const handleRenameCategory = async (oldName: string) => {
     if (!newCategoryName.trim() || newCategoryName === oldName || oldName === 'Varios') {
       setEditingCategory(null);
@@ -755,10 +765,10 @@ export default function Management() {
                                         <button onClick={(e) => { e.stopPropagation(); setEditingCategory(null); }} className="p-1 bg-surface-container text-secondary rounded-xl"><X className="w-4 h-4"/></button>
                                       </div>
                                     ) : (
-                                      <div className="flex items-center gap-2 group/cat">
+                                      <div className="flex items-center gap-2">
                                         <h3 className="font-headline font-black text-lg text-on-surface uppercase tracking-tight">{category}</h3>
                                         {category !== 'Varios' && (
-                                          <div className="opacity-0 group-hover/cat:opacity-100 flex items-center gap-1 transition-opacity" onClick={e => e.stopPropagation()}>
+                                          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                             <button 
                                               onClick={(e) => { e.stopPropagation(); setEditingCategory(category); setNewCategoryName(category); }}
                                               className="p-1 hover:bg-primary/10 hover:text-primary text-secondary rounded-lg transition-colors"
@@ -809,10 +819,16 @@ export default function Management() {
                                               <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', s.isVirtual ? 'bg-amber-100 text-amber-600' : isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
                                                 {s.isVirtual ? '👻 Virtual' : isLow ? '⚠ ' + (s.category || 'Varios') : (s.category || 'Varios')}
                                               </span>
-                                              <button onClick={(e) => { e.stopPropagation(); setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
-                                                className="w-9 h-9 rounded-xl bg-white border border-outline/20 flex items-center justify-center text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm">
-                                                <Edit3 className="w-4 h-4" />
-                                              </button>
+                                              <div className="flex gap-1.5 opacity-100">
+                                                <button onClick={(e) => { e.stopPropagation(); setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
+                                                  className="w-9 h-9 rounded-xl bg-white border border-outline/20 flex items-center justify-center text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm">
+                                                  <Edit3 className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteSupply(s.id); }}
+                                                  className="w-9 h-9 rounded-xl bg-white border border-outline/20 flex items-center justify-center text-secondary hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shadow-sm">
+                                                  <Trash2 className="w-4 h-4" />
+                                                </button>
+                                              </div>
                                             </div>
                                             <h4 className="font-bold text-base text-on-surface leading-tight mb-4">{s.name}</h4>
                                             

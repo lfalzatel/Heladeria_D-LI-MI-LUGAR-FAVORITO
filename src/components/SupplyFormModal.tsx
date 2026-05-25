@@ -12,7 +12,7 @@ interface SupplyFormModalProps {
   onSave: (data: Partial<Supply>) => Promise<void>;
 }
 
-const CATEGORIES = ['Lácteos', 'Frutas', 'Toppings', 'Insumos Venta', 'Helados base', 'Acompañamientos', 'Desechables', 'Limpieza'];
+const CATEGORIES = ['Lácteos', 'Frutas', 'Toppings', 'Insumos Venta', 'Helados base', 'Acompañamientos', 'Desechables', 'Limpieza', 'Galletas'];
 const UNITS = ['kg', 'g', 'Litro', 'und', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata', 'Tarro'];
 
 export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existingCategories = [], onSave }: SupplyFormModalProps) {
@@ -285,10 +285,9 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
               </div>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 items-end">
                <div className="flex flex-col gap-2">
                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary" title="Alerta naranja cuando llegue a este número"> Límite Crítico *</label>
-               <div className="flex gap-2">
                  <input
                    type="number"
                    required
@@ -298,18 +297,23 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
                    onChange={(e) => setMinLimit(Number(e.target.value))}
                    className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
                  />
-                 {['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa', 'Lata'].includes(unit) && (
+               </div>
+               {['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa', 'Lata'].includes(unit) ? (
+                 <div className="flex flex-col gap-2">
+                   {/* Empty label to match height of Límite Crítico label */}
+                   <label className="text-[11px] font-black uppercase tracking-widest text-transparent select-none hidden sm:block">&nbsp;</label>
                    <select
                      value={minLimitUnit}
                      onChange={(e) => setMinLimitUnit(e.target.value)}
-                     className="w-1/2 px-2 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary text-sm font-bold text-secondary"
+                     className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary text-sm font-bold text-secondary"
                    >
                      <option value="base">{unit}s</option>
                      <option value="internal">Unidades</option>
                    </select>
-                 )}
-               </div>
-               </div>
+                 </div>
+               ) : (
+                 <div className="hidden sm:block"></div>
+               )}
             </div>
 
             {!isVirtual && (
