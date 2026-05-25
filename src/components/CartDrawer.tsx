@@ -16,9 +16,10 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit?: (item: CartItem, step?: number) => void;
+  onRedeemLoyalty?: () => void;
 }
 
-export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps) {
+export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }: CartDrawerProps) {
   const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote, toggleLock } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,6 +30,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
     name: string;
     email: string;
     phone?: string;
+    loyaltyPoints?: number;
   }
 
   const [clientes, setClientes] = useState<ClienteOption[]>([]);
@@ -51,7 +53,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
           id: doc.id,
           name: doc.data().name || 'Cliente sin nombre',
           email: doc.data().email || '',
-          phone: doc.data().phone || ''
+          phone: doc.data().phone || '',
+          loyaltyPoints: doc.data().loyaltyPoints || 0
         }));
         setClientes(list);
       } catch (err) {
@@ -129,6 +132,21 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
           salesCount: increment(item.quantity)
         })
       );
+      
+      // Update Loyalty Points
+      if (selectedCliente) {
+        let pointsChange = 1; // +1 point for the sale
+        const hasReward = cart.items.some(item => item.isLoyaltyReward);
+        if (hasReward) {
+          pointsChange -= 9; // -9 points for redeeming
+        }
+        updatePromises.push(
+          updateDoc(doc(db, 'users', selectedCliente.id), {
+            loyaltyPoints: increment(pointsChange)
+          })
+        );
+      }
+
       await Promise.all(updatePromises);
       
       // Descontar insumos automáticamente (Frutas, Queso, etc)
@@ -436,7 +454,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                                 }}
                                 className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors border-b border-outline/5 cursor-pointer block"
                               >
-                                <div className="font-bold text-on-surface">{c.name}</div>
+                                <div className="font-bold text-on-surface flex justify-between">
+                                  {c.name}
+                                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{c.loyaltyPoints || 0} pts</span>
+                                </div>
                                 <div className="text-[10px] text-secondary">
                                   {c.email || 'Sin correo'} {c.phone ? `• ${c.phone}` : ''}
                                 </div>
@@ -448,6 +469,28 @@ export default function CartDrawer({ isOpen, onClose, onEdit }: CartDrawerProps)
                         </div>
                       )}
                     </div>
+                    {selectedCliente && (
+                      <div className="mt-3 flex items-center justify-between p-3 bg-white rounded-xl border border-primary/20">
+                        <div>
+                          <p className="text-xs font-bold text-primary flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            Puntos de Fidelidad
+                          </p>
+                          <p className="text-sm font-black text-on-surface">{selectedCliente.loyaltyPoints || 0} / 9</p>
+                        </div>
+                        {(selectedCliente.loyaltyPoints || 0) >= 9 && !cart.items.some(i => i.isLoyaltyReward) && (
+                          <button
+                            onClick={onRedeemLoyalty}
+                            className="px-3 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-black rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all"
+                          >
+                            ⭐ CANJEAR PREMIO
+                          </button>
+                        )}
+                        {cart.items.some(i => i.isLoyaltyReward) && (
+                          <span className="text-xs font-black text-orange-500 bg-orange-50 px-2 py-1 rounded-md">Premio en carrito</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">

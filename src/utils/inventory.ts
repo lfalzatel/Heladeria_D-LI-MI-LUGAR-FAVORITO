@@ -98,18 +98,59 @@ export async function deductInventory(cartItems: CartItem[]) {
           const supply = suppliesMap[choiceName];
           if (supply) {
               let deductionAmount = 0;
+              const productName = (product?.name || '').toLowerCase();
               
-              // 1. Usar rendimiento específico del tamaño de la porción (Ej. porción pequeña = 1/80, porción grande = 1/40)
-              if (supply.yieldPerSize && supply.yieldPerSize[size]) {
-                  deductionAmount = 1 / supply.yieldPerSize[size];
-              } 
-              // 2. Fallback a rendimiento estándar si no hay por tamaño
-              else if (supply.yieldPerUnit && supply.yieldPerUnit > 0) {
-                  deductionAmount = 1 / supply.yieldPerUnit;
-              } 
-              // 3. Fallback a 1 unidad completa en el peor caso
-              else {
-                  deductionAmount = 1; 
+              // REGLAS ESPECÍFICAS DE GRAMAJES (Custom Logic)
+              if (choiceName === 'arequipe' || choiceName === 'salsa arequipe') {
+                  // asumiendo unit = Kg (1000g) o Litro
+                  if (productName.includes('cuchareable')) deductionAmount = 50 / 1000;
+                  else if (productName.includes('oblea')) deductionAmount = 30 / 1000;
+                  else if (productName.includes('copa')) deductionAmount = 30 / 1000;
+                  else if (productName.includes('malteada')) deductionAmount = 30 / 1000;
+                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+              }
+              else if (choiceName === 'lechera' || choiceName === 'lecherita') { 
+                  // asumiendo unit = Pouch/Kg (1000g)
+                  if (productName.includes('cuchareable')) deductionAmount = 50 / 1000;
+                  else if (productName.includes('oblea') || (productName.includes('frutas') && productName.includes('crema'))) deductionAmount = 100 / 1000;
+                  else if (productName.includes('copa')) deductionAmount = 30 / 1000;
+                  else if (productName.includes('salpicón') || productName.includes('salpicon')) deductionAmount = 20 / 1000;
+                  else if (productName.includes('ensalada')) deductionAmount = 35 / 1000;
+                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+              }
+              else if (choiceName === 'salsa mora' || choiceName === 'mora') { 
+                  // asumiendo unit = Litro (1000g/ml)
+                  if (productName.includes('malteada')) deductionAmount = 30 / 1000;
+                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+              }
+              else if (choiceName === 'salsa chocolate' || choiceName === 'chocolate') { 
+                  // asumiendo unit = Litro (1000g/ml)
+                  if (productName.includes('copa')) deductionAmount = 30 / 1000;
+                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+              }
+              else if (choiceName === 'uva') { 
+                  // asumiendo unit = Kg (1000g)
+                  if (productName.includes('ensalada')) deductionAmount = 21.1 / 1000; // basado en 443g / 21
+              }
+              else if (choiceName === 'kiwi') { 
+                  // asumiendo unit = Kg (1000g)
+                  if (productName.includes('ensalada') && size !== 'mini') deductionAmount = 12.8 / 1000; // basado en 77g / 6
+              }
+
+              // Fallback a las reglas estándar si no encajó en ninguna regla específica
+              if (deductionAmount === 0) {
+                  // 1. Usar rendimiento específico del tamaño de la porción (Ej. porción pequeña = 1/80, porción grande = 1/40)
+                  if (supply.yieldPerSize && supply.yieldPerSize[size]) {
+                      deductionAmount = 1 / supply.yieldPerSize[size];
+                  } 
+                  // 2. Fallback a rendimiento estándar si no hay por tamaño
+                  else if (supply.yieldPerUnit && supply.yieldPerUnit > 0) {
+                      deductionAmount = 1 / supply.yieldPerUnit;
+                  } 
+                  // 3. Fallback a 1 unidad completa en el peor caso
+                  else {
+                      deductionAmount = 1; 
+                  }
               }
 
               deductions[supply.id] = (deductions[supply.id] || 0) + (deductionAmount * item.quantity);

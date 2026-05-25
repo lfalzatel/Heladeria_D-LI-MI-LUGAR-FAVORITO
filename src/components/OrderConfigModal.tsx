@@ -306,11 +306,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         !a.name.toLowerCase().includes('salsa')
       ).reduce((sum, a) => sum + a.price, 0);
 
-      const unitPrice = (selectedVariant?.price || product.basePrice || 0)
+      const isLoyalty = initialItem?.isLoyaltyReward;
+
+      const unitPrice = isLoyalty ? 0 : ((selectedVariant?.price || product.basePrice || 0)
         + otherAdditionsPrices
         + extraFruitsPrice
         + extraFlavorsPrice
-        + extraSaucesPrice;
+        + extraSaucesPrice);
 
       const allAdditionsNames = [
         ...allSaucesConsolidated,
@@ -368,6 +370,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         extraFlavors: extraFlavors,
         extraFruits: extraFrutas,
         extraSauces: extraSauces,
+        isLoyaltyReward: isLoyalty,
       });
       onClose();
     }

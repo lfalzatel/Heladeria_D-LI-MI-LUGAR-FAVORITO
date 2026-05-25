@@ -60,6 +60,7 @@ import MovementDetailModal from '../components/MovementDetailModal';
 import HistoryMovementCard from '../components/HistoryMovementCard';
 import ProductFormModal from '../components/ProductFormModal';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
+import { WasteModal } from '../components/WasteModal';
 import { seedDatabase } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
@@ -142,8 +143,8 @@ export default function Management() {
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
-  const [supplyToEdit, setSupplyToEdit] = useState<SupplyType | null>(null);
-  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
+  const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [supplySearch, setSupplySearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -1297,8 +1298,12 @@ export default function Management() {
                       {/* Register + Download */}
                       <div className="flex gap-3">
                         <button onClick={() => setIsPurchaseOpen(true)}
-                          className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                          className="flex-[2] py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
                           <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
+                        </button>
+                        <button onClick={() => setIsWasteModalOpen(true)}
+                          className="flex-[1] py-4 bg-red-50 text-red-500 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
+                          Merma
                         </button>
                         <button onClick={() => toast.info('Exportando informe de compras...')}
                           className="w-14 h-14 bg-surface-container text-secondary rounded-2xl flex items-center justify-center border border-outline/20 hover:bg-surface hover:text-on-surface transition-all">
@@ -1406,6 +1411,16 @@ export default function Management() {
               await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
             }
             toast.success('¡Compra registrada y stock actualizado!');
+          }}
+        />
+        <WasteModal
+          isOpen={isWasteModalOpen}
+          onClose={() => setIsWasteModalOpen(false)}
+          supplies={supplies as any}
+          onConfirm={async (supplyId, quantity, note) => {
+            await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
+            await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
+            toast.success('¡Merma registrada exitosamente!');
           }}
         />
         <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />

@@ -218,6 +218,31 @@ export default function POS() {
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)} 
         onEdit={handleEdit}
+        onRedeemLoyalty={() => {
+          const rewardProduct = products.find(p => p.id === 'cucurucho');
+          if (rewardProduct) {
+            const variant = rewardProduct.variants?.find(v => v.label === 'Doble') || rewardProduct.variants?.[1] || rewardProduct.variants?.[0];
+            setEditingItem({
+              id: Math.random().toString(36).substr(2, 9),
+              productId: rewardProduct.id,
+              productName: rewardProduct.name,
+              variantLabel: variant?.label || 'Doble',
+              description: '',
+              flavors: [],
+              fruitChoices: [],
+              additions: [],
+              quantity: 1,
+              unitPrice: 0,
+              subtotal: 0,
+              isLoyaltyReward: true
+            } as any);
+            setEditingStep(1);
+            setSelectedProduct(rewardProduct);
+            setIsCartOpen(false);
+          } else {
+            toast.error('No se encontró el producto Premio Fidelidad (Cucurucho) en el catálogo');
+          }
+        }}
       />
 
       <main className="flex-1 p-4 sm:p-8 flex flex-col gap-6 sm:gap-10 pb-32">

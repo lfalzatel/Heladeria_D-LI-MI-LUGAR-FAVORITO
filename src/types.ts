@@ -11,6 +11,7 @@ export interface User {
   phone?: string;
   address?: string;
   fcmTokens?: string[];
+  loyaltyPoints?: number;
   createdAt: Timestamp;
 }
 
@@ -100,6 +101,7 @@ export interface CartItem {
   extraFlavors?: string[];
   extraFruits?: string[];
   extraSauces?: string[];
+  isLoyaltyReward?: boolean;
 }
 
 export interface Sale {
