@@ -114,6 +114,7 @@ export default function POS() {
     { id: 'obleas', label: 'Obleas' },
     { id: 'bebidas-calientes', label: 'Bebidas Calientes' },
     { id: 'adiciones', label: 'Adiciones' },
+    { id: 'premio-fidelidad', label: '⭐ Premio Fidelidad' },
   ];
 
   const tables = [
@@ -329,12 +330,43 @@ export default function POS() {
             {categories.map(cat => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => {
+                  if (cat.id === 'premio-fidelidad') {
+                    if (window.confirm("¿Estás seguro de otorgar un premio por fidelidad (Cucurucho Doble Gratis)?")) {
+                      const rewardProduct = products.find(p => p.id === 'cucurucho');
+                      if (rewardProduct) {
+                        const variant = rewardProduct.variants?.find(v => v.label === 'Doble') || rewardProduct.variants?.[1] || rewardProduct.variants?.[0];
+                        setEditingItem({
+                          id: Math.random().toString(36).substr(2, 9),
+                          productId: rewardProduct.id,
+                          productName: rewardProduct.name,
+                          variantLabel: variant?.label || 'Doble',
+                          description: '',
+                          flavors: [],
+                          fruitChoices: [],
+                          additions: [],
+                          quantity: 1,
+                          unitPrice: 0,
+                          subtotal: 0,
+                          isLoyaltyReward: true
+                        } as any);
+                        setEditingStep(1);
+                        setSelectedProduct(rewardProduct);
+                      } else {
+                        toast.error('No se encontró el producto Premio (Cucurucho) en el catálogo');
+                      }
+                    }
+                  } else {
+                    setActiveCategory(cat.id);
+                  }
+                }}
                 className={cn(
                   "whitespace-nowrap px-6 py-2.5 rounded-xl font-bold text-xs transition-all border-2",
                   activeCategory === cat.id 
                     ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
-                    : "bg-white border-outline/50 text-secondary hover:border-primary/30"
+                    : cat.id === 'premio-fidelidad'
+                      ? "bg-gradient-to-r from-amber-400 to-orange-500 border-orange-500 text-white shadow-md"
+                      : "bg-white border-outline/50 text-secondary hover:border-primary/30"
                 )}
               >
                 {cat.label}

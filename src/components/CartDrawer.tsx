@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -456,7 +456,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                               >
                                 <div className="font-bold text-on-surface flex justify-between">
                                   {c.name}
-                                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{c.loyaltyPoints || 0} pts</span>
+                                  <span className="text-[10px] bg-fuchsia-50 text-fuchsia-500 px-1.5 py-0.5 rounded-full flex items-center gap-1"><Star className="w-3 h-3 fill-fuchsia-500" /> {c.loyaltyPoints || 0}</span>
                                 </div>
                                 <div className="text-[10px] text-secondary">
                                   {c.email || 'Sin correo'} {c.phone ? `• ${c.phone}` : ''}
@@ -470,13 +470,13 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                       )}
                     </div>
                     {selectedCliente && (
-                      <div className="mt-3 flex items-center justify-between p-3 bg-white rounded-xl border border-primary/20">
+                      <div className="mt-3 flex items-center justify-between p-3 bg-fuchsia-50/50 rounded-xl border border-fuchsia-200">
                         <div>
-                          <p className="text-xs font-bold text-primary flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                            Puntos de Fidelidad
+                          <p className="text-xs font-bold text-fuchsia-600 flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-fuchsia-500 animate-pulse" />
+                            Puntos Premium
                           </p>
-                          <p className="text-sm font-black text-on-surface">{selectedCliente.loyaltyPoints || 0} / 9</p>
+                          <p className="text-sm font-black text-fuchsia-700">{selectedCliente.loyaltyPoints || 0} / 9</p>
                         </div>
                         {(selectedCliente.loyaltyPoints || 0) >= 9 && !cart.items.some(i => i.isLoyaltyReward) && (
                           <button

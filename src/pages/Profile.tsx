@@ -14,7 +14,8 @@ import {
   Check,
   CreditCard,
   Phone,
-  MapPin
+  MapPin,
+  Star
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -261,7 +262,7 @@ export default function Profile() {
 
           <div className="mt-6">
             <h2 className="text-2xl font-black text-on-surface tracking-tight uppercase leading-tight">{profile?.name || user?.displayName || 'Usuario'}</h2>
-            <div className="flex items-center justify-center gap-4 mt-2">
+            <div className="flex items-center justify-center flex-wrap gap-2 mt-2">
               <span className={cn(
                 "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
                 profile?.role === 'admin' ? "bg-red-100 text-red-600" : 
@@ -270,6 +271,23 @@ export default function Profile() {
               )}>
                 {profile?.role || 'Cliente'}
               </span>
+              <button 
+                onClick={() => {
+                  toast.success(
+                    `Tienes ${profile?.loyaltyPoints || 0} Puntos Premium`,
+                    {
+                      description: `¡Acumula 9 para ganar un Cucurucho Doble gratis!`,
+                      position: 'top-center',
+                      duration: 6000,
+                      className: 'text-center border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700',
+                    }
+                  );
+                }}
+                className="text-[10px] font-black text-fuchsia-600 bg-fuchsia-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm border border-fuchsia-200 hover:scale-105 active:scale-95 transition-transform"
+              >
+                <Star className="w-3 h-3 fill-fuchsia-500" /> {profile?.loyaltyPoints || 0} / 9 Pts
+              </button>
+
               {heladoCoins !== null && (
                 <button 
                   onClick={() => {
@@ -284,12 +302,6 @@ export default function Profile() {
                         className: 'text-center border-amber-200 bg-amber-50',
                       }
                     );
-                    confetti({
-                      particleCount: 30,
-                      spread: 60,
-                      origin: { y: 0.3 },
-                      colors: ['#f59e0b', '#fbbf24', '#fcd34d']
-                    });
                   }}
                   className="text-[10px] font-black text-amber-600 bg-amber-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm border border-amber-200 hover:scale-105 active:scale-95 transition-transform"
                 >
