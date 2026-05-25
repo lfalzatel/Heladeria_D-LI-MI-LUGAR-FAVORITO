@@ -108,6 +108,7 @@ export async function deductInventory(cartItems: CartItem[]) {
                   else if (productName.includes('copa')) deductionAmount = 30 / 1000;
                   else if (productName.includes('malteada')) deductionAmount = 30 / 1000;
                   else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+                  else deductionAmount = 30 / 1000; // Default
               }
               else if (choiceName === 'lechera' || choiceName === 'lecherita') { 
                   // asumiendo unit = Pouch/Kg (1000g)
@@ -117,16 +118,23 @@ export async function deductInventory(cartItems: CartItem[]) {
                   else if (productName.includes('salpicón') || productName.includes('salpicon')) deductionAmount = 20 / 1000;
                   else if (productName.includes('ensalada')) deductionAmount = 35 / 1000;
                   else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+                  else deductionAmount = 30 / 1000;
               }
               else if (choiceName === 'salsa mora' || choiceName === 'mora') { 
                   // asumiendo unit = Litro (1000g/ml)
                   if (productName.includes('malteada')) deductionAmount = 30 / 1000;
                   else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+                  else deductionAmount = 30 / 1000;
               }
               else if (choiceName === 'salsa chocolate' || choiceName === 'chocolate') { 
                   // asumiendo unit = Litro (1000g/ml)
                   if (productName.includes('copa')) deductionAmount = 30 / 1000;
                   else if (productName.includes('helado')) deductionAmount = 6 / 1000;
+                  else deductionAmount = 30 / 1000;
+              }
+              else if (choiceName === 'chantilly' || choiceName === 'adición chantilly') {
+                  deductionAmount = 1; // It deductions from Chantilly, or directly from crema? 
+                  // Wait, if it deducts from "Chantilly", that's 1 portion.
               }
               else if (choiceName === 'uva') { 
                   // asumiendo unit = Kg (1000g)

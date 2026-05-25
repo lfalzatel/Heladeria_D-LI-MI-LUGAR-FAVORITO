@@ -18,6 +18,7 @@ import ProductDetailsCarousel from '../components/ProductDetailsCarousel';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
+import confetti from 'canvas-confetti';
 
 const CATEGORIES = [
   { id: 'all',       label: 'Todos',     icon: <Package className="w-4 h-4" /> },
@@ -339,7 +340,30 @@ export default function ClientCompras() {
         console.warn('No se pudo actualizar salesCount (probablemente falta de permisos), pero el pedido fue enviado.', err);
       }
 
-      toast.success('¡Pedido enviado! Te lo mostramos para que adjuntes tu comprobante.');
+      // Incrementar puntos de fidelidad en el perfil del cliente
+      try {
+        await updateDoc(doc(db, 'users', profile.uid), {
+          loyaltyPoints: increment(1)
+        });
+      } catch (err) {
+        console.warn('Error al incrementar puntos de fidelidad:', err);
+      }
+
+      // Animación de confeti de estrella (Fucsia/Dorado)
+      const colors = ['#d946ef', '#f59e0b', '#fbbf24', '#fcd34d', '#c026d3'];
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: colors,
+        disableForReducedMotion: true
+      });
+
+      toast.success('¡Ganaste 1 Punto Premium! ⭐ Revisa tu perfil.', {
+        description: '¡Tu pedido fue enviado exitosamente!',
+        duration: 8000,
+      });
+
       notifyAdmins(
         "🆕 Nuevo pedido online",
         `De ${profile.name} por $${cartTotal.toLocaleString()} - ${paymentMethod}`

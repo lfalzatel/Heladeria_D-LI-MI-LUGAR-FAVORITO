@@ -784,7 +784,34 @@
         "note": "Se decora con trozos de oblea y arequipe sobre la chantilly. Sin toppings secos ni salsas adicionales por defecto."
       },
       "salesCount": 7,
-      "name": "Oblea Cuchareable"
+      "name": "Oblea Cuchareable",
+      "recipe": [
+        {
+          "name": "Arequipe",
+          "quantity": 0.05,
+          "unit": "kg"
+        },
+        {
+          "name": "Oblea Delgada",
+          "quantity": 2,
+          "unit": "und"
+        },
+        {
+          "name": "Queso",
+          "quantity": 2,
+          "unit": "porción mini"
+        },
+        {
+          "name": "Crema de Leche Ensaladas",
+          "quantity": 0.033,
+          "unit": "kg"
+        },
+        {
+          "name": "Azúcar Pulverizada",
+          "quantity": 0.0033,
+          "unit": "kg"
+        }
+      ]
     },
     {
       "id": "oblea-tradicional",
@@ -812,7 +839,29 @@
       "scoops": null,
       "name": "Oblea Tradicional",
       "cardColor": null,
-      "salesCount": 3
+      "salesCount": 3,
+      "recipe": [
+        {
+          "name": "Oblea Gruesa",
+          "quantity": 2,
+          "unit": "und"
+        },
+        {
+          "name": "Crema de Leche Oblea Cuchareable",
+          "quantity": 0.05,
+          "unit": "kg"
+        },
+        {
+          "name": "Arequipe",
+          "quantity": 0.03,
+          "unit": "kg"
+        },
+        {
+          "name": "Queso",
+          "quantity": 1,
+          "unit": "porción mini"
+        }
+      ]
     },
     {
       "id": "perico",

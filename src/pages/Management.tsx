@@ -146,6 +146,7 @@ export default function Management() {
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [supplySearch, setSupplySearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
@@ -504,6 +505,64 @@ export default function Management() {
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error al reparar historial: ' + error.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleRecalculatePoints = async () => {
+    setIsSyncing(true);
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const salesSnap = await getDocs(collection(db, 'sales'));
+      const pedidosSnap = await getDocs(query(collection(db, 'pedidos'), where('status', 'in', ['entregado', 'pendiente', 'en_camino', 'preparando'])));
+      
+      const batch = writeBatch(db);
+      let updatedCount = 0;
+
+      usersSnap.docs.forEach(userDoc => {
+        const uid = userDoc.id;
+        const data = userDoc.data();
+        if (data.role !== 'cliente') return;
+
+        let points = 0;
+        
+        // Ventas físicas
+        salesSnap.docs.forEach(sale => {
+          const s = sale.data();
+          if (s.clienteId === uid && s.type !== 'online') {
+             const hasReward = (s.items || []).some((i:any) => i.isLoyaltyReward);
+             if (hasReward) points -= 8; // -9 for reward +1 for the sale = -8
+             else points += 1;
+          }
+        });
+
+        // Pedidos online (independiente de su estado para contar compras que ya hizo)
+        pedidosSnap.docs.forEach(pedido => {
+          if (pedido.data().clienteId === uid) {
+             points += 1;
+          }
+        });
+
+        if (points < 0) points = 0;
+
+        if (data.loyaltyPoints !== points) {
+          batch.update(doc(db, 'users', uid), { loyaltyPoints: points });
+          updatedCount++;
+        }
+      });
+
+      await batch.commit();
+      
+      if (updatedCount > 0) {
+        toast.success(`Se recalcularon y ajustaron los puntos para ${updatedCount} clientes.`);
+      } else {
+        toast.info('Los puntos ya estaban correctos para todos los clientes.');
+      }
+      setIsSyncModalOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error al recalcular puntos: ' + error.message);
     } finally {
       setIsSyncing(false);
     }
@@ -1753,6 +1812,10 @@ export default function Management() {
                   <button onClick={handleAddMissingSupplies} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {isSyncing ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                     Añadir Insumos Faltantes (Seguro)
+                  </button>
+                  <button onClick={handleRecalculatePoints} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-fuchsia-50 text-fuchsia-600 font-black text-[10px] uppercase tracking-widest hover:bg-fuchsia-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
+                    {isSyncing ? <div className="w-4 h-4 border-2 border-fuchsia-300 border-t-fuchsia-600 rounded-full animate-spin" /> : <Star className="w-4 h-4 fill-fuchsia-600" />}
+                    Recalcular Puntos de Fidelidad
                   </button>
                 </div>
                 <button onClick={() => setIsSyncModalOpen(false)} disabled={isSyncing} className="w-full mt-6 py-2 text-[10px] font-black text-secondary/40 uppercase tracking-widest hover:text-secondary transition-colors disabled:opacity-0">

@@ -23,7 +23,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote, toggleLock } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta'>('Efectivo');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Mixto'>('Efectivo');
+  const [splitAmounts, setSplitAmounts] = useState({ efectivo: '', transferencia: '' });
 
   interface ClienteOption {
     id: string;
@@ -100,9 +101,26 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
     
     setIsProcessing(true);
     try {
+      let totalStr = total.toString();
+      if (paymentMethod === 'Mixto') {
+        const ef = Number(splitAmounts.efectivo) || 0;
+        const tr = Number(splitAmounts.transferencia) || 0;
+        if (ef + tr !== total) {
+           toast.error('La suma de Efectivo y Transferencia debe ser igual al total ($' + total.toLocaleString() + ')');
+           setIsProcessing(false);
+           return;
+        }
+        totalStr = `Efectivo: $${ef.toLocaleString()} / Transferencia: $${tr.toLocaleString()}`;
+      }
+
       const saleData: any = {
         items: cart.items,
         total,
+        paymentMethod,
+        splitDetails: paymentMethod === 'Mixto' ? {
+           efectivo: Number(splitAmounts.efectivo) || 0,
+           transferencia: Number(splitAmounts.transferencia) || 0
+        } : null,
         sellerId: profile.uid,
         sellerName: profile.name,
         soldBy: profile.uid, // Required by Firestore rules
@@ -112,7 +130,6 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         note: cart.note || '', // Global order note
         timestamp: serverTimestamp(),
         createdAt: serverTimestamp(), // Required by Firestore rules
-        paymentMethod,
         date: new Date().toISOString().split('T')[0],
         hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
       };
@@ -155,7 +172,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       toast.success('¡Venta realizada con éxito!');
       notifyAdmins(
         "🍦 Nueva venta realizada",
-        `Venta manual por ${formatCurrency(total)} - ${paymentMethod}`
+        `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : paymentMethod}`
       );
 
       const completedSale = {
@@ -163,6 +180,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         items: cart.items,
         total,
         paymentMethod,
+        splitDetails: paymentMethod === 'Mixto' ? {
+           efectivo: Number(splitAmounts.efectivo) || 0,
+           transferencia: Number(splitAmounts.transferencia) || 0
+        } : null,
         tableName: saleData.tableName,
         clienteName: selectedCliente ? selectedCliente.name : undefined,
         clienteEmail: selectedCliente ? selectedCliente.email : undefined,
@@ -570,7 +591,71 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                   <Smartphone className="w-5 h-5" />
                   <span className="text-[10px] font-bold uppercase tracking-widest">Transferencia</span>
                 </button>
+                <button 
+                  onClick={() => setPaymentMethod('Tarjeta')}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all group",
+                    paymentMethod === 'Tarjeta' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
+                  )}
+                >
+                  <CreditCard className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-black uppercase tracking-wider">Tarjeta</span>
+                </button>
+                <button 
+                  onClick={() => setPaymentMethod('Mixto')}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all group",
+                    paymentMethod === 'Mixto' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
+                  )}
+                >
+                  <div className="flex -space-x-2">
+                     <Banknote className="w-6 h-6 group-hover:scale-110 transition-transform z-10 bg-white rounded-full" />
+                     <Smartphone className="w-6 h-6 group-hover:scale-110 transition-transform opacity-70" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-wider">Mixto</span>
+                </button>
               </div>
+
+              {/* Split Payment Inputs */}
+              <AnimatePresence>
+                {paymentMethod === 'Mixto' && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="flex gap-4 mt-3 overflow-hidden"
+                   >
+                      <div className="flex-1 space-y-1">
+                         <label className="text-[10px] font-black uppercase tracking-widest text-secondary/60 ml-2">Efectivo ($)</label>
+                         <input 
+                           type="number" 
+                           placeholder="Monto en efectivo" 
+                           value={splitAmounts.efectivo}
+                           onChange={(e) => {
+                             const val = e.target.value;
+                             const remainder = total - (Number(val) || 0);
+                             setSplitAmounts({ efectivo: val, transferencia: val === '' ? '' : (remainder >= 0 ? remainder.toString() : '0') });
+                           }}
+                           className="w-full h-12 bg-surface-container rounded-2xl px-4 font-bold text-sm focus:ring-2 ring-primary outline-none"
+                         />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                         <label className="text-[10px] font-black uppercase tracking-widest text-secondary/60 ml-2">Transferencia ($)</label>
+                         <input 
+                           type="number" 
+                           placeholder="Monto transferido" 
+                           value={splitAmounts.transferencia}
+                           onChange={(e) => {
+                             const val = e.target.value;
+                             const remainder = total - (Number(val) || 0);
+                             setSplitAmounts({ transferencia: val, efectivo: val === '' ? '' : (remainder >= 0 ? remainder.toString() : '0') });
+                           }}
+                           className="w-full h-12 bg-surface-container rounded-2xl px-4 font-bold text-sm focus:ring-2 ring-primary outline-none"
+                         />
+                      </div>
+                   </motion.div>
+                )}
+              </AnimatePresence>
 
               <button 
                 disabled={!cart?.items.length || isProcessing}
