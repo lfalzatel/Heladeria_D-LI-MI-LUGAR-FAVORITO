@@ -1763,6 +1763,25 @@ export default function Management() {
                   </button>
                 </div>
                 
+                {selectedUserForEdit && (
+                  <div className="flex items-center gap-4 p-4 bg-surface-container-low rounded-2xl mb-6 border border-outline/10">
+                    <div className="w-14 h-14 rounded-full bg-surface-container border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 text-primary font-black">
+                      {selectedUserForEdit.imageUrl ? (
+                        <img src={selectedUserForEdit.imageUrl} alt="Foto" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xl">{selectedUserForEdit.name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-on-surface truncate">{selectedUserForEdit.name}</p>
+                      <div className="flex items-center gap-1 text-xs text-secondary truncate">
+                        <Mail className="w-3 h-3" />
+                        <span>{selectedUserForEdit.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Nombre Completo</label>
