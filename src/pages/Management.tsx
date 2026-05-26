@@ -1756,7 +1756,83 @@ export default function Management() {
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
-                <h2 className="text-2xl font-black mb-6">Editar Usuario</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-black">Editar Perfil</h2>
+                  <button onClick={() => setIsEditModalOpen(false)} className="p-2 rounded-full hover:bg-surface-container text-secondary transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Nombre Completo</label>
+                    <input 
+                      type="text" 
+                      value={editFormData.name} 
+                      onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+
+                  {currentUser?.role === 'propietario' && selectedUserForEdit?.role !== 'cliente' && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Rol</label>
+                      <select
+                        value={editFormData.role}
+                        onChange={e => setEditFormData({ ...editFormData, role: e.target.value as any })}
+                        className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                      >
+                        <option value="vendedor">Vendedor</option>
+                        <option value="admin">Administrador</option>
+                        <option value="propietario">Propietario</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Cédula</label>
+                    <input 
+                      type="text" 
+                      value={editFormData.cedula} 
+                      onChange={e => setEditFormData({ ...editFormData, cedula: e.target.value })}
+                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Teléfono</label>
+                    <input 
+                      type="tel" 
+                      value={editFormData.phone} 
+                      onChange={e => setEditFormData({ ...editFormData, phone: e.target.value })}
+                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Dirección</label>
+                    <input 
+                      type="text" 
+                      value={editFormData.address} 
+                      onChange={e => setEditFormData({ ...editFormData, address: e.target.value })}
+                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-surface-container-high transition-all">
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleUpdateUser} 
+                    disabled={isSavingUser || !editFormData.name.trim()}
+                    className="flex-1 py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSavingUser ? 'Guardando...' : 'Guardar Cambios'}
+                  </button>
+                </div>
               </motion.div>
             </div>
           )}
