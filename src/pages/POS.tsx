@@ -185,12 +185,14 @@ export default function POS() {
         onClose={() => setDetailsProduct(null)}
         onAddToCart={(product) => {
           setDetailsProduct(null);
+          const hasVariantSteps = product.variants?.some(v => v.steps && v.steps.length > 0) || false;
           const isComplex = (product.variants && product.variants.length > 1) || 
                             product.requiresFlavors || 
                             product.requiresFruitChoice || 
                             product.requiresSauces || 
                             product.requiresToppings || 
                             product.requiresSalpiconBase ||
+                            hasVariantSteps ||
                             (product.customOptions && product.customOptions.length > 0);
           if (isComplex) {
             setSelectedProduct(product);
@@ -458,12 +460,14 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
   const cartItems = carts[activeTable]?.items.filter(item => item.productId === product.id) || [];
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   
+  const hasVariantSteps = product.variants?.some(v => v.steps && v.steps.length > 0) || false;
   const isComplex = (product.variants && product.variants.length > 1) || 
                     product.requiresFlavors || 
                     product.requiresFruitChoice || 
                     product.requiresSauces || 
                     product.requiresToppings || 
                     product.requiresSalpiconBase ||
+                    hasVariantSteps ||
                     (product.customOptions && product.customOptions.length > 0);
   const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
   const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);

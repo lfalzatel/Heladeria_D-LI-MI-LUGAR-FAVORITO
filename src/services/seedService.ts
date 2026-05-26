@@ -2,37 +2,7 @@ import { collection, writeBatch, doc, serverTimestamp, getDocs } from 'firebase/
 import { db } from '../lib/firebase';
 import menuData from '../data/menu.json';
 
-export const seedDatabase = async () => {
-  const batch = writeBatch(db);
-
-  // 0. LIMPIEZA DE DATOS EXISTENTES PARA EVITAR DUPLICADOS
-  const productsSnap = await getDocs(collection(db, 'products'));
-  productsSnap.forEach(d => batch.delete(d.ref));
-
-  const flavorsSnap = await getDocs(collection(db, 'icecreamFlavors'));
-  flavorsSnap.forEach(d => batch.delete(d.ref));
-
-  const suppliesSnap = await getDocs(collection(db, 'supplies'));
-  suppliesSnap.forEach(d => batch.delete(d.ref));
-
-  // 1. SABORES DE HELADO (Mimo's)
-  const flavors = menuData.icecreamFlavors;
-
-  flavors.forEach(flavor => {
-    const ref = doc(db, 'icecreamFlavors', flavor.id);
-    batch.set(ref, { name: flavor.name, isAvailable: flavor.isAvailable, updatedAt: serverTimestamp() });
-  });
-
-  // 2. PRODUCTOS DEL MENÚ
-  const products = menuData.products;
-
-  products.forEach(p => {
-    const ref = doc(db, 'products', p.id);
-    batch.set(ref, { ...p, updatedAt: serverTimestamp() });
-  });
-
-  // 3. INSUMOS
-  const supplies = [
+export const DEFAULT_SUPPLIES = [
     { name: "Brownie", category: "Bases", unit: "kg", currentStock: 8, minLimit: 5 },
     { name: "Papaya", category: "Frutas", unit: "kg", currentStock: 9.666666666666668, minLimit: 1 },
     { name: "Kiwi", category: "Frutas", unit: "kg", currentStock: 2, minLimit: 0.5 },
@@ -104,9 +74,45 @@ export const seedDatabase = async () => {
     { name: "Alcohol", category: "Limpieza", unit: "Litro", currentStock: 0, minLimit: 1 },
     { name: "Balas Chantillera", category: "Varios", unit: "und", currentStock: 0, minLimit: 1 },
     { name: "Rollo Caja Registradora", category: "Varios", unit: "Rollo", currentStock: 0, minLimit: 1 },
+    { name: "Crema de Leche D1", category: "Lácteos", unit: "Caja", currentStock: 0, minLimit: 1 },
+    { name: "Crema de Leche Auralac", category: "Lácteos", unit: "Bolsa", currentStock: 0, minLimit: 1 },
+    { name: "Leche en Polvo", category: "Lácteos", unit: "Paquete", currentStock: 0, minLimit: 1 },
+    { name: "Servilletas de Pared", category: "Desechables", unit: "Paquete", currentStock: 0, minLimit: 1 },
+    { name: "Vinagre", category: "Limpieza", unit: "Tarro", currentStock: 0, minLimit: 1 },
+    { name: "Recipiente Oblea Cucha Peq", category: "Desechables", unit: "Paquete", currentStock: 0, minLimit: 1 }
   ];
 
-  supplies.forEach(s => {
+export const seedDatabase = async () => {
+  const batch = writeBatch(db);
+
+  // 0. LIMPIEZA DE DATOS EXISTENTES PARA EVITAR DUPLICADOS
+  const productsSnap = await getDocs(collection(db, 'products'));
+  productsSnap.forEach(d => batch.delete(d.ref));
+
+  const flavorsSnap = await getDocs(collection(db, 'icecreamFlavors'));
+  flavorsSnap.forEach(d => batch.delete(d.ref));
+
+  const suppliesSnap = await getDocs(collection(db, 'supplies'));
+  suppliesSnap.forEach(d => batch.delete(d.ref));
+
+  // 1. SABORES DE HELADO (Mimo's)
+  const flavors = menuData.icecreamFlavors;
+
+  flavors.forEach(flavor => {
+    const ref = doc(db, 'icecreamFlavors', flavor.id);
+    batch.set(ref, { name: flavor.name, isAvailable: flavor.isAvailable, updatedAt: serverTimestamp() });
+  });
+
+  // 2. PRODUCTOS DEL MENÚ
+  const products = menuData.products;
+
+  products.forEach(p => {
+    const ref = doc(db, 'products', p.id);
+    batch.set(ref, { ...p, updatedAt: serverTimestamp() });
+  });
+
+  // 3. INSUMOS
+  DEFAULT_SUPPLIES.forEach(s => {
     const ref = doc(collection(db, 'supplies'));
     batch.set(ref, { ...s, updatedAt: serverTimestamp() });
   });

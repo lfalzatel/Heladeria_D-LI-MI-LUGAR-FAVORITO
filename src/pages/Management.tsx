@@ -62,7 +62,7 @@ import HistoryMovementCard from '../components/HistoryMovementCard';
 import ProductFormModal from '../components/ProductFormModal';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
 import { WasteModal } from '../components/WasteModal';
-import { seedDatabase } from '../services/seedService';
+import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
@@ -570,35 +570,40 @@ export default function Management() {
     }
   };
 
-  const handleAddMissingSupplies = async () => {
-    setIsSyncing(true);
+  const handleDownloadBackup = async () => {
+    setSyncAction('backup');
     try {
-      const masterSupplies = [
-        { name: "Papaya",                   category: "Frutas",         unit: "Kilo",    currentStock: 5,  minLimit: 1, yieldDetails: 'Mini: 30p / P: 8p / M: 6p / G: 4p' },
-        { name: "Banano",                   category: "Frutas",         unit: "Unidad",  currentStock: 20, minLimit: 5, yieldDetails: 'Mini: 4p / P: 2p / M: 3/4 / G: 1p' },
-        { name: "Manzana",                  category: "Frutas",         unit: "Unidad",  currentStock: 10, minLimit: 2, yieldDetails: 'P: 6p / M: 5p / G: 3p' },
-        { name: "Uva",                      category: "Frutas",         unit: "500 gr",  currentStock: 5,  minLimit: 1, yieldDetails: '21 porciones (todos los tamaños)' },
-        { name: "Kiwi",                     category: "Frutas",         unit: "Kilo",    currentStock: 2,  minLimit: 0.5 },
-        { name: "Chantilly",                category: "Lácteos",        unit: "Litro",   currentStock: 5,  minLimit: 1 },
-        { name: "Salsa Mora",               category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
-        { name: "Salsa Chocolate",          category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
-        { name: "Salsa Arequipe",           category: "Salsas",         unit: "Litro",   currentStock: 5,  minLimit: 1 },
-        { name: "Barquillos",               category: "Galletas",       unit: "Caja",    currentStock: 10, minLimit: 2 },
-        { name: "Vasos 7 ONZ",              category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Vasos 10 ONZ",             category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Vasos 13 ONZ",             category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Vasos 16 ONZ",             category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Tapas vasos 7 ONZ",        category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Tapas vasos 10 ONZ",       category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Tapas vasos 13-16 ONZ",    category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Recipiente oblea cuchareable", category: "Desechables", unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Tapa oblea cuchareable",   category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Desechable ensalada mini", category: "Desechables",    unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Desechable ensalada pequeña", category: "Desechables", unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Desechable ensalada mediana-grande", category: "Desechables", unit: "Paquete", currentStock: 5,  minLimit: 1 },
-        { name: "Cucharas",                 category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 },
-        { name: "Servilletas",              category: "Desechables",    unit: "Paquete", currentStock: 10, minLimit: 2 }
-      ];
+      const collections = ['products', 'supplies', 'icecreamFlavors', 'tables', 'users', 'pedidos', 'ventas'];
+      const data: any = {};
+      
+      for (const col of collections) {
+        const snap = await getDocs(collection(db, col));
+        data[col] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      }
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dli_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Copia de seguridad descargada exitosamente');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error al descargar backup: ' + error.message);
+    } finally {
+      setSyncAction(null);
+    }
+  };
+
+  const handleAddMissingSupplies = async () => {
+    setSyncAction('missing_supplies');
+    try {
+      const masterSupplies = DEFAULT_SUPPLIES;
 
       const snap = await getDocs(collection(db, 'supplies'));
       const existingNames = snap.docs.map(d => (d.data().name || '').toLowerCase());
@@ -624,7 +629,7 @@ export default function Management() {
       console.error(error);
       toast.error('Error: ' + error.message);
     } finally {
-      setIsSyncing(false);
+      setSyncAction(null);
     }
   };
 
@@ -1782,6 +1787,10 @@ export default function Management() {
                   <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                     Añadir Insumos Faltantes (Seguro)
+                  </button>
+                  <button onClick={handleDownloadBackup} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-blue-50 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
+                    {syncAction === 'backup' ? <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" /> : <Download className="w-4 h-4" />}
+                    Descargar Copia de Seguridad
                   </button>
                   <button onClick={handleRecalculatePoints} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-fuchsia-50 text-fuchsia-600 font-black text-[10px] uppercase tracking-widest hover:bg-fuchsia-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'points' ? <div className="w-4 h-4 border-2 border-fuchsia-300 border-t-fuchsia-600 rounded-full animate-spin" /> : <Star className="w-4 h-4 fill-fuchsia-600" />}
