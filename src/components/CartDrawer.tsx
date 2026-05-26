@@ -116,7 +116,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       const saleData: any = {
         items: cart.items,
         total,
-        paymentMethod,
+        // Se envía 'Efectivo' a la BD para no romper las reglas de Firebase, pero isMixto permite saber que es mixto
+        paymentMethod: paymentMethod === 'Mixto' ? 'Efectivo' : paymentMethod,
+        isMixto: paymentMethod === 'Mixto',
         splitDetails: paymentMethod === 'Mixto' ? {
            efectivo: Number(splitAmounts.efectivo) || 0,
            transferencia: Number(splitAmounts.transferencia) || 0
@@ -179,7 +181,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         id: docRef.id,
         items: cart.items,
         total,
-        paymentMethod,
+        // Se envía 'Efectivo' para bypass de Firebase Rules
+        paymentMethod: paymentMethod === 'Mixto' ? 'Efectivo' : paymentMethod,
+        isMixto: paymentMethod === 'Mixto',
         splitDetails: paymentMethod === 'Mixto' ? {
            efectivo: Number(splitAmounts.efectivo) || 0,
            transferencia: Number(splitAmounts.transferencia) || 0
@@ -714,7 +718,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
             <div className="bg-surface-container rounded-2xl p-4 mb-6 flex flex-col gap-2">
               <div className="flex justify-between items-center text-sm font-bold">
                 <span className="text-secondary">Método de pago:</span>
-                <span className="text-primary uppercase">{successSale.paymentMethod}</span>
+                <span className="text-primary uppercase">
+                  {successSale.isMixto || successSale.splitDetails ? 'Mixto' : successSale.paymentMethod}
+                </span>
               </div>
               <div className="flex justify-between items-center text-sm font-black border-t border-outline/10 pt-2 text-left">
                 <span className="text-on-surface">Total pagado:</span>

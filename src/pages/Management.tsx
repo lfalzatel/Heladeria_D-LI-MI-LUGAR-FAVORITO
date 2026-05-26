@@ -573,12 +573,17 @@ export default function Management() {
   const handleDownloadBackup = async () => {
     setSyncAction('backup');
     try {
-      const collections = ['products', 'supplies', 'icecreamFlavors', 'tables', 'users', 'pedidos', 'ventas'];
+      const collections = ['products', 'supplies', 'icecreamFlavors', 'tables', 'users', 'pedidos', 'sales', 'supplyPurchases', 'wasteRecords'];
       const data: any = {};
       
       for (const col of collections) {
-        const snap = await getDocs(collection(db, col));
-        data[col] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+          const snap = await getDocs(collection(db, col));
+          data[col] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (e) {
+          console.warn(`No se pudo respaldar la colección ${col}:`, e);
+          // Continue to the next collection even if one fails
+        }
       }
       
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1698,7 +1703,7 @@ export default function Management() {
                             title={sale.title}
                             total={sale.total || 0}
                             date={sale.hour}
-                            paymentMethod={sale.paymentMethod || 'Efectivo'}
+                            paymentMethod={sale.splitDetails || sale.isMixto ? 'Mixto' : (sale.paymentMethod || 'Efectivo')}
                             status={sale.status || 'aceptado'}
                             itemCount={sale.items?.length || 0}
                             items={sale.items}

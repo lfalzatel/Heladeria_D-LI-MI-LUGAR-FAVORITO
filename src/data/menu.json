@@ -173,29 +173,28 @@
     },
     {
       "id": "adicion-fruta",
-      "imageUrl": "images/products/adicion_fruta.png",
-      "isActive": true,
-      "name": "Adición Fruta",
-      "requiresFlavors": false,
+      "requiresSauces": false,
+      "cardColor": null,
+      "requiresFruitChoice": false,
       "category": "adiciones",
       "description": "Porción extra de fruta fresca. Puedes pedir fresa, mango o durazno.",
+      "scoops": null,
+      "requiresFlavors": false,
+      "imageUrl": "images/products/adicion_fruta.png",
+      "name": "Adición Fruta",
+      "basePrice": null,
       "variants": [
         {
+          "steps": [
+            {
+              "type": "fruits"
+            }
+          ],
           "price": 3500,
           "label": "Fruta"
         }
       ],
-      "requiresFruitChoice": true,
-      "fruitOptions": [
-        "fresa",
-        "mango",
-        "durazno",
-        "kiwi",
-        "banano",
-        "papaya",
-        "manzana",
-        "uva"
-      ]
+      "isActive": true
     },
     {
       "id": "adicion-helado",
@@ -236,43 +235,45 @@
     },
     {
       "id": "adicion-salsa",
-      "name": "Adición Salsa",
-      "imageUrl": "/Images/products/adicion-salsa.jpg",
-      "requiresFlavors": false,
       "isActive": true,
-      "requiresFruitChoice": false,
-      "description": "Salsa adicional: arequipe, mora, chocolate o lecherita. Los helados clásicos ya incluyen una salsa de cortesía — esta adición es para quien quiere más.",
+      "basePrice": null,
       "variants": [
         {
+          "label": "Salsa",
           "price": 1000,
-          "label": "Salsa"
+          "steps": [
+            {
+              "type": "sauces"
+            }
+          ]
         }
       ],
-      "category": "adiciones",
-      "requiresSauces": true,
-      "sauceOptions": [
-        "arequipe",
-        "mora",
-        "chocolate",
-        "lecherita"
-      ]
+      "requiresFlavors": false,
+      "name": "Adición Salsa",
+      "imageUrl": "/Images/products/adicion-salsa.jpg",
+      "cardColor": null,
+      "requiresFruitChoice": false,
+      "requiresSauces": false,
+      "scoops": null,
+      "description": "Salsa adicional: arequipe, mora, chocolate o lecherita. Los helados clásicos ya incluyen una salsa de cortesía — esta adición es para quien quiere más.",
+      "category": "adiciones"
     },
     {
       "id": "agua",
-      "name": "Botella con agua",
-      "imageUrl": "/Images/products/botella_agua.png",
-      "requiresFlavors": false,
-      "salesCount": 1,
-      "isActive": true,
-      "requiresFruitChoice": false,
       "description": "Botella de agua natural.",
       "variants": [
         {
-          "price": 1500,
-          "label": "Botella con agua"
+          "label": "Botella con agua",
+          "price": 1500
         }
       ],
-      "category": "bebidas"
+      "category": "bebidas",
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "requiresFlavors": false,
+      "salesCount": 7,
+      "name": "Botella con agua",
+      "imageUrl": "/Images/products/botella_agua.png"
     },
     {
       "id": "aromatica",
@@ -340,46 +341,50 @@
     {
       "id": "conchita",
       "name": "Conchita",
+      "salesCount": 11,
       "imageUrl": "/Images/products/conchita.jpeg",
-      "salesCount": 7,
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
       "isActive": true,
+      "requiresFlavors": true,
+      "description": "Helado servido en una delicada concha de oblea crujiente. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencilla, doble y triple.",
+      "requiresFruitChoice": false,
+      "variants": [
+        {
+          "label": "Sencilla",
+          "scoops": 1,
+          "price": 4500
+        },
+        {
+          "price": 6500,
+          "scoops": 2,
+          "label": "Doble"
+        },
+        {
+          "label": "Triple",
+          "scoops": 3,
+          "price": 8500
+        }
+      ],
       "includedExtras": {
+        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
         "sauces": [
           "arequipe",
           "mora",
           "chocolate",
           "lecherita"
-        ],
-        "toppings": [
-          "maní",
-          "bolitas de colores"
-        ],
-        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
+        ]
       },
-      "variants": [
-        {
-          "scoops": 1,
-          "price": 4500,
-          "label": "Sencilla"
-        },
-        {
-          "price": 6500,
-          "label": "Doble",
-          "scoops": 2
-        },
-        {
-          "label": "Triple",
-          "price": 8500,
-          "scoops": 3
-        }
-      ],
-      "category": "helados",
-      "description": "Helado servido en una delicada concha de oblea crujiente. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencilla, doble y triple."
+      "category": "helados"
     },
     {
       "id": "cono",
+      "imageUrl": "/Images/products/vaso-cono.jpg",
+      "name": "Cono",
+      "salesCount": 12,
+      "requiresFlavors": true,
       "isActive": true,
       "requiresFruitChoice": false,
       "description": "Helado artesanal Mimo's servido en cono de galleta. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
@@ -391,9 +396,9 @@
           "price": 3500
         },
         {
+          "price": 5500,
           "label": "Doble",
-          "scoops": 2,
-          "price": 5500
+          "scoops": 2
         }
       ],
       "includedExtras": {
@@ -408,16 +413,12 @@
           "bolitas de colores"
         ],
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
-      },
-      "imageUrl": "/Images/products/vaso-cono.jpg",
-      "name": "Cono",
-      "requiresFlavors": true,
-      "salesCount": 7
+      }
     },
     {
       "id": "copa-dli",
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/copa-dli.jpeg",
+      "isActive": true,
+      "requiresFruitChoice": false,
       "variants": [
         {
           "label": "Copa D'LI",
@@ -425,18 +426,8 @@
           "price": 13000
         }
       ],
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "salesCount": 6,
-      "name": "Copa D'LI",
-      "includedExtras": {
-        "toppings": [],
-        "note": "Lleva arequipe como base y como salsa. Sin toppings secos por defecto.",
-        "sauces": [
-          "arequipe"
-        ]
-      },
-      "category": "copas",
+      "imageUrl": "/Images/products/copa-dli.jpeg",
+      "requiresFlavors": true,
       "ingredients": [
         "arequipe",
         "helado",
@@ -445,14 +436,23 @@
         "cucurucho",
         "salsa arequipe"
       ],
-      "description": "Nuestra copa insignia. Base generosa de arequipe, 3 bolas de helado Mimo's a elección, queso rallado, chantilly y cucurucho. Bañada con salsa de arequipe. Sin toppings secos adicionales."
+      "description": "Nuestra copa insignia. Base generosa de arequipe, 3 bolas de helado Mimo's a elección, queso rallado, chantilly y cucurucho. Bañada con salsa de arequipe. Sin toppings secos adicionales.",
+      "category": "copas",
+      "includedExtras": {
+        "sauces": [
+          "arequipe"
+        ],
+        "toppings": [],
+        "note": "Lleva arequipe como base y como salsa. Sin toppings secos por defecto."
+      },
+      "name": "Copa D'LI",
+      "salesCount": 8
     },
     {
       "id": "copa-explosion",
-      "category": "copas",
       "includedExtras": {
-        "toppings": [],
         "note": "Lleva arequipe como base y como salsa sobre la chantilly.",
+        "toppings": [],
         "sauces": [
           "arequipe"
         ]
@@ -464,19 +464,21 @@
           "price": 16000
         }
       ],
+      "imageUrl": "/Images/products/copa-explosion.jpeg",
+      "salesCount": 1,
+      "requiresFruitChoice": false,
+      "description": "Para los verdaderos amantes del helado. Base de arequipe, 7 sabores de helado Mimo's a elección, cubiertos con chantilly y barquillo. Bañada con salsa de arequipe. Grande, vistosa e irresistible.",
+      "category": "copas",
+      "isActive": true,
+      "name": "Copa Explosión de Sabores",
+      "requiresFlavors": true,
       "ingredients": [
         "arequipe",
         "helado",
         "chantilly",
         "barquillo",
         "salsa arequipe"
-      ],
-      "description": "Para los verdaderos amantes del helado. Base de arequipe, 7 sabores de helado Mimo's a elección, cubiertos con chantilly y barquillo. Bañada con salsa de arequipe. Grande, vistosa e irresistible.",
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/copa-explosion.jpeg",
-      "name": "Copa Explosión de Sabores"
+      ]
     },
     {
       "id": "copa-favorita",
@@ -518,7 +520,18 @@
     },
     {
       "id": "copa-salpicon",
-      "salesCount": 5,
+      "requiresFlavors": true,
+      "imageUrl": "/Images/products/copa-salpicon.jpeg",
+      "variants": [
+        {
+          "label": "Copa Salpicón",
+          "scoops": 1,
+          "price": 11000
+        }
+      ],
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "salesCount": 11,
       "name": "Copa de Salpicón",
       "description": "Refrescante salpicón de banano, papaya y fruta fresca (fresa o mango) con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa.",
       "ingredients": [
@@ -530,64 +543,51 @@
         "lechera",
         "barquillo"
       ],
-      "category": "salpicon",
       "includedExtras": {
         "note": "La copa incluye queso rallado.",
         "queso": true
       },
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/copa-salpicon.jpeg",
-      "variants": [
-        {
-          "price": 11000,
-          "scoops": 1,
-          "label": "Copa Salpicón"
-        }
-      ],
-      "isActive": true,
-      "requiresFruitChoice": false
+      "category": "salpicon"
     },
     {
       "id": "cucurucho",
-      "recipe": [
-        {
-          "quantity": 1,
-          "name": "Salsa",
-          "supplyId": "YRKPxJcNWphgmNlcZejX",
-          "unit": "porción"
-        },
-        {
-          "name": "Toppings",
-          "supplyId": "EZmtMKcbMmKYruYy4Euu",
-          "quantity": 1,
-          "unit": "porción"
-        },
-        {
-          "unit": "porción",
-          "name": "Oblea Gruesa",
-          "supplyId": "mPIfUhrYZjXuPwFwWpty",
-          "quantity": 1
-        }
-      ],
-      "description": "El clásico en barquillo crujiente de oblea. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencillo, doble y triple.",
-      "category": "helados",
       "includedExtras": {
+        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
         "sauces": [
           "arequipe",
           "mora",
           "chocolate",
           "lecherita"
-        ],
-        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
-        "toppings": [
-          "maní",
-          "bolitas de colores"
         ]
       },
+      "category": "helados",
+      "description": "El clásico en barquillo crujiente de oblea. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencillo, doble y triple.",
+      "recipe": [
+        {
+          "supplyId": "YRKPxJcNWphgmNlcZejX",
+          "name": "Salsa",
+          "quantity": 1,
+          "unit": "porción"
+        },
+        {
+          "unit": "porción",
+          "name": "Toppings",
+          "supplyId": "EZmtMKcbMmKYruYy4Euu",
+          "quantity": 1
+        },
+        {
+          "quantity": 1,
+          "supplyId": "mPIfUhrYZjXuPwFwWpty",
+          "name": "Oblea Gruesa",
+          "unit": "porción"
+        }
+      ],
+      "salesCount": 40,
       "name": "Cucurucho",
-      "salesCount": 27,
-      "isActive": true,
-      "requiresFruitChoice": false,
       "variants": [
         {
           "label": "Sencillo",
@@ -600,13 +600,15 @@
           "price": 6000
         },
         {
+          "label": "Triple",
           "scoops": 3,
-          "price": 8000,
-          "label": "Triple"
+          "price": 8000
         }
       ],
-      "imageUrl": "/Images/products/cucurucho.jpeg",
-      "requiresFlavors": true
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "requiresFlavors": true,
+      "imageUrl": "/Images/products/cucurucho.jpeg"
     },
     {
       "id": "dli-capricho",
@@ -636,15 +638,28 @@
     },
     {
       "id": "ensalada-frutas",
-      "requiresFlavors": true,
-      "requiresSauces": false,
       "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
+      "salesCount": 19,
+      "basePrice": null,
+      "description": "Mezcla de frutas frescas con queso rallado, helado Mimo's, crema de leche, lechera y barquillo. La versión Mini lleva manzana, mango, fresa, banano, papaya y uvas (sin kiwi), 1 bola de helado y 1 barquillo. Las versiones Pequeña, Mediana y Grande llevan además kiwi, 2 bolas de helado y barquillo.",
+      "requiresFruitChoice": false,
+      "recipe": [
+        {
+          "quantity": 1,
+          "name": "Fruta",
+          "unit": "porción",
+          "supplyId": "BHDJcqzOMkgrylQeYk53"
+        }
+      ],
       "variants": [
         {
+          "price": 10000,
+          "scoops": 1,
+          "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
           "steps": [
             {
-              "type": "flavors",
-              "scoops": 1
+              "scoops": 1,
+              "type": "flavors"
             },
             {
               "type": "fruits"
@@ -653,43 +668,37 @@
               "type": "additions"
             }
           ],
-          "price": 10000,
-          "scoops": 1,
-          "label": "Mini",
-          "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg"
+          "label": "Mini"
         },
         {
-          "scoops": 2,
-          "price": 17000,
+          "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
           "label": "Pequeña",
-          "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg"
+          "scoops": 2,
+          "price": 17000
         },
         {
-          "imageUrl": "/Images/products/ensalada-frutas-mediana.png",
-          "label": "Mediana",
           "price": 22000,
-          "scoops": 2
+          "scoops": 2,
+          "imageUrl": "/Images/products/ensalada-frutas-mediana.png",
+          "label": "Mediana"
         },
         {
           "imageUrl": "/Images/products/ensalada-frutas-grande.png",
-          "price": 27000,
+          "label": "Grande",
           "scoops": 2,
-          "label": "Grande"
+          "price": 27000
         }
       ],
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "cardColor": null,
-      "salesCount": 11,
-      "scoops": null,
-      "name": "Ensalada de Frutas",
-      "category": "ensaladas",
       "includedExtras": {
-        "note": "No incluye salsas ni toppings por defecto. Las adiciones son opcionales y tienen costo adicional.",
+        "sauces": [],
         "toppings": [],
-        "sauces": []
+        "note": "No incluye salsas ni toppings por defecto. Las adiciones son opcionales y tienen costo adicional."
       },
-      "description": "Mezcla de frutas frescas con queso rallado, helado Mimo's, crema de leche, lechera y barquillo. La versión Mini lleva manzana, mango, fresa, banano, papaya y uvas (sin kiwi), 1 bola de helado y 1 barquillo. Las versiones Pequeña, Mediana y Grande llevan además kiwi, 2 bolas de helado y barquillo.",
+      "cardColor": null,
+      "name": "Ensalada de Frutas",
+      "isActive": true,
+      "scoops": null,
+      "requiresFlavors": true,
       "ingredients": [
         "manzana",
         "mango",
@@ -704,15 +713,8 @@
         "lechera",
         "barquillo"
       ],
-      "basePrice": null,
-      "recipe": [
-        {
-          "unit": "porción",
-          "quantity": 1,
-          "supplyId": "BHDJcqzOMkgrylQeYk53",
-          "name": "Fruta"
-        }
-      ]
+      "requiresSauces": false,
+      "category": "ensaladas"
     },
     {
       "id": "fruta-con-crema",
@@ -765,23 +767,6 @@
     },
     {
       "id": "oblea-cuchareable",
-      "variants": [
-        {
-          "label": "Sin helado",
-          "scoops": 0,
-          "price": 13000
-        },
-        {
-          "price": 15000,
-          "scoops": 1,
-          "label": "Con helado"
-        }
-      ],
-      "isActive": true,
-      "requiresFruitChoice": true,
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
-      "description": "Versión moderna de la oblea para disfrutar con cuchara. Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly. Decorada con trozos de oblea y arequipe extra encima. También disponible con una bola de helado Mimo's.",
       "ingredients": [
         "oblea",
         "arequipe",
@@ -792,6 +777,7 @@
         "trozos de oblea (decoración)",
         "arequipe (decoración)"
       ],
+      "description": "Versión moderna de la oblea para disfrutar con cuchara. Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly. Decorada con trozos de oblea y arequipe extra encima. También disponible con una bola de helado Mimo's.",
       "category": "obleas",
       "includedExtras": {
         "decoration": [
@@ -800,35 +786,24 @@
         ],
         "note": "Se decora con trozos de oblea y arequipe sobre la chantilly. Sin toppings secos ni salsas adicionales por defecto."
       },
-      "salesCount": 7,
+      "salesCount": 8,
       "name": "Oblea Cuchareable",
-      "recipe": [
+      "variants": [
         {
-          "name": "Arequipe",
-          "quantity": 0.05,
-          "unit": "kg"
+          "label": "Sin helado",
+          "scoops": 0,
+          "price": 13000
         },
         {
-          "name": "Oblea Delgada",
-          "quantity": 2,
-          "unit": "und"
-        },
-        {
-          "name": "Queso",
-          "quantity": 2,
-          "unit": "porción mini"
-        },
-        {
-          "name": "Crema de Leche Ensaladas",
-          "quantity": 0.033,
-          "unit": "kg"
-        },
-        {
-          "name": "Azúcar Pulverizada",
-          "quantity": 0.0033,
-          "unit": "kg"
+          "label": "Con helado",
+          "scoops": 1,
+          "price": 15000
         }
-      ]
+      ],
+      "isActive": true,
+      "requiresFruitChoice": true,
+      "requiresFlavors": true,
+      "imageUrl": "/Images/products/oblea-cuchareable.jpeg"
     },
     {
       "id": "oblea-tradicional",
@@ -856,29 +831,7 @@
       "scoops": null,
       "name": "Oblea Tradicional",
       "cardColor": null,
-      "salesCount": 3,
-      "recipe": [
-        {
-          "name": "Oblea Gruesa",
-          "quantity": 2,
-          "unit": "und"
-        },
-        {
-          "name": "Crema de Leche Oblea Cuchareable",
-          "quantity": 0.05,
-          "unit": "kg"
-        },
-        {
-          "name": "Arequipe",
-          "quantity": 0.03,
-          "unit": "kg"
-        },
-        {
-          "name": "Queso",
-          "quantity": 1,
-          "unit": "porción mini"
-        }
-      ]
+      "salesCount": 3
     },
     {
       "id": "perico",
@@ -947,7 +900,6 @@
       "id": "vaso",
       "requiresFruitChoice": false,
       "isActive": true,
-      "category": "helados",
       "variants": [
         {
           "label": "Sencillo",
@@ -973,21 +925,16 @@
           "bolitas de colores"
         ]
       },
+      "category": "helados",
       "description": "Helado artesanal Mimo's servido en vaso desechable. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
-      "imageUrl": "/Images/products/vaso.png",
       "name": "Vaso",
+      "imageUrl": "/Images/products/vaso.png",
       "requiresFlavors": true,
-      "salesCount": 10
+      "salesCount": 13
     },
     {
       "id": "vaso-salpicon",
-      "name": "Vaso de Salpicón con Helado",
-      "salesCount": 6,
-      "includedExtras": {
-        "queso": false,
-        "note": "El vaso NO incluye queso (solo la copa lo incluye). Puede agregarse como adición con costo."
-      },
-      "category": "salpicon",
+      "description": "Frutas frescas (banano, papaya y mango o fresa) con helado Mimo's, lechera y barquillo, servidas en vaso para llevar. Sin queso incluido — puede agregarse como adición. Las adiciones extras tienen costo adicional.",
       "ingredients": [
         "banano",
         "papaya",
@@ -996,11 +943,13 @@
         "lechera",
         "barquillo"
       ],
-      "description": "Frutas frescas (banano, papaya y mango o fresa) con helado Mimo's, lechera y barquillo, servidas en vaso para llevar. Sin queso incluido — puede agregarse como adición. Las adiciones extras tienen costo adicional.",
-      "imageUrl": "/Images/products/vaso-salpicon.jpeg",
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
-      "isActive": true,
+      "category": "salpicon",
+      "includedExtras": {
+        "queso": false,
+        "note": "El vaso NO incluye queso (solo la copa lo incluye). Puede agregarse como adición con costo."
+      },
+      "salesCount": 13,
+      "name": "Vaso de Salpicón con Helado",
       "variants": [
         {
           "label": "Pequeño",
@@ -1017,7 +966,11 @@
           "scoops": 1,
           "price": 11000
         }
-      ]
+      ],
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "requiresFlavors": true,
+      "imageUrl": "/Images/products/vaso-salpicon.jpeg"
     }
   ]
 }
