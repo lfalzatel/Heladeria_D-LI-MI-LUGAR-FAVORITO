@@ -68,7 +68,7 @@ export function generateDashboardExcel(
       typeLabel,
       a.clienteName || a.concept || a.description || 'Venta',
       itemsStr,
-      a.paymentMethod || 'N/A',
+      a.isMixto || a.splitDetails ? 'Mixto' : (a.paymentMethod || 'N/A'),
       a.total || 0,
       a.sellerName || 'N/A'
     ]);

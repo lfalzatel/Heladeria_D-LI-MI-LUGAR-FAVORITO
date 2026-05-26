@@ -195,14 +195,27 @@ export default function Dashboard() {
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
   const totalIngresos = ingresosSales.reduce((s, x) => s + (x.total || 0), 0);
   
-  const getMethodTotal = (methods: string[]) => 
-    ingresosSales
-      .filter(s => methods.includes((s.paymentMethod || '').toLowerCase()))
-      .reduce((s, x) => s + (x.total || 0), 0);
+  let efectivo = 0;
+  let tarjeta = 0;
+  let transferencia = 0;
 
-  const efectivo = getMethodTotal(['cash', 'efectivo', 'cash/efectivo']);
-  const tarjeta = getMethodTotal(['datafono', 'card', 'tarjeta', 'débito', 'crédito']);
-  const transferencia = getMethodTotal(['transfer', 'transferencia', 'digital', 'nequi', 'daviplata']);
+  ingresosSales.forEach(s => {
+    if (s.isMixto || s.splitDetails) {
+      efectivo += (s.splitDetails?.efectivo || 0);
+      transferencia += (s.splitDetails?.transferencia || 0);
+    } else {
+      const pm = (s.paymentMethod || '').toLowerCase();
+      if (['cash', 'efectivo', 'cash/efectivo'].includes(pm)) {
+        efectivo += (s.total || 0);
+      } else if (['datafono', 'card', 'tarjeta', 'débito', 'crédito'].includes(pm)) {
+        tarjeta += (s.total || 0);
+      } else if (['transfer', 'transferencia', 'digital', 'nequi', 'daviplata'].includes(pm)) {
+        transferencia += (s.total || 0);
+      } else {
+        efectivo += (s.total || 0);
+      }
+    }
+  });
 
   // Credit pedidos for current period
   const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate));
