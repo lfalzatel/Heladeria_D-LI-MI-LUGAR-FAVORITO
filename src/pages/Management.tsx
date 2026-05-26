@@ -47,7 +47,8 @@ import {
   Mail,
   MapPin,
   Save,
-  Trash2
+  Trash2,
+  Star
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -145,7 +146,7 @@ export default function Management() {
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncAction, setSyncAction] = useState<string | null>(null);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [supplySearch, setSupplySearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -449,7 +450,7 @@ export default function Management() {
 
   const handleFullSeed = async () => {
     if (!window.confirm('¿Estás seguro? Esto borrará todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
-    setIsSyncing(true);
+    setSyncAction('seed');
     try {
       await seedDatabase();
       toast.success('¡Catálogo recargado completamente!');
@@ -457,26 +458,26 @@ export default function Management() {
     } catch (error: any) {
       toast.error('Error: ' + error.message);
     } finally {
-      setIsSyncing(false);
+      setSyncAction(null);
     }
   };
 
   const handleImageSync = async () => {
-    setIsSyncing(true);
     try {
+      setSyncAction('images');
       const count = await syncProductImages();
       toast.success(`¡Se actualizaron ${count} imágenes correctamente!`);
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
     } finally {
-      setIsSyncing(false);
+      setSyncAction(null);
     }
   };
 
   const handleRepairSales = async () => {
     if (!currentUser) return;
-    setIsSyncing(true);
+    setSyncAction('repair');
     try {
       const pedidosSnap = await getDocs(query(collection(db, 'pedidos'), where('status', '==', 'entregado')));
       const pedidosEntregados = pedidosSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -506,13 +507,14 @@ export default function Management() {
     } catch (error: any) {
       toast.error('Error al reparar historial: ' + error.message);
     } finally {
-      setIsSyncing(false);
+      setSyncAction(null);
     }
   };
 
   const handleRecalculatePoints = async () => {
-    setIsSyncing(true);
+    if (!window.confirm('Esto revisará todas las compras anteriores y asignará puntos y niveles a los clientes que no los hayan recibido. ¿Continuar?')) return;
     try {
+      setSyncAction('points');
       const usersSnap = await getDocs(collection(db, 'users'));
       const salesSnap = await getDocs(collection(db, 'sales'));
       const pedidosSnap = await getDocs(query(collection(db, 'pedidos'), where('status', 'in', ['entregado', 'pendiente', 'en_camino', 'preparando'])));
@@ -1745,38 +1747,6 @@ export default function Management() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
                 <h2 className="text-2xl font-black mb-6">Editar Usuario</h2>
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Nombre Completo</label>
-                    <input type="text" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="Nombre" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Cédula / ID</label>
-                      <input type="text" value={editFormData.cedula} onChange={(e) => setEditFormData({ ...editFormData, cedula: e.target.value })} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="No. Cédula" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Teléfono</label>
-                      <input type="text" value={editFormData.phone} onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="Celular" />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Rol del Sistema</label>
-                    <select value={editFormData.role} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as any })} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none">
-                      <option value="vendedor">Vendedor</option>
-                      <option value="cliente">Cliente</option>
-                      <option value="propietario">Propietario</option>
-                      <option value="admin">Administrador</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Dirección de Entrega</label>
-                    <input type="text" value={editFormData.address} onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} className="w-full h-14 bg-surface-container rounded-2xl px-5 font-bold focus:ring-2 ring-primary transition-all outline-none" placeholder="Calle, Barrio, Casa..." />
-                  </div>
-                </div>
-                <button onClick={handleUpdateUser} className="w-full h-14 bg-primary text-white rounded-2xl font-black mt-8 uppercase shadow-xl">
-                  {isSavingUser ? 'Guardando...' : 'Actualizar'}
-                </button>
               </motion.div>
             </div>
           )}
@@ -1786,7 +1756,7 @@ export default function Management() {
         <AnimatePresence>
           {isSyncModalOpen && (
             <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isSyncing && setIsSyncModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !syncAction && setIsSyncModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
               <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary"><Database className="w-6 h-6" /></div>
@@ -1797,28 +1767,28 @@ export default function Management() {
                 </div>
                 <p className="text-xs text-secondary font-medium leading-relaxed mb-8">Selecciona el tipo de actualización que deseas realizar en el sistema.</p>
                 <div className="flex flex-col gap-3">
-                  <button onClick={handleImageSync} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
-                    {isSyncing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
+                  <button onClick={handleImageSync} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                    {syncAction === 'images' ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                     Sincronizar Solo Imágenes
                   </button>
-                  <button onClick={handleRepairSales} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
-                    {isSyncing ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <History className="w-4 h-4" />}
+                  <button onClick={handleRepairSales} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                    {syncAction === 'sales' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <History className="w-4 h-4" />}
                     Reparar Todo el Historial de Ventas
                   </button>
-                  <button onClick={handleFullSeed} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
-                    {isSyncing ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+                  <button onClick={handleFullSeed} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                    {syncAction === 'full' ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
                     Recargar Catálogo Completo
                   </button>
-                  <button onClick={handleAddMissingSupplies} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
-                    {isSyncing ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
+                  <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
+                    {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                     Añadir Insumos Faltantes (Seguro)
                   </button>
-                  <button onClick={handleRecalculatePoints} disabled={isSyncing} className="w-full py-4 rounded-2xl bg-fuchsia-50 text-fuchsia-600 font-black text-[10px] uppercase tracking-widest hover:bg-fuchsia-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
-                    {isSyncing ? <div className="w-4 h-4 border-2 border-fuchsia-300 border-t-fuchsia-600 rounded-full animate-spin" /> : <Star className="w-4 h-4 fill-fuchsia-600" />}
+                  <button onClick={handleRecalculatePoints} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-fuchsia-50 text-fuchsia-600 font-black text-[10px] uppercase tracking-widest hover:bg-fuchsia-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
+                    {syncAction === 'points' ? <div className="w-4 h-4 border-2 border-fuchsia-300 border-t-fuchsia-600 rounded-full animate-spin" /> : <Star className="w-4 h-4 fill-fuchsia-600" />}
                     Recalcular Puntos de Fidelidad
                   </button>
                 </div>
-                <button onClick={() => setIsSyncModalOpen(false)} disabled={isSyncing} className="w-full mt-6 py-2 text-[10px] font-black text-secondary/40 uppercase tracking-widest hover:text-secondary transition-colors disabled:opacity-0">
+                <button onClick={() => setIsSyncModalOpen(false)} disabled={!!syncAction} className="w-full mt-6 py-2 text-[10px] font-black text-secondary/40 uppercase tracking-widest hover:text-secondary transition-colors disabled:opacity-0">
                   Cancelar
                 </button>
               </motion.div>
