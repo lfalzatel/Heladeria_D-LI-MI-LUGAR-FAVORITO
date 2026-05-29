@@ -1793,7 +1793,7 @@ export default function Management() {
                     />
                   </div>
 
-                  {currentUser?.role === 'propietario' && selectedUserForEdit?.role !== 'cliente' && (
+                  {['admin', 'propietario'].includes(currentUser?.role || '') && (
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Rol</label>
                       <select
@@ -1801,9 +1801,10 @@ export default function Management() {
                         onChange={e => setEditFormData({ ...editFormData, role: e.target.value as any })}
                         className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                       >
+                        <option value="cliente">Cliente</option>
                         <option value="vendedor">Vendedor</option>
                         <option value="admin">Administrador</option>
-                        <option value="propietario">Propietario</option>
+                        {currentUser?.role === 'propietario' && <option value="propietario">Propietario</option>}
                       </select>
                     </div>
                   )}
