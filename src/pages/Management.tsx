@@ -965,6 +965,14 @@ export default function Management() {
                                                 </div>
                                               </div>
                                             )}
+                                            {!s.isVirtual && s.lastRestockDate && (
+                                                <div className="mt-3 pt-2 border-t border-outline/5 text-right">
+                                                    <p className="text-[8px] font-black text-secondary uppercase tracking-widest">Últ. Abastecimiento</p>
+                                                    <p className="text-[10px] font-bold text-secondary mt-0.5">
+                                                      {new Date(s.lastRestockDate?.toDate ? s.lastRestockDate.toDate() : s.lastRestockDate).toLocaleDateString('es-CO', {day: '2-digit', month: 'short', year: 'numeric'})}
+                                                    </p>
+                                                </div>
+                                            )}
                                           </div>
                                         );
                                       })}
@@ -1489,10 +1497,21 @@ export default function Management() {
           onClose={() => setIsPurchaseOpen(false)}
           supplies={supplies as any}
           onConfirm={async (provider, items) => {
-            const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
+            const total = items.reduce((a, i) => a + i.cost, 0); // Cost is now total cost per item
             await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
             for (const item of items) {
-              await updateDoc(doc(db, 'supplies', item.supplyId), { currentStock: increment(item.quantity) });
+              const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
+              const supplyUpdate: any = { 
+                currentStock: increment(item.quantity),
+                lastPurchasePrice: unitCost,
+                lastRestockDate: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              };
+              if (item.portions > 0) {
+                supplyUpdate.portionsPerUnit = item.portions;
+                supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+              }
+              await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
             }
             toast.success('¡Compra registrada y stock actualizado!');
           }}

@@ -66,8 +66,50 @@ export function TrendChart({ purchases, period }: { purchases: PurchaseRecord[],
 }
 
 /* ─── STAT CARD ─── */
-export function StatCard({ icon, label, value, sub, accent, index = 0 }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate', index?: number }) {
+export function StatCard({ icon, label, value, sub, accent, index = 0, numericValue, isCurrency }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate', index?: number, numericValue?: number, isCurrency?: boolean }) {
   const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100' };
+  
+  const [displayValue, setDisplayValue] = React.useState(value);
+
+  React.useEffect(() => {
+    if (numericValue === undefined) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const duration = 1000;
+    const start = 0;
+    const end = numericValue;
+    let startTimestamp: number | null = null;
+    let reqId: number;
+
+    const delay = index * 80;
+    
+    const startAnim = setTimeout(() => {
+      const step = (timestamp: number) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentVal = Math.floor(easeOut * (end - start) + start);
+        
+        setDisplayValue(isCurrency ? formatCurrency(currentVal) : currentVal.toString());
+        
+        if (progress < 1) {
+          reqId = window.requestAnimationFrame(step);
+        } else {
+          setDisplayValue(value);
+        }
+      };
+      reqId = window.requestAnimationFrame(step);
+    }, delay);
+
+    return () => {
+      clearTimeout(startAnim);
+      if (reqId) window.cancelAnimationFrame(reqId);
+    };
+  }, [numericValue, isCurrency, index, value]);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
@@ -80,7 +122,7 @@ export function StatCard({ icon, label, value, sub, accent, index = 0 }: { icon:
       className={cn("bg-white rounded-3xl p-4 border flex flex-col gap-2 shadow-sm", map[accent])}
     >
       <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">{icon}</div>
-      <p className="text-lg font-black text-on-surface leading-none">{value}</p>
+      <p className="text-lg font-black text-on-surface leading-none">{displayValue}</p>
       <div>
         <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
         {sub && <p className="text-[9px] text-secondary/60 font-medium mt-0.5 leading-tight">{sub}</p>}
@@ -154,9 +196,11 @@ export default function Supplies() {
     const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
     await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
     for (const item of items) {
+      const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
       const supplyUpdate: any = { 
         currentStock: increment(item.quantity),
-        lastPurchasePrice: item.cost,
+        lastPurchasePrice: unitCost,
+        lastRestockDate: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
       
@@ -215,10 +259,10 @@ export default function Supplies() {
 
               {/* 4 Stat cards */}
               <div className="grid grid-cols-2 gap-3">
-                <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
-                <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
-                <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
+                <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total unidades compradas" accent="blue" />
+                <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
+                <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} numericValue={avgPerPurchase} isCurrency={true} sub="Costo promedio de abastecimiento" accent="slate" />
               </div>
 
 

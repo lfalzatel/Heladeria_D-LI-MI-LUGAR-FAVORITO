@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, Receipt, MapPin } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
+import { useProvidersStore } from '../stores/useProvidersStore';
 
 export interface Supply { id: string; name: string; currentStock: number; unit: string; minLimit: number; category: string; yieldDetails?: string; yieldPerSize?: { mini?: number; small?: number; medium?: number; large?: number; }; }
 export interface PurchaseItem { supplyId: string; name: string; unit: string; quantity: number; cost: number; portions: number; category: string; }
@@ -37,7 +38,7 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-3">
               {purchase.items?.map((item, i) => {
-                const subtotal = (item.cost || 0) * (item.quantity || 1);
+                const subtotal = item.cost || 0; // Costo es el total ahora
                 return (
                   <div key={i} className="bg-surface-container/40 rounded-2xl p-4 border border-outline/5">
                     <div className="flex items-start justify-between mb-2">
@@ -51,8 +52,8 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
                       <p className="font-black text-primary">{formatCurrency(subtotal)}</p>
                     </div>
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline/5">
-                      <div><p className="text-[9px] text-secondary font-black uppercase">Cantidad</p><p className="font-bold text-sm">{item.quantity}</p></div>
-                      <div><p className="text-[9px] text-secondary font-black uppercase">Costo Unit.</p><p className="font-bold text-sm">{formatCurrency(item.cost || 0)}</p></div>
+                      <div><p className="text-[9px] text-secondary font-black uppercase">Cant. ({item.unit})</p><p className="font-bold text-sm">{item.quantity}</p></div>
+                      <div><p className="text-[9px] text-secondary font-black uppercase">Costo Total</p><p className="font-bold text-sm">{formatCurrency(item.cost || 0)}</p></div>
                       {(item.portions || 0) > 0 && <div><p className="text-[9px] text-secondary font-black uppercase">Porciones</p><p className="font-bold text-sm">{item.portions} uds</p></div>}
                     </div>
                     {(item.portions || 0) > 0 && (item.cost || 0) > 0 && (
@@ -86,12 +87,16 @@ interface Props {
 
 export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
-  const [provider, setProvider] = useState('');
+  const [provider, setProvider] = useState('Otro');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<PurchaseItem[]>([]);
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const { providers } = useProvidersStore();
+  const [isCreatingProvider, setIsCreatingProvider] = useState(false);
 
-  const reset = () => { setStep(1); setProvider(''); setSelected(new Set()); setItems([]); setSaving(false); };
+  const reset = () => { setStep(1); setProvider('Otro'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); };
   const handleClose = () => { reset(); onClose(); };
 
   // Sort: critical stock first, then alphabetically
@@ -101,7 +106,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
     if (aLow && !bLow) return -1;
     if (!aLow && bLow) return 1;
     return a.name.localeCompare(b.name);
-  });
+  }).filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.category?.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const toggleSelect = (s: Supply) => {
     const next = new Set(selected);
@@ -130,7 +135,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
     setSelected(prev => { const n = new Set(prev); n.delete(id); return n; });
   };
 
-  const total = items.reduce((acc, i) => acc + (i.cost * i.quantity), 0);
+  const total = items.reduce((acc, i) => acc + i.cost, 0); // Costo ya es el total por item
   const costPerPortion = (item: PurchaseItem) => item.portions > 0 && item.cost > 0 ? item.cost / item.portions : 0;
 
   const handleConfirm = async () => {
@@ -141,6 +146,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -180,6 +186,15 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
             {/* STEP 1 — solo selección de productos */}
             {step === 1 && (
               <>
+                <div className="px-6 py-2">
+                  <input
+                    type="text"
+                    placeholder="Buscar insumo..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all"
+                  />
+                </div>
                 <div className="flex-1 overflow-y-auto px-6 py-2 flex flex-col gap-2">
                   {sortedSupplies.map(s => {
                     const isLow = s.currentStock <= s.minLimit;
@@ -225,13 +240,18 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   {/* Proveedor — ahora en el paso 2 */}
                   <div>
                     <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Proveedor</p>
-                    <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all">
-                      <option value="">Seleccionar proveedor...</option>
-                      {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                    <div className="flex gap-2">
+                      <select value={provider} onChange={e => setProvider(e.target.value)} className="flex-1 h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all">
+                        <option value="">Seleccionar proveedor...</option>
+                        {providers.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      </select>
+                      <button onClick={() => setIsCreatingProvider(true)} className="w-11 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary/90 transition-all">
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                   {items.map(item => {
-                    const subtotal = item.cost * item.quantity;
+                    const subtotal = item.cost;
                     return (
                       <div key={item.supplyId} className="bg-white border border-outline/10 rounded-2xl p-4 shadow-sm">
                         <div className="flex items-start justify-between mb-3">
@@ -249,36 +269,58 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                         <div className="grid grid-cols-2 gap-2 mb-2">
                           {/* Quantity */}
                           <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Cantidad</p>
+                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Cant. total comprada ({item.unit})</p>
                             <div className="flex items-center gap-1.5">
-                              <button onClick={() => updateItem(item.supplyId, 'quantity', Math.max(1, item.quantity - 1))} className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center"><Minus className="w-3 h-3" /></button>
-                              <span className="font-black text-base w-8 text-center">{item.quantity}</span>
-                              <button onClick={() => updateItem(item.supplyId, 'quantity', item.quantity + 1)} className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                              <button onClick={() => updateItem(item.supplyId, 'quantity', Math.max(0, item.quantity - 10))} className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center"><Minus className="w-3 h-3" /></button>
+                              <input type="number" value={item.quantity || ''} onChange={e => updateItem(item.supplyId, 'quantity', parseFloat(e.target.value) || 0)} className="font-black text-base w-12 text-center bg-transparent outline-none border-b border-outline/20" />
+                              <button onClick={() => updateItem(item.supplyId, 'quantity', item.quantity + 10)} className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center"><Plus className="w-3 h-3" /></button>
                             </div>
+                            {item.unit === 'g' && <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">Ej: Si compras 1 bolsa de 500g, ingresa 500.</p>}
+                            {item.unit === 'ml' && <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">Ej: Si compras 1 botella de 1000ml, ingresa 1000.</p>}
                           </div>
                           {/* Cost */}
                           <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo Unit.</p>
+                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo Total</p>
                             <div className="flex items-center bg-surface-container rounded-xl px-3 h-9 border border-outline/20 focus-within:border-primary transition-all">
                               <span className="text-secondary text-xs mr-1">$</span>
                               <input type="number" value={item.cost || ''} onChange={e => updateItem(item.supplyId, 'cost', parseFloat(e.target.value) || 0)} placeholder="0" className="flex-1 bg-transparent text-sm font-black outline-none w-full" />
                             </div>
                           </div>
-                          {/* Portions */}
-                          <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Porciones / Unidad</p>
-                            <div className="flex items-center bg-surface-container rounded-xl px-3 h-9 border border-outline/20 focus-within:border-primary transition-all">
-                              <input type="number" value={item.portions || ''} onChange={e => updateItem(item.supplyId, 'portions', parseFloat(e.target.value) || 0)} placeholder="ej: 80" className="flex-1 bg-transparent text-sm font-black outline-none w-full" />
-                              <span className="text-secondary text-xs ml-1">uds</span>
-                            </div>
-                          </div>
-                          {/* Cost/portion auto-calculated */}
-                          <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo / Porción</p>
-                            <div className={cn("flex items-center rounded-xl px-3 h-9 border", costPerPortion(item) > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-container border-outline/20')}>
-                              <span className={cn("text-sm font-black", costPerPortion(item) > 0 ? 'text-emerald-700' : 'text-secondary')}>{costPerPortion(item) > 0 ? formatCurrency(costPerPortion(item)) : '—'}</span>
-                            </div>
-                          </div>
+                          {(() => {
+                            const supply = supplies.find(s => s.id === item.supplyId);
+                            const hasMultipleYields = supply?.yieldPerSize?.mini || supply?.yieldPerSize?.small || supply?.yieldPerSize?.medium || supply?.yieldPerSize?.large;
+
+                            if (hasMultipleYields) {
+                              return (
+                                <div className="col-span-2">
+                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Rendimiento</p>
+                                  <div className="flex items-center bg-amber-50 rounded-xl px-3 h-9 border border-amber-200">
+                                    <span className="text-xs font-bold text-amber-700">Rendimiento variable (por tamaños) ya configurado en catálogo.</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <>
+                                {/* Portions */}
+                                <div>
+                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Porciones / Unidad</p>
+                                  <div className="flex items-center bg-surface-container rounded-xl px-3 h-9 border border-outline/20 focus-within:border-primary transition-all">
+                                    <input type="number" value={item.portions || ''} onChange={e => updateItem(item.supplyId, 'portions', parseFloat(e.target.value) || 0)} placeholder="ej: 80" className="flex-1 bg-transparent text-sm font-black outline-none w-full" />
+                                    <span className="text-secondary text-xs ml-1">uds</span>
+                                  </div>
+                                </div>
+                                {/* Cost/portion auto-calculated */}
+                                <div>
+                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo / Porción</p>
+                                  <div className={cn("flex items-center rounded-xl px-3 h-9 border", costPerPortion(item) > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-container border-outline/20')}>
+                                    <span className={cn("text-sm font-black", costPerPortion(item) > 0 ? 'text-emerald-700' : 'text-secondary')}>{costPerPortion(item) > 0 ? formatCurrency(costPerPortion(item)) : '—'}</span>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                         <div className="flex items-center justify-end pt-2 border-t border-outline/5">
                           <p className="text-[10px] text-secondary font-bold">Subtotal: <span className="font-black text-on-surface">{formatCurrency(subtotal)}</span></p>
@@ -308,5 +350,36 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
         </div>
       )}
     </AnimatePresence>
+    
+    {isCreatingProvider && (
+      <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-on-surface/60 backdrop-blur-md" onClick={() => setIsCreatingProvider(false)} />
+        <div className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
+          <h3 className="font-black text-lg text-on-surface mb-4">Nuevo Proveedor</h3>
+          <p className="text-sm text-secondary mb-4">Agrega un proveedor a tu lista. Lo podrás seleccionar enseguida.</p>
+          <div className="mb-6">
+            <label className="text-[11px] font-black uppercase tracking-widest text-secondary block mb-1">Nombre</label>
+            <input id="newProviderName" type="text" autoFocus className="w-full h-12 px-4 rounded-xl border border-outline/20 outline-none focus:border-primary focus:ring-1" placeholder="Ej. Distribuidora XYZ" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setIsCreatingProvider(false)} className="flex-1 py-3 rounded-xl border border-outline/20 text-on-surface font-bold">Cancelar</button>
+            <button 
+              onClick={async () => {
+                const name = (document.getElementById('newProviderName') as HTMLInputElement).value;
+                if (!name.trim()) return;
+                // Import would be needed here normally, but useProvidersStore provides an add method
+                await useProvidersStore.getState().addProvider(name.trim());
+                setProvider(name.trim());
+                setIsCreatingProvider(false);
+              }}
+              className="flex-[2] py-3 rounded-xl bg-primary text-white font-bold"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

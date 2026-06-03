@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { useAuthStore } from './stores/useAuthStore';
 import { useFlavorsStore, useSplashStore } from './stores/useFlavorsStore';
 import { useCategoriesStore } from './stores/useCategoriesStore';
+import { useProvidersStore } from './stores/useProvidersStore';
 import { motion, AnimatePresence } from 'motion/react';
 
 import Login from './pages/Login';
@@ -59,6 +60,7 @@ export default function App() {
     if (user && profile) {
       initFlavors();
       initCategories();
+      const unsubProviders = useProvidersStore.getState().subscribe();
       
       if (!hasRequestedNotifs.current && 'Notification' in window) {
         // 1. Si ya tiene permiso, registrar el token silenciosamente
@@ -85,6 +87,9 @@ export default function App() {
           }, 2000);
         }
       }
+      return () => {
+        unsubProviders();
+      };
     }
   }, [user, profile, initFlavors]);
 
