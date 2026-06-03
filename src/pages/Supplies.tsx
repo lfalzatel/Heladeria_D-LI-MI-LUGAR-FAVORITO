@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, updateDoc, doc, increment, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers, Search, ChevronDown, ChevronRight, Trash2, Save, X } from 'lucide-react';
+import { Box, Plus, Package, AlertTriangle, ShoppingCart, Download, Calendar, Wallet, BarChart3, Edit3, Layers, Search, ChevronDown, ChevronRight, Trash2, Save, X, Trophy } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
@@ -12,6 +12,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import AdminSidebar from '../components/AdminSidebar';
 import SupplyFormModal from '../components/SupplyFormModal';
 import { PurchaseModal, PurchaseDetailModal, Supply, PurchaseItem, PurchaseRecord } from '../components/PurchaseModals';
+import { RankingModal } from '../components/ReportsModals';
 
 export type PeriodFilter = 'today' | 'week' | 'month';
 export const PERIOD_LABELS: Record<PeriodFilter, string> = { today: 'Hoy', week: 'Semana', month: 'Mes' };
@@ -66,8 +67,8 @@ export function TrendChart({ purchases, period }: { purchases: PurchaseRecord[],
 }
 
 /* ─── STAT CARD ─── */
-export function StatCard({ icon, label, value, sub, accent, index = 0, numericValue, isCurrency }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate', index?: number, numericValue?: number, isCurrency?: boolean }) {
-  const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100' };
+export function StatCard({ icon, label, value, sub, accent, index = 0, numericValue, isCurrency, onOpen }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' | 'amber', index?: number, numericValue?: number, isCurrency?: boolean, onOpen?: () => void }) {
+  const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100', amber: 'bg-amber-50 border-amber-100' };
   
   const [displayValue, setDisplayValue] = React.useState(value);
 
@@ -111,23 +112,40 @@ export function StatCard({ icon, label, value, sub, accent, index = 0, numericVa
   }, [numericValue, isCurrency, index, value]);
 
   return (
-    <motion.div 
+    <motion.button 
+      onClick={onOpen}
+      disabled={!onOpen}
       initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
       animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      whileTap={onOpen ? { scale: 0.98 } : undefined}
       transition={{ 
         duration: 0.6, 
         ease: [0.34, 1.56, 0.64, 1],
         delay: index * 0.1
       }}
-      className={cn("bg-white rounded-3xl p-4 border flex flex-col gap-2 shadow-sm", map[accent])}
+      className={cn("bg-white text-left w-full rounded-3xl p-4 border flex flex-col gap-2 shadow-sm relative group transition-all", map[accent], onOpen && "hover:shadow-md cursor-pointer")}
     >
-      <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">{icon}</div>
-      <p className="text-lg font-black text-on-surface leading-none">{displayValue}</p>
-      <div>
-        <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
-        {sub && <p className="text-[9px] text-secondary/60 font-medium mt-0.5 leading-tight">{sub}</p>}
+      <div className="flex items-center justify-between">
+        <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm text-on-surface">{icon}</div>
+        {onOpen && (
+          <div className="w-7 h-7 rounded-lg bg-white/80 flex items-center justify-center text-secondary border border-outline/10 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
+            <Plus className="w-3.5 h-3.5" />
+          </div>
+        )}
       </div>
-    </motion.div>
+      <div className="flex flex-col gap-0.5 mt-1">
+        <p className={cn(
+          "font-black text-on-surface leading-none",
+          displayValue.length > 18 ? "text-xs" : displayValue.length > 14 ? "text-sm" : displayValue.length > 11 ? "text-base" : "text-lg"
+        )}>
+          {displayValue}
+        </p>
+        <div>
+          <p className="text-[9px] font-black text-secondary uppercase tracking-widest leading-tight">{label}</p>
+          {sub && <p className="text-[9px] text-secondary/60 font-medium mt-0.5 leading-tight">{sub}</p>}
+        </div>
+      </div>
+    </motion.button>
   );
 }
 
@@ -177,6 +195,7 @@ export default function Supplies() {
   const [period, setPeriod] = useState<PeriodFilter>('today');
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -187,10 +206,23 @@ export default function Supplies() {
 
   const filtered = purchases.filter(p => isInPeriod(p.createdAt, period));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
-  const totalUnits = filtered.reduce((a, p) => a + (p.items?.reduce((b, i) => b + (i.quantity || 0), 0) || 0), 0);
+  const totalUnits = filtered.reduce((a, p) => a + (p.items?.length || 0), 0);
   const activeDays = new Set(filtered.map(p => toDateS(p.createdAt)?.toDateString()).filter(Boolean)).size;
   const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
   const lowStock = supplies.filter(s => s.currentStock <= s.minLimit).length;
+
+  // Product ranking
+  const productMap: Record<string, { name: string; units: number; revenue: number }> = {};
+  filtered.forEach(p => {
+    p.items?.forEach((item: any) => {
+      const k = item.name || 'Desconocido';
+      if (!productMap[k]) productMap[k] = { name: k, units: 0, revenue: 0 };
+      productMap[k].units += item.quantity || 1;
+      productMap[k].revenue += item.cost || 0;
+    });
+  });
+  const ranking = Object.values(productMap).sort((a, b) => b.revenue - a.revenue);
+  const starSupply = ranking[0];
 
   const handleConfirmPurchase = async (provider: string, items: PurchaseItem[]) => {
     const total = items.reduce((a, i) => a + i.cost * i.quantity, 0);
@@ -260,9 +292,9 @@ export default function Supplies() {
               {/* 4 Stat cards */}
               <div className="grid grid-cols-2 gap-3">
                 <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total unidades compradas" accent="blue" />
+                <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
                 <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
-                <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} numericValue={avgPerPurchase} isCurrency={true} sub="Costo promedio de abastecimiento" accent="slate" />
+                <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
               </div>
 
 
@@ -305,6 +337,7 @@ export default function Supplies() {
 
         <PurchaseModal isOpen={isPurchaseOpen} onClose={() => setIsPurchaseOpen(false)} supplies={supplies} onConfirm={handleConfirmPurchase} />
         <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />
+        <RankingModal isOpen={isRankingModalOpen} onClose={() => setIsRankingModalOpen(false)} filter={PERIOD_LABELS[period]} ranking={ranking} />
         <BottomNav />
       </div>
     </div>
