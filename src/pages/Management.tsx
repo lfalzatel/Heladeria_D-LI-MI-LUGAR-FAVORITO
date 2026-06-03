@@ -65,7 +65,8 @@ import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecor
 import { WasteModal } from '../components/WasteModal';
 import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
-import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from '../components/SupplyStats';
+import { StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from '../components/SupplyStats';
+import { TrendChart } from '../components/DashboardComponents';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
@@ -1448,7 +1449,7 @@ export default function Management() {
                             <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
                           </div>
                         </div>
-                        <TrendChart purchases={filtered} period={period} />
+                        <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
                       </div>
 
                       <div className="flex flex-col gap-3">

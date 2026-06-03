@@ -15,46 +15,6 @@ export const isInPeriod = (ts: any, period: PeriodFilter): boolean => {
   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 };
 
-/* ─── SVG TREND CHART ─── */
-export function TrendChart({ purchases, period }: { purchases: PurchaseRecord[], period: PeriodFilter }) {
-  const W = 320, H = 100, PAD = 10;
-  if (purchases.length === 0) return (
-    <div className="h-24 flex items-center justify-center opacity-20">
-      <BarChart3 className="w-8 h-8" />
-    </div>
-  );
-
-  // Group by day
-  const byDay: Record<string, number> = {};
-  purchases.forEach(p => {
-    const d = toDateS(p.createdAt);
-    if (d) { const k = d.toLocaleDateString('es-CO'); byDay[k] = (byDay[k] || 0) + p.total; }
-  });
-  const entries = Object.entries(byDay).slice(-14);
-  const max = Math.max(...entries.map(e => e[1]), 1);
-  const barW = Math.min(28, (W - PAD * 2) / Math.max(entries.length, 1) - 4);
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24">
-      {entries.map(([day, val], i) => {
-        const bh = Math.max(4, ((val / max) * (H - PAD * 2 - 16)));
-        const x = PAD + i * ((W - PAD * 2) / entries.length) + (W - PAD * 2) / entries.length / 2 - barW / 2;
-        const y = H - PAD - bh - 16;
-        return (
-          <g key={day}>
-            <rect x={x} y={y} width={barW} height={bh} rx={barW / 3} fill="url(#barGrad)" opacity="0.85" />
-          </g>
-        );
-      })}
-      <defs>
-        <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#b30069" />
-          <stop offset="100%" stopColor="#b30069" stopOpacity="0.3" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
 
 /* ─── STAT CARD ─── */
 export function StatCard({ icon, label, value, sub, accent, index = 0, numericValue, isCurrency, onOpen }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' | 'amber', index?: number, numericValue?: number, isCurrency?: boolean, onOpen?: () => void }) {
