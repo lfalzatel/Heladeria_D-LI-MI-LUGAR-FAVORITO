@@ -65,7 +65,7 @@ import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecor
 import { WasteModal } from '../components/WasteModal';
 import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
-import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
+import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from '../components/SupplyStats';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
