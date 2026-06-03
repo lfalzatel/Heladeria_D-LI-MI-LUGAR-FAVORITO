@@ -4,6 +4,7 @@ import { listenToForegroundMessages, requestNotificationPermission } from './lib
 import { Toaster } from 'sonner';
 import { useAuthStore } from './stores/useAuthStore';
 import { useFlavorsStore, useSplashStore } from './stores/useFlavorsStore';
+import { useCategoriesStore } from './stores/useCategoriesStore';
 import { motion, AnimatePresence } from 'motion/react';
 
 import Login from './pages/Login';
@@ -23,6 +24,7 @@ import MainLayout from './components/MainLayout';
 export default function App() {
   const { initialize, user, profile, isLoading: authLoading } = useAuthStore();
   const { initialize: initFlavors } = useFlavorsStore();
+  const { initialize: initCategories } = useCategoriesStore();
   const { isVisible: splashVisible, message: splashMessage, progress: splashProgress, hideSplash } = useSplashStore();
 
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
@@ -56,6 +58,7 @@ export default function App() {
   useEffect(() => {
     if (user && profile) {
       initFlavors();
+      initCategories();
       
       if (!hasRequestedNotifs.current && 'Notification' in window) {
         // 1. Si ya tiene permiso, registrar el token silenciosamente

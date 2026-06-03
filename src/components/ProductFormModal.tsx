@@ -5,6 +5,7 @@ import { Product, ProductVariant } from '../types';
 import { toast } from 'sonner';
 import { getAssetUrl, cn } from '../lib/utils';
 import { ProductImageUploader } from './ProductImageUploader';
+import { useCategoriesStore } from '../stores/useCategoriesStore';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface ProductFormModalProps {
 
 export default function ProductFormModal({ isOpen, onClose, productToEdit, onSave }: ProductFormModalProps) {
   const [loading, setLoading] = useState(false);
+  const { activeCategories } = useCategoriesStore();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Product['category']>('helados');
   const [imageUrl, setImageUrl] = useState('');
@@ -220,12 +222,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
                   onChange={(e) => setCategory(e.target.value as any)}
                   className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
                 >
-                  <option value="helados">Helados</option>
-                  <option value="ensaladas">Ensaladas</option>
-                  <option value="copas">Copas / Cuchareables</option>
-                  <option value="salpicon">Salpicón</option>
-                  <option value="obleas">Obleas</option>
-                  <option value="adiciones">Adiciones y Extras</option>
+                  {activeCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { Product, CartItem } from '../types';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useHeaderStore } from '../stores/useHeaderStore';
+import { useCategoriesStore } from '../stores/useCategoriesStore';
 import { 
   MenuSquare, 
   ShoppingBag, 
@@ -27,6 +28,7 @@ export default function POS() {
   const location = useLocation();
   const { profile } = useAuthStore();
   const { activeTable, setActiveTable, carts, addItem, removeItem, updateQuantity, initialize } = useTableCartStore();
+  const { activeCategories } = useCategoriesStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('todos');
@@ -107,13 +109,7 @@ export default function POS() {
 
   const categories = [
     { id: 'todos', label: 'Todos' },
-    { id: 'helados', label: 'Helados' },
-    { id: 'ensaladas', label: 'Ensaladas' },
-    { id: 'copas', label: 'Copas' },
-    { id: 'salpicon', label: 'Salpicón' },
-    { id: 'obleas', label: 'Obleas' },
-    { id: 'bebidas-calientes', label: 'Bebidas Calientes' },
-    { id: 'adiciones', label: 'Adiciones' },
+    ...activeCategories.map(c => ({ id: c.id, label: c.label })),
     { id: 'premio-fidelidad', label: '⭐ Premio Fidelidad' },
   ];
 

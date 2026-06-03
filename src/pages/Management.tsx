@@ -60,6 +60,7 @@ import SupplyFormModal from '../components/SupplyFormModal';
 import MovementDetailModal from '../components/MovementDetailModal';
 import HistoryMovementCard from '../components/HistoryMovementCard';
 import ProductFormModal from '../components/ProductFormModal';
+import CategoryManager from '../components/CategoryManager';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
 import { WasteModal } from '../components/WasteModal';
 import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
@@ -67,13 +68,14 @@ import { syncProductImages } from '../services/imageFixService';
 import { TrendChart, StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from './Supplies';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
+import { useCategoriesStore } from '../stores/useCategoriesStore';
 import RecipeConfigModal from '../components/RecipeConfigModal';
 import { StockCriticoModal } from '../components/ReportsModals';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type MainTab = 'inventario' | 'personas' | 'operacion';
-type InventarioSubTab = 'insumos' | 'productos' | 'sabores';
+type InventarioSubTab = 'insumos' | 'productos' | 'sabores' | 'categorias';
 type PersonasSubTab = 'equipo' | 'clientes';
 type OperacionSubTab = 'compras' | 'gastos' | 'mesas';
 
@@ -126,6 +128,7 @@ export default function Management() {
   const { profile: currentUser } = useAuthStore();
   const { setHeader, clearHeader } = useHeaderStore();
   const { availableFlavors } = useFlavorsStore();
+  const { activeCategories } = useCategoriesStore();
 
   const isStaff =
     currentUser?.role === 'admin' ||
@@ -707,10 +710,11 @@ export default function Management() {
 
   const categories = [
     { id: 'all', label: 'Todos', icon: <MenuSquare className="w-4 h-4" /> },
-    { id: 'helados', label: 'Helados', icon: <IceCream className="w-4 h-4" /> },
-    { id: 'ensaladas', label: 'Ensaladas', icon: <Utensils className="w-4 h-4" /> },
-    { id: 'copas', label: 'Copas', icon: <GlassWater className="w-4 h-4" /> },
-    { id: 'obleas', label: 'Obleas', icon: <MenuSquare className="w-4 h-4" /> },
+    ...activeCategories.map(cat => ({
+      id: cat.id,
+      label: cat.label,
+      icon: <MenuSquare className="w-4 h-4" />
+    }))
   ];
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(productSearch.toLowerCase());
@@ -769,6 +773,7 @@ export default function Management() {
                       { id: 'insumos', label: 'Insumos' },
                       { id: 'productos', label: 'Productos' },
                       { id: 'sabores', label: 'Sabores' },
+                      { id: 'categorias', label: 'Categorías' },
                     ] as { id: InventarioSubTab; label: string }[]
                   ).map((sub) => (
                     <button
@@ -1202,6 +1207,12 @@ export default function Management() {
                           </motion.div>
                         ))}
                       </section>
+                    </motion.div>
+                  )}
+
+                  {inventarioSubTab === 'categorias' && (
+                    <motion.div key="categorias" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <CategoryManager />
                     </motion.div>
                   )}
 
@@ -1793,7 +1804,7 @@ export default function Management() {
                     />
                   </div>
 
-                  {['admin', 'propietario'].includes(currentUser?.role || '') && (
+                  {['admin', 'administrador', 'propietario'].includes(currentUser?.role?.toLowerCase() || '') && (
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Rol</label>
                       <select

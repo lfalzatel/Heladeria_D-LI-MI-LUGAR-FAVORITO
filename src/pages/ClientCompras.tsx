@@ -3,6 +3,7 @@ import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy,
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Product, ProductVariant, CartItem } from '../types';
+import { useCategoriesStore } from '../stores/useCategoriesStore';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -20,15 +21,8 @@ import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
 import confetti from 'canvas-confetti';
 
-const CATEGORIES = [
-  { id: 'all',       label: 'Todos',     icon: <Package className="w-4 h-4" /> },
-  { id: 'helados',   label: 'Helados',   icon: <IceCream className="w-4 h-4" /> },
-  { id: 'ensaladas', label: 'Ensaladas', icon: <Utensils className="w-4 h-4" /> },
-  { id: 'copas',     label: 'Copas',     icon: <GlassWater className="w-4 h-4" /> },
-  { id: 'salpicon',  label: 'Salpicón',  icon: <CupSoda className="w-4 h-4" /> },
-  { id: 'obleas',    label: 'Obleas',    icon: <Package className="w-4 h-4" /> },
-  { id: 'bebidas-calientes', label: 'Bebidas Calientes', icon: <Utensils className="w-4 h-4" /> },
-  { id: 'adiciones', label: 'Adiciones', icon: <Plus className="w-4 h-4" /> },
+const CONSTANT_CATEGORIES = [
+  { id: 'all',       label: 'Todos',     icon: <Package className="w-4 h-4" /> }
 ];
 
 const PAYMENT_OPTIONS = [
@@ -38,6 +32,7 @@ const PAYMENT_OPTIONS = [
 
 export default function ClientCompras() {
   const { profile, updateProfile } = useAuthStore();
+  const { activeCategories } = useCategoriesStore();
   const { setHeader, clearHeader } = useHeaderStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -411,7 +406,7 @@ export default function ClientCompras() {
     <main className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-5 pt-2">
           {/* Category filter */}
           <div className="flex gap-1.5 p-1 overflow-x-auto hide-scrollbar bg-surface-container rounded-xl text-[10px] font-black uppercase">
-            {CATEGORIES.map(cat => (
+            {[{ id: 'all', label: 'Todos', icon: <Package className="w-4 h-4" /> }, ...activeCategories.map(c => ({ id: c.id, label: c.label, icon: <Package className="w-4 h-4" /> }))].map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}

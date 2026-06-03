@@ -991,6 +991,9 @@ export const seedDatabase = async () => {
   const flavorsSnap = await getDocs(collection(db, 'icecreamFlavors'));
   flavorsSnap.forEach(d => batch.delete(d.ref));
 
+  const categoriesSnap = await getDocs(collection(db, 'categories'));
+  categoriesSnap.forEach(d => batch.delete(d.ref));
+
   const suppliesSnap = await getDocs(collection(db, 'supplies'));
   suppliesSnap.forEach(d => batch.delete(d.ref));
 
@@ -1000,6 +1003,22 @@ export const seedDatabase = async () => {
   flavors.forEach(flavor => {
     const ref = doc(db, 'icecreamFlavors', flavor.id);
     batch.set(ref, { name: flavor.name, isAvailable: flavor.isAvailable, updatedAt: serverTimestamp() });
+  });
+
+  // 1.5 CATEGORÍAS (De las Categorías por defecto del sistema)
+  const defaultCategories = [
+    { id: 'helados', label: 'Helados', icon: 'IceCream', isActive: true, order: 1, isCustom: false },
+    { id: 'ensaladas', label: 'Ensaladas', icon: 'Utensils', isActive: true, order: 2, isCustom: false },
+    { id: 'copas', label: 'Copas', icon: 'GlassWater', isActive: true, order: 3, isCustom: false },
+    { id: 'salpicon', label: 'Salpicón', icon: 'CupSoda', isActive: true, order: 4, isCustom: false },
+    { id: 'obleas', label: 'Obleas', icon: 'Package', isActive: true, order: 5, isCustom: false },
+    { id: 'bebidas-calientes', label: 'Bebidas Calientes', icon: 'Utensils', isActive: true, order: 6, isCustom: false },
+    { id: 'adiciones', label: 'Adiciones', icon: 'Plus', isActive: true, order: 7, isCustom: false }
+  ];
+
+  defaultCategories.forEach(cat => {
+    const ref = doc(db, 'categories', cat.id);
+    batch.set(ref, { ...cat, createdAt: Date.now() });
   });
 
   // 2. PRODUCTOS DEL MENÚ

@@ -2,6 +2,15 @@ import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'admin' | 'propietario' | 'vendedor' | 'cliente';
 
+export interface Category {
+  id: string;
+  label: string;
+  iconName?: string;
+  order: number;
+  isActive: boolean;
+  updatedAt: Timestamp;
+}
+
 export interface User {
   uid: string;
   email: string;

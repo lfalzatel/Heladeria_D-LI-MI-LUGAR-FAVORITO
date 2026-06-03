@@ -144,6 +144,14 @@ export async function deductInventory(cartItems: CartItem[]) {
                   // asumiendo unit = Kg (1000g)
                   if (productName.includes('ensalada') && size !== 'mini') deductionAmount = 12.8 / 1000; // basado en 77g / 6
               }
+              else if (choiceName === 'maní' || choiceName === 'mani') {
+                  // The user requested 2gr de maní
+                  deductionAmount = 2 / 1000;
+              }
+              else if (choiceName === 'bolitas de colores' || choiceName === 'bolitas') {
+                  // The user requested 1gr de bolitas de colores
+                  deductionAmount = 1 / 1000;
+              }
 
               // Fallback a las reglas estándar si no encajó en ninguna regla específica
               if (deductionAmount === 0) {

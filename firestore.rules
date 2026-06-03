@@ -85,8 +85,13 @@ service cloud.firestore {
       );
     }
 
-    // Products & Flavors: Catalog
+    // Products & Flavors & Categories: Catalog
     match /products/{productId} {
+      allow read: if isSignedIn();
+      allow write: if true; // TEMPORAL PARA SCRIPT
+    }
+
+    match /categories/{categoryId} {
       allow read: if isSignedIn();
       allow write: if true; // TEMPORAL PARA SCRIPT
     }
