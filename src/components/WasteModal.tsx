@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, AlertTriangle, CheckCircle2, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Supply } from '../components/PurchaseModals';
 
@@ -16,8 +16,10 @@ export function WasteModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const [quantity, setQuantity] = useState<number | ''>('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const reset = () => { setSupplyId(''); setQuantity(''); setNote(''); setSaving(false); };
+  const reset = () => { setSupplyId(''); setQuantity(''); setNote(''); setSaving(false); setSearchTerm(''); setIsDropdownOpen(false); };
   const handleClose = () => { reset(); onClose(); };
 
   const selectedSupply = supplies.find(s => s.id === supplyId);
@@ -35,6 +37,7 @@ export function WasteModal({ isOpen, onClose, supplies, onConfirm }: Props) {
 
   // Sort supplies alphabetically
   const sortedSupplies = [...supplies].sort((a, b) => a.name.localeCompare(b.name));
+  const filteredSupplies = sortedSupplies.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <AnimatePresence>
@@ -59,12 +62,55 @@ export function WasteModal({ isOpen, onClose, supplies, onConfirm }: Props) {
             </div>
             
             <div className="px-6 py-5 flex flex-col gap-4">
-              <div>
+              <div className="relative">
                 <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Insumo</p>
-                <select value={supplyId} onChange={e => setSupplyId(e.target.value)} className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-red-500 outline-none transition-all">
-                  <option value="">Seleccionar insumo...</option>
-                  {sortedSupplies.map(s => <option key={s.id} value={s.id}>{s.name} ({s.unit})</option>)}
-                </select>
+                <div 
+                  className={cn("w-full h-11 bg-surface-container rounded-2xl border px-4 flex items-center justify-between cursor-pointer transition-all", isDropdownOpen ? "border-red-500" : "border-outline/20")}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <span className={cn("font-bold text-sm truncate", !selectedSupply && "text-secondary/50")}>
+                    {selectedSupply ? `${selectedSupply.name} (${selectedSupply.unit})` : 'Seleccionar insumo...'}
+                  </span>
+                  <ChevronDown className={cn("w-4 h-4 text-secondary/50 transition-transform", isDropdownOpen && "rotate-180")} />
+                </div>
+                
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-outline/10 shadow-xl z-[210] max-h-60 flex flex-col overflow-hidden"
+                    >
+                      <div className="p-2 border-b border-outline/10">
+                        <input
+                          type="text"
+                          placeholder="Buscar insumo..."
+                          value={searchTerm}
+                          onChange={e => setSearchTerm(e.target.value)}
+                          className="w-full bg-surface-container/50 rounded-xl px-3 py-2 text-xs font-bold outline-none"
+                          onClick={e => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-1 custom-scrollbar">
+                        {filteredSupplies.length === 0 ? (
+                          <p className="p-3 text-xs text-center text-secondary font-bold">No se encontraron insumos</p>
+                        ) : (
+                          filteredSupplies.map(s => (
+                            <button
+                              key={s.id}
+                              onClick={() => { setSupplyId(s.id); setIsDropdownOpen(false); setSearchTerm(''); }}
+                              className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-red-50 text-sm font-bold text-on-surface hover:text-red-600 transition-colors flex items-center justify-between"
+                            >
+                              <span className="truncate">{s.name}</span>
+                              <span className="text-[10px] text-secondary ml-2 flex-shrink-0">{s.unit}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {selectedSupply && (

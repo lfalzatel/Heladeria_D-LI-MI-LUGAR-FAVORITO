@@ -70,7 +70,8 @@ import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
 import RecipeConfigModal from '../components/RecipeConfigModal';
-import { StockCriticoModal } from '../components/ReportsModals';
+import { RankingModal, StockCriticoModal } from '../components/ReportsModals';
+import { Trophy } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -191,6 +192,7 @@ export default function Management() {
   const [isFlavorModalOpen, setIsFlavorModalOpen] = useState(false);
   const [newFlavorName, setNewFlavorName] = useState('');
   const [isSavingFlavor, setIsSavingFlavor] = useState(false);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
 
   // ── Category Edit State ──────────────────────────────────────────────────
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
@@ -693,11 +695,23 @@ export default function Management() {
   // ── Derived values ────────────────────────────────────────────────────────
   const filtered = purchases.filter((p) => isInPeriod(p.createdAt, period));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
-  const totalUnits = filtered.reduce((a, p) => a + (p.items?.reduce((b, i) => b + (i.quantity || 0), 0) || 0), 0);
+  const totalUnits = filtered.reduce((a, p) => a + (p.items?.length || 0), 0);
   const activeDays = new Set(filtered.map((p) => { const d = p.createdAt?.toDate?.() || (p.createdAt ? new Date(p.createdAt) : null); return d?.toDateString(); }).filter(Boolean)).size;
   const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
   const criticalSupplies = supplies.filter((s: any) => (s.currentStock || 0) <= (s.minLimit || 0));
   const lowStock = criticalSupplies.length;
+
+  const productMap: Record<string, { name: string; units: number; revenue: number }> = {};
+  filtered.forEach(p => {
+    p.items?.forEach((item: any) => {
+      const k = item.name || 'Desconocido';
+      if (!productMap[k]) productMap[k] = { name: k, units: 0, revenue: 0 };
+      productMap[k].units += item.quantity || 1;
+      productMap[k].revenue += item.cost || 0;
+    });
+  });
+  const ranking = Object.values(productMap).sort((a, b) => b.revenue - a.revenue);
+  const starSupply = ranking[0];
 
   const groupedSupplies = supplies
     .filter(s => s.name.toLowerCase().includes(supplySearch.toLowerCase()) || (s.category || '').toLowerCase().includes(supplySearch.toLowerCase()))
@@ -1419,10 +1433,10 @@ export default function Management() {
 
                       {/* Stat Cards */}
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                        <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Productos Ingresados" value={totalUnits.toString()} sub="Total unidades compradas" accent="blue" />
-                        <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} sub="Días con registros de compra" accent="orange" />
-                        <StatCard index={3} icon={<ShoppingCart className="w-5 h-5 text-secondary" />} label="Promedio por Compra" value={formatCurrency(avgPerPurchase)} sub="Costo promedio de abastecimiento" accent="slate" />
+                        <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                        <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
+                        <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
+                        <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
                       </div>
 
 
@@ -1971,6 +1985,13 @@ export default function Management() {
         isOpen={isStockModalOpen}
         onClose={() => setIsStockModalOpen(false)}
         criticalSupplies={criticalSupplies}
+      />
+
+      <RankingModal 
+        isOpen={isRankingModalOpen} 
+        onClose={() => setIsRankingModalOpen(false)} 
+        filter={PERIOD_LABELS[period]} 
+        ranking={ranking} 
       />
     </>
   );
