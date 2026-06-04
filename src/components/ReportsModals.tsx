@@ -483,3 +483,56 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
     </ModalWrapper>
   );
 }
+
+// ── PREMIOS DE FIDELIDAD MODAL ──
+export function PremiosModal({ isOpen, onClose, filter, premios }: {
+  isOpen: boolean; onClose: () => void; filter: string; premios: any[];
+}) {
+  return (
+    <ModalWrapper isOpen={isOpen} onClose={onClose}>
+      <ModalHeader
+        icon={<Trophy className="w-6 h-6 text-fuchsia-600" />}
+        iconBg="bg-fuchsia-50"
+        title="Premios de Fidelidad"
+        subtitle={`REPORTE ${filter.toUpperCase()}`}
+        onClose={onClose}
+      />
+      <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-2">
+        {premios.length === 0 ? (
+          <div className="py-12 flex flex-col items-center opacity-30 text-center">
+            <Trophy className="w-10 h-10 mb-2" />
+            <p className="text-xs font-bold uppercase tracking-widest">No hay premios entregados en este periodo</p>
+          </div>
+        ) : premios.map((s, idx) => {
+          const dateObj = s.timestamp ? (s.timestamp.toDate ? s.timestamp.toDate() : new Date(s.timestamp)) 
+                      : s.createdAt ? (s.createdAt.toDate ? s.createdAt.toDate() : new Date(s.createdAt))
+                      : new Date();
+          const itemsStr = (s.items || []).filter((i: any) => i.isLoyaltyReward).map((item: any) => `${item.quantity || 1}x ${item.productName || 'Premio'}`).join(', ');
+          
+          return (
+            <div key={idx} className="flex flex-col p-4 bg-white rounded-2xl border border-outline/10 shadow-sm gap-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-secondary uppercase tracking-widest bg-surface-container px-2 py-1 rounded-md">
+                  {dateObj.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}
+                </span>
+                <span className="text-[10px] font-black text-fuchsia-600 uppercase tracking-widest bg-fuchsia-50 px-2 py-1 rounded-md">
+                  {s.sellerName?.split(' ')[0] || 'Vendedor'}
+                </span>
+              </div>
+              <p className="font-bold text-sm text-on-surface">{itemsStr}</p>
+              {s.clienteName && <p className="text-xs text-secondary">Cliente: {s.clienteName}</p>}
+            </div>
+          );
+        })}
+      </div>
+      <div className="px-6 py-4 border-t border-outline/10 flex flex-shrink-0 rounded-b-[2.5rem] bg-white">
+        <button
+          onClick={onClose}
+          className="flex-1 py-3 rounded-2xl bg-surface-container text-secondary text-xs font-black uppercase tracking-widest hover:bg-surface-container-high transition-all"
+        >
+          Cerrar
+        </button>
+      </div>
+    </ModalWrapper>
+  );
+}
