@@ -72,6 +72,8 @@ export default function ReportPreviewModal({
                        <FileText className="w-16 h-16 text-emerald-500" />
                        <p className="text-sm font-bold text-center">Archivo Excel preparado<br/>(No hay vista previa visual)</p>
                      </div>
+                   ) : type === 'pdf' ? (
+                     <iframe src={`${previewUrl}#toolbar=0`} title="PDF Preview" className="w-full h-[50vh] rounded-xl border-0 bg-white" />
                    ) : (
                      <img src={previewUrl!} alt="Preview" className="w-full max-h-[50vh] object-contain rounded-xl" />
                    )

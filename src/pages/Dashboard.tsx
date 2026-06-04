@@ -793,7 +793,7 @@ export default function Dashboard() {
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
         type={previewType}
-        previewUrl={previewData?.imgData || null}
+        previewUrl={previewData?.blobUrl || previewData?.imgData || null}
         onDownload={handleDownload}
         onShare={handleShare}
       />
