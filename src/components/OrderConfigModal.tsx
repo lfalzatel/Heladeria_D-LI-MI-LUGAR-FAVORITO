@@ -151,7 +151,10 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         const qBases = query(collection(db, 'supplies'), where('category', '==', 'Bases'));
         const snapBases = await getDocs(qBases);
         if (!snapBases.empty) {
-          const basesNames = snapBases.docs.map(doc => doc.data().name as string);
+          const basesNames = snapBases.docs
+            .map(doc => doc.data())
+            .filter(data => !data.isVirtual)
+            .map(data => data.name as string);
           if (basesNames.length > 0) {
             setAvailableBases(basesNames);
           }
