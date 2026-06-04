@@ -38,7 +38,8 @@ import {
   StockCriticoModal,
   VentasCreditoModal,
   GananciaModal,
-  DeudaClientesModal
+  DeudaClientesModal,
+  PremiosModal
 } from '../components/ReportsModals';
 import MovementDetailModal from '../components/MovementDetailModal';
 import ReportPreviewModal from '../components/ReportPreviewModal';
@@ -204,6 +205,10 @@ export default function Dashboard() {
   // Ganancia
   const gananciaNeta = totalIngresos - totalCompras;
 
+  // Premios Fidelidad
+  const premiosFidelidadPeriod = combinedActivity.filter(s => (s.items || []).some((i: any) => i.isLoyaltyReward));
+  const totalPremiosFidelidad = premiosFidelidadPeriod.length;
+
   // Product ranking
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {};
   combinedActivity.forEach(s => {
@@ -329,7 +334,8 @@ export default function Dashboard() {
         transferencia,
         totalCredito,
         totalCompras,
-        gananciaNeta
+        gananciaNeta,
+        totalPremiosFidelidad
       };
 
       if (type === 'excel') {
@@ -400,7 +406,8 @@ export default function Dashboard() {
         transferencia,
         totalCredito,
         totalCompras,
-        gananciaNeta
+        gananciaNeta,
+        totalPremiosFidelidad
       };
       generateDashboardExcel(sellerName, dateStr, metrics, combinedActivity, ranking);
       toast.success('Excel descargado con éxito');
@@ -638,6 +645,17 @@ export default function Dashboard() {
             onOpen={() => setIsStockModalOpen(true)}
             index={6}
           />
+          <MetricCard
+            icon={<Trophy className="w-5 h-5" />}
+            label="Fidelidad"
+            value={totalPremiosFidelidad.toString()}
+            numericValue={totalPremiosFidelidad}
+            isCurrency={false}
+            sub="Premios"
+            accent="fuchsia"
+            onOpen={() => open('premios')}
+            index={7}
+          />
         </div>
 
         {/* CHARTS (Admin Only) */}
@@ -751,6 +769,12 @@ export default function Dashboard() {
         deudaByClient={deudaByClient}
         totalDeuda={totalDeuda}
       />
+      <PremiosModal
+        isOpen={openModal === 'premios'}
+        onClose={close}
+        filter={filterLabel}
+        premios={premiosFidelidadPeriod}
+      />
       <StockCriticoModal
         isOpen={isStockModalOpen}
         onClose={() => setIsStockModalOpen(false)}
@@ -786,7 +810,8 @@ export default function Dashboard() {
               transferencia,
               totalCredito,
               totalCompras,
-              gananciaNeta
+              gananciaNeta,
+              totalPremiosFidelidad
             }}
             ranking={ranking}
           />

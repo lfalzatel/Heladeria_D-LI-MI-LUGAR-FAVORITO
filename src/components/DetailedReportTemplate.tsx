@@ -11,6 +11,7 @@ interface ReportTemplateProps {
     totalCredito: number;
     totalCompras: number;
     gananciaNeta: number;
+    totalPremiosFidelidad?: number;
   };
   ranking: { name: string; units: number; revenue: number }[];
 }
@@ -80,6 +81,12 @@ export const DetailedReportTemplate: React.FC<ReportTemplateProps> = ({
               <td className="py-3 font-bold text-primary text-lg">Ganancia Neta (Caja - Compras)</td>
               <td className="py-3 text-right font-bold text-primary text-lg">{formatMoney(metrics.gananciaNeta)}</td>
             </tr>
+            {metrics.totalPremiosFidelidad !== undefined && (
+              <tr className="border-t border-slate-200 bg-fuchsia-50">
+                <td className="py-2 text-fuchsia-700 font-semibold">Premios de Fidelidad Entregados</td>
+                <td className="py-2 text-right font-bold text-fuchsia-700">{metrics.totalPremiosFidelidad} uds</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

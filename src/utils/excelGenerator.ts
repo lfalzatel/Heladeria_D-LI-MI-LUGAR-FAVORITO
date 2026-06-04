@@ -11,6 +11,7 @@ export function generateDashboardExcel(
     totalCredito: number;
     totalCompras: number;
     gananciaNeta: number;
+    totalPremiosFidelidad?: number;
   },
   activities: any[],
   ranking: { name: string; units: number; revenue: number }[] = []
@@ -30,6 +31,7 @@ export function generateDashboardExcel(
     ['Ventas a Crédito (No sumadas a caja)', metrics.totalCredito],
     ['Egresos / Compras', metrics.totalCompras],
     ['Ganancia Neta (Caja - Compras)', metrics.gananciaNeta],
+    ...(metrics.totalPremiosFidelidad !== undefined ? [['Premios Fidelidad Entregados', `${metrics.totalPremiosFidelidad} uds`]] : []),
     [],
     ['--- TOP 10 PRODUCTOS MÁS VENDIDOS ---'],
     ['Producto', 'Unidades Vendidas', 'Ingresos Generados']

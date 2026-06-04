@@ -13,6 +13,7 @@ export async function generateDetailedPDF(
     totalCredito: number;
     totalCompras: number;
     gananciaNeta: number;
+    totalPremiosFidelidad?: number;
   },
   activities: any[],
   ranking: { name: string; units: number; revenue: number }[] = []
@@ -71,12 +72,14 @@ export async function generateDetailedPDF(
         ['Ventas a Crédito (No sumadas a caja)', formatMoney(metrics.totalCredito)],
         ['Egresos / Compras', formatMoney(metrics.totalCompras)],
         ['Ganancia Neta (Caja - Compras)', formatMoney(metrics.gananciaNeta)],
+        ...(metrics.totalPremiosFidelidad !== undefined ? [['Premios Fidelidad Entregados', `${metrics.totalPremiosFidelidad} uds`]] : [])
       ],
       didParseCell: function(data) {
         if (data.row.index === 0) data.cell.styles.textColor = [22, 163, 74]; // green-600
         if (data.row.index === 4) data.cell.styles.textColor = [194, 65, 12]; // orange-700
         if (data.row.index === 5) data.cell.styles.textColor = [185, 28, 28]; // red-700
         if (data.row.index === 6) data.cell.styles.textColor = [219, 39, 119]; // pink-600
+        if (data.row.index === 7) data.cell.styles.textColor = [192, 38, 211]; // fuchsia-600
       }
     });
 
