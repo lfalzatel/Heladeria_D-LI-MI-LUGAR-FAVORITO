@@ -1903,7 +1903,7 @@ export default function Management() {
                         <option value="cliente">Cliente</option>
                         <option value="vendedor">Vendedor</option>
                         <option value="admin">Administrador</option>
-                        {currentUser?.role === 'propietario' && <option value="propietario">Propietario</option>}
+                        {['admin', 'propietario'].includes(currentUser?.role || '') && <option value="propietario">Propietario</option>}
                       </select>
                     </div>
                   )}
