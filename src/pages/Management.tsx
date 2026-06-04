@@ -1368,8 +1368,29 @@ export default function Management() {
                 exit={{ opacity: 0, x: -10 }}
                 className="w-full flex flex-col gap-5 pb-10"
               >
-                {/* Header Actions & Date Filter */}
+                {/* Title and Actions */}
                 <div className="flex flex-col gap-3 w-full">
+                  <div className="flex items-center justify-between w-full">
+                    <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">Compras</h2>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => toast.info('Seleccionar fecha exacta')}
+                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                        title="Calendario"
+                      >
+                        <Calendar className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => toast.info('Exportando informe de compras...')}
+                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                        title="Descargar Reporte"
+                      >
+                        <Download className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Header Actions & Date Filter */}
                   {selectedDate ? (
                     <div className="flex items-center justify-between bg-primary/10 rounded-2xl p-3 w-full border border-primary/20">
                       <span className="text-sm font-bold text-primary capitalize">
@@ -1397,27 +1418,6 @@ export default function Management() {
                       ))}
                     </div>
                   )}
-
-                  {/* Title and Actions */}
-                  <div className="flex items-center justify-between w-full">
-                    <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">Compras</h2>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => toast.info('Seleccionar fecha exacta')}
-                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
-                        title="Calendario"
-                      >
-                        <Calendar className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={() => toast.info('Exportando informe de compras...')}
-                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
-                        title="Descargar Reporte"
-                      >
-                        <Download className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
 
                   {/* Week Selector */}
                   {!selectedDate && period === 'week' && (
