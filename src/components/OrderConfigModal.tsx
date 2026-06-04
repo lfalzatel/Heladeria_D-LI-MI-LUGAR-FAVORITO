@@ -236,8 +236,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
         // Salpicón: Banano y Papaya incluidos por defecto. El cliente elige Fresa o Mango.
-        const catInit = product.category?.toLowerCase();
-        setSelectedFrutas(catInit === 'salpicon' ? ['Banano', 'Papaya'] : []);
+        setSelectedFrutas(isSalpicon ? ['Banano', 'Papaya'] : []);
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
