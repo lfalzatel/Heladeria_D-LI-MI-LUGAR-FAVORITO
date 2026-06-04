@@ -1369,10 +1369,9 @@ export default function Management() {
                 className="w-full flex flex-col gap-5 pb-10"
               >
                 {/* Header Actions & Date Filter */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-                  
+                <div className="flex flex-col gap-3 w-full">
                   {selectedDate ? (
-                    <div className="flex items-center justify-between bg-primary/10 rounded-2xl p-3 w-full sm:max-w-sm border border-primary/20">
+                    <div className="flex items-center justify-between bg-primary/10 rounded-2xl p-3 w-full border border-primary/20">
                       <span className="text-sm font-bold text-primary capitalize">
                         {selectedDate.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
@@ -1384,105 +1383,107 @@ export default function Management() {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3 w-full sm:max-w-sm">
-                      <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
-                        {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map((p) => (
-                          <button key={p} onClick={() => {
-                            setPeriod(p);
-                            setSelectedDate(null);
-                            if (p === 'month') setSelectedMonth(new Date());
-                            if (p === 'week') setSelectedWeek(new Date());
-                          }}
-                            className={cn('px-4 py-2.5 rounded-xl transition-all flex-1 text-[10px] font-black uppercase tracking-widest', period === p ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:bg-surface-container-high')}>
-                            {PERIOD_LABELS[p]}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Week Selector */}
-                      {period === 'week' && (
-                        <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10">
-                          <button 
-                            onClick={() => {
-                              const newD = new Date(selectedWeek);
-                              newD.setDate(newD.getDate() - 7);
-                              setSelectedWeek(newD);
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
-                          >
-                            <ChevronLeft className="w-5 h-5" />
-                          </button>
-                          <span className="text-sm font-bold text-on-surface capitalize tracking-wide text-center leading-tight">
-                            {(() => {
-                              const { start, end } = getWeekBoundaries(selectedWeek);
-                              const isSameMonth = start.getMonth() === end.getMonth();
-                              if (isSameMonth) {
-                                return `${start.getDate()} al ${end.getDate()} de ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
-                              } else {
-                                return `${start.getDate()} ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')} al ${end.getDate()} ${end.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
-                              }
-                            })()}
-                          </span>
-                          <button 
-                            onClick={() => {
-                              const newD = new Date(selectedWeek);
-                              newD.setDate(newD.getDate() + 7);
-                              setSelectedWeek(newD);
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
-                          >
-                            <ChevronRight className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Month Selector */}
-                      {period === 'month' && (
-                        <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10">
-                          <button 
-                            onClick={() => {
-                              const newD = new Date(selectedMonth);
-                              newD.setMonth(newD.getMonth() - 1);
-                              setSelectedMonth(newD);
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
-                          >
-                            <ChevronLeft className="w-5 h-5" />
-                          </button>
-                          <span className="text-sm font-bold text-on-surface capitalize tracking-wide">
-                            {selectedMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
-                          </span>
-                          <button 
-                            onClick={() => {
-                              const newD = new Date(selectedMonth);
-                              newD.setMonth(newD.getMonth() + 1);
-                              setSelectedMonth(newD);
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
-                          >
-                            <ChevronRight className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
+                    <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
+                      {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map((p) => (
+                        <button key={p} onClick={() => {
+                          setPeriod(p);
+                          setSelectedDate(null);
+                          if (p === 'month') setSelectedMonth(new Date());
+                          if (p === 'week') setSelectedWeek(new Date());
+                        }}
+                          className={cn('px-4 py-2.5 rounded-xl transition-all flex-1 text-[10px] font-black uppercase tracking-widest', period === p ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:bg-surface-container-high')}>
+                          {PERIOD_LABELS[p]}
+                        </button>
+                      ))}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    <button 
-                      onClick={() => toast.info('Seleccionar fecha exacta')}
-                      className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
-                      title="Calendario"
-                    >
-                      <Calendar className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => toast.info('Exportando informe de compras...')}
-                      className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
-                      title="Descargar Reporte"
-                    >
-                      <Download className="w-5 h-5" />
-                    </button>
+                  {/* Title and Actions */}
+                  <div className="flex items-center justify-between w-full">
+                    <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">Compras</h2>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => toast.info('Seleccionar fecha exacta')}
+                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                        title="Calendario"
+                      >
+                        <Calendar className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => toast.info('Exportando informe de compras...')}
+                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                        title="Descargar Reporte"
+                      >
+                        <Download className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Week Selector */}
+                  {!selectedDate && period === 'week' && (
+                    <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10 w-full">
+                      <button 
+                        onClick={() => {
+                          const newD = new Date(selectedWeek);
+                          newD.setDate(newD.getDate() - 7);
+                          setSelectedWeek(newD);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className="text-sm font-bold text-on-surface capitalize tracking-wide text-center leading-tight">
+                        {(() => {
+                          const { start, end } = getWeekBoundaries(selectedWeek);
+                          const isSameMonth = start.getMonth() === end.getMonth();
+                          if (isSameMonth) {
+                            return `${start.getDate()} al ${end.getDate()} de ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
+                          } else {
+                            return `${start.getDate()} ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')} al ${end.getDate()} ${end.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
+                          }
+                        })()}
+                      </span>
+                      <button 
+                        onClick={() => {
+                          const newD = new Date(selectedWeek);
+                          newD.setDate(newD.getDate() + 7);
+                          setSelectedWeek(newD);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Month Selector */}
+                  {!selectedDate && period === 'month' && (
+                    <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10 w-full">
+                      <button 
+                        onClick={() => {
+                          const newD = new Date(selectedMonth);
+                          newD.setMonth(newD.getMonth() - 1);
+                          setSelectedMonth(newD);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className="text-sm font-bold text-on-surface capitalize tracking-wide">
+                        {selectedMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+                      </span>
+                      <button 
+                        onClick={() => {
+                          const newD = new Date(selectedMonth);
+                          newD.setMonth(newD.getMonth() + 1);
+                          setSelectedMonth(newD);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Register + Download */}
