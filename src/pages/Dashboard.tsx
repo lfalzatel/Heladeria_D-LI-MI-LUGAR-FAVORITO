@@ -43,10 +43,6 @@ import {
 import MovementDetailModal from '../components/MovementDetailModal';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 
-type DateFilter = 'today' | 'week' | 'month';
-
-// ── UTILS ──
-const toDateS = (ts: any): Date | null => { 
 import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
 
 export default function Dashboard() {
