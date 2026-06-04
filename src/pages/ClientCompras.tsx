@@ -708,7 +708,7 @@ export default function ClientCompras() {
                                       {typeof f === 'object' ? f.name || f.label : f}
                                     </span>
                                   ))}
-                                  {(item.includedFruits || item.fruitChoices || []).map((f: any, idx: number) => (
+                                  {(item.includedFruits || item.fruitChoices || []).filter((f: any) => f !== item.baseChoice).map((f: any, idx: number) => (
                                     <span key={idx} className="text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10">
                                       {typeof f === 'object' ? f.name || f.label : f}
                                     </span>

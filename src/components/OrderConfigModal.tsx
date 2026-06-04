@@ -337,14 +337,17 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         count > 1 ? `${flavor} (x${count})` : flavor
       ).join(', ');
 
+      const finalBaseChoice = isSalpicon ? (allFruitsConsolidated.find(f => f === 'Mango' || f === 'Fresa') || '') : selectedBaseChoice;
+      const remainingFruits = allFruitsConsolidated.filter(f => f !== finalBaseChoice);
+
       const customOptionsStrings = Object.entries(selectedCustomOptions).map(([key, val]) => `${key}: ${val}`);
 
       const configParts = [
         variantLabel,
-        selectedBaseChoice ? `Base: ${selectedBaseChoice}` : '',
+        finalBaseChoice ? `Base: ${finalBaseChoice}` : '',
         formattedFlavors,
-        allFruitsConsolidated.length > 0
-          ? (isSalpicon ? `Base: ${allFruitsConsolidated.join(', ')}` : `Fruta: ${allFruitsConsolidated.join(', ')}`)
+        remainingFruits.length > 0
+          ? `Fruta: ${remainingFruits.join(', ')}`
           : '',
         ...customOptionsStrings,
         allAdditionsNames.length > 0 ? `Extras: ${allAdditionsNames.join(', ')}` : '',
@@ -357,7 +360,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         productName: product.name,
         variantLabel,
         description: configParts.join(' | '),
-        baseChoice: selectedBaseChoice,
+        baseChoice: finalBaseChoice,
         flavors: allFlavorsConsolidated,
         fruitChoices: allFruitsConsolidated,
         additions: allAdditionsNames,

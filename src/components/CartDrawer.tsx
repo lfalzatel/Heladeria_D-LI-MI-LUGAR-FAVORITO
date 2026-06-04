@@ -302,7 +302,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                               {f}
                             </span>
                           ))}
-                          {(item.includedFruits || item.fruitChoices || []).map((f, i) => (
+                          {(item.includedFruits || item.fruitChoices || []).filter(f => f !== item.baseChoice).map((f, i) => (
                             <button 
                               key={i} 
                               onClick={() => !item.locked && onEdit?.(item, 4)}
