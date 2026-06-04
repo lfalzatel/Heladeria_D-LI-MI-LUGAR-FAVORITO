@@ -4,16 +4,7 @@ import { formatCurrency, cn } from '../lib/utils';
 import { motion } from 'motion/react';
 import { PurchaseRecord } from './PurchaseModals';
 
-export type PeriodFilter = 'today' | 'week' | 'month';
-export const PERIOD_LABELS: Record<PeriodFilter, string> = { today: 'Hoy', week: 'Semana', month: 'Mes' };
-export const toDateS = (ts: any): Date | null => { if (!ts) return null; if (ts.toDate) return ts.toDate(); return new Date(ts); };
-export const isInPeriod = (ts: any, period: PeriodFilter): boolean => {
-  const d = toDateS(ts); if (!d) return false;
-  const now = new Date();
-  if (period === 'today') return d.toDateString() === now.toDateString();
-  if (period === 'week') { const s = new Date(now); s.setDate(now.getDate() - 7); return d >= s; }
-  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-};
+import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod } from '../lib/dateUtils';
 
 
 /* ─── STAT CARD ─── */

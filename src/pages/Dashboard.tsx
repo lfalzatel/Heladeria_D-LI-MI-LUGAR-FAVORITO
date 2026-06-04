@@ -47,36 +47,16 @@ type DateFilter = 'today' | 'week' | 'month';
 
 // ── UTILS ──
 const toDateS = (ts: any): Date | null => { 
-  if (!ts) return null; 
-  if (ts.toDate) return ts.toDate(); 
-  return new Date(ts); 
-};
-
-const isInPeriod = (timestamp: any, period: DateFilter, customDate?: Date | null, customMonth?: Date) => {
-  const d = toDateS(timestamp);
-  if (!d) return false;
-  if (customDate) return d.toDateString() === customDate.toDateString();
-  const now = new Date();
-  if (period === 'today') return d.toDateString() === now.toDateString();
-  if (period === 'week') {
-    const weekAgo = new Date(now);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return d >= weekAgo;
-  }
-  if (period === 'month') {
-    const m = customMonth || now;
-    return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear();
-  }
-  return true;
-};
+import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
 
 export default function Dashboard() {
   const { profile } = useAuthStore();
   const { carts, initialize } = useTableCartStore();
   const { setHeader, clearHeader } = useHeaderStore();
 
-  const [dashboardFilter, setDashboardFilter] = useState<DateFilter>('today');
+  const [dashboardFilter, setDashboardFilter] = useState<PeriodFilter>('today');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<Date>(new Date());
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   
   const [showCalendar, setShowCalendar] = useState(false);
@@ -182,14 +162,14 @@ export default function Dashboard() {
     return allUnfilteredActivity
       .filter(item => {
         const timestamp = item.timestamp || item.updatedAt || item.createdAt;
-        return isInPeriod(timestamp, dashboardFilter, selectedDate, selectedMonth);
+        return isInPeriod(timestamp, dashboardFilter, selectedDate, selectedMonth, selectedWeek);
       })
       .sort((a, b) => {
         const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
         const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
         return tB - tA;
       });
-  }, [allUnfilteredActivity, dashboardFilter, selectedDate, selectedMonth]);
+  }, [allUnfilteredActivity, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
 
   // ── COMPUTED METRICS ──
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
@@ -218,11 +198,11 @@ export default function Dashboard() {
   });
 
   // Credit pedidos for current period
-  const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate));
+  const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCredito = creditPedidosPeriod.reduce((s, p) => s + (p.total || 0), 0);
 
   // Supply purchases for current period
-  const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate));
+  const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
 
   // Ganancia
@@ -260,14 +240,17 @@ export default function Dashboard() {
       return selectedDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'long' }).replace(',', '');
     }
     const now = new Date();
+    
     if (dashboardFilter === 'today') {
       return `Hoy (${now.toLocaleDateString('es-CO')})`;
     }
+    
     if (dashboardFilter === 'week') {
-      const weekAgo = new Date(now);
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return `Últimos 7 días (${weekAgo.toLocaleDateString('es-CO')} al ${now.toLocaleDateString('es-CO')})`;
+      const w = selectedWeek || now;
+      const { start, end } = getWeekBoundaries(w);
+      return `Semana (${start.toLocaleDateString('es-CO')} al ${end.toLocaleDateString('es-CO')})`;
     }
+    
     const m = selectedMonth || now;
     const firstDay = new Date(m.getFullYear(), m.getMonth(), 1);
     const lastDay = new Date(m.getFullYear(), m.getMonth() + 1, 0);
@@ -494,6 +477,7 @@ export default function Dashboard() {
                     setDashboardFilter(f);
                     setSelectedDate(null);
                     if (f === 'month') setSelectedMonth(new Date());
+                    if (f === 'week') setSelectedWeek(new Date());
                   }}
                   className={cn(
                     "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
@@ -504,6 +488,43 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+
+            {/* Week Selector */}
+            {dashboardFilter === 'week' && (
+              <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10">
+                <button 
+                  onClick={() => {
+                    const newD = new Date(selectedWeek);
+                    newD.setDate(newD.getDate() - 7);
+                    setSelectedWeek(newD);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-sm font-bold text-on-surface capitalize tracking-wide text-center leading-tight">
+                  {(() => {
+                    const { start, end } = getWeekBoundaries(selectedWeek);
+                    const isSameMonth = start.getMonth() === end.getMonth();
+                    if (isSameMonth) {
+                      return `${start.getDate()} al ${end.getDate()} de ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
+                    } else {
+                      return `${start.getDate()} ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')} al ${end.getDate()} ${end.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
+                    }
+                  })()}
+                </span>
+                <button 
+                  onClick={() => {
+                    const newD = new Date(selectedWeek);
+                    newD.setDate(newD.getDate() + 7);
+                    setSelectedWeek(newD);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
 
             {/* Month Selector */}
             {dashboardFilter === 'month' && (

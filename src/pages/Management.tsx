@@ -65,7 +65,8 @@ import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecor
 import { WasteModal } from '../components/WasteModal';
 import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
-import { StatCard, PurchaseCard, PeriodFilter, PERIOD_LABELS, isInPeriod } from '../components/SupplyStats';
+import { StatCard, PurchaseCard } from '../components/SupplyStats';
+import { PeriodFilter, PERIOD_LABELS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
 import { TrendChart } from '../components/DashboardComponents';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
@@ -145,6 +146,9 @@ export default function Management() {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [period, setPeriod] = useState<PeriodFilter>('today');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<Date>(new Date());
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   const [insumosSubTab, setInsumosSubTab] = useState<'compras' | 'catalogo'>('compras');
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
@@ -694,7 +698,7 @@ export default function Management() {
   };
 
   // ── Derived values ────────────────────────────────────────────────────────
-  const filtered = purchases.filter((p) => isInPeriod(p.createdAt, period));
+  const filtered = purchases.filter((p) => isInPeriod(p.createdAt, period, selectedDate, selectedMonth, selectedWeek));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
   const totalUnits = filtered.reduce((a, p) => a + (p.items?.length || 0), 0);
   const activeDays = new Set(filtered.map((p) => { const d = p.createdAt?.toDate?.() || (p.createdAt ? new Date(p.createdAt) : null); return d?.toDateString(); }).filter(Boolean)).size;
@@ -1354,7 +1358,7 @@ export default function Management() {
             )}
 
             {/* ═══════════════════════════════════════════════════════════════
-                TAB: OPERACIÓN (Compras, Gastos y Mesas)
+                TAB: OPERACIÓN (Compras)
             ═══════════════════════════════════════════════════════════════ */}
             {activeTab === 'operacion' && (
               <motion.div
@@ -1364,133 +1368,182 @@ export default function Management() {
                 exit={{ opacity: 0, x: -10 }}
                 className="w-full flex flex-col gap-5 pb-10"
               >
-                {/* Sub-tab bar: Compras | Gastos | Mesas */}
-                <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
-                  {(
-                    [
-                      { id: 'compras', label: 'Compras' },
-                      { id: 'gastos', label: 'Gastos Local' },
-                      { id: 'mesas', label: 'Mesas' },
-                    ] as { id: OperacionSubTab; label: string }[]
-                  ).map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => setOperacionSubTab(sub.id)}
-                      className={cn(
-                        'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
-                        operacionSubTab === sub.id
-                          ? 'bg-white text-primary shadow-sm'
-                          : 'text-secondary hover:bg-surface-container-high'
-                      )}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {/* ── Sub-tab: COMPRAS (Movida de Inventario) ────────────────── */}
-                  {operacionSubTab === 'compras' && (
-                    <motion.div key="op-compras" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
-                      {/* Period filter */}
-                      <div className="flex gap-1.5 p-1 bg-surface-container rounded-xl text-[10px] font-black uppercase">
+                {/* Header Actions & Date Filter */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+                  
+                  {selectedDate ? (
+                    <div className="flex items-center justify-between bg-primary/10 rounded-2xl p-3 w-full sm:max-w-sm border border-primary/20">
+                      <span className="text-sm font-bold text-primary capitalize">
+                        {selectedDate.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                      <button 
+                        onClick={() => { setSelectedDate(null); setPeriod('today'); }}
+                        className="w-8 h-8 flex items-center justify-center bg-white rounded-full text-primary shadow-sm hover:bg-primary hover:text-white transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3 w-full sm:max-w-sm">
+                      <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
                         {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map((p) => (
-                          <button key={p} onClick={() => setPeriod(p)}
-                            className={cn('px-4 py-2 rounded-lg transition-all flex-1', period === p ? 'bg-on-surface text-white shadow-sm' : 'text-secondary hover:bg-surface')}>
+                          <button key={p} onClick={() => {
+                            setPeriod(p);
+                            setSelectedDate(null);
+                            if (p === 'month') setSelectedMonth(new Date());
+                            if (p === 'week') setSelectedWeek(new Date());
+                          }}
+                            className={cn('px-4 py-2.5 rounded-xl transition-all flex-1 text-[10px] font-black uppercase tracking-widest', period === p ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:bg-surface-container-high')}>
                             {PERIOD_LABELS[p]}
                           </button>
                         ))}
                       </div>
 
-                      {/* Register + Download */}
-                      <div className="flex gap-3">
-                        <button onClick={() => setIsPurchaseOpen(true)}
-                          className="flex-[2] py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                          <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
-                        </button>
-                        <button onClick={() => setIsWasteModalOpen(true)}
-                          className="flex-[1] py-4 bg-red-50 text-red-500 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
-                          Merma
-                        </button>
-                        <button onClick={() => toast.info('Exportando informe de compras...')}
-                          className="w-14 h-14 bg-surface-container text-secondary rounded-2xl flex items-center justify-center border border-outline/20 hover:bg-surface hover:text-on-surface transition-all">
-                          <Download className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      {/* Stock alert moved below Registrar Compra */}
-                      {lowStock > 0 && (
-                        <motion.button 
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          onClick={() => setIsStockModalOpen(true)}
-                          className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
-                        >
-                          <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                          <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
-                          <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
-                        </motion.button>
+                      {/* Week Selector */}
+                      {period === 'week' && (
+                        <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10">
+                          <button 
+                            onClick={() => {
+                              const newD = new Date(selectedWeek);
+                              newD.setDate(newD.getDate() - 7);
+                              setSelectedWeek(newD);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <span className="text-sm font-bold text-on-surface capitalize tracking-wide text-center leading-tight">
+                            {(() => {
+                              const { start, end } = getWeekBoundaries(selectedWeek);
+                              const isSameMonth = start.getMonth() === end.getMonth();
+                              if (isSameMonth) {
+                                return `${start.getDate()} al ${end.getDate()} de ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
+                              } else {
+                                return `${start.getDate()} ${start.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')} al ${end.getDate()} ${end.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')}`;
+                              }
+                            })()}
+                          </span>
+                          <button 
+                            onClick={() => {
+                              const newD = new Date(selectedWeek);
+                              newD.setDate(newD.getDate() + 7);
+                              setSelectedWeek(newD);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
                       )}
 
-                      {/* Stat Cards */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                        <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
-                        <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
-                        <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
-                      </div>
-
-
-                      <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
-                          <div>
-                            <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
-                            <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
-                          </div>
+                      {/* Month Selector */}
+                      {period === 'month' && (
+                        <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-outline/10">
+                          <button 
+                            onClick={() => {
+                              const newD = new Date(selectedMonth);
+                              newD.setMonth(newD.getMonth() - 1);
+                              setSelectedMonth(newD);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <span className="text-sm font-bold text-on-surface capitalize tracking-wide">
+                            {selectedMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+                          </span>
+                          <button 
+                            onClick={() => {
+                              const newD = new Date(selectedMonth);
+                              newD.setMonth(newD.getMonth() + 1);
+                              setSelectedMonth(newD);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-surface-container rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
                         </div>
-                        <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between px-1">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad Reciente</h3>
-                          <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
-                        </div>
-                        {filtered.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-16 opacity-20">
-                            <ShoppingCart className="w-12 h-12 mb-3" />
-                            <p className="text-sm font-bold">Sin compras en este período</p>
-                          </div>
-                        ) : (
-                          filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
-                        )}
-                      </div>
-                    </motion.div>
+                      )}
+                    </div>
                   )}
 
-                  {/* ── Sub-tab: GASTOS (Fase 3) ────────────────────────────────── */}
-                  {operacionSubTab === 'gastos' && (
-                    <motion.div key="op-gastos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-24 gap-5 opacity-40">
-                      <Wallet className="w-14 h-14 text-secondary" />
-                      <div className="text-center">
-                        <p className="font-black text-lg uppercase tracking-widest text-on-surface">Gastos del Local</p>
-                        <p className="text-xs font-bold text-secondary mt-1">Próximamente: Servicios, Arriendo, Papelería...</p>
-                      </div>
-                    </motion.div>
-                  )}
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    <button 
+                      onClick={() => toast.info('Seleccionar fecha exacta')}
+                      className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                      title="Calendario"
+                    >
+                      <Calendar className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => toast.info('Exportando informe de compras...')}
+                      className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                      title="Descargar Reporte"
+                    >
+                      <Download className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
 
-                  {/* ── Sub-tab: MESAS (Fase 3) ─────────────────────────────────── */}
-                  {operacionSubTab === 'mesas' && (
-                    <motion.div key="op-mesas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-24 gap-5 opacity-40">
-                      <Utensils className="w-14 h-14 text-secondary" />
-                      <div className="text-center">
-                        <p className="font-black text-lg uppercase tracking-widest text-on-surface">Gestión de Mesas</p>
-                        <p className="text-xs font-bold text-secondary mt-1">Próximamente: Mapa de mesas y pedidos activos</p>
-                      </div>
-                    </motion.div>
+                {/* Register + Download */}
+                <div className="flex gap-3 w-full">
+                  <button onClick={() => setIsPurchaseOpen(true)}
+                    className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                    <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
+                  </button>
+                  <button onClick={() => setIsWasteModalOpen(true)}
+                    className="flex-1 py-4 bg-red-50 text-red-500 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
+                    Merma
+                  </button>
+                </div>
+
+                {/* Stock alert moved below Registrar Compra */}
+                {lowStock > 0 && (
+                  <motion.button 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => setIsStockModalOpen(true)}
+                    className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
+                  >
+                    <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
+                    <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
+                  </motion.button>
+                )}
+
+                {/* Stat Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                  <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
+                  <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
+                  <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
+                </div>
+
+                <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
+                    <div>
+                      <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
+                    </div>
+                  </div>
+                  <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad Reciente</h3>
+                    <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
+                  </div>
+                  {filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 opacity-20">
+                      <ShoppingCart className="w-12 h-12 mb-3" />
+                      <p className="text-sm font-bold">Sin compras en este período</p>
+                    </div>
+                  ) : (
+                    filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
                   )}
-                </AnimatePresence>
+                </div>
               </motion.div>
             )}
 
