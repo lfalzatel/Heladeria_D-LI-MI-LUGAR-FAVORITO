@@ -139,9 +139,10 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const costPerPortion = (item: PurchaseItem) => item.portions > 0 && item.cost > 0 ? item.cost / item.portions : 0;
 
   const handleConfirm = async () => {
-    if (!provider || items.length === 0) return;
+    const finalProvider = provider.trim() === '' ? 'Otro' : provider;
+    if (items.length === 0) return;
     setSaving(true);
-    try { await onConfirm(provider, items); reset(); onClose(); }
+    try { await onConfirm(finalProvider, items); reset(); onClose(); }
     finally { setSaving(false); }
   };
 
@@ -334,11 +335,11 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     <div><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Monto Inversión</p><p className="text-2xl font-black text-on-surface">{formatCurrency(total)}</p></div>
                     <div className="text-right"><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Items Totales</p><p className="text-2xl font-black text-on-surface">{items.length} uds</p></div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border border-outline/30 text-on-surface font-black text-xs uppercase tracking-widest hover:bg-surface-container transition-all flex items-center justify-center gap-2">
                       <ChevronLeft className="w-4 h-4" /> Editar
                     </button>
-                    <button onClick={handleConfirm} disabled={saving || items.length === 0 || total === 0 || !provider}
+                    <button onClick={handleConfirm} disabled={saving || items.length === 0 || total === 0}
                       className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
                       <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : 'Confirmar y Abastecer'}
                     </button>
