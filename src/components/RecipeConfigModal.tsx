@@ -199,7 +199,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                     )}
                   >
                     <div className="flex-1 min-w-0 pr-2">
-                      <p className={cn("font-bold text-xs truncate", isInRecipe ? "text-emerald-700" : "text-on-surface")}>
+                      <p className={cn("font-bold text-xs leading-tight mb-1", isInRecipe ? "text-emerald-700" : "text-on-surface")}>
                         {supply.name}
                       </p>
                       <p className="text-[9px] text-secondary font-black uppercase tracking-tighter opacity-50">
