@@ -245,7 +245,7 @@ export function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () 
   } else if (isTable) {
     originLabel = sale.tableName.replace(/mesa/gi, '').trim();
   } else if (isTakeaway) {
-    originLabel = 'Para Llevar'; // It will say [ LLEVAR ] Para Llevar
+    originLabel = ''; // It will say [ PARA LLEVAR ]
   } else if (isOnline) {
     originLabel = 'Web'; // [ ONLINE ] Web
   } else {
@@ -286,7 +286,7 @@ export function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () 
                 isTakeaway ? "bg-emerald-50 text-emerald-600 ring-emerald-500/20" :
                 (isOnline ? "bg-purple-50 text-purple-600 ring-purple-500/20" : "bg-primary/5 text-primary ring-primary/20")
               )}>
-                {isTable ? 'Mesa' : (isTakeaway ? 'Llevar' : (isOnline ? 'Online' : 'Local'))}
+                {isTable ? 'Mesa' : (isTakeaway ? 'Para Llevar' : (isOnline ? 'Online' : 'Local'))}
               </span>
               <span className={cn(
                 "text-[9px] font-black uppercase tracking-widest truncate max-w-[100px]",
