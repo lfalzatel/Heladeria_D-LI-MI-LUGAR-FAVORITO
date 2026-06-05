@@ -89,344 +89,536 @@
   "products": [
     {
       "id": "adicion-barquillo",
-      "requiresFlavors": false,
-      "name": "Adición Barquillo",
-      "imageUrl": "/Images/products/barquillos.jpeg",
       "description": "Barquillo crujiente adicional para acompañar tu postre.",
+      "requiresFlavors": false,
       "variants": [
         {
+          "label": "Barquillo",
           "price": 500,
-          "label": "Barquillo"
+          "recipe": []
         }
       ],
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Adición Barquillo",
       "category": "adiciones",
-      "isActive": true,
-      "requiresFruitChoice": false
-    },
-    {
-      "id": "adicion-chantilly",
-      "description": "Crema chantilly extra para los más golosos.",
-      "variants": [
-        {
-          "price": 4000,
-          "label": "Chantilly"
-        }
-      ],
-      "category": "adiciones",
-      "isActive": true,
+      "imageUrl": "/Images/products/barquillos.jpeg",
       "requiresFruitChoice": false,
-      "requiresFlavors": false,
-      "name": "Adición Chantilly",
-      "imageUrl": "/Images/products/chantilly.jpg"
-    },
-    {
-      "id": "adicion-chips-chocolate",
-      "imageUrl": "/Images/products/chips_chocolate.jpeg",
-      "name": "Adición Chips de Chocolate",
-      "requiresFlavors": false,
       "isActive": true,
-      "requiresFruitChoice": false,
-      "description": "Trocitos de chocolate crujiente para agregar textura y sabor.",
-      "category": "adiciones",
-      "variants": [
+      "recipe": [
         {
-          "price": 3000,
-          "label": "Chips de Chocolate"
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "und"
         }
       ]
     },
     {
-      "id": "adicion-cono",
-      "basePrice": null,
+      "id": "adicion-chantilly",
+      "description": "Crema chantilly extra para los más golosos.",
+      "requiresFlavors": false,
       "variants": [
         {
-          "price": 1000,
-          "label": "Cono"
+          "label": "Chantilly",
+          "price": 4000,
+          "recipe": []
         }
       ],
-      "isActive": true,
-      "requiresSauces": false,
-      "cardColor": null,
-      "requiresFruitChoice": false,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Adición Chantilly",
+      "imageUrl": "/Images/products/chantilly.jpg",
       "category": "adiciones",
-      "description": "Un cono de galleta extra.",
-      "scoops": null,
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "recipe": [
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 0.05,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "adicion-chips-chocolate",
+      "imageUrl": "/Images/products/chips_chocolate.jpeg",
+      "category": "adiciones",
+      "requiresFruitChoice": false,
+      "isActive": true,
       "requiresFlavors": false,
+      "description": "Trocitos de chocolate crujiente para agregar textura y sabor.",
+      "variants": [
+        {
+          "label": "Chips de Chocolate",
+          "price": 3000,
+          "recipe": []
+        }
+      ],
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Adición Chips de Chocolate",
+      "recipe": []
+    },
+    {
+      "id": "adicion-cono",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "requiresSauces": false,
       "imageUrl": "/Images/products/adicion_cono.png",
-      "name": "Adición Cono"
+      "basePrice": null,
+      "isActive": true,
+      "variants": [
+        {
+          "label": "Cono",
+          "price": 1000,
+          "recipe": []
+        }
+      ],
+      "cardColor": null,
+      "description": "Un cono de galleta extra.",
+      "requiresFlavors": false,
+      "name": "Adición Cono",
+      "category": "adiciones",
+      "scoops": null,
+      "requiresFruitChoice": false,
+      "recipe": []
     },
     {
       "id": "adicion-cucurucho",
-      "name": "Adición Cucurucho",
-      "imageUrl": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&q=80&w=500",
       "requiresFlavors": false,
-      "isActive": true,
-      "requiresFruitChoice": false,
       "description": "Un barquillo o cucurucho extra.",
       "variants": [
         {
+          "label": "Cucurucho",
           "price": 1000,
-          "label": "Cucurucho"
+          "recipe": []
         }
       ],
-      "category": "adiciones"
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Adición Cucurucho",
+      "category": "adiciones",
+      "imageUrl": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&q=80&w=500",
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "recipe": []
     },
     {
       "id": "adicion-fruta",
-      "requiresSauces": false,
-      "cardColor": null,
-      "requiresFruitChoice": false,
       "category": "adiciones",
-      "description": "Porción extra de fruta fresca. Puedes pedir fresa, mango o durazno.",
       "scoops": null,
+      "requiresFruitChoice": false,
       "requiresFlavors": false,
-      "imageUrl": "images/products/adicion_fruta.png",
-      "name": "Adición Fruta",
-      "basePrice": null,
+      "description": "Porción extra de fruta fresca. Puedes pedir fresa, mango o durazno.",
       "variants": [
         {
+          "label": "Fruta",
           "steps": [
             {
               "type": "fruits"
             }
           ],
           "price": 3500,
-          "label": "Fruta"
+          "recipe": []
         }
       ],
-      "isActive": true
+      "cardColor": null,
+      "name": "Adición Fruta",
+      "requiresSauces": false,
+      "imageUrl": "images/products/adicion_fruta.png",
+      "basePrice": null,
+      "isActive": true,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "recipe": [
+        {
+          "supplyId": "YzC6Lh3PQssKLIVvzVFZ",
+          "name": "Fruta",
+          "quantity": 1,
+          "unit": "kg"
+        }
+      ]
     },
     {
       "id": "adicion-helado",
-      "scoops": null,
-      "category": "adiciones",
-      "description": "Varias bolas adicionales de helado Mimo's al sabor que prefieras.",
-      "cardColor": null,
-      "requiresFruitChoice": false,
-      "requiresSauces": false,
       "name": "Adición Helado",
-      "imageUrl": "/Images/products/adicion_helado.png",
+      "salesCount": 1,
+      "description": "Varias bolas adicionales de helado Mimo's al sabor que prefieras.",
       "requiresFlavors": true,
       "variants": [
         {
-          "price": 3000,
           "scoops": 1,
-          "label": "Helado"
+          "price": 3000,
+          "label": "Helado",
+          "recipe": []
         }
       ],
+      "cardColor": null,
+      "scoops": null,
+      "requiresFruitChoice": false,
+      "category": "adiciones",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
       "basePrice": null,
-      "isActive": true
+      "isActive": true,
+      "requiresSauces": false,
+      "imageUrl": "/Images/products/adicion_helado.png",
+      "recipe": [
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 1,
+          "unit": "kg"
+        }
+      ]
     },
     {
       "id": "adicion-queso",
-      "name": "Adición Queso",
       "imageUrl": "/Images/products/adicion_queso.png",
-      "requiresFlavors": false,
-      "isActive": true,
+      "category": "adiciones",
       "requiresFruitChoice": false,
+      "isActive": true,
       "description": "Porción adicional de queso rallado fresco para complementar cualquier producto.",
+      "requiresFlavors": false,
       "variants": [
         {
+          "price": 4000,
           "label": "Queso",
-          "price": 4000
+          "recipe": []
         }
       ],
-      "category": "adiciones"
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Adición Queso",
+      "recipe": [
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 0.06666666666666667,
+          "unit": "Bloque"
+        }
+      ]
     },
     {
       "id": "adicion-salsa",
-      "isActive": true,
-      "basePrice": null,
+      "salesCount": 2,
+      "name": "Adición Salsa",
       "variants": [
         {
-          "label": "Salsa",
           "price": 1000,
           "steps": [
             {
               "type": "sauces"
             }
-          ]
+          ],
+          "label": "Salsa",
+          "recipe": []
         }
       ],
-      "requiresFlavors": false,
-      "name": "Adición Salsa",
-      "imageUrl": "/Images/products/adicion-salsa.jpg",
       "cardColor": null,
-      "requiresFruitChoice": false,
-      "requiresSauces": false,
-      "scoops": null,
+      "requiresFlavors": false,
       "description": "Salsa adicional: arequipe, mora, chocolate o lecherita. Los helados clásicos ya incluyen una salsa de cortesía — esta adición es para quien quiere más.",
-      "category": "adiciones"
+      "requiresFruitChoice": false,
+      "scoops": null,
+      "category": "adiciones",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "isActive": true,
+      "basePrice": null,
+      "imageUrl": "/Images/products/adicion-salsa.jpg",
+      "requiresSauces": false,
+      "recipe": []
     },
     {
       "id": "agua",
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "imageUrl": "/Images/products/botella_agua.png",
+      "category": "bebidas",
+      "salesCount": 14,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Botella con agua",
       "description": "Botella de agua natural.",
+      "requiresFlavors": false,
       "variants": [
         {
+          "price": 1500,
           "label": "Botella con agua",
-          "price": 1500
+          "recipe": []
         }
       ],
-      "category": "bebidas",
-      "isActive": true,
-      "requiresFruitChoice": false,
-      "requiresFlavors": false,
-      "salesCount": 7,
-      "name": "Botella con agua",
-      "imageUrl": "/Images/products/botella_agua.png"
+      "recipe": []
     },
     {
       "id": "aromatica",
-      "imageUrl": "/Images/products/aromatica.png",
       "name": "Aromática",
+      "imageUrl": "/Images/products/aromatica.png",
+      "variants": [
+        {
+          "price": 1500,
+          "label": "Aromática",
+          "recipe": []
+        }
+      ],
+      "requiresFlavors": false,
+      "category": "bebidas-calientes",
+      "requiresFruitChoice": false,
       "customOptions": [
         {
+          "id": "tipo",
           "choices": [
             "Sobre",
             "Cubo"
           ],
           "required": true,
-          "name": "Tipo de Aromática",
-          "id": "tipo"
+          "name": "Tipo de Aromática"
         },
         {
           "id": "azucar",
-          "name": "Azúcar",
-          "required": true,
           "choices": [
             "Con azúcar",
             "Sin azúcar"
-          ]
+          ],
+          "required": true,
+          "name": "Azúcar"
         }
       ],
-      "requiresFlavors": false,
-      "requiresFruitChoice": false,
       "isActive": true,
-      "category": "bebidas-calientes",
-      "variants": [
-        {
-          "price": 1500,
-          "label": "Aromática"
-        }
-      ],
-      "description": "Bebida caliente a base de hierbas aromáticas."
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "description": "Bebida caliente a base de hierbas aromáticas.",
+      "salesCount": 1,
+      "recipe": []
     },
     {
       "id": "cafe",
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "variants": [
-        {
-          "price": 2500,
-          "label": "Café"
-        }
-      ],
       "category": "bebidas-calientes",
-      "description": "Café con leche caliente.",
-      "name": "Café",
+      "imageUrl": "/Images/products/cafe.png",
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "requiresFlavors": false,
       "customOptions": [
         {
-          "required": true,
           "choices": [
             "Con azúcar",
             "Sin azúcar"
           ],
           "name": "Azúcar",
-          "id": "azucar"
+          "id": "azucar",
+          "required": true
         }
       ],
-      "imageUrl": "/Images/products/cafe.png",
-      "requiresFlavors": false
+      "description": "Café con leche caliente.",
+      "variants": [
+        {
+          "label": "Café",
+          "price": 2500,
+          "recipe": []
+        }
+      ],
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Café",
+      "recipe": [
+        {
+          "supplyId": "po8wRQbsZTpCFAV6j6LO",
+          "name": "Vasos 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "fkh6KRUxrTbiEpjWxvE0",
+          "name": "Tapas Vaso 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
     },
     {
       "id": "conchita",
-      "name": "Conchita",
-      "salesCount": 11,
-      "imageUrl": "/Images/products/conchita.jpeg",
-      "isActive": true,
       "requiresFlavors": true,
       "description": "Helado servido en una delicada concha de oblea crujiente. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencilla, doble y triple.",
-      "requiresFruitChoice": false,
       "variants": [
         {
-          "label": "Sencilla",
           "scoops": 1,
-          "price": 4500
+          "price": 4500,
+          "label": "Sencilla",
+          "recipe": []
         },
         {
+          "label": "Doble",
           "price": 6500,
           "scoops": 2,
-          "label": "Doble"
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 2,
+              "unit": "und"
+            }
+          ]
         },
         {
           "label": "Triple",
           "scoops": 3,
-          "price": 8500
+          "price": 8500,
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 3,
+              "unit": "und"
+            }
+          ]
         }
       ],
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Conchita",
       "includedExtras": {
+        "toppings": [
+          "maní",
+          "bolitas de colores"
+        ],
+        "sauces": [
+          "arequipe",
+          "mora",
+          "chocolate",
+          "lecherita"
+        ],
+        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
+      },
+      "salesCount": 21,
+      "category": "helados",
+      "imageUrl": "/Images/products/conchita.jpeg",
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "recipe": [
+        {
+          "supplyId": "xxe4z3w0ji3J5vFrRQYr",
+          "name": "Conchitas",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "GVzW5WJVA3Fzb017lsQL",
+          "name": "Servilletas para Conos",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
+    },
+    {
+      "id": "cono",
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "category": "helados",
+      "salesCount": 55,
+      "description": "Helado artesanal Mimo's servido en cono de galleta. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "imageUrl": "/Images/products/vaso-cono.jpg",
+      "includedExtras": {
+        "sauces": [
+          "arequipe",
+          "mora",
+          "chocolate",
+          "lecherita"
+        ],
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
         "toppings": [
           "maní",
           "bolitas de colores"
-        ],
-        "sauces": [
-          "arequipe",
-          "mora",
-          "chocolate",
-          "lecherita"
         ]
       },
-      "category": "helados"
-    },
-    {
-      "id": "cono",
-      "imageUrl": "/Images/products/vaso-cono.jpg",
       "name": "Cono",
-      "salesCount": 12,
-      "requiresFlavors": true,
-      "isActive": true,
-      "requiresFruitChoice": false,
-      "description": "Helado artesanal Mimo's servido en cono de galleta. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
-      "category": "helados",
       "variants": [
         {
-          "label": "Sencillo",
+          "price": 3500,
           "scoops": 1,
-          "price": 3500
+          "label": "Sencillo",
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 1,
+              "unit": "und"
+            }
+          ]
         },
         {
           "price": 5500,
+          "scoops": 2,
           "label": "Doble",
-          "scoops": 2
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 2,
+              "unit": "und"
+            }
+          ]
         }
       ],
-      "includedExtras": {
-        "sauces": [
-          "arequipe",
-          "mora",
-          "chocolate",
-          "lecherita"
-        ],
-        "toppings": [
-          "maní",
-          "bolitas de colores"
-        ],
-        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional"
-      }
+      "requiresFlavors": true,
+      "recipe": [
+        {
+          "supplyId": "Zn0HGZ9pBrCLdhnPEc7S",
+          "name": "Conos",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "GVzW5WJVA3Fzb017lsQL",
+          "name": "Servilletas para Conos",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
     },
     {
       "id": "copa-dli",
-      "isActive": true,
+      "category": "copas",
       "requiresFruitChoice": false,
       "variants": [
         {
           "label": "Copa D'LI",
           "scoops": 3,
-          "price": 13000
+          "price": 13000,
+          "recipe": []
         }
       ],
-      "imageUrl": "/Images/products/copa-dli.jpeg",
       "requiresFlavors": true,
       "ingredients": [
         "arequipe",
@@ -437,47 +629,151 @@
         "salsa arequipe"
       ],
       "description": "Nuestra copa insignia. Base generosa de arequipe, 3 bolas de helado Mimo's a elección, queso rallado, chantilly y cucurucho. Bañada con salsa de arequipe. Sin toppings secos adicionales.",
-      "category": "copas",
+      "salesCount": 14,
       "includedExtras": {
-        "sauces": [
-          "arequipe"
-        ],
         "toppings": [],
-        "note": "Lleva arequipe como base y como salsa. Sin toppings secos por defecto."
-      },
-      "name": "Copa D'LI",
-      "salesCount": 8
-    },
-    {
-      "id": "copa-explosion",
-      "includedExtras": {
-        "note": "Lleva arequipe como base y como salsa sobre la chantilly.",
-        "toppings": [],
+        "note": "Lleva arequipe como base y como salsa. Sin toppings secos por defecto.",
         "sauces": [
           "arequipe"
         ]
       },
-      "variants": [
-        {
-          "label": "Copa Explosión",
-          "scoops": 7,
-          "price": 16000
-        }
-      ],
-      "imageUrl": "/Images/products/copa-explosion.jpeg",
-      "salesCount": 1,
-      "requiresFruitChoice": false,
-      "description": "Para los verdaderos amantes del helado. Base de arequipe, 7 sabores de helado Mimo's a elección, cubiertos con chantilly y barquillo. Bañada con salsa de arequipe. Grande, vistosa e irresistible.",
-      "category": "copas",
+      "name": "Copa D'LI",
+      "imageUrl": "/Images/products/copa-dli.jpeg",
       "isActive": true,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "recipe": [
+        {
+          "supplyId": "EzgWSO8MusrXfaAt9XhV",
+          "name": "Arequipe",
+          "quantity": 0.05,
+          "unit": "g"
+        },
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 3,
+          "unit": "kg"
+        },
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 0.06666666666666667,
+          "unit": "Bloque"
+        },
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 0.05,
+          "unit": "g"
+        },
+        {
+          "supplyId": "yGJIo16EOdpC10Fjbzs9",
+          "name": "Cucuruchos",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "VckYsY5I7V64eSh8uXsz",
+          "name": "Vasos 13 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+          "name": "Cuchara Pequeña",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
+    },
+    {
+      "id": "copa-explosion",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "isActive": true,
+      "imageUrl": "/Images/products/copa-explosion.jpeg",
       "name": "Copa Explosión de Sabores",
-      "requiresFlavors": true,
+      "includedExtras": {
+        "sauces": [
+          "arequipe"
+        ],
+        "note": "Lleva arequipe como base y como salsa sobre la chantilly.",
+        "toppings": []
+      },
+      "salesCount": 1,
       "ingredients": [
         "arequipe",
         "helado",
         "chantilly",
         "barquillo",
         "salsa arequipe"
+      ],
+      "requiresFlavors": true,
+      "description": "Para los verdaderos amantes del helado. Base de arequipe, 7 sabores de helado Mimo's a elección, cubiertos con chantilly y barquillo. Bañada con salsa de arequipe. Grande, vistosa e irresistible.",
+      "variants": [
+        {
+          "scoops": 7,
+          "price": 16000,
+          "label": "Copa Explosión",
+          "recipe": []
+        }
+      ],
+      "requiresFruitChoice": false,
+      "category": "copas",
+      "recipe": [
+        {
+          "supplyId": "EzgWSO8MusrXfaAt9XhV",
+          "name": "Arequipe",
+          "quantity": 0.08,
+          "unit": "g"
+        },
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 7,
+          "unit": "kg"
+        },
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 0.05,
+          "unit": "g"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "GTEgX4UYAWNrMtXo7wye",
+          "name": "Recipiente oblea cuchareable",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+          "name": "Cuchara Pequeña",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
       ]
     },
     {
@@ -485,55 +781,80 @@
       "variants": [
         {
           "label": "Copa Favorita",
+          "price": 16500,
           "scoops": 2,
-          "price": 16500
+          "recipe": []
         }
       ],
+      "cardColor": null,
+      "description": "Copa de helado con dos sabores a elección, arequipe, fresas, kiwi, durazno, queso, chantilly y barquillo.",
+      "requiresFlavors": true,
+      "name": "Copa Favorita",
+      "salesCount": 2,
+      "category": "copas",
+      "scoops": null,
+      "requiresFruitChoice": false,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "requiresSauces": false,
+      "imageUrl": "/Images/products/copa_favorita.png",
       "basePrice": null,
       "isActive": true,
-      "scoops": null,
-      "category": "copas",
-      "description": "Copa de helado con dos sabores a elección, arequipe, fresas, kiwi, durazno, queso, chantilly y barquillo.",
-      "cardColor": null,
-      "requiresFruitChoice": false,
-      "requiresSauces": false,
-      "name": "Copa Favorita",
-      "imageUrl": "/Images/products/copa_favorita.png",
-      "requiresFlavors": true
+      "recipe": []
     },
     {
       "id": "copa-queso",
-      "name": "Copa Queso",
-      "isActive": true,
+      "category": "copas",
       "imageUrl": "/Images/products/copa_queso.png",
+      "requiresFruitChoice": false,
+      "isActive": true,
       "requiresFlavors": true,
+      "description": "Copa de helado con dos sabores a elección, lecherita, doble porción de queso, crema y barquillo.",
       "variants": [
         {
-          "label": "Copa Queso",
+          "price": 14000,
           "scoops": 2,
-          "price": 14000
+          "label": "Copa Queso",
+          "recipe": []
         }
       ],
-      "description": "Copa de helado con dos sabores a elección, lecherita, doble porción de queso, crema y barquillo.",
-      "category": "copas",
-      "requiresFruitChoice": false
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Copa Queso",
+      "salesCount": 5,
+      "recipe": []
     },
     {
       "id": "copa-salpicon",
       "requiresFlavors": true,
-      "imageUrl": "/Images/products/copa-salpicon.jpeg",
-      "variants": [
-        {
-          "label": "Copa Salpicón",
-          "scoops": 1,
-          "price": 11000
-        }
-      ],
-      "isActive": true,
-      "requiresFruitChoice": false,
-      "salesCount": 11,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
       "name": "Copa de Salpicón",
       "description": "Refrescante salpicón de banano, papaya y fruta fresca (fresa o mango) con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa.",
+      "includedExtras": {
+        "queso": true,
+        "note": "La copa incluye queso rallado."
+      },
+      "isActive": true,
+      "scoops": null,
+      "imageUrl": "/Images/products/copa-salpicon.jpeg",
+      "requiresFruitChoice": false,
+      "variants": [
+        {
+          "scoops": 1,
+          "price": 11000,
+          "label": "Copa Salpicón",
+          "recipe": []
+        }
+      ],
+      "basePrice": null,
+      "cardColor": null,
       "ingredients": [
         "banano",
         "papaya",
@@ -543,123 +864,193 @@
         "lechera",
         "barquillo"
       ],
-      "includedExtras": {
-        "note": "La copa incluye queso rallado.",
-        "queso": true
-      },
-      "category": "salpicon"
+      "requiresSauces": false,
+      "salesCount": 14,
+      "category": "salpic-n",
+      "recipe": []
     },
     {
       "id": "cucurucho",
+      "category": "helados",
+      "recipe": [
+        {
+          "supplyId": "yGJIo16EOdpC10Fjbzs9",
+          "name": "Cucuruchos",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "GVzW5WJVA3Fzb017lsQL",
+          "name": "Servilletas para Conos",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ],
+      "salesCount": 97,
+      "description": "El clásico en barquillo crujiente de oblea. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencillo, doble y triple.",
+      "name": "Cucurucho",
+      "variants": [
+        {
+          "price": 4000,
+          "label": "Sencillo",
+          "scoops": 1,
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 1,
+              "unit": "und"
+            }
+          ]
+        },
+        {
+          "label": "Doble",
+          "scoops": 2,
+          "price": 6000,
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 2,
+              "unit": "und"
+            }
+          ]
+        },
+        {
+          "price": 8000,
+          "scoops": 3,
+          "label": "Triple",
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 3,
+              "unit": "und"
+            }
+          ]
+        }
+      ],
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "imageUrl": "/Images/products/cucurucho.jpeg",
       "includedExtras": {
         "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
-        "toppings": [
-          "maní",
-          "bolitas de colores"
-        ],
         "sauces": [
           "arequipe",
           "mora",
           "chocolate",
           "lecherita"
+        ],
+        "toppings": [
+          "maní",
+          "bolitas de colores"
         ]
       },
-      "category": "helados",
-      "description": "El clásico en barquillo crujiente de oblea. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Disponible en sencillo, doble y triple.",
-      "recipe": [
-        {
-          "supplyId": "YRKPxJcNWphgmNlcZejX",
-          "name": "Salsa",
-          "quantity": 1,
-          "unit": "porción"
-        },
-        {
-          "unit": "porción",
-          "name": "Toppings",
-          "supplyId": "EZmtMKcbMmKYruYy4Euu",
-          "quantity": 1
-        },
-        {
-          "quantity": 1,
-          "supplyId": "mPIfUhrYZjXuPwFwWpty",
-          "name": "Oblea Gruesa",
-          "unit": "porción"
-        }
-      ],
-      "salesCount": 40,
-      "name": "Cucurucho",
-      "variants": [
-        {
-          "label": "Sencillo",
-          "scoops": 1,
-          "price": 4000
-        },
-        {
-          "label": "Doble",
-          "scoops": 2,
-          "price": 6000
-        },
-        {
-          "label": "Triple",
-          "scoops": 3,
-          "price": 8000
-        }
-      ],
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/cucurucho.jpeg"
+      "requiresFlavors": true
     },
     {
       "id": "dli-capricho",
-      "basePrice": null,
-      "description": "Copa de helado con dos sabores a elección, brownie, arequipe, chantilly y barquillo.",
-      "category": "copas",
+      "requiresFruitChoice": false,
       "scoops": null,
+      "category": "copas",
+      "salesCount": 2,
       "name": "D'LI Capricho",
-      "salesCount": 1,
+      "requiresFlavors": true,
+      "description": "Copa de helado con dos sabores a elección, brownie, arequipe, chantilly y barquillo.",
+      "cardColor": null,
+      "variants": [
+        {
+          "scoops": 2,
+          "price": 14000,
+          "steps": [
+            {
+              "type": "flavors",
+              "scoops": 2
+            },
+            {
+              "type": "sauces"
+            },
+            {
+              "type": "bases"
+            },
+            {
+              "type": "additions"
+            }
+          ],
+          "label": "D'LI Capricho",
+          "recipe": []
+        }
+      ],
+      "isActive": true,
+      "basePrice": null,
+      "imageUrl": "/Images/products/dli_capricho.png",
       "sauceOptions": [
         "Arequipe",
         "Lecherita"
       ],
-      "cardColor": null,
-      "isActive": true,
-      "requiresFruitChoice": false,
-      "variants": [
-        {
-          "label": "D'LI Capricho",
-          "price": 14000,
-          "scoops": 2
-        }
-      ],
-      "imageUrl": "/Images/products/dli_capricho.png",
       "requiresSauces": true,
-      "requiresFlavors": true
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "recipe": []
     },
     {
       "id": "ensalada-frutas",
-      "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
-      "salesCount": 19,
-      "basePrice": null,
+      "scoops": null,
       "description": "Mezcla de frutas frescas con queso rallado, helado Mimo's, crema de leche, lechera y barquillo. La versión Mini lleva manzana, mango, fresa, banano, papaya y uvas (sin kiwi), 1 bola de helado y 1 barquillo. Las versiones Pequeña, Mediana y Grande llevan además kiwi, 2 bolas de helado y barquillo.",
-      "requiresFruitChoice": false,
+      "salesCount": 56,
+      "basePrice": null,
+      "category": "ensaladas",
       "recipe": [
         {
+          "supplyId": "OQJXBXLD14HamYLZHzH1",
+          "name": "Uva",
+          "quantity": 0.047619047619047616,
+          "unit": "g"
+        },
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 2,
+          "unit": "kg"
+        },
+        {
+          "supplyId": "CiZcLsMlleKivYXP3aaq",
+          "name": "Lechera",
+          "quantity": 0.05,
+          "unit": "g"
+        },
+        {
+          "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+          "name": "Cuchara Pequeña",
           "quantity": 1,
-          "name": "Fruta",
-          "unit": "porción",
-          "supplyId": "BHDJcqzOMkgrylQeYk53"
+          "unit": "und"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "und"
         }
       ],
       "variants": [
         {
           "price": 10000,
-          "scoops": 1,
-          "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
           "steps": [
             {
-              "scoops": 1,
-              "type": "flavors"
+              "type": "flavors",
+              "scoops": 1
             },
             {
               "type": "fruits"
@@ -668,36 +1059,256 @@
               "type": "additions"
             }
           ],
-          "label": "Mini"
+          "scoops": 1,
+          "label": "Mini",
+          "imageUrl": "/Images/products/ensalada-frutas-mini.jpeg",
+          "recipe": [
+            {
+              "supplyId": "BShilodzthyQJkHi2riC",
+              "name": "Mango",
+              "quantity": 0.02631578947368421,
+              "unit": "kg"
+            },
+            {
+              "supplyId": "Ugnw0DsBnGE3CYpTGm1x",
+              "name": "Papaya",
+              "quantity": 0.03333333333333333,
+              "unit": "g"
+            },
+            {
+              "supplyId": "1iHkGY7x8hP3aPpSsTiF",
+              "name": "Fresa",
+              "quantity": 0.02127659574468085,
+              "unit": "g"
+            },
+            {
+              "supplyId": "RlEJxlSvmDxeAmHX3vSs",
+              "name": "Banano",
+              "quantity": 0.25,
+              "unit": "und"
+            },
+            {
+              "supplyId": "G06SiLwcEafPShAjF5Lk",
+              "name": "Durazno",
+              "quantity": 0.05,
+              "unit": "g"
+            },
+            {
+              "supplyId": "rp58vljdMGtvlq1QPI1z",
+              "name": "Queso",
+              "quantity": 0.05555555555555555,
+              "unit": "Bloque"
+            },
+            {
+              "supplyId": "DeIL9YPHY4wn2r6xLjDE",
+              "name": "Crema de Leche Ensaladas",
+              "quantity": 0.2,
+              "unit": "und"
+            },
+            {
+              "supplyId": "UU4J4b76goxUs5qqd2lN",
+              "name": "Desechable ensalada mini",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "Helado",
+              "quantity": 1,
+              "unit": "kg"
+            }
+          ]
         },
         {
-          "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
-          "label": "Pequeña",
           "scoops": 2,
-          "price": 17000
+          "label": "Pequeña",
+          "price": 17000,
+          "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
+          "recipe": [
+            {
+              "supplyId": "BShilodzthyQJkHi2riC",
+              "name": "Mango",
+              "quantity": 0.1,
+              "unit": "kg"
+            },
+            {
+              "supplyId": "Ugnw0DsBnGE3CYpTGm1x",
+              "name": "Papaya",
+              "quantity": 0.125,
+              "unit": "g"
+            },
+            {
+              "supplyId": "1iHkGY7x8hP3aPpSsTiF",
+              "name": "Fresa",
+              "quantity": 0.038461538461538464,
+              "unit": "g"
+            },
+            {
+              "supplyId": "RlEJxlSvmDxeAmHX3vSs",
+              "name": "Banano",
+              "quantity": 0.5,
+              "unit": "und"
+            },
+            {
+              "supplyId": "EI24vlkJeu0HW7sosbAB",
+              "name": "Manzana",
+              "quantity": 0.16666666666666666,
+              "unit": "und"
+            },
+            {
+              "supplyId": "G06SiLwcEafPShAjF5Lk",
+              "name": "Durazno",
+              "quantity": 0.08333333333333333,
+              "unit": "g"
+            },
+            {
+              "supplyId": "rp58vljdMGtvlq1QPI1z",
+              "name": "Queso",
+              "quantity": 0.07692307692307693,
+              "unit": "Bloque"
+            },
+            {
+              "supplyId": "DeIL9YPHY4wn2r6xLjDE",
+              "name": "Crema de Leche Ensaladas",
+              "quantity": 0.3333333333333333,
+              "unit": "und"
+            },
+            {
+              "supplyId": "l1GmPIPDqRDXB6mz4Sc7",
+              "name": "Desechable Ens Pequeña",
+              "quantity": 1,
+              "unit": "Paquete"
+            }
+          ]
         },
         {
           "price": 22000,
+          "label": "Mediana",
           "scoops": 2,
           "imageUrl": "/Images/products/ensalada-frutas-mediana.png",
-          "label": "Mediana"
+          "recipe": [
+            {
+              "supplyId": "BShilodzthyQJkHi2riC",
+              "name": "Mango",
+              "quantity": 0.125,
+              "unit": "kg"
+            },
+            {
+              "supplyId": "Ugnw0DsBnGE3CYpTGm1x",
+              "name": "Papaya",
+              "quantity": 0.16666666666666666,
+              "unit": "g"
+            },
+            {
+              "supplyId": "1iHkGY7x8hP3aPpSsTiF",
+              "name": "Fresa",
+              "quantity": 0.05,
+              "unit": "g"
+            },
+            {
+              "supplyId": "RlEJxlSvmDxeAmHX3vSs",
+              "name": "Banano",
+              "quantity": 0.75,
+              "unit": "und"
+            },
+            {
+              "supplyId": "EI24vlkJeu0HW7sosbAB",
+              "name": "Manzana",
+              "quantity": 0.2,
+              "unit": "und"
+            },
+            {
+              "supplyId": "G06SiLwcEafPShAjF5Lk",
+              "name": "Durazno",
+              "quantity": 0.125,
+              "unit": "g"
+            },
+            {
+              "supplyId": "rp58vljdMGtvlq1QPI1z",
+              "name": "Queso",
+              "quantity": 0.1,
+              "unit": "Bloque"
+            },
+            {
+              "supplyId": "DeIL9YPHY4wn2r6xLjDE",
+              "name": "Crema de Leche Ensaladas",
+              "quantity": 0.2857142857142857,
+              "unit": "und"
+            },
+            {
+              "supplyId": "tSG8K70JlomFgG7OvKyk",
+              "name": "Desechable Ens Mediana y Grande",
+              "quantity": 1,
+              "unit": "Paquete"
+            }
+          ]
         },
         {
           "imageUrl": "/Images/products/ensalada-frutas-grande.png",
-          "label": "Grande",
+          "price": 27000,
           "scoops": 2,
-          "price": 27000
+          "label": "Grande",
+          "recipe": [
+            {
+              "supplyId": "BShilodzthyQJkHi2riC",
+              "name": "Mango",
+              "quantity": 0.2,
+              "unit": "kg"
+            },
+            {
+              "supplyId": "Ugnw0DsBnGE3CYpTGm1x",
+              "name": "Papaya",
+              "quantity": 0.25,
+              "unit": "g"
+            },
+            {
+              "supplyId": "1iHkGY7x8hP3aPpSsTiF",
+              "name": "Fresa",
+              "quantity": 0.07142857142857142,
+              "unit": "g"
+            },
+            {
+              "supplyId": "RlEJxlSvmDxeAmHX3vSs",
+              "name": "Banano",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "EI24vlkJeu0HW7sosbAB",
+              "name": "Manzana",
+              "quantity": 0.3333333333333333,
+              "unit": "und"
+            },
+            {
+              "supplyId": "rp58vljdMGtvlq1QPI1z",
+              "name": "Queso",
+              "quantity": 0.125,
+              "unit": "Bloque"
+            },
+            {
+              "supplyId": "DeIL9YPHY4wn2r6xLjDE",
+              "name": "Crema de Leche Ensaladas",
+              "quantity": 0.5,
+              "unit": "und"
+            },
+            {
+              "supplyId": "tSG8K70JlomFgG7OvKyk",
+              "name": "Desechable Ens Mediana y Grande",
+              "quantity": 1,
+              "unit": "Paquete"
+            }
+          ]
         }
       ],
-      "includedExtras": {
-        "sauces": [],
-        "toppings": [],
-        "note": "No incluye salsas ni toppings por defecto. Las adiciones son opcionales y tienen costo adicional."
-      },
-      "cardColor": null,
+      "requiresSauces": false,
       "name": "Ensalada de Frutas",
+      "cardColor": null,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "requiresFruitChoice": false,
       "isActive": true,
-      "scoops": null,
       "requiresFlavors": true,
       "ingredients": [
         "manzana",
@@ -713,60 +1324,95 @@
         "lechera",
         "barquillo"
       ],
-      "requiresSauces": false,
-      "category": "ensaladas"
+      "imageUrl": "/Images/products/ensalada-frutas-pequeña.jpeg",
+      "includedExtras": {
+        "toppings": [],
+        "sauces": [],
+        "note": "No incluye salsas ni toppings por defecto. Las adiciones son opcionales y tienen costo adicional."
+      }
     },
     {
       "id": "fruta-con-crema",
-      "name": "Fruta con crema",
       "imageUrl": "/Images/products/fruta_con_crema.png",
       "requiresFlavors": false,
-      "scoops": null,
-      "category": "ensaladas",
-      "description": "Porción de fruta fresca acompañada de deliciosa crema.",
-      "cardColor": null,
-      "requiresFruitChoice": true,
-      "requiresSauces": true,
       "isActive": true,
-      "variants": [
-        {
-          "label": "Fruta con crema",
-          "price": 13000
-        }
-      ],
-      "basePrice": null,
+      "requiresFruitChoice": true,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "cardColor": null,
+      "name": "Fruta con crema",
       "fruitOptions": [
         "Fresa",
         "Mango",
         "Durazno"
-      ]
+      ],
+      "requiresSauces": true,
+      "variants": [
+        {
+          "label": "Fruta con crema",
+          "price": 13000,
+          "recipe": []
+        }
+      ],
+      "category": "copas",
+      "basePrice": null,
+      "description": "Porción de fruta fresca acompañada de deliciosa crema.",
+      "salesCount": 5,
+      "scoops": null,
+      "recipe": []
     },
     {
       "id": "malteada",
       "requiresSauces": true,
-      "imageUrl": "/Images/products/malteada.png",
-      "name": "Malteada",
       "sauceOptions": [
         "Arequipe",
         "Lechera",
         "Mora",
         "Chocolate"
       ],
-      "requiresFlavors": true,
-      "requiresFruitChoice": false,
-      "isActive": true,
-      "category": "bebidas-calientes",
       "variants": [
         {
-          "label": "Malteada",
           "scoops": 2,
-          "price": 12000
+          "label": "Malteada",
+          "price": 12000,
+          "recipe": []
         }
       ],
-      "description": "Deliciosa malteada preparada con helado artesanal, leche y salsa a elegir."
+      "name": "Malteada",
+      "description": "Deliciosa malteada preparada con helado artesanal, leche y salsa a elegir.",
+      "salesCount": 5,
+      "category": "bebidas-calientes",
+      "requiresFlavors": true,
+      "imageUrl": "/Images/products/malteada.png",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "isActive": true,
+      "requiresFruitChoice": false,
+      "recipe": []
     },
     {
       "id": "oblea-cuchareable",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "isActive": true,
+      "imageUrl": "/Images/products/oblea-cuchareable.jpeg",
+      "includedExtras": {
+        "decoration": [
+          "trozos de oblea",
+          "arequipe"
+        ],
+        "note": "Se decora con trozos de oblea y arequipe sobre la chantilly. Sin toppings secos ni salsas adicionales por defecto."
+      },
+      "salesCount": 19,
+      "name": "Oblea Cuchareable",
+      "requiresFlavors": true,
+      "description": "Versión moderna de la oblea para disfrutar con cuchara. Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly. Decorada con trozos de oblea y arequipe extra encima. También disponible con una bola de helado Mimo's.",
       "ingredients": [
         "oblea",
         "arequipe",
@@ -777,101 +1423,233 @@
         "trozos de oblea (decoración)",
         "arequipe (decoración)"
       ],
-      "description": "Versión moderna de la oblea para disfrutar con cuchara. Trozos de oblea crujiente mezclados con arequipe, queso, crema de leche, fruta fresca (fresa, mango o durazno) y chantilly. Decorada con trozos de oblea y arequipe extra encima. También disponible con una bola de helado Mimo's.",
-      "category": "obleas",
-      "includedExtras": {
-        "decoration": [
-          "trozos de oblea",
-          "arequipe"
-        ],
-        "note": "Se decora con trozos de oblea y arequipe sobre la chantilly. Sin toppings secos ni salsas adicionales por defecto."
-      },
-      "salesCount": 8,
-      "name": "Oblea Cuchareable",
       "variants": [
         {
-          "label": "Sin helado",
+          "price": 13000,
           "scoops": 0,
-          "price": 13000
+          "label": "Sin helado",
+          "recipe": []
         },
         {
-          "label": "Con helado",
           "scoops": 1,
-          "price": 15000
+          "price": 15000,
+          "label": "Con helado",
+          "recipe": []
         }
       ],
-      "isActive": true,
       "requiresFruitChoice": true,
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/oblea-cuchareable.jpeg"
+      "category": "obleas",
+      "recipe": [
+        {
+          "supplyId": "hZpW8OCDO6yZQMFNfhIO",
+          "name": "Oblea Gruesa",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "EzgWSO8MusrXfaAt9XhV",
+          "name": "Arequipe",
+          "quantity": 0.04,
+          "unit": "g"
+        },
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 0.05,
+          "unit": "Bloque"
+        },
+        {
+          "supplyId": "Vlive457m1cTaOBLepUT",
+          "name": "Crema de Leche Oblea Cuchareable",
+          "quantity": 0.05,
+          "unit": "kg"
+        },
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 0.04,
+          "unit": "g"
+        },
+        {
+          "supplyId": "GTEgX4UYAWNrMtXo7wye",
+          "name": "Recipiente oblea cuchareable",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "JVAojvhljv0XSwKnpJDR",
+          "name": "Tapa Recipiente Oblea Cuchareable",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+          "name": "Cuchara Pequeña",
+          "quantity": 1,
+          "unit": "und"
+        }
+      ]
     },
     {
       "id": "oblea-tradicional",
-      "requiresFruitChoice": false,
-      "isActive": true,
+      "cardColor": null,
+      "requiresFlavors": false,
+      "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
+      "basePrice": null,
+      "requiresSauces": false,
       "variants": [
         {
           "hasFruit": false,
+          "price": 6000,
           "label": "Arequipe, crema y queso",
-          "price": 6000
+          "steps": [
+            {
+              "type": "sauces"
+            },
+            {
+              "type": "additions"
+            }
+          ],
+          "recipe": []
         },
         {
+          "hasFruit": true,
           "label": "Arequipe, crema, queso y fruta",
           "price": 9000,
-          "hasFruit": true
+          "steps": [
+            {
+              "type": "sauces"
+            },
+            {
+              "type": "fruits"
+            },
+            {
+              "type": "additions"
+            }
+          ],
+          "recipe": []
         }
       ],
-      "requiresSauces": false,
-      "imageUrl": "/Images/products/oblea-tradicional-fruta.jpeg",
-      "requiresFlavors": false,
-      "basePrice": null,
-      "category": "obleas",
-      "description": "Dos crujientes obleas de maíz unidas con arequipe, crema y queso. Sin salsas líquidas incluidas — solo los ingredientes clásicos que la hacen irresistible.",
+      "requiresFruitChoice": false,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
       "requiresToppings": false,
-      "scoops": null,
+      "description": "Dos crujientes obleas de maíz unidas con arequipe, crema y queso. Sin salsas líquidas incluidas — solo los ingredientes clásicos que la hacen irresistible.",
+      "isActive": true,
+      "salesCount": 23,
       "name": "Oblea Tradicional",
-      "cardColor": null,
-      "salesCount": 3
+      "category": "obleas",
+      "scoops": null,
+      "recipe": [
+        {
+          "supplyId": "hZpW8OCDO6yZQMFNfhIO",
+          "name": "Oblea Gruesa",
+          "quantity": 2,
+          "unit": "und"
+        },
+        {
+          "supplyId": "EzgWSO8MusrXfaAt9XhV",
+          "name": "Arequipe",
+          "quantity": 0.03,
+          "unit": "g"
+        },
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 0.04,
+          "unit": "Bloque"
+        },
+        {
+          "supplyId": "DeIL9YPHY4wn2r6xLjDE",
+          "name": "Crema de Leche Ensaladas",
+          "quantity": 0.02,
+          "unit": "und"
+        },
+        {
+          "supplyId": "ppE3CQpxHruoo2ZYT9mk",
+          "name": "Bolsa Metalizada Oblea",
+          "quantity": 1,
+          "unit": "und"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
     },
     {
       "id": "perico",
-      "description": "Café con leche caliente en presentación pequeña.",
       "variants": [
         {
           "label": "Perico",
-          "price": 2000
+          "price": 2000,
+          "recipe": []
         }
       ],
-      "category": "bebidas-calientes",
+      "requiresFlavors": false,
+      "imageUrl": "/Images/products/perico.png",
+      "name": "Perico",
+      "salesCount": 3,
+      "description": "Café con leche caliente en presentación pequeña.",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
       "isActive": true,
       "requiresFruitChoice": false,
-      "requiresFlavors": false,
       "customOptions": [
         {
           "name": "Azúcar",
-          "id": "azucar",
           "required": true,
+          "id": "azucar",
           "choices": [
             "Con azúcar",
             "Sin azúcar"
           ]
         }
       ],
-      "name": "Perico",
-      "imageUrl": "/Images/products/perico.png"
+      "category": "bebidas-calientes",
+      "recipe": [
+        {
+          "supplyId": "po8wRQbsZTpCFAV6j6LO",
+          "name": "Vasos 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "fkh6KRUxrTbiEpjWxvE0",
+          "name": "Tapas Vaso 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
     },
     {
       "id": "tinto",
-      "requiresFlavors": false,
       "name": "Tinto",
+      "imageUrl": "/Images/products/tinto.png",
+      "requiresFlavors": false,
+      "variants": [
+        {
+          "price": 1500,
+          "label": "Tinto",
+          "recipe": []
+        }
+      ],
+      "category": "bebidas-calientes",
+      "requiresFruitChoice": false,
       "customOptions": [
         {
-          "required": true,
+          "id": "intensidad",
           "choices": [
             "Claro",
             "Oscuro"
           ],
-          "id": "intensidad",
+          "required": true,
           "name": "Intensidad"
         },
         {
@@ -880,61 +1658,139 @@
             "Con azúcar",
             "Sin azúcar"
           ],
-          "name": "Azúcar",
-          "id": "azucar"
+          "id": "azucar",
+          "name": "Azúcar"
         }
       ],
-      "imageUrl": "/Images/products/tinto.png",
-      "variants": [
-        {
-          "label": "Tinto",
-          "price": 1500
-        }
-      ],
-      "category": "bebidas-calientes",
+      "isActive": true,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "salesCount": 13,
       "description": "Café negro caliente.",
-      "requiresFruitChoice": false,
-      "isActive": true
+      "recipe": [
+        {
+          "supplyId": "po8wRQbsZTpCFAV6j6LO",
+          "name": "Vasos 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "fkh6KRUxrTbiEpjWxvE0",
+          "name": "Tapas Vaso 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        }
+      ]
     },
     {
       "id": "vaso",
-      "requiresFruitChoice": false,
-      "isActive": true,
+      "requiresFlavors": true,
       "variants": [
         {
           "label": "Sencillo",
           "scoops": 1,
-          "price": 3500
+          "price": 3500,
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 1,
+              "unit": "und"
+            }
+          ]
         },
         {
-          "label": "Doble",
           "scoops": 2,
-          "price": 5500
+          "label": "Doble",
+          "price": 5500,
+          "recipe": [
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 2,
+              "unit": "und"
+            }
+          ]
         }
       ],
+      "name": "Vaso",
       "includedExtras": {
+        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
         "sauces": [
           "arequipe",
           "mora",
           "chocolate",
           "lecherita"
         ],
-        "note": "Cliente elige 1 salsa y 1 topping incluidos sin costo adicional",
         "toppings": [
           "maní",
           "bolitas de colores"
         ]
       },
-      "category": "helados",
-      "description": "Helado artesanal Mimo's servido en vaso desechable. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
-      "name": "Vaso",
       "imageUrl": "/Images/products/vaso.png",
-      "requiresFlavors": true,
-      "salesCount": 13
+      "description": "Helado artesanal Mimo's servido en vaso desechable. Incluye una salsa a elegir (arequipe, mora, chocolate o lecherita) y un topping a elegir (maní o bolitas de colores). Sencillo para un antojo rápido, doble para el que no se decide.",
+      "salesCount": 27,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "requiresFruitChoice": false,
+      "category": "helados",
+      "isActive": true,
+      "recipe": [
+        {
+          "supplyId": "po8wRQbsZTpCFAV6j6LO",
+          "name": "Vasos 7 ONZ",
+          "quantity": 1,
+          "unit": "Paquete"
+        },
+        {
+          "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+          "name": "Cuchara Pequeña",
+          "quantity": 1,
+          "unit": "und"
+        }
+      ]
     },
     {
       "id": "vaso-salpicon",
+      "scoops": null,
+      "basePrice": null,
       "description": "Frutas frescas (banano, papaya y mango o fresa) con helado Mimo's, lechera y barquillo, servidas en vaso para llevar. Sin queso incluido — puede agregarse como adición. Las adiciones extras tienen costo adicional.",
+      "salesCount": 29,
+      "category": "helados",
+      "variants": [
+        {
+          "scoops": 1,
+          "label": "Pequeño",
+          "price": 7000,
+          "recipe": []
+        },
+        {
+          "price": 9000,
+          "scoops": 1,
+          "label": "Mediano",
+          "recipe": []
+        },
+        {
+          "price": 11000,
+          "scoops": 1,
+          "label": "Grande",
+          "recipe": []
+        }
+      ],
+      "requiresSauces": false,
+      "name": "Vaso de Salpicón con Helado",
+      "cardColor": null,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "requiresFruitChoice": false,
+      "isActive": true,
+      "requiresFlavors": true,
       "ingredients": [
         "banano",
         "papaya",
@@ -943,34 +1799,1761 @@
         "lechera",
         "barquillo"
       ],
-      "category": "salpicon",
+      "imageUrl": "/Images/products/vaso-salpicon.jpeg",
       "includedExtras": {
         "queso": false,
         "note": "El vaso NO incluye queso (solo la copa lo incluye). Puede agregarse como adición con costo."
       },
-      "salesCount": 13,
-      "name": "Vaso de Salpicón con Helado",
-      "variants": [
-        {
-          "label": "Pequeño",
-          "scoops": 1,
-          "price": 7000
-        },
-        {
-          "label": "Mediano",
-          "scoops": 1,
-          "price": 9000
-        },
-        {
-          "label": "Grande",
-          "scoops": 1,
-          "price": 11000
-        }
-      ],
-      "isActive": true,
-      "requiresFruitChoice": false,
-      "requiresFlavors": true,
-      "imageUrl": "/Images/products/vaso-salpicon.jpeg"
+      "recipe": []
+    }
+  ],
+  "supplies": [
+    {
+      "id": "1aeTwgz5tOMxdLSQ3aGV",
+      "name": "Tapas vasos 7 ONZ",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "unit": "Paquete",
+      "minLimit": 1,
+      "category": "Desechables",
+      "currentStock": 5
+    },
+    {
+      "id": "1iHkGY7x8hP3aPpSsTiF",
+      "portionsPerUnit": 1,
+      "category": "Frutas",
+      "minLimit": 500,
+      "currentStock": 897.9286108296752,
+      "stockMinimum": 500,
+      "name": "Fresa",
+      "stockQuantity": 900,
+      "isVirtual": false,
+      "yieldDetails": "",
+      "unit": "g",
+      "updatedAt": {
+        "seconds": 1779829081,
+        "nanoseconds": 440000000
+      },
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "medium": 20,
+        "mini": 47,
+        "small": 27,
+        "large": 14
+      },
+      "yieldPerUnit": 1,
+      "minLimitUnit": "base"
+    },
+    {
+      "id": "1qNK9J2UUML9PoLGVbrA",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Alcohol",
+      "minLimit": 1,
+      "unit": "Litro",
+      "currentStock": 0,
+      "category": "Limpieza"
+    },
+    {
+      "id": "2wgyUDslSiQzvIs5UYY5",
+      "unit": "Rollo",
+      "minLimit": 1,
+      "currentStock": 3,
+      "category": "Limpieza",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Bolsa de Basura Negra"
+    },
+    {
+      "id": "4W3Z9a8JkmgfQJFjvMBY",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "updatedAt": {
+        "seconds": 1779831542,
+        "nanoseconds": 634000000
+      },
+      "currentStock": 246,
+      "minLimit": 40,
+      "stockMinimum": 40,
+      "unit": "und",
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "category": "Galletas",
+      "stockQuantity": 246,
+      "yieldPerUnit": 1,
+      "name": "Barquillos",
+      "purchaseUnit": "und"
+    },
+    {
+      "id": "4xmHF00Iewy5kq9Wbnbi",
+      "createdAt": {
+        "seconds": 1780534060,
+        "nanoseconds": 245000000
+      },
+      "yieldDetails": "",
+      "yieldPerSize": {
+        "small": null,
+        "medium": null,
+        "large": null,
+        "mini": null
+      },
+      "currentStock": 0,
+      "stockMinimum": 5,
+      "name": "Detergente en polvo",
+      "updatedAt": {
+        "seconds": 1780534060,
+        "nanoseconds": 245000000
+      },
+      "stockQuantity": 0,
+      "portionsPerUnit": 1,
+      "category": "Limpieza",
+      "yieldPerUnit": 1,
+      "minLimit": 5,
+      "isVirtual": false,
+      "unit": "g",
+      "minLimitUnit": "base",
+      "purchaseUnit": "g"
+    },
+    {
+      "id": "5P1eaIdw6E6wjeL0rZpP",
+      "purchaseUnit": "und",
+      "name": "Bolsa Blanca Grande",
+      "yieldPerUnit": 1,
+      "stockQuantity": 79,
+      "category": "Desechables",
+      "yieldPerSize": {
+        "medium": null,
+        "small": null,
+        "large": null,
+        "mini": null
+      },
+      "unit": "und",
+      "stockMinimum": 30,
+      "minLimit": 30,
+      "currentStock": 79,
+      "updatedAt": {
+        "seconds": 1779834971,
+        "nanoseconds": 998000000
+      },
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "isVirtual": false,
+      "yieldDetails": ""
+    },
+    {
+      "id": "5qhSguCJ26kJ60rEu9e1",
+      "updatedAt": {
+        "seconds": 1779826567,
+        "nanoseconds": 179000000
+      },
+      "currentStock": 1550,
+      "minLimit": 250,
+      "stockMinimum": 250,
+      "unit": "g",
+      "yieldDetails": "",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "name": "Salsa Chocolate",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": null,
+        "large": null,
+        "small": null,
+        "medium": null
+      },
+      "category": "Salsas",
+      "stockQuantity": 1550
+    },
+    {
+      "id": "6wY8QFazQNFhy0ABmTQh",
+      "minLimit": 5,
+      "stockMinimum": 5,
+      "unit": "kg",
+      "currentStock": 0,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": true,
+      "yieldDetails": "",
+      "purchaseUnit": "kg",
+      "name": "Helado",
+      "yieldPerUnit": 1,
+      "category": "Helados base",
+      "stockQuantity": 0,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      }
+    },
+    {
+      "id": "9qGHHRZeAJaEp3Wuij1q",
+      "category": "Desechables",
+      "currentStock": 5,
+      "minLimit": 1,
+      "unit": "Paquete",
+      "name": "Tapas vasos 13-16 ONZ",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "BShilodzthyQJkHi2riC",
+      "updatedAt": {
+        "seconds": 1779829054,
+        "nanoseconds": 604000000
+      },
+      "yieldDetails": "",
+      "unit": "kg",
+      "minLimitUnit": "base",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "kg",
+      "yieldPerSize": {
+        "small": 10,
+        "large": 5,
+        "medium": 8,
+        "mini": 38
+      },
+      "currentStock": 3125.8223684210534,
+      "category": "Frutas",
+      "minLimit": 500,
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "name": "Mango",
+      "stockQuantity": 3129,
+      "stockMinimum": 500
+    },
+    {
+      "id": "BjRxkwe3srI2fWfRbGC7",
+      "currentStock": 0,
+      "category": "Limpieza",
+      "unit": "und",
+      "minLimit": 1,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Guantes Amarillos (Loza)"
+    },
+    {
+      "id": "C06U5nqFkCEYYLZXz3fP",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "portionsPerUnit": 50,
+      "minLimitUnit": "internal",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "currentStock": 0,
+      "unit": "Paquete",
+      "stockMinimum": 0.2,
+      "minLimit": 0.2,
+      "yieldPerSize": {
+        "mini": null,
+        "small": null,
+        "large": null,
+        "medium": null
+      },
+      "stockQuantity": 0,
+      "category": "Desechables",
+      "yieldPerUnit": 50,
+      "name": "Tapas 12 ONZ",
+      "purchaseUnit": "Paquete"
+    },
+    {
+      "id": "CeC5qsFV8TNLMd7TKYC6",
+      "name": "Salsa Arequipe",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "unit": "Litro",
+      "minLimit": 1,
+      "category": "Salsas",
+      "currentStock": 5
+    },
+    {
+      "id": "CiZcLsMlleKivYXP3aaq",
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "category": "Lácteos",
+      "stockQuantity": 2230,
+      "yieldPerUnit": 1,
+      "name": "Lechera",
+      "purchaseUnit": "g",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "minLimit": 500,
+      "stockMinimum": 500,
+      "unit": "g",
+      "currentStock": 2230
+    },
+    {
+      "id": "D5rW3put2hglJPloNmwQ",
+      "currentStock": 0,
+      "category": "Limpieza",
+      "unit": "Caja",
+      "minLimit": 1,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Guantes de Nitrilo"
+    },
+    {
+      "id": "DeIL9YPHY4wn2r6xLjDE",
+      "updatedAt": {
+        "seconds": 1779834345,
+        "nanoseconds": 228000000
+      },
+      "currentStock": 30,
+      "unit": "und",
+      "stockMinimum": 5,
+      "minLimit": 5,
+      "yieldDetails": "",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "name": "Crema de Leche Ensaladas",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "und",
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "category": "Lácteos",
+      "stockQuantity": 30
+    },
+    {
+      "id": "E0qiLZpaFfMjvQjaVULT",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "category": "Desechables",
+      "currentStock": 5,
+      "name": "Vasos 16 ONZ",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "EAOxra4vl63GAoAJim5i",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Cucharas",
+      "currentStock": 10,
+      "category": "Desechables",
+      "unit": "Paquete",
+      "minLimit": 2
+    },
+    {
+      "id": "EI24vlkJeu0HW7sosbAB",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "updatedAt": {
+        "seconds": 1779829255,
+        "nanoseconds": 247000000
+      },
+      "stockMinimum": 3,
+      "minLimit": 3,
+      "unit": "und",
+      "currentStock": 4.666666666666666,
+      "yieldPerSize": {
+        "medium": 5,
+        "small": 6,
+        "large": 3,
+        "mini": null
+      },
+      "category": "Frutas",
+      "stockQuantity": 7,
+      "yieldPerUnit": 1,
+      "name": "Manzana",
+      "purchaseUnit": "und"
+    },
+    {
+      "id": "EwociEwaPPgEktIzGI7E",
+      "minLimit": 100,
+      "category": "Toppings",
+      "currentStock": 511.992,
+      "portionsPerUnit": 250,
+      "name": "Maní",
+      "stockQuantity": 20,
+      "isVirtual": false,
+      "lastRestockDate": {
+        "seconds": 1780528924,
+        "nanoseconds": 509000000
+      },
+      "stockMinimum": 100,
+      "lastPurchasePrice": 19,
+      "yieldDetails": "",
+      "unit": "g",
+      "updatedAt": {
+        "seconds": 1780528924,
+        "nanoseconds": 509000000
+      },
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "medium": null,
+        "mini": null,
+        "large": null,
+        "small": null
+      },
+      "minLimitUnit": "base",
+      "yieldPerUnit": 250
+    },
+    {
+      "id": "EzgWSO8MusrXfaAt9XhV",
+      "minLimitUnit": "base",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "yieldDetails": "",
+      "unit": "g",
+      "stockMinimum": 500,
+      "isVirtual": false,
+      "name": "Arequipe",
+      "stockQuantity": 3260,
+      "portionsPerUnit": 1,
+      "currentStock": 3254.803999999999,
+      "category": "Lácteos",
+      "minLimit": 500
+    },
+    {
+      "id": "FXmLB3gV5ar51UbPnZgp",
+      "purchaseUnit": "Paquete",
+      "name": "Vasos 10 ONZ",
+      "yieldPerUnit": 50,
+      "stockQuantity": 5,
+      "category": "Desechables",
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "currentStock": 5,
+      "unit": "Paquete",
+      "stockMinimum": 0.2,
+      "minLimit": 0.2,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "portionsPerUnit": 50,
+      "minLimitUnit": "internal",
+      "isVirtual": false,
+      "yieldDetails": ""
+    },
+    {
+      "id": "G06SiLwcEafPShAjF5Lk",
+      "purchaseUnit": "g",
+      "yieldPerUnit": 1,
+      "name": "Durazno",
+      "stockQuantity": 700,
+      "category": "Frutas",
+      "yieldPerSize": {
+        "large": null,
+        "small": 12,
+        "medium": 8,
+        "mini": 20
+      },
+      "unit": "g",
+      "minLimit": 200,
+      "stockMinimum": 200,
+      "currentStock": 698.25,
+      "updatedAt": {
+        "seconds": 1779829227,
+        "nanoseconds": 107000000
+      },
+      "isVirtual": false,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "yieldDetails": ""
+    },
+    {
+      "id": "GTEgX4UYAWNrMtXo7wye",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Recipiente oblea cuchareable",
+      "unit": "Paquete",
+      "minLimit": 1,
+      "currentStock": 5,
+      "category": "Desechables"
+    },
+    {
+      "id": "GVzW5WJVA3Fzb017lsQL",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Servilletas para Conos",
+      "unit": "Paquete",
+      "minLimit": 1,
+      "currentStock": 0,
+      "category": "Desechables"
+    },
+    {
+      "id": "JVAojvhljv0XSwKnpJDR",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "category": "Desechables",
+      "currentStock": 0,
+      "name": "Tapa Recipiente Oblea Cuchareable",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "KHRe2Ullq5t4vdZcTBKF",
+      "unit": "Paquete",
+      "minLimit": 1,
+      "currentStock": 0,
+      "category": "Desechables",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Tapas Vaso 9, 10 y 12 ONZ"
+    },
+    {
+      "id": "MC6dg61uJLTDUbDACAyu",
+      "purchaseUnit": "kg",
+      "yieldPerUnit": 1,
+      "name": "Bases",
+      "category": "Bases",
+      "stockQuantity": 0,
+      "yieldPerSize": {
+        "medium": null,
+        "small": null,
+        "large": null,
+        "mini": null
+      },
+      "currentStock": 0,
+      "unit": "kg",
+      "stockMinimum": 5,
+      "minLimit": 5,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "isVirtual": true,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "yieldDetails": ""
+    },
+    {
+      "id": "MGaWY2Ey0iX9M9gNlqTP",
+      "name": "Polvo Fresa",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "medium": null,
+        "large": null,
+        "small": null,
+        "mini": null
+      },
+      "stockQuantity": 11,
+      "category": "Varios",
+      "updatedAt": {
+        "seconds": 1779828052,
+        "nanoseconds": 402000000
+      },
+      "currentStock": 11,
+      "minLimit": 10,
+      "unit": "g",
+      "stockMinimum": 10,
+      "yieldDetails": "",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false
+    },
+    {
+      "id": "Mfh6bESEfhfADxYf613O",
+      "category": "Desechables",
+      "currentStock": 0,
+      "unit": "Paquete",
+      "minLimit": 1,
+      "name": "Tapas Vaso 13, 14 y 16 ONZ",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "OQJXBXLD14HamYLZHzH1",
+      "yieldPerSize": {
+        "medium": null,
+        "small": null,
+        "large": null,
+        "mini": null
+      },
+      "stockQuantity": 273,
+      "category": "Frutas",
+      "name": "Uva",
+      "yieldPerUnit": 200,
+      "purchaseUnit": "g",
+      "yieldDetails": "",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 200,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1779829428,
+        "nanoseconds": 12000000
+      },
+      "currentStock": 272.91560000000004,
+      "unit": "g",
+      "minLimit": 200,
+      "stockMinimum": 200
+    },
+    {
+      "id": "QiSGiB8rBXXNvMkuOq3C",
+      "purchaseUnit": "Litro",
+      "unit": "Litro",
+      "minLimitUnit": "base",
+      "isVirtual": false,
+      "minLimit": 5,
+      "yieldPerUnit": 1,
+      "category": "Lácteos",
+      "updatedAt": {
+        "seconds": 1780534035,
+        "nanoseconds": 548000000
+      },
+      "name": "Leche deslactosada",
+      "portionsPerUnit": 1,
+      "stockQuantity": 0,
+      "currentStock": 0,
+      "stockMinimum": 5,
+      "yieldPerSize": {
+        "small": null,
+        "medium": null,
+        "mini": null,
+        "large": null
+      },
+      "yieldDetails": "",
+      "createdAt": {
+        "seconds": 1780534035,
+        "nanoseconds": 548000000
+      }
+    },
+    {
+      "id": "Rdn1Jhe0oEsdNPabQKP2",
+      "yieldPerUnit": 1,
+      "name": "Cucharas grandes",
+      "purchaseUnit": "und",
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "category": "Desechables",
+      "stockQuantity": 22,
+      "updatedAt": {
+        "seconds": 1779834579,
+        "nanoseconds": 876000000
+      },
+      "currentStock": 22,
+      "stockMinimum": 30,
+      "minLimit": 30,
+      "unit": "und",
+      "yieldDetails": "100",
+      "isVirtual": false,
+      "minLimitUnit": "internal",
+      "portionsPerUnit": 1
+    },
+    {
+      "id": "RlEJxlSvmDxeAmHX3vSs",
+      "yieldPerSize": {
+        "medium": 1,
+        "large": 1,
+        "small": 2,
+        "mini": 4
+      },
+      "category": "Frutas",
+      "stockQuantity": 30,
+      "yieldPerUnit": 1,
+      "name": "Banano",
+      "purchaseUnit": "und",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "updatedAt": {
+        "seconds": 1779828912,
+        "nanoseconds": 543000000
+      },
+      "currentStock": 17.5,
+      "stockMinimum": 5,
+      "unit": "und",
+      "minLimit": 5
+    },
+    {
+      "id": "Stnj272zvsybJtCnuOTO",
+      "currentStock": 430.99800000000005,
+      "minLimit": 70,
+      "category": "Toppings",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "name": "Bolitas de Colores",
+      "stockQuantity": 450,
+      "stockMinimum": 70,
+      "updatedAt": {
+        "seconds": 1779829632,
+        "nanoseconds": 247000000
+      },
+      "yieldDetails": "",
+      "unit": "g",
+      "minLimitUnit": "base",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "large": null,
+        "small": null,
+        "medium": null,
+        "mini": null
+      }
+    },
+    {
+      "id": "TQ4YQg9fa70LeSC1wuCP",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "yieldDetails": "",
+      "unit": "und",
+      "minLimit": 4,
+      "stockMinimum": 4,
+      "currentStock": 1,
+      "updatedAt": {
+        "seconds": 1779834434,
+        "nanoseconds": 927000000
+      },
+      "stockQuantity": 1,
+      "category": "Bases",
+      "yieldPerSize": {
+        "mini": null,
+        "large": null,
+        "small": null,
+        "medium": null
+      },
+      "purchaseUnit": "und",
+      "name": "Chocorramo",
+      "yieldPerUnit": 1
+    },
+    {
+      "id": "TzmxGqTn9mmlLmu3JmHp",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "updatedAt": {
+        "seconds": 1779829596,
+        "nanoseconds": 23000000
+      },
+      "minLimit": 50,
+      "unit": "g",
+      "stockMinimum": 50,
+      "currentStock": 270,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "large": null,
+        "small": null
+      },
+      "stockQuantity": 270,
+      "category": "Toppings",
+      "yieldPerUnit": 1,
+      "name": "Chips de Chocolate",
+      "purchaseUnit": "g"
+    },
+    {
+      "id": "U26n3PI1bpm5LY6q7MM6",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "yieldDetails": "",
+      "unit": "g",
+      "stockMinimum": 250,
+      "minLimit": 250,
+      "currentStock": 1090,
+      "updatedAt": {
+        "seconds": 1779826664,
+        "nanoseconds": 822000000
+      },
+      "category": "Salsas",
+      "stockQuantity": 1090,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "large": null,
+        "small": null
+      },
+      "purchaseUnit": "g",
+      "name": "Salsa Mora",
+      "yieldPerUnit": 1
+    },
+    {
+      "id": "UCg3yaiPLE7GwIErUAWi",
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "isVirtual": false,
+      "yieldDetails": "",
+      "currentStock": 108,
+      "unit": "und",
+      "stockMinimum": 30,
+      "minLimit": 30,
+      "updatedAt": {
+        "seconds": 1779835132,
+        "nanoseconds": 317000000
+      },
+      "stockQuantity": 108,
+      "category": "Desechables",
+      "yieldPerSize": {
+        "medium": null,
+        "large": null,
+        "small": null,
+        "mini": null
+      },
+      "purchaseUnit": "und",
+      "name": "Bolsa Blanca Pequeña",
+      "yieldPerUnit": 1
+    },
+    {
+      "id": "UU4J4b76goxUs5qqd2lN",
+      "category": "Desechables",
+      "currentStock": 5,
+      "unit": "Paquete",
+      "minLimit": 1,
+      "name": "Desechable ensalada mini",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "Ugnw0DsBnGE3CYpTGm1x",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "yieldDetails": "",
+      "currentStock": 3497.350000000001,
+      "unit": "g",
+      "minLimit": 750,
+      "stockMinimum": 750,
+      "updatedAt": {
+        "seconds": 1779829382,
+        "nanoseconds": 831000000
+      },
+      "category": "Frutas",
+      "stockQuantity": 3500,
+      "yieldPerSize": {
+        "medium": 6,
+        "large": 4,
+        "small": 8,
+        "mini": 30
+      },
+      "purchaseUnit": "g",
+      "yieldPerUnit": 1,
+      "name": "Papaya"
+    },
+    {
+      "id": "VKqLaYKlpT8K8HSTmjM5",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "yieldDetails": "",
+      "minLimit": 10,
+      "unit": "g",
+      "stockMinimum": 10,
+      "currentStock": 11,
+      "updatedAt": {
+        "seconds": 1779828063,
+        "nanoseconds": 669000000
+      },
+      "stockQuantity": 11,
+      "category": "Varios",
+      "yieldPerSize": {
+        "mini": null,
+        "large": null,
+        "small": null,
+        "medium": null
+      },
+      "purchaseUnit": "g",
+      "yieldPerUnit": 1,
+      "name": "Polvo Mango"
+    },
+    {
+      "id": "VckYsY5I7V64eSh8uXsz",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Vasos 13 ONZ",
+      "currentStock": 5,
+      "category": "Desechables",
+      "unit": "Paquete",
+      "minLimit": 1
+    },
+    {
+      "id": "Vlive457m1cTaOBLepUT",
+      "minLimit": 1,
+      "unit": "kg",
+      "category": "Lácteos",
+      "currentStock": 0,
+      "name": "Crema de Leche Oblea Cuchareable",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "W7tXHvoU7mFmfAc8x2Dv",
+      "yieldPerUnit": 1,
+      "name": "Cucharas pequeñas",
+      "purchaseUnit": "und",
+      "yieldPerSize": {
+        "mini": null,
+        "large": null,
+        "small": null,
+        "medium": null
+      },
+      "stockQuantity": 116,
+      "category": "Desechables",
+      "updatedAt": {
+        "seconds": 1779834532,
+        "nanoseconds": 983000000
+      },
+      "unit": "und",
+      "minLimit": 30,
+      "stockMinimum": 30,
+      "currentStock": 116,
+      "yieldDetails": "",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base"
+    },
+    {
+      "id": "XGFSXbKGeXrx8dgd7FER",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Bolsa de Basura Verde",
+      "unit": "Rollo",
+      "minLimit": 1,
+      "currentStock": 0,
+      "category": "Limpieza"
+    },
+    {
+      "id": "Xe3cWRrPgyYuKPqEQQ6r",
+      "yieldDetails": "",
+      "minLimitUnit": "internal",
+      "portionsPerUnit": 50,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "currentStock": 0,
+      "minLimit": 0.2,
+      "unit": "Paquete",
+      "stockMinimum": 0.2,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "category": "Desechables",
+      "stockQuantity": 0,
+      "name": "Tapas 10 ONZ",
+      "yieldPerUnit": 50,
+      "purchaseUnit": "Paquete"
+    },
+    {
+      "id": "YNVnaHSJNokkNpsCDd5G",
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "large": null,
+        "small": null
+      },
+      "stockQuantity": 100,
+      "category": "Varios",
+      "yieldPerUnit": 1,
+      "name": "Azúcar Pulverizada",
+      "purchaseUnit": "g",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "updatedAt": {
+        "seconds": 1779827921,
+        "nanoseconds": 124000000
+      },
+      "minLimit": 100,
+      "unit": "g",
+      "stockMinimum": 100,
+      "currentStock": 100
+    },
+    {
+      "id": "YzC6Lh3PQssKLIVvzVFZ",
+      "yieldPerUnit": 1,
+      "name": "Fruta",
+      "purchaseUnit": "kg",
+      "yieldPerSize": {
+        "medium": null,
+        "small": null,
+        "large": null,
+        "mini": null
+      },
+      "stockQuantity": 0,
+      "category": "Frutas",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "currentStock": -9,
+      "minLimit": 5,
+      "unit": "kg",
+      "stockMinimum": 5,
+      "yieldDetails": "",
+      "isVirtual": true,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1
+    },
+    {
+      "id": "Zn0HGZ9pBrCLdhnPEc7S",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "yieldDetails": "",
+      "stockMinimum": 40,
+      "unit": "und",
+      "minLimit": 40,
+      "currentStock": 234,
+      "updatedAt": {
+        "seconds": 1779834086,
+        "nanoseconds": 885000000
+      },
+      "category": "Galletas",
+      "stockQuantity": 234,
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "purchaseUnit": "und",
+      "name": "Conos",
+      "yieldPerUnit": 1
+    },
+    {
+      "id": "aJbRQ0BEki0eFF7m2K7w",
+      "name": "Jabón de Loza",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "minLimit": 1,
+      "unit": "Tarro",
+      "category": "Limpieza",
+      "currentStock": 0
+    },
+    {
+      "id": "ajOtBYHhB31LOYrwNnxD",
+      "minLimit": 1,
+      "unit": "Tarro",
+      "currentStock": 0,
+      "category": "Limpieza",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Jabón de Manos"
+    },
+    {
+      "id": "bnfE86kQoryoGglyhMXI",
+      "yieldDetails": "",
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1779828167,
+        "nanoseconds": 182000000
+      },
+      "minLimit": 20,
+      "unit": "g",
+      "stockMinimum": 20,
+      "currentStock": 50,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "stockQuantity": 50,
+      "category": "Varios",
+      "name": "Salero",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "g"
+    },
+    {
+      "id": "e7oncW38cWwihqNLgWk0",
+      "minLimitUnit": "internal",
+      "portionsPerUnit": 49,
+      "isVirtual": false,
+      "yieldDetails": "",
+      "minLimit": 0.20408163265306123,
+      "unit": "Paquete",
+      "stockMinimum": 0.20408163265306123,
+      "currentStock": 0,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "category": "Desechables",
+      "stockQuantity": 0,
+      "yieldPerSize": {
+        "large": null,
+        "small": null,
+        "medium": null,
+        "mini": null
+      },
+      "purchaseUnit": "Paquete",
+      "name": "Tapas 7 ONZ",
+      "yieldPerUnit": 49
+    },
+    {
+      "id": "fOUftWtgphnmRHdvEQ04",
+      "yieldPerSize": {
+        "mini": null,
+        "large": null,
+        "small": null,
+        "medium": null
+      },
+      "stockQuantity": 500,
+      "category": "Lácteos",
+      "name": "Chantilly",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "g",
+      "yieldDetails": "",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "minLimit": 10,
+      "unit": "g",
+      "stockMinimum": 10,
+      "currentStock": 500
+    },
+    {
+      "id": "fkh6KRUxrTbiEpjWxvE0",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Tapas Vaso 7 ONZ",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "currentStock": 0,
+      "category": "Desechables"
+    },
+    {
+      "id": "hIm2jEqncXNFfnzz168L",
+      "name": "Desechable ensalada pequeña",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "unit": "Paquete",
+      "minLimit": 1,
+      "category": "Desechables",
+      "currentStock": 5
+    },
+    {
+      "id": "hZpW8OCDO6yZQMFNfhIO",
+      "minLimit": 40,
+      "stockMinimum": 40,
+      "unit": "und",
+      "currentStock": 234,
+      "updatedAt": {
+        "seconds": 1779833313,
+        "nanoseconds": 473000000
+      },
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "isVirtual": false,
+      "yieldDetails": "",
+      "purchaseUnit": "und",
+      "name": "Oblea Gruesa",
+      "yieldPerUnit": 1,
+      "stockQuantity": 234,
+      "category": "Galletas",
+      "yieldPerSize": {
+        "mini": null,
+        "small": null,
+        "large": null,
+        "medium": null
+      }
+    },
+    {
+      "id": "imBHqp8cJkASnCVEoCFD",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Desechable ensalada mediana-grande",
+      "currentStock": 5,
+      "category": "Desechables",
+      "unit": "Paquete",
+      "minLimit": 1
+    },
+    {
+      "id": "j6uusMRF7v5MKxzS0rQy",
+      "name": "Servilletas",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "minLimit": 2,
+      "unit": "Paquete",
+      "category": "Desechables",
+      "currentStock": 10
+    },
+    {
+      "id": "jCJMf7ub9G0DY6FQJd1l",
+      "category": "Limpieza",
+      "currentStock": 0,
+      "minLimit": 1,
+      "unit": "Rollo",
+      "name": "Bolsa de Basura Pequeña",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "jX7cFWZhLXRNUMIlblvN",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "yieldDetails": "",
+      "stockMinimum": 1,
+      "minLimit": 1,
+      "unit": "Rollo",
+      "currentStock": 1,
+      "updatedAt": {
+        "seconds": 1779828124,
+        "nanoseconds": 664000000
+      },
+      "category": "Varios",
+      "stockQuantity": 1,
+      "yieldPerSize": {
+        "large": null,
+        "small": null,
+        "medium": null,
+        "mini": null
+      },
+      "purchaseUnit": "Rollo",
+      "yieldPerUnit": 1,
+      "name": "Rollo Caja Registradora"
+    },
+    {
+      "id": "l1GmPIPDqRDXB6mz4Sc7",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Desechable Ens Pequeña",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "currentStock": 0,
+      "category": "Desechables"
+    },
+    {
+      "id": "lP4myTlDH6gXL2YGiJH5",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "category": "Desechables",
+      "currentStock": 0,
+      "name": "Desechable Pequeño",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "mtVxskso6RCadP9Es6XZ",
+      "yieldPerUnit": 1,
+      "minLimitUnit": "base",
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "purchaseUnit": "und",
+      "updatedAt": {
+        "seconds": 1779834423,
+        "nanoseconds": 824000000
+      },
+      "unit": "und",
+      "yieldDetails": "",
+      "stockMinimum": 4,
+      "isVirtual": false,
+      "stockQuantity": 8,
+      "name": "Brownie",
+      "portionsPerUnit": 1,
+      "currentStock": 2,
+      "minLimit": 4,
+      "category": "Bases"
+    },
+    {
+      "id": "o97hn4XJ0WInMW8mHLay",
+      "updatedAt": {
+        "seconds": 1779828582,
+        "nanoseconds": 949000000
+      },
+      "stockMinimum": 3,
+      "minLimit": 3,
+      "unit": "und",
+      "currentStock": 9,
+      "yieldDetails": "",
+      "portionsPerUnit": 6,
+      "minLimitUnit": "base",
+      "isVirtual": false,
+      "name": "Kiwi",
+      "yieldPerUnit": 6,
+      "purchaseUnit": "und",
+      "yieldPerSize": {
+        "medium": 6,
+        "large": 6,
+        "small": 6,
+        "mini": 6
+      },
+      "category": "Frutas",
+      "stockQuantity": 9
+    },
+    {
+      "id": "po8wRQbsZTpCFAV6j6LO",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Vasos 7 ONZ",
+      "currentStock": 5,
+      "category": "Desechables",
+      "minLimit": 1,
+      "unit": "Paquete"
+    },
+    {
+      "id": "ppE3CQpxHruoo2ZYT9mk",
+      "unit": "und",
+      "stockMinimum": 15,
+      "minLimit": 15,
+      "currentStock": 61,
+      "updatedAt": {
+        "seconds": 1779921327,
+        "nanoseconds": 787000000
+      },
+      "isVirtual": false,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "yieldDetails": "",
+      "purchaseUnit": "und",
+      "yieldPerUnit": 1,
+      "name": "Bolsa Metalizada Oblea",
+      "category": "Desechables",
+      "stockQuantity": 61,
+      "yieldPerSize": {
+        "mini": null,
+        "small": null,
+        "large": null,
+        "medium": null
+      }
+    },
+    {
+      "id": "ps7wqNlFnzvobu0SwAyX",
+      "purchaseUnit": "und",
+      "yieldPerUnit": 1,
+      "name": "Balas Chantillera",
+      "category": "Varios",
+      "stockQuantity": 4,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "currentStock": 4,
+      "stockMinimum": 2,
+      "minLimit": 2,
+      "unit": "und",
+      "updatedAt": {
+        "seconds": 1779827949,
+        "nanoseconds": 855000000
+      },
+      "isVirtual": false,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "yieldDetails": ""
+    },
+    {
+      "id": "rY85sX3ZHVmqN86c7nh3",
+      "isVirtual": false,
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "yieldDetails": "",
+      "stockMinimum": 4,
+      "minLimit": 4,
+      "unit": "und",
+      "currentStock": 1,
+      "updatedAt": {
+        "seconds": 1779834445,
+        "nanoseconds": 827000000
+      },
+      "category": "Bases",
+      "stockQuantity": 1,
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "purchaseUnit": "und",
+      "yieldPerUnit": 1,
+      "name": "Jet Wafer"
+    },
+    {
+      "id": "rb3qDHM3r7c46gAgAD9c",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "minLimit": 5,
+      "stockMinimum": 5,
+      "unit": "und",
+      "currentStock": -25,
+      "yieldDetails": "",
+      "isVirtual": true,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "yieldPerUnit": 1,
+      "name": "Toppings",
+      "purchaseUnit": "und",
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "category": "Toppings",
+      "stockQuantity": 0
+    },
+    {
+      "id": "rp58vljdMGtvlq1QPI1z",
+      "updatedAt": {
+        "seconds": 1779827511,
+        "nanoseconds": 131000000
+      },
+      "stockMinimum": 1000,
+      "minLimit": 1000,
+      "unit": "Bloque",
+      "currentStock": 1300,
+      "yieldDetails": "",
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "isVirtual": false,
+      "name": "Queso",
+      "yieldPerUnit": 1,
+      "purchaseUnit": "Bloque",
+      "yieldPerSize": {
+        "mini": null,
+        "small": null,
+        "large": null,
+        "medium": null
+      },
+      "category": "Lácteos",
+      "stockQuantity": 1300
+    },
+    {
+      "id": "s2XVzIPeFC3sW9yCqkLi",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Tapas vasos 10 ONZ",
+      "currentStock": 5,
+      "category": "Desechables",
+      "unit": "Paquete",
+      "minLimit": 1
+    },
+    {
+      "id": "shbcn9AHwHK2HlUFEmFd",
+      "yieldPerSize": {
+        "small": null,
+        "large": null,
+        "medium": null,
+        "mini": null
+      },
+      "category": "Desechables",
+      "stockQuantity": 0,
+      "yieldPerUnit": 50,
+      "name": "Vasos 12 ONZ",
+      "purchaseUnit": "Paquete",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "minLimitUnit": "internal",
+      "portionsPerUnit": 50,
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "stockMinimum": 0.2,
+      "unit": "Paquete",
+      "minLimit": 0.2,
+      "currentStock": 0
+    },
+    {
+      "id": "ssJyfaJEBGaDIbjvNVDs",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Límpido",
+      "currentStock": 0,
+      "category": "Limpieza",
+      "minLimit": 1,
+      "unit": "Litro"
+    },
+    {
+      "id": "tSG8K70JlomFgG7OvKyk",
+      "currentStock": 0,
+      "category": "Desechables",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Desechable Ens Mediana y Grande"
+    },
+    {
+      "id": "u8tJN4bht1ogp30rBeUX",
+      "minLimit": 1,
+      "unit": "Paquete",
+      "category": "Desechables",
+      "currentStock": 5,
+      "name": "Tapa oblea cuchareable",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "uOU7jJwk3v9b2OEQhlBk",
+      "portionsPerUnit": 1,
+      "minLimitUnit": "base",
+      "isVirtual": true,
+      "yieldDetails": "",
+      "currentStock": -25,
+      "minLimit": 5,
+      "stockMinimum": 5,
+      "unit": "und",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "stockQuantity": 0,
+      "category": "Salsas",
+      "yieldPerSize": {
+        "mini": null,
+        "small": null,
+        "large": null,
+        "medium": null
+      },
+      "purchaseUnit": "und",
+      "name": "Salsa",
+      "yieldPerUnit": 1
+    },
+    {
+      "id": "wA0VyC0dYTdYxUqFISM8",
+      "category": "Limpieza",
+      "currentStock": 0,
+      "minLimit": 1,
+      "unit": "kg",
+      "name": "Jabón en Polvo",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      }
+    },
+    {
+      "id": "xW74Gmt0srs3pUu5Y4Xi",
+      "yieldDetails": "",
+      "portionsPerUnit": 50,
+      "minLimitUnit": "internal",
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1779833709,
+        "nanoseconds": 711000000
+      },
+      "currentStock": 116,
+      "minLimit": 0.6,
+      "stockMinimum": 0.6,
+      "unit": "und",
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "category": "Galletas",
+      "stockQuantity": 116,
+      "name": "Cuchara Pequeña",
+      "yieldPerUnit": 50,
+      "purchaseUnit": "und"
+    },
+    {
+      "id": "xxe4z3w0ji3J5vFrRQYr",
+      "yieldDetails": "",
+      "isVirtual": false,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "updatedAt": {
+        "seconds": 1779832862,
+        "nanoseconds": 577000000
+      },
+      "unit": "und",
+      "stockMinimum": 15,
+      "minLimit": 15,
+      "currentStock": 4,
+      "yieldPerSize": {
+        "mini": null,
+        "large": null,
+        "small": null,
+        "medium": null
+      },
+      "category": "Galletas",
+      "stockQuantity": 4,
+      "yieldPerUnit": 1,
+      "name": "Conchitas",
+      "purchaseUnit": "und"
+    },
+    {
+      "id": "y4FIerlVP3TrmeOdAWP5",
+      "purchaseUnit": "und",
+      "name": "Oblea delgada",
+      "yieldPerUnit": 50,
+      "category": "Galletas",
+      "stockQuantity": 189,
+      "yieldPerSize": {
+        "large": null,
+        "small": null,
+        "medium": null,
+        "mini": null
+      },
+      "stockMinimum": 0.8,
+      "minLimit": 0.8,
+      "unit": "und",
+      "currentStock": 189,
+      "updatedAt": {
+        "seconds": 1779833291,
+        "nanoseconds": 6000000
+      },
+      "minLimitUnit": "internal",
+      "portionsPerUnit": 50,
+      "isVirtual": false,
+      "yieldDetails": ""
+    },
+    {
+      "id": "yGJIo16EOdpC10Fjbzs9",
+      "purchaseUnit": "und",
+      "yieldPerUnit": 50,
+      "name": "Cucuruchos",
+      "stockQuantity": 47,
+      "category": "Galletas",
+      "yieldPerSize": {
+        "mini": null,
+        "medium": null,
+        "small": null,
+        "large": null
+      },
+      "currentStock": 47,
+      "unit": "und",
+      "minLimit": 0.8,
+      "stockMinimum": 0.8,
+      "updatedAt": {
+        "seconds": 1779833082,
+        "nanoseconds": 818000000
+      },
+      "isVirtual": false,
+      "minLimitUnit": "internal",
+      "portionsPerUnit": 50,
+      "yieldDetails": ""
+    },
+    {
+      "id": "yysbIBhsD2AFGby4kwwt",
+      "updatedAt": {
+        "seconds": 1779756244,
+        "nanoseconds": 572000000
+      },
+      "name": "Tapas",
+      "unit": "Paquete",
+      "minLimit": 2,
+      "currentStock": 10,
+      "category": "Desechables"
     }
   ]
 }

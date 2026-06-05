@@ -216,8 +216,9 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="w-10 text-center font-black text-sm text-primary">
-                            {ingredient.quantity}
+                          <span className="min-w-[48px] px-2 text-center font-black text-sm text-primary flex items-center justify-center gap-1">
+                            {Number.isInteger(ingredient.quantity) ? ingredient.quantity : Number(ingredient.quantity).toFixed(4).replace(/\.?0+$/, '')}
+                            <span className="text-[9px] opacity-70 font-bold uppercase">{supply.unit}</span>
                           </span>
                           <button
                             onClick={() => updateQuantity(supply.id, 0.5)}
