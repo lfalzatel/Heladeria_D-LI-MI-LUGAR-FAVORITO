@@ -67,7 +67,7 @@ import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { StatCard, PurchaseCard } from '../components/SupplyStats';
 import { PeriodFilter, PERIOD_LABELS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
-import { TrendChart } from '../components/DashboardComponents';
+import { TrendChart, CalendarModal } from '../components/DashboardComponents';
 import { notifyUser, notifyAdmins } from '../lib/notifications';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
@@ -178,6 +178,7 @@ export default function Management() {
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [showHistoryHeatmap, setShowHistoryHeatmap] = useState(false);
+  const [showPurchaseCalendar, setShowPurchaseCalendar] = useState(false);
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<Date | null>(null);
 
   // ── User Edit State ──────────────────────────────────────────────────────
@@ -1374,7 +1375,7 @@ export default function Management() {
                     <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">Compras</h2>
                     <div className="flex items-center gap-2">
                       <button 
-                        onClick={() => toast.info('Seleccionar fecha exacta')}
+                        onClick={() => setShowPurchaseCalendar(true)}
                         className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
                         title="Calendario"
                       >
@@ -1418,6 +1419,18 @@ export default function Management() {
                       ))}
                     </div>
                   )}
+
+                  <CalendarModal 
+                    isOpen={showPurchaseCalendar}
+                    onClose={() => setShowPurchaseCalendar(false)}
+                    allActivity={purchases.map(p => ({ 
+                      hour: p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt) 
+                    }))}
+                    onSelectDate={(date) => {
+                      setSelectedDate(date);
+                      setPeriod('today');
+                    }}
+                  />
 
                   {/* Week Selector */}
                   {!selectedDate && period === 'week' && (

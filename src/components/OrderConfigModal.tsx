@@ -236,7 +236,20 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
         setSelectedVariant(product.variants?.length === 1 ? product.variants[0] : null);
         setSelectedFlavors([]);
         // Salpicón: Banano y Papaya incluidos por defecto. El cliente elige Fresa o Mango.
-        setSelectedFrutas(isSalpicon ? ['Banano', 'Papaya'] : []);
+        if (isSalpicon) {
+          setSelectedFrutas(['Banano', 'Papaya']);
+        } else if (product.category?.toLowerCase() === 'ensaladas') {
+          const initVariant = product.variants?.length === 1 ? product.variants[0] : null;
+          if (initVariant?.label.toLowerCase().includes('mini')) {
+            setSelectedFrutas(FRUTAS_DEFAULT.filter(f => f !== 'Kiwi'));
+          } else if (initVariant) {
+            setSelectedFrutas(FRUTAS_DEFAULT);
+          } else {
+            setSelectedFrutas([]);
+          }
+        } else {
+          setSelectedFrutas([]);
+        }
         setSelectedSauces([]);
         setSelectedIncludedToppings([]);
         setSelectedAdditions([]);
@@ -566,6 +579,12 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               if (cat === 'salpicon') {
                                 // Resetear a las frutas fijas. El cliente elige Fresa/Mango en el siguiente paso.
                                 setSelectedFrutas(['Banano', 'Papaya']);
+                              } else if (cat === 'ensaladas') {
+                                if (label.includes('mini')) {
+                                  setSelectedFrutas(FRUTAS_DEFAULT.filter(f => f !== 'Kiwi'));
+                                } else {
+                                  setSelectedFrutas(FRUTAS_DEFAULT);
+                                }
                               } else if (label.includes('fresa')) {
                                 setSelectedFrutas(['Fresa']);
                               } else if (label.includes('mango')) {
