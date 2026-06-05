@@ -238,21 +238,19 @@ export function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () 
   const isTakeaway = sale.tableName === 'Para Llevar';
   const isOnline = sale.type === 'online' || sale.tableName === 'Pedido Online';
   
-  // Clean label logic: Remove redundant "Mesa" if it exists in the name
-  let cleanOrigin = '';
+  // Clean label logic
+  let originLabel = '';
   if (cName) {
-    cleanOrigin = cName;
+    originLabel = cName;
   } else if (isTable) {
-    cleanOrigin = sale.tableName.replace(/mesa/gi, '').trim();
+    originLabel = sale.tableName.replace(/mesa/gi, '').trim();
   } else if (isTakeaway) {
-    cleanOrigin = 'Para Llevar';
+    originLabel = 'Pedido'; // It will say [ LLEVAR ] Pedido instead of [ LLEVAR ] Para Llevar
   } else if (isOnline) {
-    cleanOrigin = 'Pedido Online';
+    originLabel = 'Web'; // [ ONLINE ] Web
   } else {
-    cleanOrigin = 'Venta Directa';
+    originLabel = 'Mostrador'; // [ LOCAL ] Mostrador
   }
-  
-  const originLabel = cleanOrigin;
   
   const pmIcon = {
     efectivo: <Banknote className="w-3.5 h-3.5 text-emerald-600" />,
@@ -288,11 +286,11 @@ export function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () 
                 isTakeaway ? "bg-emerald-50 text-emerald-600 ring-emerald-500/20" :
                 (isOnline ? "bg-purple-50 text-purple-600 ring-purple-500/20" : "bg-primary/5 text-primary ring-primary/20")
               )}>
-                {isTable ? 'Mesa' : (isTakeaway ? 'Llevar' : (isOnline ? 'Online' : 'POS'))}
+                {isTable ? 'Mesa' : (isTakeaway ? 'Llevar' : (isOnline ? 'Online' : 'Local'))}
               </span>
               <span className={cn(
                 "text-[9px] font-black uppercase tracking-widest truncate max-w-[100px]",
-                isTable ? "text-blue-600" : isTakeaway ? "text-emerald-600" : (isOnline ? "text-purple-600" : "text-secondary/40")
+                isTable ? "text-blue-600" : isTakeaway ? "text-emerald-600" : (isOnline ? "text-purple-600" : "text-primary/70")
               )}>
                 {originLabel}
               </span>

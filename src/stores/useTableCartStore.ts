@@ -26,6 +26,8 @@ interface TableCart {
   openedAt: string | null;
   note: string;
   isLocked?: boolean;
+  isTakeout?: boolean;
+  packagingSupplies?: { supplyId: string; quantity: number }[];
 }
 
 interface TableCartState {
@@ -43,6 +45,8 @@ interface TableCartState {
   clearCart: (table: string) => Promise<void>;
   updateNote: (table: string, note: string) => Promise<void>;
   toggleLock: (table: string, locked: boolean) => Promise<void>;
+  setTakeout: (table: string, isTakeout: boolean) => Promise<void>;
+  updatePackagingSupply: (table: string, supplyId: string, quantity: number) => Promise<void>;
   getTotal: (table: string) => number;
   getItemCount: (table: string) => number;
 }
@@ -52,18 +56,18 @@ const initialTableCart: TableCart = {
   openedAt: null,
   note: '',
   isLocked: false,
+  isTakeout: false,
+  packagingSupplies: [],
 };
 
 export const useTableCartStore = create<TableCartState>()((set, get) => ({
   carts: {
-    'paraLlevar': { ...initialTableCart },
+    'directa': { ...initialTableCart },
     'mesa1': { ...initialTableCart },
     'mesa2': { ...initialTableCart },
     'mesa3': { ...initialTableCart },
-    'mesa4': { ...initialTableCart },
-    'mesa5': { ...initialTableCart },
   },
-  activeTable: 'paraLlevar',
+  activeTable: 'directa',
   isInitialized: false,
 
   initialize: () => {
@@ -199,6 +203,38 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     }));
 
     const newCart = { ...tableCart, items: newItems, isLocked: locked };
+    const docRef = doc(db, 'tables', table);
+    await setDoc(docRef, { currentCart: newCart }, { merge: true });
+  },
+
+  setTakeout: async (table, isTakeout) => {
+    const tableCart = get().carts[table];
+    if (!tableCart) return;
+
+    const newCart = { ...tableCart, isTakeout };
+    const docRef = doc(db, 'tables', table);
+    await setDoc(docRef, { currentCart: newCart }, { merge: true });
+  },
+
+  updatePackagingSupply: async (table, supplyId, quantity) => {
+    const tableCart = get().carts[table];
+    if (!tableCart) return;
+
+    const currentSupplies = tableCart.packagingSupplies || [];
+    let newSupplies = [...currentSupplies];
+    
+    const existingIndex = newSupplies.findIndex(s => s.supplyId === supplyId);
+    if (existingIndex >= 0) {
+      if (quantity <= 0) {
+        newSupplies.splice(existingIndex, 1);
+      } else {
+        newSupplies[existingIndex].quantity = quantity;
+      }
+    } else if (quantity > 0) {
+      newSupplies.push({ supplyId, quantity });
+    }
+
+    const newCart = { ...tableCart, packagingSupplies: newSupplies };
     const docRef = doc(db, 'tables', table);
     await setDoc(docRef, { currentCart: newCart }, { merge: true });
   },

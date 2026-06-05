@@ -126,12 +126,10 @@ export default function POS() {
   ];
 
   const tables = [
-    { id: 'paraLlevar', label: 'Para Llevar', type: 'delivery' },
+    { id: 'directa', label: 'Venta Directa', type: 'delivery' },
     { id: 'mesa1', label: 'Mesa 1', type: 'table' },
     { id: 'mesa2', label: 'Mesa 2', type: 'table' },
     { id: 'mesa3', label: 'Mesa 3', type: 'table' },
-    { id: 'mesa4', label: 'Mesa 4', type: 'table' },
-    { id: 'mesa5', label: 'Mesa 5', type: 'table' },
   ];
 
   const filteredProducts = products

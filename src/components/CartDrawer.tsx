@@ -20,7 +20,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }: CartDrawerProps) {
-  const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote, toggleLock } = useTableCartStore();
+  const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote, toggleLock, setTakeout, updatePackagingSupply } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Mixto'>('Efectivo');
@@ -43,6 +43,22 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [emailSending, setEmailSending] = useState(false);
   const [manualPhone, setManualPhone] = useState('');
   const [manualEmail, setManualEmail] = useState('');
+
+  const [packagingSuppliesData, setPackagingSuppliesData] = useState<any[]>([]);
+
+  // Fetch packaging supplies
+  useEffect(() => {
+    const fetchPackaging = async () => {
+      try {
+        const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
+        const snap = await getDocs(q);
+        setPackagingSuppliesData(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error("Error fetching packaging supplies:", error);
+      }
+    };
+    fetchPackaging();
+  }, []);
 
   // Fetch clients
   useEffect(() => {
@@ -128,7 +144,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         soldBy: profile.uid, // Required by Firestore rules
         status: 'completed', // Required by Firestore rules
         tableId: activeTable,
-        tableName: activeTable === 'paraLlevar' ? 'Para Llevar' : `Mesa ${activeTable.replace('mesa', '')}`,
+        tableName: cart.isTakeout ? 'Para Llevar' : (activeTable === 'directa' ? 'Venta Directa' : `Mesa ${activeTable.replace('mesa', '')}`),
         note: cart.note || '', // Global order note
         timestamp: serverTimestamp(),
         createdAt: serverTimestamp(), // Required by Firestore rules
@@ -168,8 +184,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
 
       await Promise.all(updatePromises);
       
-      // Descontar insumos automáticamente (Frutas, Queso, etc)
-      await deductInventory(cart.items);
+      // Descontar insumos automáticamente (Frutas, Queso, etc) y empaques
+      await deductInventory(cart.items, cart.packagingSupplies);
       
       toast.success('¡Venta realizada con éxito!');
       notifyAdmins(
@@ -532,6 +548,68 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                     onChange={(e) => updateNote(activeTable, e.target.value)}
                     className={cn("w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 resize-none transition-all", cart?.isLocked && "opacity-60 cursor-not-allowed")}
                   />
+                </div>
+
+                {/* Pedido Para Llevar Toggle */}
+                <div className="mt-4 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <ShoppingBag className="w-5 h-5 text-indigo-500" />
+                      <span className="font-bold text-indigo-900 text-sm">Pedido Para Llevar</span>
+                    </div>
+                    <button
+                      onClick={() => setTakeout(activeTable, !cart.isTakeout)}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                        cart.isTakeout ? "bg-indigo-500" : "bg-outline/20"
+                      )}
+                    >
+                      <span className="sr-only">Toggle Para Llevar</span>
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                          cart.isTakeout ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
+                  
+                  <AnimatePresence>
+                    {cart.isTakeout && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-3 overflow-hidden pt-2 border-t border-indigo-100"
+                      >
+                        <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 mb-2">Empaques Adicionales</p>
+                        {packagingSuppliesData.map(supply => {
+                          const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
+                          return (
+                            <div key={supply.id} className="flex items-center justify-between bg-white p-2 rounded-xl border border-indigo-50 shadow-sm">
+                              <span className="text-xs font-bold text-indigo-900">{supply.name}</span>
+                              <div className="flex items-center gap-3 bg-surface-container-low rounded-lg p-1">
+                                <button
+                                  onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
+                                  disabled={quantity <= 0}
+                                  className="p-1 rounded-md hover:bg-white disabled:opacity-30 transition-colors"
+                                >
+                                  <Minus className="w-3 h-3 text-indigo-600" />
+                                </button>
+                                <span className="text-xs font-black text-indigo-900 w-4 text-center">{quantity}</span>
+                                <button
+                                  onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                  className="p-1 rounded-md hover:bg-white transition-colors"
+                                >
+                                  <Plus className="w-3 h-3 text-indigo-600" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </>
             )}

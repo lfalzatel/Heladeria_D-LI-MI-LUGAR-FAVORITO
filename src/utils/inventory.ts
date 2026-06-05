@@ -6,7 +6,7 @@ import { CartItem, Product } from '../types';
  * Deduce insumos del inventario basándose en el carrito
  * Integra recetas estáticas y selecciones dinámicas con matemática de rendimiento.
  */
-export async function deductInventory(cartItems: CartItem[]) {
+export async function deductInventory(cartItems: CartItem[], packagingSupplies?: {supplyId: string, quantity: number}[]) {
   try {
     // 1. Obtener todos los supplies actuales para buscar sus IDs y rendimientos
     const suppliesSnap = await getDocs(collection(db, 'supplies'));
@@ -171,6 +171,15 @@ export async function deductInventory(cartItems: CartItem[]) {
 
               deductions[supply.id] = (deductions[supply.id] || 0) + (deductionAmount * item.quantity);
           }
+      }
+    }
+
+    // 2.5 ADD PACKAGING SUPPLIES
+    if (packagingSupplies && packagingSupplies.length > 0) {
+      for (const pack of packagingSupplies) {
+        if (pack.quantity > 0) {
+          deductions[pack.supplyId] = (deductions[pack.supplyId] || 0) + pack.quantity;
+        }
       }
     }
 
