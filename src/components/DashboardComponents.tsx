@@ -245,7 +245,7 @@ export function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () 
   } else if (isTable) {
     originLabel = sale.tableName.replace(/mesa/gi, '').trim();
   } else if (isTakeaway) {
-    originLabel = 'Pedido'; // It will say [ LLEVAR ] Pedido instead of [ LLEVAR ] Para Llevar
+    originLabel = 'Para Llevar'; // It will say [ LLEVAR ] Para Llevar
   } else if (isOnline) {
     originLabel = 'Web'; // [ ONLINE ] Web
   } else {

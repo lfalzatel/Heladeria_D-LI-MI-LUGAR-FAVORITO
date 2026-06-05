@@ -550,67 +550,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                   />
                 </div>
 
-                {/* Pedido Para Llevar Toggle */}
-                <div className="mt-4 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <ShoppingBag className="w-5 h-5 text-indigo-500" />
-                      <span className="font-bold text-indigo-900 text-sm">Pedido Para Llevar</span>
-                    </div>
-                    <button
-                      onClick={() => setTakeout(activeTable, !cart.isTakeout)}
-                      className={cn(
-                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                        cart.isTakeout ? "bg-indigo-500" : "bg-outline/20"
-                      )}
-                    >
-                      <span className="sr-only">Toggle Para Llevar</span>
-                      <span
-                        className={cn(
-                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                          cart.isTakeout ? "translate-x-5" : "translate-x-0"
-                        )}
-                      />
-                    </button>
-                  </div>
-                  
-                  <AnimatePresence>
-                    {cart.isTakeout && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-3 overflow-hidden pt-2 border-t border-indigo-100"
-                      >
-                        <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 mb-2">Empaques Adicionales</p>
-                        {packagingSuppliesData.map(supply => {
-                          const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
-                          return (
-                            <div key={supply.id} className="flex items-center justify-between bg-white p-2 rounded-xl border border-indigo-50 shadow-sm">
-                              <span className="text-xs font-bold text-indigo-900">{supply.name}</span>
-                              <div className="flex items-center gap-3 bg-surface-container-low rounded-lg p-1">
-                                <button
-                                  onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
-                                  disabled={quantity <= 0}
-                                  className="p-1 rounded-md hover:bg-white disabled:opacity-30 transition-colors"
-                                >
-                                  <Minus className="w-3 h-3 text-indigo-600" />
-                                </button>
-                                <span className="text-xs font-black text-indigo-900 w-4 text-center">{quantity}</span>
-                                <button
-                                  onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
-                                  className="p-1 rounded-md hover:bg-white transition-colors"
-                                >
-                                  <Plus className="w-3 h-3 text-indigo-600" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+
               </>
             )}
             </div>
@@ -652,49 +592,49 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 <span className="text-3xl font-black text-primary">{formatCurrency(total)}</span>
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 <button 
                   onClick={() => setPaymentMethod('Efectivo')}
                   className={cn(
-                    "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
+                    "flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all border-2",
                     paymentMethod === 'Efectivo' ? "bg-primary/5 border-primary text-primary shadow-sm" : "bg-surface-container-high/50 border-transparent text-on-surface hover:bg-primary/5"
                   )}
                 >
-                  <Banknote className="w-5 h-5" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Efectivo</span>
+                  <Banknote className="w-4 h-4" />
+                  <span className="text-[8px] font-bold uppercase tracking-wider">Efectivo</span>
                 </button>
                 <button 
                   onClick={() => setPaymentMethod('Transferencia')}
                   className={cn(
-                    "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
+                    "flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all border-2",
                     paymentMethod === 'Transferencia' ? "bg-primary/5 border-primary text-primary shadow-sm" : "bg-surface-container-high/50 border-transparent text-on-surface hover:bg-primary/5"
                   )}
                 >
-                  <Smartphone className="w-5 h-5" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Transferencia</span>
+                  <Smartphone className="w-4 h-4" />
+                  <span className="text-[8px] font-bold uppercase tracking-wider truncate w-full text-center">Transf.</span>
                 </button>
                 <button 
                   onClick={() => setPaymentMethod('Tarjeta')}
                   className={cn(
-                    "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all group",
+                    "flex flex-col items-center justify-center gap-1 p-2 rounded-xl border-2 transition-all group",
                     paymentMethod === 'Tarjeta' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
                   )}
                 >
-                  <CreditCard className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-black uppercase tracking-wider">Tarjeta</span>
+                  <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span className="text-[8px] font-bold uppercase tracking-wider">Tarjeta</span>
                 </button>
                 <button 
                   onClick={() => setPaymentMethod('Mixto')}
                   className={cn(
-                    "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all group",
+                    "flex flex-col items-center justify-center gap-1 p-2 rounded-xl border-2 transition-all group",
                     paymentMethod === 'Mixto' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
                   )}
                 >
-                  <div className="flex -space-x-2">
-                     <Banknote className="w-6 h-6 group-hover:scale-110 transition-transform z-10 bg-white rounded-full" />
-                     <Smartphone className="w-6 h-6 group-hover:scale-110 transition-transform opacity-70" />
+                  <div className="flex -space-x-1">
+                     <Banknote className="w-4 h-4 group-hover:scale-110 transition-transform z-10 bg-white rounded-full" />
+                     <Smartphone className="w-4 h-4 group-hover:scale-110 transition-transform opacity-70" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-wider">Mixto</span>
+                  <span className="text-[8px] font-bold uppercase tracking-wider">Mixto</span>
                 </button>
               </div>
 
@@ -738,6 +678,68 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                    </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Pedido Para Llevar Toggle */}
+              <div className="mt-2 mb-2 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-indigo-500" />
+                    <span className="font-bold text-indigo-900 text-sm">Pedido Para Llevar</span>
+                  </div>
+                  <button
+                    onClick={() => setTakeout(activeTable, !cart.isTakeout)}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                      cart.isTakeout ? "bg-indigo-500" : "bg-outline/20"
+                    )}
+                  >
+                    <span className="sr-only">Toggle Para Llevar</span>
+                    <span
+                      className={cn(
+                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                        cart.isTakeout ? "translate-x-5" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                </div>
+                
+                <AnimatePresence>
+                  {cart.isTakeout && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-3 overflow-hidden pt-3 mt-3 border-t border-indigo-100"
+                    >
+                      <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 mb-2">Empaques Adicionales</p>
+                      {packagingSuppliesData.map(supply => {
+                        const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
+                        return (
+                          <div key={supply.id} className="flex items-center justify-between bg-white p-2 rounded-xl border border-indigo-50 shadow-sm">
+                            <span className="text-xs font-bold text-indigo-900">{supply.name}</span>
+                            <div className="flex items-center gap-3 bg-surface-container-low rounded-lg p-1">
+                              <button
+                                onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
+                                disabled={quantity <= 0}
+                                className="p-1 rounded-md hover:bg-white disabled:opacity-30 transition-colors"
+                              >
+                                <Minus className="w-3 h-3 text-indigo-600" />
+                              </button>
+                              <span className="text-xs font-black text-indigo-900 w-4 text-center">{quantity}</span>
+                              <button
+                                onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                className="p-1 rounded-md hover:bg-white transition-colors"
+                              >
+                                <Plus className="w-3 h-3 text-indigo-600" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <button 
                 disabled={!cart?.items.length || isProcessing}
