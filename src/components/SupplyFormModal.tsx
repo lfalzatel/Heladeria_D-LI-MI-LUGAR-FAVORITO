@@ -13,7 +13,7 @@ interface SupplyFormModalProps {
 }
 
 const CATEGORIES = ['Lácteos', 'Frutas', 'Toppings', 'Insumos Venta', 'Helados base', 'Acompañamientos', 'Desechables', 'Limpieza', 'Galletas'];
-const UNITS = ['kg', 'g', 'Litro', 'und', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata', 'Tarro'];
+const UNITS = ['kg', 'g', 'Litro', 'Unidad', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata', 'Tarro'];
 
 export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existingCategories = [], onSave }: SupplyFormModalProps) {
   const mergedCategories = Array.from(new Set([...CATEGORIES, ...existingCategories]));
@@ -51,7 +51,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         // Fallback for custom units not in dropdown
         let initialUnit = supplyToEdit.unit || supplyToEdit.purchaseUnit || UNITS[0];
         if (initialUnit.toLowerCase() === 'kilo') initialUnit = 'kg';
-        if (initialUnit.toLowerCase() === 'unidad') initialUnit = 'und';
+        if (initialUnit.toLowerCase() === 'und') initialUnit = 'Unidad';
         
         setUnit(initialUnit);
         
@@ -238,7 +238,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
             </div>
 
             {/* SMART YIELD SECTION */}
-            {['kg', 'g', 'Litro', 'Bloque', 'Tarro', 'und', 'Lata'].includes(unit) ? (
+            {['kg', 'g', 'Litro', 'Bloque', 'Tarro', 'Unidad', 'Lata'].includes(unit) ? (
               <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                   <Package className="w-4 h-4 text-primary" />
