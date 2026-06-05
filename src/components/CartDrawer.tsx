@@ -45,6 +45,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [manualEmail, setManualEmail] = useState('');
 
   const [packagingSuppliesData, setPackagingSuppliesData] = useState<any[]>([]);
+  const [packagingSearch, setPackagingSearch] = useState('');
 
   // Fetch packaging supplies
   useEffect(() => {
@@ -709,33 +710,50 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2 overflow-hidden pt-2 mt-2 border-t border-indigo-100"
+                      className="overflow-hidden pt-2 mt-2 border-t border-indigo-100 flex flex-col"
                     >
-                      <p className="text-[9px] uppercase font-black tracking-widest text-indigo-400 mb-1">Empaques</p>
-                      {packagingSuppliesData.map(supply => {
-                        const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
-                        return (
-                          <div key={supply.id} className="flex items-center justify-between bg-white p-1.5 rounded-lg border border-indigo-50 shadow-sm">
-                            <span className="text-[10px] font-bold text-indigo-900">{supply.name}</span>
-                            <div className="flex items-center gap-2 bg-surface-container-low rounded p-0.5">
-                              <button
-                                onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
-                                disabled={quantity <= 0}
-                                className="p-0.5 rounded-sm hover:bg-white disabled:opacity-30 transition-colors"
-                              >
-                                <Minus className="w-3 h-3 text-indigo-600" />
-                              </button>
-                              <span className="text-[10px] font-black text-indigo-900 w-3 text-center">{quantity}</span>
-                              <button
-                                onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
-                                className="p-0.5 rounded-sm hover:bg-white transition-colors"
-                              >
-                                <Plus className="w-3 h-3 text-indigo-600" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      <div className="flex items-center gap-2 mb-2">
+                        <p className="text-[9px] uppercase font-black tracking-widest text-indigo-400">Empaques</p>
+                        <input
+                          type="text"
+                          placeholder="Buscar..."
+                          value={packagingSearch}
+                          onChange={(e) => setPackagingSearch(e.target.value)}
+                          className="flex-1 bg-white border border-indigo-100 rounded text-[10px] px-2 py-1 outline-none focus:border-indigo-300"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1.5 overflow-y-auto max-h-[25vh] pr-1 styled-scrollbar">
+                        {packagingSuppliesData
+                          .filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase()))
+                          .map(supply => {
+                            const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
+                            return (
+                              <div key={supply.id} className="flex items-center justify-between bg-white p-1.5 rounded-lg border border-indigo-50 shadow-sm">
+                                <span className="text-[10px] font-bold text-indigo-900">{supply.name}</span>
+                                <div className="flex items-center gap-2 bg-surface-container-low rounded p-0.5">
+                                  <button
+                                    onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
+                                    disabled={quantity <= 0}
+                                    className="p-0.5 rounded-sm hover:bg-white disabled:opacity-30 transition-colors"
+                                  >
+                                    <Minus className="w-3 h-3 text-indigo-600" />
+                                  </button>
+                                  <span className="text-[10px] font-black text-indigo-900 w-3 text-center">{quantity}</span>
+                                  <button
+                                    onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                    className="p-0.5 rounded-sm hover:bg-white transition-colors"
+                                  >
+                                    <Plus className="w-3 h-3 text-indigo-600" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                        })}
+                        {packagingSuppliesData.filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase())).length === 0 && (
+                          <p className="text-[10px] text-center text-indigo-300 py-2">No se encontraron empaques.</p>
+                        )}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
