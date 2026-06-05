@@ -194,11 +194,13 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                     layout
                     key={supply.id}
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-2xl border transition-all",
-                      isInRecipe ? "bg-emerald-50 border-emerald-200 shadow-sm" : "bg-white border-outline/10"
+                      "p-3 rounded-2xl border transition-all flex",
+                      isInRecipe 
+                        ? "flex-col gap-3 items-start bg-emerald-50 border-emerald-200 shadow-sm" 
+                        : "flex-row items-center justify-between bg-white border-outline/10"
                     )}
                   >
-                    <div className="flex-1 min-w-0 pr-2">
+                    <div className="w-full flex-1 min-w-0 pr-2">
                       <p className={cn("font-bold text-xs leading-tight mb-1", isInRecipe ? "text-emerald-700" : "text-on-surface")}>
                         {supply.name}
                       </p>
@@ -207,7 +209,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className={cn("flex items-center gap-2", isInRecipe && "w-full justify-end")}>
                       {isInRecipe ? (
                         <div className="flex items-center bg-white rounded-xl p-0.5 border border-primary/20 shadow-sm">
                           <button
