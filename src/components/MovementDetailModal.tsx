@@ -172,9 +172,19 @@ export default function MovementDetailModal({
                           }
                         } else if (tName && tName !== 'Pedido Online') {
                           label = tName;
-                          sub = 'Consumo en local';
-                          icon = <Check className="w-3.5 h-3.5 text-blue-600" />;
-                          colorClass = "text-blue-600";
+                          if (tName === 'Venta Directa') {
+                            sub = 'Atención en mostrador';
+                            icon = <Check className="w-3.5 h-3.5 text-primary" />;
+                            colorClass = "text-primary";
+                          } else if (tName === 'Para Llevar') {
+                            sub = 'Empacado para llevar';
+                            icon = <Truck className="w-3.5 h-3.5 text-emerald-600" />;
+                            colorClass = "text-emerald-600";
+                          } else {
+                            sub = 'Consumo en local';
+                            icon = <Check className="w-3.5 h-3.5 text-blue-600" />;
+                            colorClass = "text-blue-600";
+                          }
                         } else if (tName === 'Pedido Online' || isOnline) {
                           label = 'Pedido Online';
                           sub = 'Venta por App/Web';
