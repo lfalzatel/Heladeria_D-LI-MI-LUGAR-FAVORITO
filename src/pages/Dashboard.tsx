@@ -16,7 +16,7 @@ import {
   TrendingDown,
   Users
 } from 'lucide-react';
-import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, Timestamp, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -675,9 +675,9 @@ export default function Dashboard() {
         {/* RECENT SALES & TABLE STATUS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-headline font-bold text-lg text-on-surface">Movimientos</h4>
-              <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">{combinedActivity.length} regs</span>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-on-surface">Movimientos</h2>
+              <span className="text-xs font-bold text-secondary uppercase tracking-widest">{sales.length} REGS</span>
             </div>
             <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
               {combinedActivity.length > 0 ? (
