@@ -1423,9 +1423,13 @@ export default function Management() {
                   <CalendarModal 
                     isOpen={showPurchaseCalendar}
                     onClose={() => setShowPurchaseCalendar(false)}
-                    allActivity={purchases.map(p => ({ 
-                      hour: p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt) 
-                    }))}
+                    allActivity={purchases.map(p => {
+                      let dateVal = new Date();
+                      if (p.createdAt?.toDate) dateVal = p.createdAt.toDate();
+                      else if (p.createdAt?.seconds) dateVal = new Date(p.createdAt.seconds * 1000);
+                      else if (p.createdAt) dateVal = new Date(p.createdAt);
+                      return { createdAt: dateVal };
+                    })}
                     onSelectDate={(date) => {
                       setSelectedDate(date);
                       setPeriod('today');
