@@ -391,6 +391,7 @@ export function CalendarModal({
               {days.map(d => {
                 const count = salesByDay[d] || 0;
                 const hasActivity = count > 0;
+                const isToday = year === new Date().getFullYear() && month === new Date().getMonth() && d === new Date().getDate();
                 return (
                   <button 
                     key={d} 
@@ -400,11 +401,12 @@ export function CalendarModal({
                       onClose();
                     }}
                     className={cn(
-                      "relative h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 transition-all group border border-transparent",
-                      hasActivity ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-surface"
+                      "relative h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 transition-all group border",
+                      isToday ? "border-primary/50 bg-primary/5" : "border-transparent",
+                      hasActivity && !isToday ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-surface"
                     )}
                   >
-                    <span className={cn("text-xs font-black", hasActivity ? "text-primary" : "text-secondary")}>{d}</span>
+                    <span className={cn("text-xs font-black", hasActivity || isToday ? "text-primary" : "text-secondary")}>{d}</span>
                     {hasActivity && (
                       <div className="flex flex-col items-center">
                         <div className="w-1 h-1 bg-primary rounded-full mb-0.5 shadow-[0_0_8px_rgba(179,0,105,0.6)]" />
