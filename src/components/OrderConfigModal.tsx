@@ -567,9 +567,14 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 >
                   {effectiveCurrentStepType === 'variants' && (
                     <div className="grid grid-cols-1 gap-2.5">
-                      {product.variants?.map(variant => (
+                      {product.variants?.map(variant => {
+                        const isStrictLoyaltyReward = initialItem?.isLoyaltyReward && !initialItem?.isOwnerConsumption;
+                        const isBlocked = isStrictLoyaltyReward && selectedVariant?.label !== variant.label;
+                        
+                        return (
                         <button
                           key={variant.label}
+                          disabled={isBlocked}
                           onClick={() => {
                             if (selectedVariant?.label !== variant.label) {
                               setSelectedVariant(variant);
@@ -600,7 +605,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                             "relative flex items-center justify-between p-4 rounded-[1.5rem] transition-all border-2 text-left group",
                             selectedVariant?.label === variant.label
                               ? "bg-primary/5 border-primary shadow-sm scale-[1.01]"
-                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                              : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low",
+                            isBlocked && "opacity-50 cursor-not-allowed hover:bg-white"
                           )}
                         >
                           <div className="flex items-center gap-3">
@@ -619,7 +625,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                             <p className="font-brand font-black text-xl text-primary">{formatCurrency(variant.price)}</p>
                           </div>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 

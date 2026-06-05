@@ -67,6 +67,8 @@ export interface CartItem {
   unitPrice: number;
   subtotal: number;
   prepared?: boolean;
+  isLoyaltyReward?: boolean;
+  isOwnerConsumption?: boolean;
 }
 
 export interface Sale {

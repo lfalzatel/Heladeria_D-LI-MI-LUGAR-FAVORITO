@@ -205,3 +205,124 @@ export async function captureReportImage(elementId: string): Promise<string | nu
     return null;
   }
 }
+
+export async function generatePurchasesPDF(
+  sellerName: string, 
+  dateStr: string,
+  purchases: any[],
+  totalGastado: number
+) {
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const formatMoney = (amount: number) => {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    };
+
+    // --- ENCABEZADO ---
+    pdf.setFontSize(18);
+    pdf.setTextColor(219, 39, 119); // text-primary
+    pdf.text("D'LI - LUGAR FAVORITO", 105, 20, { align: 'center' });
+    
+    pdf.setFontSize(12);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text("Reporte de Compras", 105, 27, { align: 'center' });
+
+    pdf.setFontSize(10);
+    pdf.setTextColor(60, 60, 60);
+    pdf.text(`Fecha del reporte: ${dateStr}`, 15, 38);
+    pdf.text(`Generado por: ${sellerName}`, 15, 44);
+
+    let startY = 52;
+
+    // --- RESUMEN DE GASTOS ---
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('--- RESUMEN DE GASTOS ---', 15, startY);
+    startY += 5;
+
+    autoTable(pdf, {
+      startY: startY,
+      theme: 'plain',
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 100 },
+        1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+      },
+      body: [
+        ['Total Gastado en Compras', formatMoney(totalGastado)]
+      ],
+      didParseCell: function(data) {
+        if (data.row.index === 0) data.cell.styles.textColor = [185, 28, 28]; // red-700
+      }
+    });
+
+    startY = (pdf as any).lastAutoTable.finalY + 15;
+
+    // --- DETALLE DE COMPRAS ---
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(60, 60, 60);
+    pdf.text('--- DETALLE DE COMPRAS ---', 15, startY);
+    startY += 5;
+
+    if (purchases.length === 0) {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(10);
+      pdf.text('No hay compras registradas en este período.', 15, startY + 5);
+    } else {
+      const purchasesBody = purchases.map(p => {
+        const dateObj = p.createdAt ? (p.createdAt.toDate ? p.createdAt.toDate() : (p.createdAt.seconds ? new Date(p.createdAt.seconds * 1000) : new Date(p.createdAt))) : new Date();
+        const dateString = dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' });
+        
+        let itemsStr = 'N/A';
+        if (p.items && Array.isArray(p.items)) {
+          itemsStr = p.items.map((i: any) => `${i.quantity}x ${i.name} (${formatMoney(i.cost)})`).join('\n');
+        }
+
+        return [
+          dateString,
+          p.provider || 'Proveedor Gral',
+          itemsStr,
+          formatMoney(p.total || 0)
+        ];
+      });
+
+      autoTable(pdf, {
+        startY: startY,
+        head: [['Fecha/Hora', 'Proveedor', 'Insumos', 'Total']],
+        body: purchasesBody,
+        theme: 'striped',
+        headStyles: { fillColor: [248, 113, 113], textColor: 255, fontStyle: 'bold' }, // red-400
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 35, halign: 'right', fontStyle: 'bold' }
+        }
+      });
+    }
+
+    const pdfBlob = pdf.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+
+    return {
+      success: true,
+      pdf,
+      blobUrl
+    };
+  } catch (error) {
+    console.error('Error generando PDF de compras:', error);
+    return { success: false };
+  }
+}

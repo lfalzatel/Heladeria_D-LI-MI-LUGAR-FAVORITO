@@ -63,6 +63,9 @@ import ProductFormModal from '../components/ProductFormModal';
 import CategoryManager from '../components/CategoryManager';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
 import { WasteModal } from '../components/WasteModal';
+import { generatePurchasesPDF, captureReportImage } from '../utils/pdfGenerator';
+import { generatePurchasesExcel } from '../utils/excelGenerator';
+import ReportPreviewModal from '../components/ReportPreviewModal';
 import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { StatCard, PurchaseCard } from '../components/SupplyStats';
@@ -203,6 +206,13 @@ export default function Management() {
   // ── Category Edit State ──────────────────────────────────────────────────
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  // ── Purchase Export States ──────────────────────────────────────────────────
+  const [showPurchaseExportOptions, setShowPurchaseExportOptions] = useState(false);
+  const [isPurchasePreviewModalOpen, setIsPurchasePreviewModalOpen] = useState(false);
+  const [isGeneratingPurchasePDF, setIsGeneratingPurchasePDF] = useState(false);
+  const [purchasePreviewData, setPurchasePreviewData] = useState<any>(null);
+  const [purchasePreviewType, setPurchasePreviewType] = useState<'pdf' | 'excel' | 'image' | null>(null);
 
   // ── Header Actions ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -741,6 +751,124 @@ export default function Management() {
     const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // REPORT EXPORT HANDLERS (COMPRAS)
+  // ─────────────────────────────────────────────────────────────────────────
+  const handlePurchasePreview = async (type: 'pdf' | 'excel' | 'image') => {
+    setShowPurchaseExportOptions(false);
+    setPurchasePreviewType(type);
+    setIsPurchasePreviewModalOpen(true);
+    setPurchasePreviewData(null);
+    setIsGeneratingPurchasePDF(true);
+    
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
+    const sellerName = currentUser?.name || 'Administrador';
+
+    try {
+      const totalGastado = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
+
+      if (type === 'excel') {
+        setPurchasePreviewData({ type: 'excel', dateStr, sellerName });
+        setIsGeneratingPurchasePDF(false);
+      } else if (type === 'pdf') {
+        const result = await generatePurchasesPDF(sellerName, dateStr, filtered, totalGastado);
+        if (result.success) {
+           setPurchasePreviewData({
+             type,
+             pdf: result.pdf,
+             blobUrl: result.blobUrl,
+             imgData: null,
+             dateStr,
+             sellerName,
+             totalGastado
+           });
+        } else {
+           toast.error('Error generando PDF de Compras');
+           setIsPurchasePreviewModalOpen(false);
+        }
+        setIsGeneratingPurchasePDF(false);
+      } else if (type === 'image') {
+        setTimeout(async () => {
+          const imgData = await captureReportImage('hidden-purchase-image-report');
+          if (imgData) {
+             setPurchasePreviewData({
+               type,
+               pdf: null,
+               blobUrl: null,
+               imgData,
+               dateStr,
+               sellerName,
+               totalGastado
+             });
+          } else {
+             toast.error('Error generando Imagen');
+             setIsPurchasePreviewModalOpen(false);
+          }
+          setIsGeneratingPurchasePDF(false);
+        }, 100);
+      }
+    } catch (e) {
+      toast.error('Ocurrió un error al procesar el reporte de compras');
+      setIsPurchasePreviewModalOpen(false);
+      setIsGeneratingPurchasePDF(false);
+    }
+  };
+
+  const handlePurchaseDownload = () => {
+    if (!purchasePreviewData) return;
+    const { type, pdf, imgData, dateStr, sellerName, totalGastado } = purchasePreviewData;
+    const fileName = `Compras_${dateStr.replace(/\//g, '-')}_${sellerName}`;
+    
+    if (type === 'pdf' && pdf) {
+      pdf.save(`${fileName}.pdf`);
+      toast.success('PDF descargado con éxito');
+    } else if (type === 'image' && imgData) {
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `${fileName}.jpg`;
+      link.click();
+      toast.success('Imagen descargada con éxito');
+    } else if (type === 'excel') {
+      const currentTotal = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
+      generatePurchasesExcel(sellerName, dateStr, filtered, currentTotal);
+      toast.success('Excel descargado con éxito');
+    }
+  };
+
+  const handlePurchaseShare = async () => {
+    if (!purchasePreviewData) return;
+    try {
+      const { type, pdf, imgData, dateStr, sellerName } = purchasePreviewData;
+      const fileName = `Compras_${dateStr.replace(/\//g, '-')}_${sellerName}`;
+      
+      let fileToShare: File | null = null;
+
+      if (type === 'pdf' && pdf) {
+        const blob = pdf.output('blob');
+        fileToShare = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
+      } else if (type === 'image' && imgData) {
+        const response = await fetch(imgData);
+        const blob = await response.blob();
+        fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+      } else if (type === 'excel') {
+         toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
+         return;
+      }
+
+      if (fileToShare && navigator.share) {
+        await navigator.share({
+          title: `Reporte de Compras ${dateStr}`,
+          text: `Adjunto reporte de compras generado por ${sellerName}`,
+          files: [fileToShare]
+        });
+      } else {
+        toast.info('Compartir no está soportado en este navegador');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -1373,7 +1501,7 @@ export default function Management() {
                 <div className="flex flex-col gap-3 w-full">
                   <div className="flex items-center justify-between w-full">
                     <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">Compras</h2>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 relative">
                       <button 
                         onClick={() => setShowPurchaseCalendar(true)}
                         className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
@@ -1382,12 +1510,40 @@ export default function Management() {
                         <Calendar className="w-5 h-5" />
                       </button>
                       <button 
-                        onClick={() => toast.info('Exportando informe de compras...')}
-                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                        onClick={() => setShowPurchaseExportOptions(!showPurchaseExportOptions)}
+                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm relative overflow-hidden group"
                         title="Descargar Reporte"
+                        disabled={isGeneratingPurchasePDF}
                       >
-                        <Download className="w-5 h-5" />
+                        <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       </button>
+
+                      <AnimatePresence>
+                        {showPurchaseExportOptions && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute top-12 right-0 bg-white rounded-3xl p-2 shadow-2xl border border-outline/10 w-64 z-[100] flex flex-col gap-1"
+                          >
+                            <div className="px-3 py-2">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-secondary/60">Formato de Salida</p>
+                            </div>
+                            <button onClick={() => handlePurchasePreview('excel')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">XLS</div>
+                              <span className="font-bold text-on-surface">Descargar Excel</span>
+                            </button>
+                            <button onClick={() => handlePurchasePreview('pdf')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                              <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-xs">PDF</div>
+                              <span className="font-bold text-on-surface">Descargar PDF</span>
+                            </button>
+                            <button onClick={() => handlePurchasePreview('image')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">JPG</div>
+                              <span className="font-bold text-on-surface">Descargar Imagen</span>
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
 
@@ -2065,6 +2221,85 @@ export default function Management() {
         filter={PERIOD_LABELS[period]} 
         ranking={ranking} 
       />
+
+      <ReportPreviewModal
+        isOpen={isPurchasePreviewModalOpen}
+        onClose={() => setIsPurchasePreviewModalOpen(false)}
+        type={purchasePreviewType}
+        previewUrl={purchasePreviewData?.type === 'image' ? purchasePreviewData.imgData : (purchasePreviewData?.blobUrl || null)}
+        onDownload={handlePurchaseDownload}
+        onShare={handlePurchaseShare}
+      />
+
+      {/* Hidden Component for Purchase Image Report */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <div id="hidden-purchase-image-report" className="bg-white p-8 w-[800px]">
+          <div className="text-center mb-6 border-b border-outline/10 pb-4">
+            <h1 className="text-3xl font-black text-primary mb-2">D'LI - LUGAR FAVORITO</h1>
+            <h2 className="text-xl font-bold text-secondary">Reporte de Compras</h2>
+            <p className="text-sm text-secondary/70 mt-2">
+              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico')} | 
+              Generado por: {currentUser?.name || 'Administrador'}
+            </p>
+          </div>
+
+          <div className="mb-6 bg-red-50 p-6 rounded-2xl border border-red-100">
+            <h3 className="text-lg font-black text-red-900 mb-4 border-b border-red-200 pb-2">Resumen de Gastos</h3>
+            <div className="flex justify-between items-center text-xl">
+              <span className="font-bold text-red-700">Total Gastado en Compras</span>
+              <span className="font-black text-red-700">
+                {formatCurrency(filtered.reduce((sum, p) => sum + (p.total || 0), 0))}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-lg font-black text-secondary mb-4 border-b border-outline/10 pb-2">Detalle de Compras</h3>
+            {filtered.length === 0 ? (
+              <p className="text-secondary/70 italic text-center py-4">No hay compras registradas en este período.</p>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-surface-container text-secondary">
+                    <th className="p-3 font-bold rounded-l-xl">Fecha/Hora</th>
+                    <th className="p-3 font-bold">Proveedor</th>
+                    <th className="p-3 font-bold">Insumos</th>
+                    <th className="p-3 font-bold text-right rounded-r-xl">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline/5">
+                  {filtered.map(p => {
+                    const dateObj = p.createdAt ? (p.createdAt.toDate ? p.createdAt.toDate() : (p.createdAt.seconds ? new Date(p.createdAt.seconds * 1000) : new Date(p.createdAt))) : new Date();
+                    return (
+                      <tr key={p.id}>
+                        <td className="p-3 align-top whitespace-nowrap text-secondary font-medium">
+                          {dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' })}
+                        </td>
+                        <td className="p-3 align-top font-bold text-on-surface">
+                          {p.provider || 'Proveedor Gral'}
+                        </td>
+                        <td className="p-3 align-top text-secondary">
+                          {p.items && Array.isArray(p.items) ? p.items.map((i: any, idx: number) => (
+                            <div key={idx}>{i.quantity}x {i.name}</div>
+                          )) : 'N/A'}
+                        </td>
+                        <td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">
+                          {formatCurrency(p.total || 0)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+          
+          <div className="text-center mt-8 pt-4 border-t border-outline/10 text-xs font-bold text-secondary/50">
+            Sistema Integrado de Control - D'LI
+          </div>
+        </div>
+      </div>
     </>
   );
 }
+

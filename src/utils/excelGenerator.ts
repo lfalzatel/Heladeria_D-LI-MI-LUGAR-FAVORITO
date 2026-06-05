@@ -95,3 +95,67 @@ export function generateDashboardExcel(
   const fileName = `Reporte_Excel_${dateStr.replace(/\//g, '-')}_${sellerName}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }
+
+export function generatePurchasesExcel(
+  sellerName: string, 
+  dateStr: string,
+  purchases: any[],
+  totalGastado: number
+) {
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const reportData: any[][] = [
+    ['REPORTE DE COMPRAS D\'LI - LUGAR FAVORITO'],
+    [],
+    ['Fecha del reporte:', dateStr],
+    ['Generado por:', sellerName],
+    [],
+    ['--- RESUMEN DE GASTOS ---'],
+    ['Total Gastado en Compras', totalGastado],
+    [],
+    ['--- DETALLE DE COMPRAS ---'],
+    ['Fecha/Hora', 'Proveedor', 'Insumos', 'Total']
+  ];
+
+  if (purchases.length === 0) {
+    reportData.push(['No hay compras registradas en este período', '', '', '']);
+  } else {
+    purchases.forEach(p => {
+      const dateObj = p.createdAt ? (p.createdAt.toDate ? p.createdAt.toDate() : (p.createdAt.seconds ? new Date(p.createdAt.seconds * 1000) : new Date(p.createdAt))) : new Date();
+      
+      let itemsStr = 'N/A';
+      if (p.items && Array.isArray(p.items)) {
+         itemsStr = p.items.map((i: any) => `${i.quantity}x ${i.name} (${formatMoney(i.cost)})`).join(', ');
+      }
+
+      reportData.push([
+        dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+        p.provider || 'Proveedor Gral',
+        itemsStr,
+        p.total || 0
+      ]);
+    });
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(reportData);
+
+  ws['!cols'] = [
+    { wch: 25 }, // Fecha/Hora
+    { wch: 25 }, // Proveedor
+    { wch: 60 }, // Insumos
+    { wch: 15 }  // Total
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reporte de Compras');
+
+  const fileName = `Compras_Excel_${dateStr.replace(/\//g, '-')}_${sellerName}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}

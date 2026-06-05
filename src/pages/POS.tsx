@@ -38,6 +38,8 @@ export default function POS() {
   const [detailsProduct, setDetailsProduct] = useState<Product | null>(null);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [editingStep, setEditingStep] = useState<number | undefined>(undefined);
+  const [showFidelityTargetModal, setShowFidelityTargetModal] = useState(false);
+  const [isOwnerConsumptionMode, setIsOwnerConsumptionMode] = useState(false);
 
   const handleEdit = (item: CartItem, step?: number) => {
     const product = products.find(p => p.id === item.productId);
@@ -52,13 +54,23 @@ export default function POS() {
   };
 
   const handleAddItem = async (item: CartItem) => {
+    let finalItem = { ...item };
+    if (isOwnerConsumptionMode) {
+      finalItem.isOwnerConsumption = true;
+      finalItem.isLoyaltyReward = true;
+      finalItem.unitPrice = 0;
+      finalItem.subtotal = 0;
+      setIsOwnerConsumptionMode(false);
+      toast.success('Producto de autoconsumo registrado a $0');
+    }
+
     if (editingItem) {
       // If we are editing, we remove the exact original ID first
       await removeItem(activeTable, editingItem.id);
       setEditingItem(null);
     }
     // Then add the new one (addItem handles merging if it matches an existing entry)
-    await addItem(activeTable, item);
+    await addItem(activeTable, finalItem);
   };
 
   useEffect(() => {
@@ -218,29 +230,8 @@ export default function POS() {
         onClose={() => setIsCartOpen(false)} 
         onEdit={handleEdit}
         onRedeemLoyalty={() => {
-          const rewardProduct = products.find(p => p.id === 'cucurucho');
-          if (rewardProduct) {
-            const variant = rewardProduct.variants?.find(v => v.label === 'Doble') || rewardProduct.variants?.[1] || rewardProduct.variants?.[0];
-            setEditingItem({
-              id: Math.random().toString(36).substr(2, 9),
-              productId: rewardProduct.id,
-              productName: rewardProduct.name,
-              variantLabel: variant?.label || 'Doble',
-              description: '',
-              flavors: [],
-              fruitChoices: [],
-              additions: [],
-              quantity: 1,
-              unitPrice: 0,
-              subtotal: 0,
-              isLoyaltyReward: true
-            } as any);
-            setEditingStep(1);
-            setSelectedProduct(rewardProduct);
-            setIsCartOpen(false);
-          } else {
-            toast.error('No se encontró el producto Premio Fidelidad (Cucurucho) en el catálogo');
-          }
+          setShowFidelityTargetModal(true);
+          setIsCartOpen(false);
         }}
       />
 
@@ -330,30 +321,7 @@ export default function POS() {
                 key={cat.id}
                 onClick={() => {
                   if (cat.id === 'premio-fidelidad') {
-                    if (window.confirm("¿Estás seguro de otorgar un premio por fidelidad (Cucurucho Doble Gratis)?")) {
-                      const rewardProduct = products.find(p => p.id === 'cucurucho');
-                      if (rewardProduct) {
-                        const variant = rewardProduct.variants?.find(v => v.label === 'Doble') || rewardProduct.variants?.[1] || rewardProduct.variants?.[0];
-                        setEditingItem({
-                          id: Math.random().toString(36).substr(2, 9),
-                          productId: rewardProduct.id,
-                          productName: rewardProduct.name,
-                          variantLabel: variant?.label || 'Doble',
-                          description: '',
-                          flavors: [],
-                          fruitChoices: [],
-                          additions: [],
-                          quantity: 1,
-                          unitPrice: 0,
-                          subtotal: 0,
-                          isLoyaltyReward: true
-                        } as any);
-                        setEditingStep(1);
-                        setSelectedProduct(rewardProduct);
-                      } else {
-                        toast.error('No se encontró el producto Premio (Cucurucho) en el catálogo');
-                      }
-                    }
+                    setShowFidelityTargetModal(true);
                   } else {
                     setActiveCategory(cat.id);
                   }
@@ -394,6 +362,7 @@ export default function POS() {
                   product={product} 
                   onClick={() => setSelectedProduct(product)}
                   onDetailClick={() => setDetailsProduct(product)}
+                  isOwnerConsumptionMode={isOwnerConsumptionMode}
                 />
               </motion.div>
             ))
@@ -445,11 +414,78 @@ export default function POS() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* Target Modal for Fidelity Reward */}
+      <AnimatePresence>
+        {showFidelityTargetModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowFidelityTargetModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-black text-on-surface">Destinatario</h3>
+                <button onClick={() => setShowFidelityTargetModal(false)} className="p-2 rounded-full hover:bg-surface-container transition-colors">
+                  <X className="w-5 h-5 text-secondary" />
+                </button>
+              </div>
+              <p className="text-sm text-secondary font-medium mb-6">¿Para quién es este premio o consumo?</p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => {
+                    setShowFidelityTargetModal(false);
+                    if (window.confirm("¿Estás seguro de otorgar un premio por fidelidad para cliente (Cucurucho Doble Gratis)?")) {
+                      const rewardProduct = products.find(p => p.id === 'cucurucho');
+                      if (rewardProduct) {
+                        const variant = rewardProduct.variants?.find(v => v.label === 'Doble') || rewardProduct.variants?.[1] || rewardProduct.variants?.[0];
+                        setEditingItem({
+                          id: Math.random().toString(36).substr(2, 9),
+                          productId: rewardProduct.id,
+                          productName: rewardProduct.name,
+                          variantLabel: variant?.label || 'Doble',
+                          description: '',
+                          flavors: [],
+                          fruitChoices: [],
+                          additions: [],
+                          quantity: 1,
+                          unitPrice: 0,
+                          subtotal: 0,
+                          isLoyaltyReward: true,
+                          isOwnerConsumption: false
+                        } as any);
+                        setEditingStep(1);
+                        setSelectedProduct(rewardProduct);
+                        setIsCartOpen(false);
+                      } else {
+                        toast.error('No se encontró el producto Cucurucho');
+                      }
+                    }
+                  }}
+                  className="w-full py-4 rounded-2xl bg-fuchsia-50 text-fuchsia-700 font-black text-xs uppercase tracking-widest hover:bg-fuchsia-100 transition-colors flex items-center justify-center gap-2"
+                >
+                  <IceCream className="w-5 h-5" />
+                  Para Cliente
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowFidelityTargetModal(false);
+                    setIsOwnerConsumptionMode(true);
+                    toast.success('Modo Autoconsumo: Selecciona cualquier producto a $0', { duration: 4000 });
+                  }}
+                  className="w-full py-4 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-transform shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  Para Propietario
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
-function ProductCard({ product, onClick, onDetailClick }: { product: Product, onClick: () => void, onDetailClick?: () => void }) {
+function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }: { product: Product, onClick: () => void, onDetailClick?: () => void, isOwnerConsumptionMode?: boolean }) {
   const { activeTable, carts, addItem, updateQuantity, removeItem } = useTableCartStore();
   const [imgError, setImgError] = useState(false);
   
@@ -484,10 +520,12 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
           fruitChoices: [],
           additions: [],
           quantity: 1,
-          unitPrice: minPrice,
-          subtotal: minPrice,
+          unitPrice: isOwnerConsumptionMode ? 0 : minPrice,
+          subtotal: isOwnerConsumptionMode ? 0 : minPrice,
+          isOwnerConsumption: isOwnerConsumptionMode
         };
         addItem(activeTable, item);
+        setIsOwnerConsumptionMode(false);
         toast.success(`${product.name} agregado`);
       }
     }
@@ -512,10 +550,12 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
              fruitChoices: [],
              additions: [],
              quantity: 1,
-             unitPrice: minPrice,
-             subtotal: minPrice,
+             unitPrice: isOwnerConsumptionMode ? 0 : minPrice,
+             subtotal: isOwnerConsumptionMode ? 0 : minPrice,
+             isOwnerConsumption: isOwnerConsumptionMode
            };
            addItem(activeTable, item);
+           setIsOwnerConsumptionMode(false);
         }
       } else if (delta === -1 && unlockedItem) {
         if (unlockedItem.quantity === 1) {
@@ -598,7 +638,7 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
         
         <div className="flex justify-between items-end mt-1">
           <p className="text-primary font-black text-base sm:text-lg leading-none">
-            {priceDisplay}
+            {isOwnerConsumptionMode ? "$0" : priceDisplay}
           </p>
 
           {/* Quick UI Add controls right inside the item details */}
@@ -633,4 +673,3 @@ function ProductCard({ product, onClick, onDetailClick }: { product: Product, on
     </motion.div>
   );
 }
-

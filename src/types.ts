@@ -111,6 +111,7 @@ export interface CartItem {
   extraFruits?: string[];
   extraSauces?: string[];
   isLoyaltyReward?: boolean;
+  isOwnerConsumption?: boolean;
 }
 
 export interface Sale {

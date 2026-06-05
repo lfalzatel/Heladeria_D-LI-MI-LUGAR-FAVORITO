@@ -18,6 +18,7 @@ export interface CartItem {
   subtotal: number;
   prepared?: boolean;
   locked?: boolean;
+  isOwnerConsumption?: boolean;
 }
 
 interface TableCart {
