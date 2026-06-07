@@ -40,6 +40,7 @@ export default function POS() {
   const [editingStep, setEditingStep] = useState<number | undefined>(undefined);
   const [showFidelityTargetModal, setShowFidelityTargetModal] = useState(false);
   const [isOwnerConsumptionMode, setIsOwnerConsumptionMode] = useState(false);
+  const [extraTables, setExtraTables] = useState<number>(0);
 
   const handleEdit = (item: CartItem, step?: number) => {
     const product = products.find(p => p.id === item.productId);
@@ -125,11 +126,18 @@ export default function POS() {
     { id: 'premio-fidelidad', label: '⭐ Premio Fidelidad' },
   ];
 
-  const tables = [
+  const baseTables = [
     { id: 'directa', label: 'Venta Directa', type: 'delivery' },
     { id: 'mesa1', label: 'Mesa 1', type: 'table' },
     { id: 'mesa2', label: 'Mesa 2', type: 'table' },
     { id: 'mesa3', label: 'Mesa 3', type: 'table' },
+  ];
+
+  const tables = [
+    ...baseTables,
+    ...Array.from({ length: extraTables }).map((_, i) => ({
+      id: `mesa${i + 4}`, label: `Mesa ${i + 4}`, type: 'table'
+    }))
   ];
 
   const filteredProducts = products
@@ -280,7 +288,10 @@ export default function POS() {
             
             <button 
               className="flex-shrink-0 w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/20 hover:bg-primary/5 hover:text-primary transition-all border-2 border-dashed border-outline/40"
-              onClick={() => toast.info('Función para agregar mesas próximamente')}
+              onClick={() => {
+                setExtraTables(prev => prev + 1);
+                toast.success(`Mesa ${extraTables + 4} agregada temporalmente`);
+              }}
             >
               <Plus className="w-5 h-5" />
             </button>
