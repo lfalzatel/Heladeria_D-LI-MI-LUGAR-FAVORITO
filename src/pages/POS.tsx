@@ -42,6 +42,21 @@ export default function POS() {
   const [isOwnerConsumptionMode, setIsOwnerConsumptionMode] = useState(false);
   const [extraTables, setExtraTables] = useState<number>(0);
 
+  // Sync extra tables with active carts from Firebase
+  useEffect(() => {
+    const activeMesaNumbers = Object.keys(carts)
+      .filter(key => key.startsWith('mesa') && carts[key].items && carts[key].items.length > 0)
+      .map(key => parseInt(key.replace('mesa', ''), 10))
+      .filter(num => !isNaN(num) && num > 3);
+    
+    if (activeMesaNumbers.length > 0) {
+      const maxMesa = Math.max(...activeMesaNumbers);
+      if (maxMesa - 3 > extraTables) {
+        setExtraTables(maxMesa - 3);
+      }
+    }
+  }, [carts, extraTables]);
+
   const handleEdit = (item: CartItem, step?: number) => {
     const product = products.find(p => p.id === item.productId);
     if (product) {
