@@ -177,9 +177,15 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                   className="w-full pl-10 pr-4 h-10 bg-surface-container/50 rounded-xl border-none text-xs font-medium focus:ring-2 focus:ring-primary transition-all"
                 />
               </div>
-              <div className="flex flex-col items-end">
-                <p className="text-[9px] font-black uppercase tracking-tighter text-secondary opacity-50">Costo Sugerido</p>
-                <p className="text-sm font-bold text-emerald-600">{formatCurrency(estimatedCost)}</p>
+              <div className="flex gap-4">
+                <div className="flex flex-col items-end">
+                  <p className="text-[9px] font-black uppercase tracking-tighter text-secondary opacity-50">Costo Producción</p>
+                  <p className="text-sm font-bold text-orange-600">{formatCurrency(estimatedCost)}</p>
+                </div>
+                <div className="flex flex-col items-end">
+                  <p className="text-[9px] font-black uppercase tracking-tighter text-secondary opacity-50">Precio Sugerido (60% Margen)</p>
+                  <p className="text-sm font-bold text-emerald-600">{formatCurrency(estimatedCost > 0 ? estimatedCost / 0.4 : 0)}</p>
+                </div>
               </div>
             </div>
 
