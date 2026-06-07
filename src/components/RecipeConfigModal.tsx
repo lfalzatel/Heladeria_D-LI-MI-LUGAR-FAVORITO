@@ -165,27 +165,26 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
           )}
 
           {/* Buscador y Resumen de Costo */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="relative flex-1 max-w-[250px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/40" />
-                <input
-                  type="text"
-                  placeholder="Buscar insumo..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 h-10 bg-surface-container/50 rounded-xl border-none text-xs font-medium focus:ring-2 focus:ring-primary transition-all"
-                />
+          <div className="flex flex-col gap-3">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/40" />
+              <input
+                type="text"
+                placeholder="Buscar insumo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 h-11 bg-surface-container/50 rounded-2xl border-none text-xs font-medium focus:ring-2 focus:ring-primary transition-all"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between bg-surface-container/30 p-3 rounded-2xl border border-outline/10">
+              <div className="flex flex-col items-start">
+                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Costo Producción</p>
+                <p className="text-base font-black text-orange-600">{formatCurrency(estimatedCost)}</p>
               </div>
-              <div className="flex gap-4">
-                <div className="flex flex-col items-end">
-                  <p className="text-[9px] font-black uppercase tracking-tighter text-secondary opacity-50">Costo Producción</p>
-                  <p className="text-sm font-bold text-orange-600">{formatCurrency(estimatedCost)}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <p className="text-[9px] font-black uppercase tracking-tighter text-secondary opacity-50">Precio Sugerido (60% Margen)</p>
-                  <p className="text-sm font-bold text-emerald-600">{formatCurrency(estimatedCost > 0 ? estimatedCost / 0.4 : 0)}</p>
-                </div>
+              <div className="flex flex-col items-end">
+                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Sugerido (60% Margen)</p>
+                <p className="text-base font-black text-emerald-600">{formatCurrency(estimatedCost > 0 ? estimatedCost / 0.4 : 0)}</p>
               </div>
             </div>
 
