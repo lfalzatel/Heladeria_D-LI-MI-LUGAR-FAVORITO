@@ -11,7 +11,8 @@ import {
   getDocs,
   serverTimestamp,
   increment,
-  writeBatch
+  writeBatch,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
