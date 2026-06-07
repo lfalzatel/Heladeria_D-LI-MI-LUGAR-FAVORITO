@@ -988,10 +988,6 @@
       "isActive": true,
       "basePrice": null,
       "imageUrl": "/Images/products/dli_capricho.png",
-      "sauceOptions": [
-        "Arequipe",
-        "Lecherita"
-      ],
       "requiresSauces": true,
       "updatedAt": {
         "seconds": 1779756244,

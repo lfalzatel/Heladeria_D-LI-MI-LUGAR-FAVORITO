@@ -166,8 +166,23 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     fetchData();
   }, []);
 
+  const hasInitializedRef = useRef(false);
+
   // Reset or pre-fill state when modal opens
   useEffect(() => {
+    if (!isOpen) {
+      hasInitializedRef.current = false;
+      return;
+    }
+
+    if (initialItem && initialItem.additionIds && initialItem.additionIds.length > 0 && availableAdditions.length === 0) {
+      // Waiting for additions to load before initializing edit mode
+      return;
+    }
+
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     if (isOpen) {
       if (initialItem) {
         const variant = product.variants?.find(v => 
