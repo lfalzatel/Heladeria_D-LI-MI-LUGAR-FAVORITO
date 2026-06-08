@@ -289,7 +289,7 @@ export async function generatePurchasesPDF(
     } else {
       const rankingBody = top10.map(prod => [
         prod.name, 
-        formatMoney(prod.amount)
+        formatMoney(prod.amount || prod.revenue || 0)
       ]);
 
       autoTable(pdf, {

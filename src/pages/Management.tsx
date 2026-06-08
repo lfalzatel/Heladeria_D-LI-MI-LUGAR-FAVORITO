@@ -852,7 +852,7 @@ export default function Management() {
         setPurchasePreviewData({ type, dateStr, sellerName, totalGastado });
         setIsGeneratingPurchasePDF(false);
       } else if (type === 'pdf') {
-        const result = await generatePurchasesPDF(sellerName, dateStr, filtered, totalGastado, sortedInsumos);
+        const result = await generatePurchasesPDF(sellerName, dateStr, filtered, totalGastado, ranking);
         if (result.success) {
            setPurchasePreviewData({
              type,

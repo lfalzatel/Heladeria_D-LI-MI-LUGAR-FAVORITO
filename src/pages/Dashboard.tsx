@@ -113,8 +113,15 @@ export default function Dashboard() {
     });
 
     // Listen to GASTOS
-    const unsubGastos = onSnapshot(query(collection(db, 'gastos'), orderBy('dateObj', 'desc'), limit(1000)), snap => {
-      setGastosOperativos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const unsubGastos = onSnapshot(query(collection(db, 'gastos'), orderBy('date', 'desc'), limit(1000)), snap => {
+      setGastosOperativos(snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data,
+          dateObj: data.date?.toDate ? data.date.toDate() : new Date(data.date)
+        };
+      }));
     });
 
     // Listen to CREDIT PEDIDOS

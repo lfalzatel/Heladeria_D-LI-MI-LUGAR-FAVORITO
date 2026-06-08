@@ -131,7 +131,7 @@ export function generatePurchasesExcel(
     reportData.push(['No hay ranking en este período', '']);
   } else {
     ranking.slice(0, 10).forEach(r => {
-      reportData.push([r.name, r.amount]);
+      reportData.push([r.name, r.amount || r.revenue || 0]);
     });
   }
 
