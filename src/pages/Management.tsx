@@ -1858,7 +1858,8 @@ export default function Management() {
         <ExpenseModal
           isOpen={isExpenseModalOpen}
           onClose={() => setIsExpenseModalOpen(false)}
-          onSave={handleSaveExpense}
+          onConfirm={handleSaveExpense}
+          onOpenCategoryManager={() => setIsExpenseCategoryModalOpen(true)}
         />
 
         <SupplyFormModal
