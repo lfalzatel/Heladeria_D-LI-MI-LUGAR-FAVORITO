@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  X, DollarSign, CreditCard, TrendingUp, Trophy, Clock,
+  X, DollarSign, CreditCard, TrendingUp, TrendingDown, Trophy, Clock,
   AlertTriangle, ShoppingCart, ArrowRight, Box, Banknote,
   Smartphone, ChevronLeft, ShoppingBag
 } from 'lucide-react';
