@@ -326,3 +326,122 @@ export async function generatePurchasesPDF(
     return { success: false };
   }
 }
+
+export async function generateExpensePDF(
+  sellerName: string, 
+  dateStr: string,
+  gastos: any[],
+  totalGastado: number
+) {
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const formatMoney = (amount: number) => {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    };
+
+    // --- ENCABEZADO ---
+    pdf.setFontSize(18);
+    pdf.setTextColor(219, 39, 119); // text-primary
+    pdf.text("D'LI - LUGAR FAVORITO", 105, 20, { align: 'center' });
+    
+    pdf.setFontSize(12);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text("Reporte de Gastos", 105, 27, { align: 'center' });
+
+    pdf.setFontSize(10);
+    pdf.setTextColor(60, 60, 60);
+    pdf.text(`Fecha del reporte: ${dateStr}`, 15, 38);
+    pdf.text(`Generado por: ${sellerName}`, 15, 44);
+
+    let startY = 52;
+
+    // --- RESUMEN DE GASTOS ---
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('--- RESUMEN DE GASTOS ---', 15, startY);
+    startY += 5;
+
+    autoTable(pdf, {
+      startY: startY,
+      theme: 'plain',
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 100 },
+        1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+      },
+      body: [
+        ['Total Gastado', formatMoney(totalGastado)]
+      ],
+      didParseCell: function(data) {
+        if (data.row.index === 0) data.cell.styles.textColor = [185, 28, 28]; // red-700
+      }
+    });
+
+    startY = (pdf as any).lastAutoTable.finalY + 15;
+
+    // --- DETALLE DE GASTOS ---
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(60, 60, 60);
+    pdf.text('--- DETALLE DE GASTOS ---', 15, startY);
+    startY += 5;
+
+    if (gastos.length === 0) {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(10);
+      pdf.text('No hay gastos registrados en este período.', 15, startY + 5);
+    } else {
+      const gastosBody = gastos.map(g => {
+        const dateObj = g.dateObj || new Date();
+        const dateString = dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' });
+        
+        return [
+          dateString,
+          g.userName || 'Usuario',
+          `${g.categoryEmoji || ''} ${g.categoryName || 'Sin Categoría'}`,
+          g.description || '-',
+          formatMoney(g.amount || 0)
+        ];
+      });
+
+      autoTable(pdf, {
+        startY: startY,
+        head: [['Fecha/Hora', 'Responsable', 'Categoría', 'Descripción', 'Total']],
+        body: gastosBody,
+        theme: 'striped',
+        headStyles: { fillColor: [248, 113, 113], textColor: 255, fontStyle: 'bold' }, // red-400
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 50 },
+          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+        }
+      });
+    }
+
+    const pdfBlob = pdf.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+
+    return {
+      success: true,
+      pdf,
+      blobUrl
+    };
+  } catch (error) {
+    console.error('Error generando PDF de gastos:', error);
+    return { success: false };
+  }
+}
+

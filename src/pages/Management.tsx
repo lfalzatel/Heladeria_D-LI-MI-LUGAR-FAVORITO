@@ -66,7 +66,7 @@ import ProductFormModal from '../components/ProductFormModal';
 import CategoryManager from '../components/CategoryManager';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
 import { WasteModal } from '../components/WasteModal';
-import { generatePurchasesPDF, captureReportImage } from '../utils/pdfGenerator';
+import { generatePurchasesPDF, captureReportImage, generateExpensePDF } from '../utils/pdfGenerator';
 import { generatePurchasesExcel, generateExpenseExcel } from '../utils/excelGenerator';
 import { ExpenseDetailModal, GastoRecord } from '../components/ExpenseDetailModal';
 import { ExpenseRankingModal } from '../components/ExpenseRankingModal';
@@ -223,7 +223,16 @@ export default function Management() {
   const [showPurchaseExportOptions, setShowPurchaseExportOptions] = useState(false);
   const [isPurchasePreviewModalOpen, setIsPurchasePreviewModalOpen] = useState(false);
   const [isGeneratingPurchasePDF, setIsGeneratingPurchasePDF] = useState(false);
-  const [purchasePreviewData, setPurchasePreviewData] = useState<any>(null);
+  const [purchasePreviewData, setPurchasePreviewData] = useState<{
+    dateStr: string;
+    sellerName: string;
+    totalGastado: number;
+    isExpense?: boolean;
+    type: 'pdf' | 'excel' | 'image';
+    pdf?: any;
+    blobUrl?: string;
+    imgData?: string;
+  } | null>(null);
   const [purchasePreviewType, setPurchasePreviewType] = useState<'pdf' | 'excel' | 'image' | null>(null);
   const [selectedGastoForDetail, setSelectedGastoForDetail] = useState<any | null>(null);
   const [isExpenseRankingOpen, setIsExpenseRankingOpen] = useState(false);
@@ -840,7 +849,7 @@ export default function Management() {
       const totalGastado = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
 
       if (type === 'excel') {
-        setPurchasePreviewData({ type: 'excel', dateStr, sellerName });
+        setPurchasePreviewData({ type, dateStr, sellerName, totalGastado });
         setIsGeneratingPurchasePDF(false);
       } else if (type === 'pdf') {
         const result = await generatePurchasesPDF(sellerName, dateStr, filtered, totalGastado);
@@ -849,7 +858,6 @@ export default function Management() {
              type,
              pdf: result.pdf,
              blobUrl: result.blobUrl,
-             imgData: null,
              dateStr,
              sellerName,
              totalGastado
@@ -865,8 +873,6 @@ export default function Management() {
           if (imgData) {
              setPurchasePreviewData({
                type,
-               pdf: null,
-               blobUrl: null,
                imgData,
                dateStr,
                sellerName,
@@ -890,13 +896,46 @@ export default function Management() {
     setShowPurchaseExportOptions(false);
     const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
     const sellerName = currentUser?.name || 'Administrador';
+    const totalGastado = filteredGastos.reduce((a, g) => a + (g.amount || 0), 0);
 
     if (type === 'excel') {
-      const totalGastado = filteredGastos.reduce((a, g) => a + (g.amount || 0), 0);
-      generateExpenseExcel(sellerName, dateStr, filteredGastos, totalGastado);
-      toast.success('Excel de Gastos descargado con éxito');
-    } else {
-       toast.error('Solo exportación Excel está soportada para gastos en este momento.');
+      setPurchasePreviewType('excel');
+      setPurchasePreviewData({ type, dateStr, sellerName, totalGastado, isExpense: true });
+      setIsPurchasePreviewModalOpen(true);
+    } else if (type === 'pdf') {
+      setIsGeneratingPurchasePDF(true);
+      try {
+        const { success, pdf, blobUrl } = await generateExpensePDF(sellerName, dateStr, filteredGastos, totalGastado);
+        if (success && pdf && blobUrl) {
+          setPurchasePreviewType('pdf');
+          setPurchasePreviewData({ type, pdf, blobUrl, dateStr, sellerName, totalGastado, isExpense: true });
+          setIsPurchasePreviewModalOpen(true);
+        } else {
+          toast.error('Error al generar el PDF de gastos');
+        }
+      } catch (e) {
+        toast.error('Ocurrió un error al procesar el PDF de gastos');
+      } finally {
+        setIsGeneratingPurchasePDF(false);
+      }
+    } else if (type === 'image') {
+      setIsGeneratingPurchasePDF(true);
+      try {
+        setTimeout(async () => {
+          const imgData = await captureReportImage('hidden-expense-image-report');
+          setIsGeneratingPurchasePDF(false);
+          if (imgData) {
+            setPurchasePreviewType('image');
+            setPurchasePreviewData({ type, imgData, dateStr, sellerName, totalGastado, isExpense: true });
+            setIsPurchasePreviewModalOpen(true);
+          } else {
+            toast.error('Error al generar la imagen de gastos');
+          }
+        }, 100);
+      } catch (e) {
+        toast.error('Ocurrió un error al procesar la imagen de gastos');
+        setIsGeneratingPurchasePDF(false);
+      }
     }
   };
 
@@ -2604,6 +2643,74 @@ export default function Management() {
                         </td>
                         <td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">
                           {formatCurrency(p.total || 0)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+          
+          <div className="text-center mt-8 pt-4 border-t border-outline/10 text-xs font-bold text-secondary/50">
+            Sistema Integrado de Control - D'LI
+          </div>
+        </div>
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <div id="hidden-expense-image-report" className="bg-white p-8 w-[800px]">
+          <div className="text-center mb-6 border-b border-outline/10 pb-4">
+            <h1 className="text-3xl font-black text-primary mb-2">D'LI - LUGAR FAVORITO</h1>
+            <h2 className="text-xl font-bold text-secondary">Reporte de Gastos</h2>
+            <p className="text-sm text-secondary/70 mt-2">
+              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico')} | 
+              Generado por: {currentUser?.name || 'Administrador'}
+            </p>
+          </div>
+
+          <div className="mb-6 bg-red-50 p-6 rounded-2xl border border-red-100">
+            <h3 className="text-lg font-black text-red-900 mb-4 border-b border-red-200 pb-2">Resumen de Gastos</h3>
+            <div className="flex justify-between items-center text-xl">
+              <span className="font-bold text-red-700">Total Gastado</span>
+              <span className="font-black text-red-700">
+                {formatCurrency(filteredGastos.reduce((sum, g) => sum + (g.amount || 0), 0))}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-lg font-black text-secondary mb-4 border-b border-outline/10 pb-2">Detalle de Gastos</h3>
+            {filteredGastos.length === 0 ? (
+              <p className="text-secondary/70 italic text-center py-4">No hay gastos registrados en este período.</p>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-surface-container text-secondary">
+                    <th className="p-3 font-bold rounded-l-xl">Fecha/Hora</th>
+                    <th className="p-3 font-bold">Responsable</th>
+                    <th className="p-3 font-bold">Categoría</th>
+                    <th className="p-3 font-bold">Descripción</th>
+                    <th className="p-3 font-bold text-right rounded-r-xl">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline/5">
+                  {filteredGastos.map(g => {
+                    const dateObj = g.dateObj || new Date();
+                    return (
+                      <tr key={g.id}>
+                        <td className="p-3 align-top whitespace-nowrap text-secondary font-medium">
+                          {dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' })}
+                        </td>
+                        <td className="p-3 align-top font-bold text-on-surface">
+                          {g.userName || 'Usuario'}
+                        </td>
+                        <td className="p-3 align-top text-secondary">
+                          {g.categoryEmoji || ''} {g.categoryName || 'Sin Categoría'}
+                        </td>
+                        <td className="p-3 align-top text-secondary">
+                          {g.description || '-'}
+                        </td>
+                        <td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">
+                          {formatCurrency(g.amount || 0)}
                         </td>
                       </tr>
                     );
