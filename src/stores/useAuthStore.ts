@@ -100,17 +100,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
                 createdAt: serverTimestamp()
               };
 
-              try {
-                await setDoc(userRef, newProfile);
-                // The onSnapshot will fire again after setDoc
-              } catch (err) {
-                console.error("Error creating profile:", err);
-                // Fallback for UI if setDoc fails (e.g. offline)
-                set({ 
-                  profile: { uid: user.uid, ...newProfile } as UserProfile,
-                  isLoading: false
-                });
-              }
+              // IMPORTANTE: No usar setDoc aquí. 
+              // Al borrar datos de la página (caché vacía), onSnapshot puede dispararse temporalmente 
+              // como "no existe" antes de conectarse al servidor. Si hacemos setDoc, sobreescribimos 
+              // el rol real (propietario) por el default (cliente).
+              // La creación real del documento se hace de forma segura en Login.tsx con getDoc.
+              set({ 
+                profile: { uid: user.uid, ...newProfile } as UserProfile,
+                isLoading: false
+              });
             }
           }, (error) => {
             console.error("Profile listener error:", error);
