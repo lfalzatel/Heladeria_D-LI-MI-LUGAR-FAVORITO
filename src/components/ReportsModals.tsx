@@ -274,6 +274,53 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
   );
 }
 
+// ── 3.B. EGRESOS MODAL ──
+export function EgresosModal({ isOpen, onClose, filter, totalCompras, totalGastosOperativos, onNavigate }: {
+  isOpen: boolean; onClose: () => void; filter: string;
+  totalCompras: number; totalGastosOperativos: number;
+  onNavigate?: (subtab: 'compras' | 'gastos') => void;
+}) {
+  const totalEgresos = totalCompras + totalGastosOperativos;
+  return (
+    <ModalWrapper isOpen={isOpen} onClose={onClose}>
+      <ModalHeader
+        icon={<TrendingDown className="w-6 h-6 text-amber-600" />}
+        iconBg="bg-amber-50"
+        title="Detalle de Egresos"
+        subtitle={`SALIDAS DE DINERO (${filter.toUpperCase()})`}
+        onClose={onClose}
+      />
+      <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
+        <button 
+          onClick={() => { onClose(); onNavigate?.('compras'); }}
+          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-amber-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+        >
+          <p className="text-sm font-bold text-on-surface">Compras de Mercancía</p>
+          <p className="font-black text-amber-600">{formatCurrency(totalCompras)}</p>
+        </button>
+        <div className="h-px bg-outline/10" />
+        <button 
+          onClick={() => { onClose(); onNavigate?.('gastos'); }}
+          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-amber-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+        >
+          <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
+          <p className="font-black text-amber-600">{formatCurrency(totalGastosOperativos)}</p>
+        </button>
+
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl mt-2">
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest">TOTAL EGRESOS</p>
+            <p className="font-black text-amber-700 text-lg">{formatCurrency(totalEgresos)}</p>
+          </div>
+          <p className="text-[10px] text-amber-600/70 font-medium leading-snug">
+            Suma de todas las salidas de dinero del negocio en este periodo.
+          </p>
+        </div>
+      </div>
+    </ModalWrapper>
+  );
+}
+
 // ── 4. RANKING MODAL ──
 export function RankingModal({ isOpen, onClose, filter, ranking }: {
   isOpen: boolean; onClose: () => void; filter: string;
