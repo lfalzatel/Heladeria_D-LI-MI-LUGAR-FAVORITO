@@ -151,5 +151,10 @@ service cloud.firestore {
       allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
     }
+
+    match /expenseCategories/{categoryId} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
   }
 }

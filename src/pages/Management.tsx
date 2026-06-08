@@ -771,6 +771,19 @@ export default function Management() {
   const ranking = Object.values(productMap).sort((a, b) => b.revenue - a.revenue);
   const starSupply = ranking[0];
 
+  // Gastos derived values
+  const filteredGastos = gastos.filter((g) => isInPeriod(g.dateObj, period, selectedDate, selectedMonth, selectedWeek));
+  const periodTotalGastos = filteredGastos.reduce((a, g) => a + (g.amount || 0), 0);
+  const gastosCategoryMap: Record<string, { name: string; amount: number; count: number; emoji?: string }> = {};
+  filteredGastos.forEach(g => {
+    const k = g.categoryName || 'Otro';
+    if (!gastosCategoryMap[k]) gastosCategoryMap[k] = { name: k, amount: 0, count: 0, emoji: g.categoryEmoji };
+    gastosCategoryMap[k].amount += g.amount || 0;
+    gastosCategoryMap[k].count += 1;
+  });
+  const sortedExpenseCategories = Object.values(gastosCategoryMap).sort((a, b) => b.amount - a.amount);
+  const topExpenseCategory = sortedExpenseCategories[0] || null;
+
   const groupedSupplies = supplies
     .filter(s => s.name.toLowerCase().includes(supplySearch.toLowerCase()) || (s.category || '').toLowerCase().includes(supplySearch.toLowerCase()))
     .reduce((acc, supply) => {
