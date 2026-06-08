@@ -10,6 +10,7 @@ export function generateDashboardExcel(
     transferencia: number;
     totalCredito: number;
     totalCompras: number;
+    totalGastosOperativos?: number;
     gananciaNeta: number;
     totalPremiosFidelidad?: number;
   },
@@ -29,8 +30,9 @@ export function generateDashboardExcel(
     ['  - Tarjeta/Datafono', metrics.tarjeta],
     ['  - Transferencia/Nequi', metrics.transferencia],
     ['Ventas a Crédito (No sumadas a caja)', metrics.totalCredito],
-    ['Egresos / Compras', metrics.totalCompras],
-    ['Ganancia Neta (Caja - Compras)', metrics.gananciaNeta],
+    ['Egresos / Gastos en Compras (Mercancía)', metrics.totalCompras],
+    ...(metrics.totalGastosOperativos !== undefined ? [['Gastos Operativos (Fijos/Var.)', metrics.totalGastosOperativos]] : []),
+    ['Ganancia Neta (Caja - Compras - Gastos)', metrics.gananciaNeta],
     ...(metrics.totalPremiosFidelidad !== undefined ? [['Premios Fidelidad Entregados', `${metrics.totalPremiosFidelidad} uds`]] : []),
     [],
     ['--- TOP 10 PRODUCTOS MÁS VENDIDOS ---'],

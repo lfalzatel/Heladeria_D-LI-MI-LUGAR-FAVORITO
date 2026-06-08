@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [sales, setSales] = useState<any[]>([]);
   const [pedidosData, setPedidosData] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
+  const [gastosOperativos, setGastosOperativos] = useState<any[]>([]);
   const [supplies, setSupplies] = useState<any[]>([]);
   const [creditPedidos, setCreditPedidos] = useState<any[]>([]);
   
@@ -111,6 +112,11 @@ export default function Dashboard() {
       setPurchases(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
+    // Listen to GASTOS
+    const unsubGastos = onSnapshot(query(collection(db, 'gastos'), orderBy('dateObj', 'desc'), limit(1000)), snap => {
+      setGastosOperativos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
     // Listen to CREDIT PEDIDOS
     const qCredit = query(
       collection(db, 'pedidos'),
@@ -129,6 +135,7 @@ export default function Dashboard() {
       unsubPedidos();
       unsubSupplies();
       unsubPurchases();
+      unsubGastos();
       unsubCredit();
       unsubCart();
     };
@@ -202,8 +209,12 @@ export default function Dashboard() {
   const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
 
+  // Gastos operativos for current period
+  const gastosPeriod = gastosOperativos.filter(g => isInPeriod(g.dateObj, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
+  const totalGastosOperativos = gastosPeriod.reduce((s, g) => s + (g.amount || 0), 0);
+
   // Ganancia
-  const gananciaNeta = totalIngresos - totalCompras;
+  const gananciaNeta = totalIngresos - totalCompras - totalGastosOperativos;
 
   // Premios Fidelidad
   const premiosFidelidadPeriod = combinedActivity.filter(s => (s.items || []).some((i: any) => i.isLoyaltyReward));
@@ -334,6 +345,7 @@ export default function Dashboard() {
         transferencia,
         totalCredito,
         totalCompras,
+        totalGastosOperativos,
         gananciaNeta,
         totalPremiosFidelidad
       };
@@ -406,6 +418,7 @@ export default function Dashboard() {
         transferencia,
         totalCredito,
         totalCompras,
+        totalGastosOperativos,
         gananciaNeta,
         totalPremiosFidelidad
       };
@@ -755,6 +768,7 @@ export default function Dashboard() {
         filter={filterLabel}
         totalIngresos={totalIngresos}
         totalCompras={totalCompras}
+        totalGastosOperativos={totalGastosOperativos}
         totalCredito={totalCredito}
       />
       <RankingModal
@@ -810,6 +824,7 @@ export default function Dashboard() {
               transferencia,
               totalCredito,
               totalCompras,
+              totalGastosOperativos,
               gananciaNeta,
               totalPremiosFidelidad
             }}

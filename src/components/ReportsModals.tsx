@@ -204,11 +204,11 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
 }
 
 // ── 3. GANANCIA MODAL ──
-export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalCredito }: {
+export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito }: {
   isOpen: boolean; onClose: () => void; filter: string;
-  totalIngresos: number; totalCompras: number; totalCredito: number;
+  totalIngresos: number; totalCompras: number; totalGastosOperativos: number; totalCredito: number;
 }) {
-  const saldoFinal = totalIngresos - totalCompras;
+  const saldoFinal = totalIngresos - totalCompras - totalGastosOperativos;
   const costoRef = totalIngresos + totalCredito;
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
@@ -228,6 +228,11 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
         <div className="flex justify-between items-center py-2">
           <p className="text-sm font-bold text-on-surface">Gasto en Compras (Mercancía)</p>
           <p className="font-black text-red-500">- {formatCurrency(totalCompras)}</p>
+        </div>
+        <div className="h-px bg-outline/10" />
+        <div className="flex justify-between items-center py-2">
+          <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
+          <p className="font-black text-red-500">- {formatCurrency(totalGastosOperativos)}</p>
         </div>
         {totalCredito > 0 && (
           <div className="p-4 bg-red-50 border border-red-100 rounded-2xl">

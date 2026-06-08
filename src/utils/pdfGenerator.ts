@@ -12,6 +12,7 @@ export async function generateDetailedPDF(
     transferencia: number;
     totalCredito: number;
     totalCompras: number;
+    totalGastosOperativos?: number;
     gananciaNeta: number;
     totalPremiosFidelidad?: number;
   },
@@ -70,16 +71,21 @@ export async function generateDetailedPDF(
         ['  - Tarjeta/Datafono', formatMoney(metrics.tarjeta)],
         ['  - Transferencia/Nequi', formatMoney(metrics.transferencia)],
         ['Ventas a Crédito (No sumadas a caja)', formatMoney(metrics.totalCredito)],
-        ['Egresos / Compras', formatMoney(metrics.totalCompras)],
-        ['Ganancia Neta (Caja - Compras)', formatMoney(metrics.gananciaNeta)],
+        ['Gastos en Compras (Mercancía)', formatMoney(metrics.totalCompras)],
+        ...(metrics.totalGastosOperativos !== undefined ? [['Gastos Operativos (Fijos/Var.)', formatMoney(metrics.totalGastosOperativos)]] : []),
+        ['Ganancia Neta (Caja - Compras - Gastos)', formatMoney(metrics.gananciaNeta)],
         ...(metrics.totalPremiosFidelidad !== undefined ? [['Premios Fidelidad Entregados', `${metrics.totalPremiosFidelidad} uds`]] : [])
       ],
       didParseCell: function(data) {
         if (data.row.index === 0) data.cell.styles.textColor = [22, 163, 74]; // green-600
         if (data.row.index === 4) data.cell.styles.textColor = [194, 65, 12]; // orange-700
         if (data.row.index === 5) data.cell.styles.textColor = [185, 28, 28]; // red-700
-        if (data.row.index === 6) data.cell.styles.textColor = [219, 39, 119]; // pink-600
-        if (data.row.index === 7) data.cell.styles.textColor = [192, 38, 211]; // fuchsia-600
+        const isGastoOp = metrics.totalGastosOperativos !== undefined;
+        if (isGastoOp && data.row.index === 6) data.cell.styles.textColor = [185, 28, 28]; // red-700
+        const gananciaIdx = isGastoOp ? 7 : 6;
+        if (data.row.index === gananciaIdx) data.cell.styles.textColor = [219, 39, 119]; // pink-600
+        const premiosIdx = isGastoOp ? 8 : 7;
+        if (data.row.index === premiosIdx) data.cell.styles.textColor = [192, 38, 211]; // fuchsia-600
       }
     });
 

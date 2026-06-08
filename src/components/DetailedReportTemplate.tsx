@@ -10,6 +10,7 @@ interface ReportTemplateProps {
     transferencia: number;
     totalCredito: number;
     totalCompras: number;
+    totalGastosOperativos?: number;
     gananciaNeta: number;
     totalPremiosFidelidad?: number;
   };
@@ -74,11 +75,17 @@ export const DetailedReportTemplate: React.FC<ReportTemplateProps> = ({
               <td className="py-2 text-right font-semibold text-orange-700">{formatMoney(metrics.totalCredito)}</td>
             </tr>
             <tr className="border-b border-slate-200 bg-red-50">
-              <td className="py-2 text-red-700">Egresos / Compras</td>
+              <td className="py-2 text-red-700">Gastos en Compras (Mercancía)</td>
               <td className="py-2 text-right font-semibold text-red-700">{formatMoney(metrics.totalCompras)}</td>
             </tr>
+            {metrics.totalGastosOperativos !== undefined && (
+              <tr className="border-b border-slate-200 bg-red-50">
+                <td className="py-2 text-red-700">Gastos Operativos (Fijos/Var.)</td>
+                <td className="py-2 text-right font-semibold text-red-700">{formatMoney(metrics.totalGastosOperativos)}</td>
+              </tr>
+            )}
             <tr className="bg-primary/10">
-              <td className="py-3 font-bold text-primary text-lg">Ganancia Neta (Caja - Compras)</td>
+              <td className="py-3 font-bold text-primary text-lg">Ganancia Neta (Caja - Compras - Gastos)</td>
               <td className="py-3 text-right font-bold text-primary text-lg">{formatMoney(metrics.gananciaNeta)}</td>
             </tr>
             {metrics.totalPremiosFidelidad !== undefined && (
