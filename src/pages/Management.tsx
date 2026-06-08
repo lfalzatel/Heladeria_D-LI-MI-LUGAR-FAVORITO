@@ -79,6 +79,9 @@ import { useCategoriesStore } from '../stores/useCategoriesStore';
 import RecipeConfigModal from '../components/RecipeConfigModal';
 import { RankingModal, StockCriticoModal } from '../components/ReportsModals';
 import { Trophy } from 'lucide-react';
+import { ExpenseModal, ExpenseData } from '../components/ExpenseModal';
+import { ExpenseCategoryManager } from '../components/ExpenseCategoryManager';
+import { useExpenseCategoriesStore } from '../stores/useExpenseCategoriesStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -137,6 +140,7 @@ export default function Management() {
   const { setHeader, clearHeader } = useHeaderStore();
   const { availableFlavors } = useFlavorsStore();
   const { activeCategories } = useCategoriesStore();
+  const { subscribe: subscribeExpenseCategories } = useExpenseCategoriesStore();
 
   const isStaff =
     currentUser?.role === 'admin' ||
@@ -159,6 +163,9 @@ export default function Management() {
   const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
+  const [gastos, setGastos] = useState<any[]>([]);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isExpenseCategoryModalOpen, setIsExpenseCategoryModalOpen] = useState(false);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [syncAction, setSyncAction] = useState<string | null>(null);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
@@ -281,6 +288,18 @@ export default function Management() {
       (snap) => setPurchases(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as PurchaseRecord[])
     );
 
+    const unsubExpenses = onSnapshot(
+      query(collection(db, 'gastos'), orderBy('date', 'desc')),
+      (snap) => {
+        setGastos(snap.docs.map(d => {
+          const item = d.data();
+          return { id: d.id, ...item, dateObj: item.date?.toDate ? item.date.toDate() : new Date(item.date) };
+        }));
+      }
+    );
+
+    const unsubExpenseCats = subscribeExpenseCategories();
+
     const unsubProducts = onSnapshot(
       query(collection(db, 'products')),
       (snap) => {
@@ -304,6 +323,8 @@ export default function Management() {
       unsubUsers();
       unsubSupplies();
       unsubPurchases();
+      unsubExpenses();
+      unsubExpenseCats();
       unsubProducts();
     };
   }, [currentUser]);
@@ -421,6 +442,25 @@ export default function Management() {
     } catch (error) {
       console.error(error);
       throw error;
+    }
+  };
+
+  const handleSaveExpense = async (data: ExpenseData) => {
+    try {
+      await addDoc(collection(db, 'gastos'), {
+        amount: data.amount,
+        categoryId: data.categoryId,
+        categoryName: data.categoryName,
+        categoryEmoji: data.categoryEmoji,
+        description: data.description,
+        userId: currentUser?.uid,
+        userName: currentUser?.name,
+        date: serverTimestamp()
+      });
+      toast.success('Gasto registrado con éxito');
+    } catch (error) {
+      console.error("Error saving expense:", error);
+      toast.error('Error al registrar gasto');
     }
   };
 
@@ -1502,7 +1542,9 @@ export default function Management() {
                 {/* Title and Actions */}
                 <div className="flex flex-col gap-3 w-full">
                   <div className="flex items-center justify-between w-full">
-                    <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">Compras</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
+                      {operacionSubTab === 'compras' ? 'Compras' : 'Gastos'}
+                    </h2>
                     <div className="flex items-center gap-2 relative">
                       <button 
                         onClick={() => setShowPurchaseCalendar(true)}
@@ -1547,6 +1589,24 @@ export default function Management() {
                         )}
                       </AnimatePresence>
                     </div>
+                  </div>
+                  
+                  {/* Operación Sub-tabs */}
+                  <div className="flex gap-2 bg-surface-container p-1.5 rounded-2xl">
+                    {(['compras', 'gastos'] as OperacionSubTab[]).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setOperacionSubTab(tab)}
+                        className={cn(
+                          "flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+                          operacionSubTab === tab 
+                            ? 'bg-white text-on-surface shadow-sm' 
+                            : 'text-secondary hover:text-on-surface hover:bg-white/50'
+                        )}
+                      >
+                        {tab}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Header Actions & Date Filter */}
@@ -1661,65 +1721,114 @@ export default function Management() {
                   )}
                 </div>
 
-                {/* Register + Download */}
-                <div className="flex gap-3 w-full">
-                  <button onClick={() => setIsPurchaseOpen(true)}
-                    className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                    <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
-                  </button>
-                  <button onClick={() => setIsWasteModalOpen(true)}
-                    className="flex-1 py-4 bg-red-50 text-red-500 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
-                    Merma
-                  </button>
-                </div>
+                {operacionSubTab === 'compras' && (
+                  <>
+                    <div className="flex gap-3 w-full">
+                      <button onClick={() => setIsPurchaseOpen(true)}
+                        className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                        <Plus className="w-5 h-5 stroke-[3]" /> Registrar Compra
+                      </button>
+                      <button onClick={() => setIsWasteModalOpen(true)}
+                        className="flex-1 py-4 bg-red-50 text-red-500 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
+                        Merma
+                      </button>
+                    </div>
 
-                {/* Stock alert moved below Registrar Compra */}
-                {lowStock > 0 && (
-                  <motion.button 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => setIsStockModalOpen(true)}
-                    className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
-                  >
-                    <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
-                    <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
-                  </motion.button>
+                    {lowStock > 0 && (
+                      <motion.button 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={() => setIsStockModalOpen(true)}
+                        className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
+                      >
+                        <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                        <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
+                        <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
+                      </motion.button>
+                    )}
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                      <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
+                      <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
+                      <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
+                    </div>
+
+                    <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
+                        <div>
+                          <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
+                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
+                        </div>
+                      </div>
+                      <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between px-1">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad Reciente</h3>
+                        <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
+                      </div>
+                      {filtered.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 opacity-20">
+                          <ShoppingCart className="w-12 h-12 mb-3" />
+                          <p className="text-sm font-bold">Sin compras en este período</p>
+                        </div>
+                      ) : (
+                        filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
+                      )}
+                    </div>
+                  </>
                 )}
 
-                {/* Stat Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                  <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
-                  <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
-                  <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
-                </div>
-
-                <div className="bg-white rounded-[2rem] border border-outline/10 shadow-sm p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
-                    <div>
-                      <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
-                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
+                {operacionSubTab === 'gastos' && (
+                  <>
+                    <div className="flex gap-3 w-full">
+                      <button onClick={() => setIsExpenseModalOpen(true)}
+                        className="flex-1 py-4 bg-red-600 text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                        <Plus className="w-5 h-5 stroke-[3]" /> Registrar Gasto
+                      </button>
+                      <button onClick={() => setIsExpenseCategoryModalOpen(true)}
+                        className="flex-1 py-4 bg-red-50 text-red-600 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
+                        Categorías
+                      </button>
                     </div>
-                  </div>
-                  <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
-                </div>
 
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Actividad Reciente</h3>
-                    <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filtered.length} compras</span>
-                  </div>
-                  {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 opacity-20">
-                      <ShoppingCart className="w-12 h-12 mb-3" />
-                      <p className="text-sm font-bold">Sin compras en este período</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-red-600" />} label="Gastos Totales" value={formatCurrency(periodTotalGastos)} numericValue={periodTotalGastos} isCurrency={true} sub={`En ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                      <StatCard index={1} icon={<Package className="w-5 h-5 text-orange-500" />} label="Total Registros" value={filteredGastos.length.toString()} numericValue={filteredGastos.length} sub="Cantidad de gastos" accent="orange" />
+                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || '🏷️' : '🏷️'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" />
                     </div>
-                  ) : (
-                    filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
-                  )}
-                </div>
+
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between px-1">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Historial de Gastos</h3>
+                        <span className="px-2.5 py-0.5 bg-surface-container text-secondary rounded-full text-[10px] font-black">{filteredGastos.length} registros</span>
+                      </div>
+                      {filteredGastos.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 opacity-20">
+                          <Wallet className="w-12 h-12 mb-3" />
+                          <p className="text-sm font-bold">Sin gastos registrados</p>
+                        </div>
+                      ) : (
+                        filteredGastos.map((g) => (
+                          <div key={g.id} className="bg-white rounded-2xl p-4 border border-outline/10 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-lg">{g.categoryEmoji || '💸'}</div>
+                              <div>
+                                <p className="font-black text-sm text-on-surface">{g.categoryName}</p>
+                                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{g.description || 'Sin descripción'}</p>
+                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} · {g.userName}</p>
+                              </div>
+                            </div>
+                            <p className="font-black text-red-600">{formatCurrency(g.amount)}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
 
@@ -1727,6 +1836,17 @@ export default function Management() {
         </div>
 
         {/* ── MODALS (todos preservados) ──────────────────────────────────── */}
+
+        <ExpenseCategoryManager 
+          isOpen={isExpenseCategoryModalOpen}
+          onClose={() => setIsExpenseCategoryModalOpen(false)}
+        />
+
+        <ExpenseModal
+          isOpen={isExpenseModalOpen}
+          onClose={() => setIsExpenseModalOpen(false)}
+          onSave={handleSaveExpense}
+        />
 
         <SupplyFormModal
           isOpen={isSupplyModalOpen}
