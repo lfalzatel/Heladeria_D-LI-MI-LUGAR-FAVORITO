@@ -40,7 +40,12 @@ export const useProvidersStore = create<ProvidersState>((set) => {
         set({ loading: false });
       });
 
-      return unsubscribe;
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
+      };
     },
 
     addProvider: async (name: string) => {
