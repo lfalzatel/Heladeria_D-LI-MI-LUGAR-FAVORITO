@@ -119,7 +119,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   };
 
   const goToStep2 = () => {
-    const newItems = sortedSupplies
+    const newItems = supplies
       .filter(s => selected.has(s.id))
       .map(s => ({ supplyId: s.id, name: s.name, unit: s.unit, quantity: 1, cost: 0, portions: 0, category: s.category }));
     setItems(newItems);
