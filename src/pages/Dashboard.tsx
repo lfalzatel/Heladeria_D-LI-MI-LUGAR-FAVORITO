@@ -38,6 +38,7 @@ import {
   StockCriticoModal,
   VentasCreditoModal,
   GananciaModal,
+  EgresosModal,
   DeudaClientesModal,
   PremiosModal
 } from '../components/ReportsModals';
@@ -610,12 +611,12 @@ export default function Dashboard() {
             <MetricCard
               icon={<TrendingDown className="w-5 h-5" />}
               label="Egresos/Compras"
-              value={formatCurrency(totalCompras)}
-              numericValue={totalCompras}
+              value={formatCurrency(totalCompras + totalGastosOperativos)}
+              numericValue={totalCompras + totalGastosOperativos}
               isCurrency={true}
               sub={filterLabel}
               accent="amber"
-              onOpen={() => { /* Implement Egresos Modal if needed */ }}
+              onOpen={() => open('egresos')}
               index={2}
             />
           )}
@@ -770,6 +771,14 @@ export default function Dashboard() {
         onClose={close}
         filter={filterLabel}
         creditPedidos={creditPedidosPeriod}
+      />
+      <EgresosModal
+        isOpen={openModal === 'egresos'}
+        onClose={close}
+        filter={filterLabel}
+        totalCompras={totalCompras}
+        totalGastosOperativos={totalGastosOperativos}
+        onNavigate={(subtab) => navigate(`/admin/management?tab=operacion&subtab=${subtab}`)}
       />
       <GananciaModal
         isOpen={openModal === 'ganancia'}
