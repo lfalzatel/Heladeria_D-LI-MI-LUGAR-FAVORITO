@@ -852,7 +852,7 @@ export default function Management() {
         setPurchasePreviewData({ type, dateStr, sellerName, totalGastado });
         setIsGeneratingPurchasePDF(false);
       } else if (type === 'pdf') {
-        const result = await generatePurchasesPDF(sellerName, dateStr, filtered, totalGastado);
+        const result = await generatePurchasesPDF(sellerName, dateStr, filtered, totalGastado, sortedInsumos);
         if (result.success) {
            setPurchasePreviewData({
              type,
@@ -905,7 +905,7 @@ export default function Management() {
     } else if (type === 'pdf') {
       setIsGeneratingPurchasePDF(true);
       try {
-        const { success, pdf, blobUrl } = await generateExpensePDF(sellerName, dateStr, filteredGastos, totalGastado);
+        const { success, pdf, blobUrl } = await generateExpensePDF(sellerName, dateStr, filteredGastos, totalGastado, sortedExpenseCategories);
         if (success && pdf && blobUrl) {
           setPurchasePreviewType('pdf');
           setPurchasePreviewData({ type, pdf, blobUrl, dateStr, sellerName, totalGastado, isExpense: true });

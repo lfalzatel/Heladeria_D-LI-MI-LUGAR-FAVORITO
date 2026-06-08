@@ -100,7 +100,8 @@ export function generatePurchasesExcel(
   sellerName: string, 
   dateStr: string,
   purchases: any[],
-  totalGastado: number
+  totalGastado: number,
+  ranking: any[] = []
 ) {
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -120,9 +121,21 @@ export function generatePurchasesExcel(
     ['--- RESUMEN DE GASTOS ---'],
     ['Total Gastado en Compras', totalGastado],
     [],
-    ['--- DETALLE DE COMPRAS ---'],
-    ['Fecha/Hora', 'Proveedor', 'Insumos', 'Total']
+    ['--- TOP INSUMOS COMPRADOS ---'],
+    ['Insumo', 'Inversión']
   ];
+
+  if (ranking.length === 0) {
+    reportData.push(['No hay ranking en este período', '']);
+  } else {
+    ranking.slice(0, 10).forEach(r => {
+      reportData.push([r.name, r.amount]);
+    });
+  }
+
+  reportData.push([]);
+  reportData.push(['--- DETALLE DE COMPRAS ---']);
+  reportData.push(['Fecha/Hora', 'Proveedor', 'Insumos', 'Total']);
 
   if (purchases.length === 0) {
     reportData.push(['No hay compras registradas en este período', '', '', '']);
@@ -164,7 +177,8 @@ export function generateExpenseExcel(
   sellerName: string, 
   dateStr: string,
   gastos: any[],
-  totalGastado: number
+  totalGastado: number,
+  ranking: any[] = []
 ) {
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -184,9 +198,21 @@ export function generateExpenseExcel(
     ['--- RESUMEN DE GASTOS ---'],
     ['Total Gastado', totalGastado],
     [],
-    ['--- DETALLE DE GASTOS ---'],
-    ['Fecha/Hora', 'Categoría', 'Descripción', 'Usuario', 'Monto']
+    ['--- TOP CATEGORÍAS ---'],
+    ['Categoría', 'Total']
   ];
+
+  if (ranking.length === 0) {
+    reportData.push(['No hay ranking en este período', '']);
+  } else {
+    ranking.slice(0, 10).forEach(r => {
+      reportData.push([`${r.emoji || ''} ${r.name}`, r.amount]);
+    });
+  }
+
+  reportData.push([]);
+  reportData.push(['--- DETALLE DE GASTOS ---']);
+  reportData.push(['Fecha/Hora', 'Categoría', 'Descripción', 'Usuario', 'Monto']);
 
   if (gastos.length === 0) {
     reportData.push(['No hay gastos registrados en este período', '', '', '', '']);

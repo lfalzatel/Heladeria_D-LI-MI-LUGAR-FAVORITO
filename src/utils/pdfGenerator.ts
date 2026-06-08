@@ -210,7 +210,8 @@ export async function generatePurchasesPDF(
   sellerName: string, 
   dateStr: string,
   purchases: any[],
-  totalGastado: number
+  totalGastado: number,
+  ranking: any[] = []
 ) {
   try {
     const pdf = new jsPDF({
@@ -267,6 +268,37 @@ export async function generatePurchasesPDF(
     });
 
     startY = (pdf as any).lastAutoTable.finalY + 15;
+
+    // --- TOP 10 INSUMOS MÁS COMPRADOS ---
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('--- TOP INSUMOS COMPRADOS ---', 15, startY);
+    startY += 5;
+
+    const top10 = ranking.slice(0, 10);
+    if (top10.length === 0) {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(10);
+      pdf.text('No hay ranking de insumos en este período.', 15, startY + 5);
+      startY += 15;
+    } else {
+      const rankingBody = top10.map(prod => [
+        prod.name, 
+        formatMoney(prod.amount)
+      ]);
+
+      autoTable(pdf, {
+        startY: startY,
+        head: [['Insumo', 'Inversión']],
+        body: rankingBody,
+        theme: 'striped',
+        headStyles: { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontStyle: 'bold' },
+        styles: { fontSize: 9 },
+        columnStyles: {
+          1: { halign: 'right' }
+        }
+      });
+      startY = (pdf as any).lastAutoTable.finalY + 15;
+    }
 
     // --- DETALLE DE COMPRAS ---
     pdf.setFontSize(12);
@@ -331,7 +363,8 @@ export async function generateExpensePDF(
   sellerName: string, 
   dateStr: string,
   gastos: any[],
-  totalGastado: number
+  totalGastado: number,
+  ranking: any[] = []
 ) {
   try {
     const pdf = new jsPDF({
@@ -388,6 +421,37 @@ export async function generateExpensePDF(
     });
 
     startY = (pdf as any).lastAutoTable.finalY + 15;
+
+    // --- TOP 10 CATEGORÍAS DE GASTOS ---
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('--- TOP CATEGORÍAS ---', 15, startY);
+    startY += 5;
+
+    const top10 = ranking.slice(0, 10);
+    if (top10.length === 0) {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(10);
+      pdf.text('No hay ranking de categorías en este período.', 15, startY + 5);
+      startY += 15;
+    } else {
+      const rankingBody = top10.map(cat => [
+        `${cat.emoji || ''} ${cat.name}`, 
+        formatMoney(cat.amount)
+      ]);
+
+      autoTable(pdf, {
+        startY: startY,
+        head: [['Categoría', 'Total']],
+        body: rankingBody,
+        theme: 'striped',
+        headStyles: { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontStyle: 'bold' },
+        styles: { fontSize: 9 },
+        columnStyles: {
+          1: { halign: 'right' }
+        }
+      });
+      startY = (pdf as any).lastAutoTable.finalY + 15;
+    }
 
     // --- DETALLE DE GASTOS ---
     pdf.setFontSize(12);
