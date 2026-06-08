@@ -2651,7 +2651,8 @@ export default function Management() {
               </table>
             )}
           </div>
-          
+          <div className="text-center mt-8 pt-4 border-t border-outline/10 text-xs font-bold text-secondary/50">
+            Sistema Integrado de Control - D'LI
           </div>
         </div>
       </div>
