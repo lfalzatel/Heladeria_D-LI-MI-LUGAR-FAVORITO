@@ -204,9 +204,10 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
 }
 
 // ── 3. GANANCIA MODAL ──
-export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito }: {
+export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito, onNavigate }: {
   isOpen: boolean; onClose: () => void; filter: string;
   totalIngresos: number; totalCompras: number; totalGastosOperativos: number; totalCredito: number;
+  onNavigate?: (subtab: 'compras' | 'gastos') => void;
 }) {
   const saldoFinal = totalIngresos - totalCompras - totalGastosOperativos;
   const costoRef = totalIngresos + totalCredito;
@@ -225,15 +226,21 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
           <p className="font-black text-emerald-600">+ {formatCurrency(totalIngresos)}</p>
         </div>
         <div className="h-px bg-outline/10" />
-        <div className="flex justify-between items-center py-2">
+        <button 
+          onClick={() => { onClose(); onNavigate?.('compras'); }}
+          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-red-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+        >
           <p className="text-sm font-bold text-on-surface">Gasto en Compras (Mercancía)</p>
           <p className="font-black text-red-500">- {formatCurrency(totalCompras)}</p>
-        </div>
+        </button>
         <div className="h-px bg-outline/10" />
-        <div className="flex justify-between items-center py-2">
+        <button 
+          onClick={() => { onClose(); onNavigate?.('gastos'); }}
+          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-red-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+        >
           <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
           <p className="font-black text-red-500">- {formatCurrency(totalGastosOperativos)}</p>
-        </div>
+        </button>
         {totalCredito > 0 && (
           <div className="p-4 bg-red-50 border border-red-100 rounded-2xl">
             <div className="flex justify-between items-center mb-1">

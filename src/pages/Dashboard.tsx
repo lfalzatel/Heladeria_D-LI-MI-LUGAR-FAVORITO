@@ -45,8 +45,10 @@ import MovementDetailModal from '../components/MovementDetailModal';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 
 import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { profile } = useAuthStore();
   const { carts, initialize } = useTableCartStore();
   const { setHeader, clearHeader } = useHeaderStore();
@@ -777,6 +779,7 @@ export default function Dashboard() {
         totalCompras={totalCompras}
         totalGastosOperativos={totalGastosOperativos}
         totalCredito={totalCredito}
+        onNavigate={(subtab) => navigate(`/admin/management?tab=operacion&subtab=${subtab}`)}
       />
       <RankingModal
         isOpen={openModal === 'ranking'}

@@ -135,9 +135,18 @@ export default function Management() {
   const queryParams = new URLSearchParams(location.search);
   const activeTab = (queryParams.get('tab') as MainTab) || 'inventario';
   const setActiveTab = (tab: MainTab) => navigate(`/admin/management?tab=${tab}`, { replace: true });
-  const [inventarioSubTab, setInventarioSubTab] = useState<InventarioSubTab>('insumos');
-  const [personasSubTab, setPersonasSubTab] = useState<PersonasSubTab>('equipo');
-  const [operacionSubTab, setOperacionSubTab] = useState<OperacionSubTab>('compras');
+  const [inventarioSubTab, setInventarioSubTab] = useState<InventarioSubTab>((queryParams.get('subtab') as InventarioSubTab) || 'insumos');
+  const [personasSubTab, setPersonasSubTab] = useState<PersonasSubTab>((queryParams.get('subtab') as PersonasSubTab) || 'equipo');
+  const [operacionSubTab, setOperacionSubTab] = useState<OperacionSubTab>((queryParams.get('subtab') as OperacionSubTab) || 'compras');
+
+  useEffect(() => {
+    const sub = queryParams.get('subtab');
+    if (sub) {
+      if (['compras', 'gastos', 'mesas'].includes(sub)) setOperacionSubTab(sub as OperacionSubTab);
+      if (['insumos', 'sabores'].includes(sub)) setInventarioSubTab(sub as InventarioSubTab);
+      if (['equipo', 'clientes', 'fidelidad'].includes(sub)) setPersonasSubTab(sub as PersonasSubTab);
+    }
+  }, [location.search]);
 
   const { profile: currentUser } = useAuthStore();
   const { setHeader, clearHeader } = useHeaderStore();
@@ -1678,7 +1687,10 @@ export default function Management() {
                     {(['compras', 'gastos'] as OperacionSubTab[]).map(tab => (
                       <button
                         key={tab}
-                        onClick={() => setOperacionSubTab(tab)}
+                        onClick={() => {
+                          setOperacionSubTab(tab);
+                          navigate(`/admin/management?tab=operacion&subtab=${tab}`, { replace: true });
+                        }}
                         className={cn(
                           "flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
                           operacionSubTab === tab 
