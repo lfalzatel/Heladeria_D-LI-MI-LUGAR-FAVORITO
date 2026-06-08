@@ -12,7 +12,8 @@ import {
   serverTimestamp,
   increment,
   writeBatch,
-  deleteDoc
+  deleteDoc,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
@@ -969,9 +970,9 @@ export default function Management() {
                           
                           return (
                             <div key={category} className="bg-white rounded-[2rem] border border-outline/50 shadow-sm overflow-hidden transition-all">
-                              <button 
+                              <div 
                                 onClick={() => setExpandedCategory(isExpanded && supplySearch === '' ? null : category)}
-                                className="w-full flex items-center justify-between p-5 sm:p-6 bg-surface-container/30 hover:bg-surface-container/50 transition-colors"
+                                className="w-full flex items-center justify-between p-5 sm:p-6 bg-surface-container/30 hover:bg-surface-container/50 transition-colors cursor-pointer"
                               >
                                 <div className="flex items-center gap-4">
                                   <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shadow-inner', 
@@ -1028,7 +1029,7 @@ export default function Management() {
                                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                                   </div>
                                 </div>
-                              </button>
+                              </div>
 
                               <AnimatePresence>
                                 {isExpanded && (
@@ -2161,6 +2162,119 @@ export default function Management() {
                   <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                     Añadir Insumos Faltantes (Seguro)
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      setSyncAction('recipes');
+                      try {
+                        const { default: menuData } = await import('../data/menu.json');
+                        const snap = await getDocs(collection(db, 'products'));
+                        let count = 0;
+                        for (const d of snap.docs) {
+                          const localProd = menuData.products.find((p: any) => p.id === d.id);
+                          if (!localProd) continue;
+
+                          const dbData = d.data();
+                          let updated = false;
+                          const updates: any = {};
+
+                          if (localProd.description && localProd.description !== dbData.description) {
+                            updates.description = localProd.description;
+                            updated = true;
+                          }
+
+                          if ((!dbData.recipe || dbData.recipe.length === 0) && localProd.recipe && localProd.recipe.length > 0) {
+                            updates.recipe = localProd.recipe;
+                            updated = true;
+                          }
+
+                          if (localProd.variants && localProd.variants.length > 0) {
+                            let dbVariants = dbData.variants || [];
+                            let variantsUpdated = false;
+
+                            if (dbVariants.length > 0) {
+                              dbVariants = dbVariants.map((v: any) => {
+                                const localV = localProd.variants.find((lv: any) => lv.label === v.label);
+                                if (localV && localV.recipe && localV.recipe.length > 0 && (!v.recipe || v.recipe.length <= 1)) {
+                                  variantsUpdated = true;
+                                  return { ...v, recipe: localV.recipe };
+                                }
+                                return v;
+                              });
+                            } else {
+                              dbVariants = localProd.variants;
+                              variantsUpdated = true;
+                            }
+
+                            if (variantsUpdated) {
+                              updates.variants = dbVariants;
+                              updated = true;
+                            }
+                          }
+
+                          if (updated) {
+                            await updateDoc(d.ref, updates);
+                            count++;
+                          }
+                        }
+                        toast.success(`¡Se actualizaron recetas y descripciones de ${count} productos!`);
+                      } catch(e: any) {
+                        toast.error('Error: ' + e.message);
+                      } finally {
+                        setSyncAction(null);
+                        setIsSyncModalOpen(false);
+                      }
+                    }} 
+                    disabled={!!syncAction} 
+                    className="w-full py-4 rounded-2xl bg-primary/10 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2"
+                  >
+                    {syncAction === 'recipes' ? <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Sincronizar Recetas Nuevas (Seguro)
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      setSyncAction('supplies');
+                      try {
+                        const { default: menuData } = await import('../data/menu.json');
+                        let count = 0;
+                        for (const flavor of menuData.icecreamFlavors) {
+                          if (flavor.id === 'sin-helado') continue;
+                          const ns = {
+                            id: 'helado_' + flavor.id,
+                            name: 'Helado de ' + flavor.name,
+                            category: 'Helado base',
+                            unit: 'g',
+                            currentStock: 0,
+                            minLimit: 1000,
+                            minLimitUnit: 'base',
+                            portionsPerUnit: 1,
+                            stockMinimum: 1000,
+                            stockQuantity: 0,
+                            purchaseUnit: 'g',
+                            yieldPerSize: { mini: 80, small: 90, medium: 100, large: null },
+                            yieldPerUnit: 1,
+                            isVirtual: false
+                          };
+                          // Check if exists first
+                          const docs = await getDocs(query(collection(db, 'supplies'), where('name', '==', ns.name)));
+                          if (docs.empty) {
+                            await setDoc(doc(db, 'supplies', ns.id), ns);
+                            count++;
+                          }
+                        }
+                        toast.success(`¡Se añadieron ${count} insumos de helado!`);
+                      } catch(e: any) {
+                        toast.error('Error: ' + e.message);
+                      } finally {
+                        setSyncAction(null);
+                        setIsSyncModalOpen(false);
+                      }
+                    }} 
+                    disabled={!!syncAction} 
+                    className="w-full py-4 rounded-2xl bg-orange-50 text-orange-600 font-black text-[10px] uppercase tracking-widest hover:bg-orange-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2"
+                  >
+                    {syncAction === 'supplies' ? <div className="w-4 h-4 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Crear Insumos de Helado Base
                   </button>
                   <button onClick={handleDownloadBackup} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-blue-50 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'backup' ? <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" /> : <Download className="w-4 h-4" />}

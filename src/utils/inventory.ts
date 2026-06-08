@@ -7,6 +7,14 @@ import { CartItem, Product } from '../types';
  * Integra recetas estáticas y selecciones dinámicas con matemática de rendimiento.
  */
 export async function deductInventory(cartItems: CartItem[], packagingSupplies?: {supplyId: string, quantity: number}[]) {
+  return processInventory(cartItems, packagingSupplies, false);
+}
+
+export async function restoreInventory(cartItems: CartItem[], packagingSupplies?: {supplyId: string, quantity: number}[]) {
+  return processInventory(cartItems, packagingSupplies, true);
+}
+
+async function processInventory(cartItems: CartItem[], packagingSupplies?: {supplyId: string, quantity: number}[], isRestore = false) {
   try {
     // 1. Obtener todos los supplies actuales para buscar sus IDs y rendimientos
     const suppliesSnap = await getDocs(collection(db, 'supplies'));
@@ -57,51 +65,84 @@ export async function deductInventory(cartItems: CartItem[], packagingSupplies?:
          // Acumular la receta estática
          for (const rItem of activeRecipe) {
              if (rItem.supplyId && rItem.quantity > 0) {
-                 deductions[rItem.supplyId] = (deductions[rItem.supplyId] || 0) + (rItem.quantity * item.quantity);
+                 // Check if it's a real supply
+                 const supplyInfo = suppliesMap[rItem.supplyId] || Object.values(suppliesMap).find(s => s.id === rItem.supplyId);
+                 if (supplyInfo && !supplyInfo.isVirtual) {
+                     const yieldPerUnit = supplyInfo.portionsPerUnit || supplyInfo.yieldPerUnit || 1;
+                     const deductedUnits = (rItem.quantity * item.quantity) / yieldPerUnit;
+                     deductions[rItem.supplyId] = (deductions[rItem.supplyId] || 0) + deductedUnits;
+                 }
              }
          }
       }
 
       // 2.2 DESCUENTOS DINÁMICOS (Sabores, Frutas, Salsas, Toppings elegidos por el cliente)
-      // Consolidar todos los nombres de selecciones dinámicas del carrito
-      const dynamicChoices: string[] = [
-          ...(item.flavors || []),
-          ...(item.fruitChoices || []),
-          ...(item.includedSauces || []),
-          ...(item.extraSauces || []),
-          ...(item.additions || [])
-      ];
+      const dynamicChoices: {name: string, type: string}[] = [];
+      const addChoice = (list: string[] | undefined, type: string) => {
+         (list || []).forEach(choice => {
+             const lower = choice.toLowerCase();
+             if (lower.includes('adición fruta') || lower.includes('adición helado') || lower.includes('adición de salsa')) return;
+             let cleanName = choice.replace(/\(x\d+\)/gi, '').trim().toLowerCase();
+             let multiplier = 1;
+             const match = choice.match(/\(x(\d+)\)/i);
+             if (match) multiplier = parseInt(match[1]);
+             for(let i=0; i<multiplier; i++) dynamicChoices.push({ name: cleanName, type });
+         });
+      };
 
-      const cleanChoices: string[] = [];
-      dynamicChoices.forEach(choice => {
-          const lower = choice.toLowerCase();
-          // Ignorar etiquetas genéricas de cobro que no son insumos físicos
-          if (lower.includes('adición fruta') || lower.includes('adición helado') || lower.includes('adición de salsa')) {
-              return;
-          }
-          
-          // Extraer multiplicador real si existe (ej. "Arequipe (x2)" -> significa 2 porciones)
-          let cleanName = choice.replace(/\(x\d+\)/gi, '').trim().toLowerCase();
-          let multiplier = 1;
-          const match = choice.match(/\(x(\d+)\)/i);
-          if (match) {
-              multiplier = parseInt(match[1]);
-          }
-          
-          for(let i = 0; i < multiplier; i++) {
-              cleanChoices.push(cleanName);
-          }
-      });
+      addChoice(item.flavors, 'flavor');
+      addChoice(item.fruitChoices, 'fruit');
+      addChoice(item.includedSauces, 'sauce');
+      addChoice(item.extraSauces, 'sauce');
+      addChoice(item.additions, 'addition');
 
-      // Calcular descuento dinámico basado en rendimientos
-      for (const choiceName of cleanChoices) {
-          const supply = suppliesMap[choiceName];
+      for (const choice of dynamicChoices) {
+          const choiceName = choice.name;
+          let supply = suppliesMap[choiceName];
+          
+          if (!supply && choice.type === 'flavor') {
+             const possibleNames = [`helado de ${choiceName}`, `helado ${choiceName}`, `${choiceName} helado`, `helado sabor ${choiceName}`];
+             for (const p of possibleNames) {
+                 if (suppliesMap[p]) { supply = suppliesMap[p]; break; }
+             }
+          }
+          if (!supply && choice.type === 'sauce') {
+             if (suppliesMap[`salsa ${choiceName}`]) supply = suppliesMap[`salsa ${choiceName}`];
+             else if (suppliesMap[`salsa de ${choiceName}`]) supply = suppliesMap[`salsa de ${choiceName}`];
+          }
+
           if (supply) {
               let deductionAmount = 0;
               const productName = (product?.name || '').toLowerCase();
               
               // REGLAS ESPECÍFICAS DE GRAMAJES (Custom Logic)
-              if (choiceName === 'arequipe' || choiceName === 'salsa arequipe') {
+              if (choice.type === 'flavor') {
+                  const isGrams = supplyInfo.unit?.toLowerCase() === 'g' || supplyInfo.unit?.toLowerCase() === 'gramos';
+
+                  if (productName.includes('cuchareable') || productName.includes('ensalada') || productName.includes('salpicón') || productName.includes('salpicon') || productName.includes("copa d'li") || productName.includes("copa d´li")) {
+                      const val = supplyInfo.yieldPerSize?.mini || (isGrams ? 80 : 62);
+                      deductionAmount = isGrams ? val : 1 / val;
+                  } else if (productName.includes("capricho") || productName.includes('copa queso') || productName.includes('copa favorita')) {
+                      const val = supplyInfo.yieldPerSize?.small || (isGrams ? 90 : 55);
+                      deductionAmount = isGrams ? val : 1 / val;
+                  } else {
+                      const val = supplyInfo.yieldPerSize?.medium || (isGrams ? 100 : 50);
+                      deductionAmount = isGrams ? val : 1 / val;
+                  }
+              }
+              else if (choiceName === 'queso' || choiceName === 'adición queso') {
+                  if (productName.includes('mini') && productName.includes('ensalada')) deductionAmount = 100;
+                  else if (productName.includes('pequeña') && productName.includes('ensalada')) deductionAmount = 150;
+                  else if (productName.includes('mediana') && productName.includes('ensalada')) deductionAmount = 200;
+                  else if (productName.includes('grande') && productName.includes('ensalada')) deductionAmount = 250;
+                  else if (productName.includes("copa d'li") || productName.includes("copa d´li") || productName.includes('salpicón') || productName.includes('salpicon') || productName.includes('copa favorita')) deductionAmount = 100;
+                  else if (productName.includes('oblea tradicional') || choiceName === 'adición queso') deductionAmount = 150;
+                  else if (productName.includes('oblea cuchareable') || productName.includes('copa queso')) deductionAmount = 200;
+                  else deductionAmount = 100; // Default
+                  
+                  if (supply.unit?.toLowerCase() === 'kg') deductionAmount /= 1000;
+              }
+              else if (choiceName === 'arequipe' || choiceName === 'salsa arequipe') {
                   // asumiendo unit = Kg (1000g) o Litro
                   if (productName.includes('cuchareable')) deductionAmount = 50 / 1000;
                   else if (productName.includes('oblea')) deductionAmount = 30 / 1000;
@@ -140,10 +181,7 @@ export async function deductInventory(cartItems: CartItem[], packagingSupplies?:
                   // asumiendo unit = Kg (1000g)
                   if (productName.includes('ensalada')) deductionAmount = 21.1 / 1000; // basado en 443g / 21
               }
-              else if (choiceName === 'kiwi') { 
-                  // asumiendo unit = Kg (1000g)
-                  if (productName.includes('ensalada') && size !== 'mini') deductionAmount = 12.8 / 1000; // basado en 77g / 6
-              }
+
               else if (choiceName === 'maní' || choiceName === 'mani') {
                   // The user requested 2gr de maní
                   deductionAmount = 2 / 1000;
@@ -187,12 +225,12 @@ export async function deductInventory(cartItems: CartItem[], packagingSupplies?:
     const promises = Object.entries(deductions).map(([supplyId, amount]) => {
       if (amount <= 0) return Promise.resolve();
       return updateDoc(doc(db, 'supplies', supplyId), {
-        currentStock: increment(-amount) // Resta el monto calculado
+        currentStock: increment(isRestore ? amount : -amount) // Resta o suma el monto calculado
       });
     });
 
     await Promise.all(promises);
-    console.log("Inventario estático y dinámico descontado exitosamente", deductions);
+    console.log(`Inventario estático y dinámico ${isRestore ? 'restaurado' : 'descontado'} exitosamente`, deductions);
 
   } catch (error) {
     console.error("Error descontando inventario:", error);

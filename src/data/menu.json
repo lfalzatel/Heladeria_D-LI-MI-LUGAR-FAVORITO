@@ -470,13 +470,68 @@
           "scoops": 1,
           "price": 4500,
           "label": "Sencilla",
-          "recipe": []
+          "recipe": [
+            {
+              "supplyId": "xxe4z3w0ji3J5vFrRQYr",
+              "name": "Conchitas",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "6wY8QFazQNFhy0ABmTQh",
+              "name": "helado",
+              "quantity": 1,
+              "unit": "und"
+            }
+          ]
         },
         {
           "label": "Doble",
           "price": 6500,
           "scoops": 2,
           "recipe": [
+            {
+              "supplyId": "xxe4z3w0ji3J5vFrRQYr",
+              "name": "Conchitas",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
@@ -490,6 +545,30 @@
           "scoops": 3,
           "price": 8500,
           "recipe": [
+            {
+              "supplyId": "xxe4z3w0ji3J5vFrRQYr",
+              "name": "Conchitas",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
@@ -570,6 +649,30 @@
           "label": "Sencillo",
           "recipe": [
             {
+              "supplyId": "Zn0HGZ9pBrCLdhnPEc7S",
+              "name": "Conos",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
               "quantity": 1,
@@ -582,6 +685,30 @@
           "scoops": 2,
           "label": "Doble",
           "recipe": [
+            {
+              "supplyId": "Zn0HGZ9pBrCLdhnPEc7S",
+              "name": "Conos",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
@@ -787,7 +914,7 @@
         }
       ],
       "cardColor": null,
-      "description": "Copa de helado con dos sabores a elección, arequipe, fresas, kiwi, durazno, queso, chantilly y barquillo.",
+      "description": "Copa de helado con dos sabores a elección, fresas, kiwi y durazno (a elección), arequipe, queso, chantilly y barquillo.",
       "requiresFlavors": true,
       "name": "Copa Favorita",
       "salesCount": 2,
@@ -802,7 +929,68 @@
       "imageUrl": "/Images/products/copa_favorita.png",
       "basePrice": null,
       "isActive": true,
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 2,
+          "unit": "por"
+        },
+        {
+          "supplyId": "1iHkGY7x8hP3aPpSsTiF",
+          "name": "Fresa",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "o97hn4XJ0WInMW8mHLay",
+          "name": "Kiwi",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "G06SiLwcEafPShAjF5Lk",
+          "name": "Durazno",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "EzgWSO8MusrXfaAt9XhV",
+          "name": "Arequipe",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     },
     {
       "id": "copa-queso",
@@ -811,7 +999,7 @@
       "requiresFruitChoice": false,
       "isActive": true,
       "requiresFlavors": true,
-      "description": "Copa de helado con dos sabores a elección, lecherita, doble porción de queso, crema y barquillo.",
+      "description": "Copa de helado con dos sabores a elección, lecherita, doble porción de queso, chantilly y barquillo.",
       "variants": [
         {
           "price": 14000,
@@ -826,7 +1014,50 @@
       },
       "name": "Copa Queso",
       "salesCount": 5,
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 2,
+          "unit": "por"
+        },
+        {
+          "supplyId": "CiZcLsMlleKivYXP3aaq",
+          "name": "Lechera",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 2,
+          "unit": "por"
+        },
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     },
     {
       "id": "copa-salpicon",
@@ -836,7 +1067,7 @@
         "nanoseconds": 572000000
       },
       "name": "Copa de Salpicón",
-      "description": "Refrescante salpicón de banano, papaya y fruta fresca (fresa o mango) con queso rallado, helado Mimo's a elección, lechera y barquillo. Servido en copa.",
+      "description": "Refrescante salpicón con banano y papaya, base de fruta a elección (fresa o mango), queso rallado, una bola de helado Mimo's, lechera y barquillo.",
       "includedExtras": {
         "queso": true,
         "note": "La copa incluye queso rallado."
@@ -867,7 +1098,62 @@
       "requiresSauces": false,
       "salesCount": 14,
       "category": "salpic-n",
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "RlEJxlSvmDxeAmHX3vSs",
+          "name": "Banano",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "Ugnw0DsBnGE3CYpTGm1x",
+          "name": "Papaya",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "YzC6Lh3PQssKLIVvzVFZ",
+          "name": "Fruta",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "rp58vljdMGtvlq1QPI1z",
+          "name": "Queso",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "CiZcLsMlleKivYXP3aaq",
+          "name": "Lechera",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     },
     {
       "id": "cucurucho",
@@ -896,6 +1182,30 @@
           "scoops": 1,
           "recipe": [
             {
+              "supplyId": "yGJIo16EOdpC10Fjbzs9",
+              "name": "Cucuruchos",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
               "quantity": 1,
@@ -909,6 +1219,30 @@
           "price": 6000,
           "recipe": [
             {
+              "supplyId": "yGJIo16EOdpC10Fjbzs9",
+              "name": "Cucuruchos",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
               "quantity": 2,
@@ -921,6 +1255,30 @@
           "scoops": 3,
           "label": "Triple",
           "recipe": [
+            {
+              "supplyId": "yGJIo16EOdpC10Fjbzs9",
+              "name": "Cucuruchos",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "GVzW5WJVA3Fzb017lsQL",
+              "name": "Servilletas para Conos",
+              "quantity": 1,
+              "unit": "Paquete"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
@@ -993,7 +1351,50 @@
         "seconds": 1779756244,
         "nanoseconds": 572000000
       },
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 2,
+          "unit": "por"
+        },
+        {
+          "supplyId": "mtVxskso6RCadP9Es6XZ",
+          "name": "Brownie",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "EzgWSO8MusrXfaAt9XhV",
+          "name": "Arequipe",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "fOUftWtgphnmRHdvEQ04",
+          "name": "Chantilly",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     },
     {
       "id": "ensalada-frutas",
@@ -1354,10 +1755,47 @@
       ],
       "category": "copas",
       "basePrice": null,
-      "description": "Porción de fruta fresca acompañada de deliciosa crema.",
+      "description": "Porción de fresa, mango y durazno a tu elección acompañada de nuestra deliciosa crema.",
       "salesCount": 5,
       "scoops": null,
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "1iHkGY7x8hP3aPpSsTiF",
+          "name": "Fresa",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "BShilodzthyQJkHi2riC",
+          "name": "Mango",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "G06SiLwcEafPShAjF5Lk",
+          "name": "Durazno",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "DeIL9YPHY4wn2r6xLjDE",
+          "name": "Crema de Leche Ensaladas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     },
     {
       "id": "malteada",
@@ -1377,7 +1815,7 @@
         }
       ],
       "name": "Malteada",
-      "description": "Deliciosa malteada preparada con helado artesanal, leche y salsa a elegir.",
+      "description": "Deliciosa malteada preparada con un sabor de helado artesanal, leche y salsa a elegir.",
       "salesCount": 5,
       "category": "bebidas-calientes",
       "requiresFlavors": true,
@@ -1388,7 +1826,38 @@
       },
       "isActive": true,
       "requiresFruitChoice": false,
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "QiSGiB8rBXXNvMkuOq3C",
+          "name": "Leche deslactosada",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+          "name": "Salsa",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     },
     {
       "id": "oblea-cuchareable",
@@ -1457,8 +1926,8 @@
         {
           "supplyId": "Vlive457m1cTaOBLepUT",
           "name": "Crema de Leche Oblea Cuchareable",
-          "quantity": 0.05,
-          "unit": "kg"
+          "quantity": 183.5,
+          "unit": "g"
         },
         {
           "supplyId": "fOUftWtgphnmRHdvEQ04",
@@ -1690,6 +2159,42 @@
           "price": 3500,
           "recipe": [
             {
+              "supplyId": "po8wRQbsZTpCFAV6j6LO",
+              "name": "Vasos 7 ONZ",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "1aeTwgz5tOMxdLSQ3aGV",
+              "name": "Tapas vasos 7 ONZ",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+              "name": "Cuchara Peque�a",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "j6uusMRF7v5MKxzS0rQy",
+              "name": "Servilletas",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
               "quantity": 1,
@@ -1702,6 +2207,42 @@
           "label": "Doble",
           "price": 5500,
           "recipe": [
+            {
+              "supplyId": "FXmLB3gV5ar51UbPnZgp",
+              "name": "Vasos 10 ONZ",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "s2XVzIPeFC3sW9yCqkLi",
+              "name": "Tapas vasos 10 ONZ",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
+              "name": "Cuchara Peque�a",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "j6uusMRF7v5MKxzS0rQy",
+              "name": "Servilletas",
+              "quantity": 1,
+              "unit": "und"
+            },
+            {
+              "supplyId": "uOU7jJwk3v9b2OEQhlBk",
+              "name": "Salsa",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
+            {
+              "supplyId": "rb3qDHM3r7c46gAgAD9c",
+              "name": "Toppings",
+              "quantity": 1,
+              "unit": "porci�n"
+            },
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
@@ -1754,7 +2295,7 @@
       "id": "vaso-salpicon",
       "scoops": null,
       "basePrice": null,
-      "description": "Frutas frescas (banano, papaya y mango o fresa) con helado Mimo's, lechera y barquillo, servidas en vaso para llevar. Sin queso incluido — puede agregarse como adición. Las adiciones extras tienen costo adicional.",
+      "description": "Salpicón con banano y papaya, base de fruta a elección (fresa o mango) con una bola de helado Mimo's, lechera y barquillo. Servido en vaso para llevar. (Sin queso).",
       "salesCount": 29,
       "category": "helados",
       "variants": [
@@ -1800,7 +2341,68 @@
         "queso": false,
         "note": "El vaso NO incluye queso (solo la copa lo incluye). Puede agregarse como adición con costo."
       },
-      "recipe": []
+      "recipe": [
+        {
+          "supplyId": "RlEJxlSvmDxeAmHX3vSs",
+          "name": "Banano",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "Ugnw0DsBnGE3CYpTGm1x",
+          "name": "Papaya",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "YzC6Lh3PQssKLIVvzVFZ",
+          "name": "Fruta",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "6wY8QFazQNFhy0ABmTQh",
+          "name": "Helado",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "CiZcLsMlleKivYXP3aaq",
+          "name": "Lechera",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "4W3Z9a8JkmgfQJFjvMBY",
+          "name": "Barquillos",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "VckYsY5I7V64eSh8uXsz",
+          "name": "Vasos 13 ONZ",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "Mfh6bESEfhfADxYf613O",
+          "name": "Tapas Vaso 13, 14 y 16 ONZ",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
+          "name": "Cucharas pequeñas",
+          "quantity": 1,
+          "unit": "por"
+        },
+        {
+          "supplyId": "j6uusMRF7v5MKxzS0rQy",
+          "name": "Servilletas",
+          "quantity": 1,
+          "unit": "por"
+        }
+      ]
     }
   ],
   "supplies": [
@@ -2739,8 +3341,8 @@
     },
     {
       "id": "Vlive457m1cTaOBLepUT",
-      "minLimit": 1,
-      "unit": "kg",
+      "minLimit": 780,
+      "unit": "g",
       "category": "Lácteos",
       "currentStock": 0,
       "name": "Crema de Leche Oblea Cuchareable",
@@ -3550,6 +4152,406 @@
       "minLimit": 2,
       "currentStock": 10,
       "category": "Desechables"
+    },
+    {
+      "id": "helado_arequipe",
+      "name": "Helado de Arequipe",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_brownie",
+      "name": "Helado de Brownie",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_chicle",
+      "name": "Helado de Chicle",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_chocolate",
+      "name": "Helado de Chocolate",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_fresa",
+      "name": "Helado de Fresa",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_frutos-rojos",
+      "name": "Helado de Frutos Rojos",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_mandarina",
+      "name": "Helado de Mandarina",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_mango-biche",
+      "name": "Helado de Mango Biche",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_maracuya",
+      "name": "Helado de Maracuyá",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_nata-mani",
+      "name": "Helado de Nata Maní",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_ron-pasas",
+      "name": "Helado de Ron Pasas",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_vainilla",
+      "name": "Helado de Vainilla",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_vainilla-chips",
+      "name": "Helado de Vainilla Chips",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_vainilla-pasas",
+      "name": "Helado de Vainilla Pasas",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_veteado-caramelo",
+      "name": "Helado de Veteado de Caramelo",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "id": "helado_veteado-mora",
+      "name": "Helado de Veteado de Mora",
+      "category": "Helado base",
+      "unit": "g",
+      "currentStock": 0,
+      "minLimit": 1000,
+      "minLimitUnit": "base",
+      "portionsPerUnit": 1,
+      "stockMinimum": 1000,
+      "stockQuantity": 0,
+      "purchaseUnit": "g",
+      "yieldPerSize": {
+        "mini": 80,
+        "small": 90,
+        "medium": 100,
+        "large": null
+      },
+      "yieldPerUnit": 1,
+      "isVirtual": false,
+      "updatedAt": {
+        "seconds": 1780882561,
+        "nanoseconds": 0
+      }
     }
   ]
 }

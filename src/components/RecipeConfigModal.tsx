@@ -21,37 +21,74 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
   // Cargar receta cuando cambia el producto o la variante activa
   useEffect(() => {
     if (product && isOpen) {
+      const sizeHelper = (prodName: string, varLabel: string) => {
+        const name = (prodName + ' ' + varLabel).toLowerCase();
+        if (name.includes('mini')) return 'mini';
+        if (name.includes('pequeñ') || name.includes('sencill')) return 'small';
+        if (name.includes('grand') || name.includes('triple')) return 'large';
+        return 'medium';
+      };
+
+      const syncWithSupplyYield = (recipeToLoad: RecipeIngredient[], varLabel: string) => {
+        const size = sizeHelper(product.name, varLabel);
+        return recipeToLoad.map(ing => {
+            const supply = supplies.find(s => s.id === ing.supplyId);
+            if (supply?.yieldPerSize && supply.yieldPerSize[size]) {
+                return { ...ing, quantity: supply.yieldPerSize[size] };
+            }
+            return ing;
+        });
+      };
+
       if (activeVariant === 'base') {
-        setCurrentRecipe(product.recipe || []);
+        setCurrentRecipe(syncWithSupplyYield(product.recipe || [], 'base'));
       } else {
         const variant = product.variants?.find(v => v.label === activeVariant);
         if ((!variant?.recipe || variant.recipe.length === 0) && product.recipe && product.recipe.length > 0) {
-          setCurrentRecipe([...product.recipe]);
+          setCurrentRecipe(syncWithSupplyYield([...product.recipe], activeVariant));
           toast.info(`Cargada receta base para ${activeVariant}`);
         } else {
-          setCurrentRecipe(variant?.recipe || []);
+          setCurrentRecipe(syncWithSupplyYield(variant?.recipe || [], activeVariant));
         }
       }
     }
-  }, [product, activeVariant, isOpen]);
+  }, [product, activeVariant, isOpen, supplies]);
 
   if (!isOpen || !product) return null;
 
-  const filteredSupplies = supplies.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSupplies = supplies
+    .filter(s => 
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.category.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const aInRecipe = currentRecipe.some(i => i.supplyId === a.id);
+      const bInRecipe = currentRecipe.some(i => i.supplyId === b.id);
+      if (aInRecipe && !bInRecipe) return -1;
+      if (!aInRecipe && bInRecipe) return 1;
+      return a.name.localeCompare(b.name);
+    });
 
   const toggleIngredient = (supply: Supply) => {
     const exists = currentRecipe.find(i => i.supplyId === supply.id);
     if (exists) {
       setCurrentRecipe(currentRecipe.filter(i => i.supplyId !== supply.id));
     } else {
+      const sizeHelper = (prodName: string, varLabel: string) => {
+        const name = (prodName + ' ' + varLabel).toLowerCase();
+        if (name.includes('mini')) return 'mini';
+        if (name.includes('pequeñ') || name.includes('sencill')) return 'small';
+        if (name.includes('grand') || name.includes('triple')) return 'large';
+        return 'medium';
+      };
+      const size = sizeHelper(product.name, activeVariant);
+      const defaultQty = (supply.yieldPerSize && supply.yieldPerSize[size]) ? supply.yieldPerSize[size] : 1;
+
       const newIngredient: RecipeIngredient = {
         supplyId: supply.id,
         name: supply.name,
-        quantity: 1,
-        unit: supply.consumptionUnit || 'porción'
+        quantity: defaultQty,
+        unit: supply.unit
       };
       setCurrentRecipe([...currentRecipe, newIngredient]);
     }
@@ -60,7 +97,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
   const updateQuantity = (supplyId: string, delta: number) => {
     setCurrentRecipe(currentRecipe.map(i => {
       if (i.supplyId === supplyId) {
-        const newQty = Math.max(0.1, i.quantity + delta);
+        const newQty = Math.max(0.1, (Number(i.quantity) || 0) + delta);
         return { ...i, quantity: Number(newQty.toFixed(2)) };
       }
       return i;
@@ -88,7 +125,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
     const supply = supplies.find(s => s.id === ing.supplyId);
     if (!supply || !supply.lastPurchasePrice || !supply.yieldPerUnit) return acc;
     const costPerPortion = supply.lastPurchasePrice / supply.yieldPerUnit;
-    return acc + (costPerPortion * ing.quantity);
+    return acc + (costPerPortion * (Number(ing.quantity) || 0));
   }, 0);
 
   return (
@@ -182,9 +219,14 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                 <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Costo Producción</p>
                 <p className="text-base font-black text-orange-600">{formatCurrency(estimatedCost)}</p>
               </div>
-              <div className="flex flex-col items-end">
-                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Sugerido (60% Margen)</p>
-                <p className="text-base font-black text-emerald-600">{formatCurrency(estimatedCost > 0 ? estimatedCost / 0.4 : 0)}</p>
+              <div className="flex flex-col items-end text-right">
+                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Ganancia (Margen Real)</p>
+                <p className="text-base font-black text-emerald-600">
+                  {formatCurrency(product.price - estimatedCost)}
+                  <span className="text-xs font-bold ml-1 opacity-80">
+                    ({product.price > 0 ? (((product.price - estimatedCost) / product.price) * 100).toFixed(1) : 0}%)
+                  </span>
+                </p>
               </div>
             </div>
 
@@ -223,10 +265,26 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="min-w-[48px] px-2 text-center font-black text-sm text-primary flex items-center justify-center gap-1">
-                            {Number.isInteger(ingredient.quantity) ? ingredient.quantity : Number(ingredient.quantity).toFixed(4).replace(/\.?0+$/, '')}
+                          <div className="flex items-center justify-center gap-1 min-w-[64px] px-1">
+                            <input
+                              type="number"
+                              step="any"
+                              value={ingredient.quantity}
+                              onChange={(e) => {
+                                setCurrentRecipe(currentRecipe.map(i => i.supplyId === supply.id ? { ...i, quantity: e.target.value as any } : i));
+                              }}
+                              onBlur={(e) => {
+                                const val = Number(e.target.value);
+                                if (!e.target.value || isNaN(val) || val < 0) {
+                                  setCurrentRecipe(currentRecipe.map(i => i.supplyId === supply.id ? { ...i, quantity: 0.1 } : i));
+                                } else {
+                                  setCurrentRecipe(currentRecipe.map(i => i.supplyId === supply.id ? { ...i, quantity: Number(val.toFixed(4)) } : i));
+                                }
+                              }}
+                              className="w-16 text-center font-black text-sm text-primary bg-transparent outline-none focus:bg-primary/5 rounded py-0.5"
+                            />
                             <span className="text-[9px] text-slate-400 font-bold uppercase">{supply.unit}</span>
-                          </span>
+                          </div>
                           <button
                             onClick={() => updateQuantity(supply.id, 0.5)}
                             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-emerald-50 text-secondary hover:text-emerald-500 transition-colors"

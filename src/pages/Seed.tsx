@@ -201,6 +201,37 @@ export default function Seed() {
             >
               {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Añadir Insumos Faltantes'}
             </button>
+
+            <button 
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  const { default: menuData } = await import('../data/menu.json');
+                  const snap = await getDocs(collection(db, 'products'));
+                  let count = 0;
+                  for (const d of snap.docs) {
+                    const localProd = menuData.products.find(p => p.id === d.id);
+                    if (localProd && (!d.data().recipe || d.data().recipe.length === 0) && localProd.recipe && localProd.recipe.length > 0) {
+                      await updateDoc(d.ref, { 
+                        recipe: localProd.recipe,
+                        description: localProd.description
+                      });
+                      count++;
+                    }
+                  }
+                  toast.success(`¡Se actualizaron recetas y descripciones de ${count} productos!`);
+                  setDone(true);
+                } catch(e: any) {
+                  toast.error('Error: ' + e.message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="w-full py-4 rounded-2xl bg-primary/10 border-2 border-primary text-primary font-bold hover:bg-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Sincronizar Recetas Nuevas'}
+            </button>
           </div>
         )}
 

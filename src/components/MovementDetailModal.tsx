@@ -1,9 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon } from 'lucide-react';
+import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { compressImage } from '../utils/imageCompressor';
+import { doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { restoreInventory } from '../utils/inventory';
+import { toast } from 'sonner';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -59,12 +63,83 @@ export default function MovementDetailModal({
 }: MovementDetailModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
+  const [editPaymentMethod, setEditPaymentMethod] = useState('');
+  const [editEfectivo, setEditEfectivo] = useState(0);
 
   if (!data) return null;
 
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
   const isOnlinePedido = !!data.clienteId;
+  const isToday = data?.createdAt && new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toDateString() === new Date().toDateString();
+  const canEditPayment = isStaff && isToday;
+
+  const handleSavePayment = async () => {
+    try {
+      const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
+      const isMixto = editPaymentMethod === 'Mixto';
+      let splitDetails = null;
+      if (isMixto) {
+         splitDetails = {
+           efectivo: editEfectivo,
+           transferencia: data.total - editEfectivo
+         };
+      }
+      await updateDoc(doc(db, collectionName, data.id), {
+        paymentMethod: editPaymentMethod,
+        isMixto,
+        splitDetails
+      });
+      data.paymentMethod = editPaymentMethod;
+      data.isMixto = isMixto;
+      data.splitDetails = splitDetails;
+      setIsEditingPayment(false);
+    } catch (e) {
+      console.error(e);
+      alert('Error guardando pago');
+    }
+  };
+
+  const handleDeleteSale = async () => {
+    if (!window.confirm('⚠️ ADVERTENCIA: ¿Estás completamente seguro de que deseas eliminar esta venta? Esto restaurará los insumos al inventario y eliminará el registro monetario. Esta acción no se puede deshacer.')) return;
+
+    setIsDeleting(true);
+    try {
+      if (data.items?.length > 0) {
+         await restoreInventory(data.items, data.packagingSupplies || []);
+         const updatePromises = data.items.map((item: any) => 
+           updateDoc(doc(db, 'products', item.productId), {
+             salesCount: increment(-item.quantity)
+           })
+         );
+         if (data.clienteId) {
+           let pointsChange = -1;
+           const hasReward = data.items.some((item: any) => item.isLoyaltyReward);
+           if (hasReward) pointsChange += 9;
+           updatePromises.push(
+             updateDoc(doc(db, 'users', data.clienteId), {
+               loyaltyPoints: increment(pointsChange)
+             })
+           );
+         }
+         await Promise.all(updatePromises).catch(e => console.error('Error restaurando extras', e));
+      }
+
+      const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
+      await deleteDoc(doc(db, collectionName, data.id));
+
+      toast.success('Venta eliminada y el inventario ha sido restaurado');
+      onClose();
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Error al eliminar: ' + e.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -224,12 +299,85 @@ export default function MovementDetailModal({
                        <p className="text-[9px] text-secondary flex items-center gap-1"><Clock className="w-3 h-3" />{time}</p>
                      </div>
                      {/* Método de pago */}
-                     <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm">
-                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Pago</p>
-                       <div className="flex items-center gap-1.5 mt-0.5">
-                         <PaymentIcon method={data.paymentMethod} />
-                         <p className="font-headline font-bold text-on-surface text-xs capitalize">{data.paymentMethod || 'Efectivo'}</p>
+                     <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-1 border border-outline/5 shadow-sm relative">
+                       <div className="flex items-center justify-between">
+                         <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Pago</p>
+                         {canEditPayment && !isEditingPayment && (
+                           <button onClick={() => {
+                              setIsEditingPayment(true);
+                              setEditPaymentMethod(data.paymentMethod || 'Efectivo');
+                              setEditEfectivo(data.splitDetails?.efectivo || data.total || 0);
+                           }} className="text-secondary/50 hover:text-primary transition-colors cursor-pointer">
+                             <Edit3 className="w-3.5 h-3.5" />
+                           </button>
+                         )}
                        </div>
+                       
+                       {!isEditingPayment ? (
+                         <div className="flex items-center gap-1.5 mt-0.5">
+                           <PaymentIcon method={data.paymentMethod} />
+                           <p className="font-headline font-bold text-on-surface text-xs capitalize">{data.paymentMethod || 'Efectivo'}</p>
+                           {data.isMixto && data.splitDetails && (
+                             <span className="text-[9px] text-secondary font-bold ml-1">
+                               (Efe: {formatCurrency(data.splitDetails.efectivo)} / Trans: {formatCurrency(data.splitDetails.transferencia)})
+                             </span>
+                           )}
+                         </div>
+                       ) : (
+                         <div className="flex flex-col gap-2 mt-1">
+                           <select
+                             value={editPaymentMethod}
+                             onChange={(e) => setEditPaymentMethod(e.target.value)}
+                             className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full cursor-pointer"
+                           >
+                             <option value="Efectivo">Efectivo</option>
+                             <option value="Nequi">Nequi</option>
+                             <option value="Daviplata">Daviplata</option>
+                             <option value="Tarjeta">Tarjeta</option>
+                             <option value="Transferencia">Transferencia</option>
+                             <option value="Mixto">Mixto</option>
+                             <option value="credito">Crédito</option>
+                           </select>
+                           
+                           {editPaymentMethod === 'Mixto' && (
+                             <div className="flex flex-col gap-1.5">
+                               <div className="flex flex-col gap-0.5">
+                                 <label className="text-[8px] font-black uppercase text-secondary/60">Monto Efectivo</label>
+                                 <input
+                                   type="number"
+                                   value={editEfectivo}
+                                   onChange={(e) => setEditEfectivo(Number(e.target.value) || 0)}
+                                   className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full"
+                                 />
+                               </div>
+                               <div className="flex flex-col gap-0.5">
+                                 <label className="text-[8px] font-black uppercase text-secondary/60">Monto Transferencia (Calculado)</label>
+                                 <input
+                                   type="number"
+                                   disabled
+                                   value={data.total - editEfectivo}
+                                   className="bg-surface-container border border-outline/10 rounded-lg text-xs p-1.5 w-full text-secondary"
+                                 />
+                               </div>
+                             </div>
+                           )}
+                           
+                           <div className="flex gap-2 mt-1">
+                             <button
+                               onClick={() => setIsEditingPayment(false)}
+                               className="flex-1 py-1.5 text-[9px] font-bold text-secondary bg-surface-container rounded-md hover:bg-surface-container-high cursor-pointer"
+                             >
+                               Cancelar
+                             </button>
+                             <button
+                               onClick={handleSavePayment}
+                               className="flex-1 py-1.5 text-[9px] font-bold text-white bg-primary rounded-md hover:bg-primary/90 cursor-pointer"
+                             >
+                               Guardar
+                             </button>
+                           </div>
+                         </div>
+                       )}
                      </div>
                    </div>
                  );
@@ -397,6 +545,19 @@ export default function MovementDetailModal({
                        )}
                     </div>
                  </section>
+               )}
+
+               {(profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador') && (
+                 <div className="px-4 sm:px-8 mt-6 pb-4">
+                   <button 
+                     onClick={handleDeleteSale}
+                     disabled={isDeleting}
+                     className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-bold text-[11px] uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                   >
+                     <AlertTriangle className="w-4 h-4" />
+                     {isDeleting ? 'Eliminando y Restaurando...' : 'Eliminar Venta Permanentemente'}
+                   </button>
+                 </div>
                )}
             </div>
 

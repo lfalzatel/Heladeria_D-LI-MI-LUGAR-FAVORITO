@@ -139,6 +139,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /providers/{id} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
+
     // Gastos: Finanzas personales y control de gastos
     match /gastos/{gastoId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
