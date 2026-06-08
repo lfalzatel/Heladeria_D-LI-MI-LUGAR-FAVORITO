@@ -159,3 +159,64 @@ export function generatePurchasesExcel(
   const fileName = `Compras_Excel_${dateStr.replace(/\//g, '-')}_${sellerName}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }
+
+export function generateExpenseExcel(
+  sellerName: string, 
+  dateStr: string,
+  gastos: any[],
+  totalGastado: number
+) {
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const reportData: any[][] = [
+    ['REPORTE DE GASTOS D\'LI - LUGAR FAVORITO'],
+    [],
+    ['Fecha del reporte:', dateStr],
+    ['Generado por:', sellerName],
+    [],
+    ['--- RESUMEN DE GASTOS ---'],
+    ['Total Gastado', totalGastado],
+    [],
+    ['--- DETALLE DE GASTOS ---'],
+    ['Fecha/Hora', 'Categoría', 'Descripción', 'Usuario', 'Monto']
+  ];
+
+  if (gastos.length === 0) {
+    reportData.push(['No hay gastos registrados en este período', '', '', '', '']);
+  } else {
+    gastos.forEach(g => {
+      const dateObj = g.dateObj || (g.createdAt ? (g.createdAt.toDate ? g.createdAt.toDate() : (g.createdAt.seconds ? new Date(g.createdAt.seconds * 1000) : new Date(g.createdAt))) : new Date());
+      
+      reportData.push([
+        dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+        `${g.categoryEmoji || ''} ${g.categoryName || 'Sin Categoría'}`,
+        g.description || 'N/A',
+        g.userName || 'Usuario',
+        g.amount || 0
+      ]);
+    });
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(reportData);
+
+  ws['!cols'] = [
+    { wch: 25 }, // Fecha/Hora
+    { wch: 25 }, // Categoría
+    { wch: 45 }, // Descripción
+    { wch: 20 }, // Usuario
+    { wch: 15 }  // Monto
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reporte de Gastos');
+
+  const fileName = `Gastos_Excel_${dateStr.replace(/\//g, '-')}_${sellerName}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}

@@ -58,7 +58,7 @@ export function ExpenseCategoryManager({ isOpen, onClose }: { isOpen: boolean; o
                     value={newCatName}
                     onChange={e => setNewCatName(e.target.value)}
                     placeholder="Ej: Aseo, Servicios..."
-                    className="flex-1 h-12 bg-white border border-outline/20 rounded-2xl px-4 text-sm font-bold focus:border-primary outline-none"
+                    className="flex-1 min-w-0 h-12 bg-white border border-outline/20 rounded-2xl px-4 text-sm font-bold focus:border-primary outline-none"
                   />
                   <button onClick={handleAdd} disabled={!newCatName.trim() || isAdding}
                     className="h-12 w-12 shrink-0 bg-primary text-white rounded-2xl flex items-center justify-center disabled:opacity-50"

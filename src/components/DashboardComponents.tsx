@@ -123,15 +123,39 @@ export function TrendChart({ data, color = 'currentColor', label = 'Ventas' }: {
     </div>
   );
 
-  // Group by day (last 7 days)
-  const byDay: Record<string, number> = {};
-  const today = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    byDay[d.toLocaleDateString('es-CO')] = 0;
+  // Extract valid dates
+  const dates = data.map(s => toDateS(s.timestamp || s.createdAt)).filter(Boolean) as Date[];
+  if (dates.length === 0) {
+    return (
+      <div className="h-32 flex flex-col items-center justify-center opacity-20 bg-surface-container/30 rounded-3xl border border-dashed border-outline/30">
+        <TrendingUp className="w-8 h-8 mb-2" />
+        <p className="text-[10px] font-black uppercase tracking-widest">Sin datos para graficar</p>
+      </div>
+    );
   }
 
+  let minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+  let maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  
+  minDate.setHours(0,0,0,0);
+  maxDate.setHours(0,0,0,0);
+
+  // Si minDate === maxDate (ej. seleccionaste "Hoy" o solo hay registros de un día)
+  // Expandimos un poco la ventana para que se vea como una gráfica
+  if (minDate.getTime() === maxDate.getTime()) {
+    minDate = new Date(maxDate);
+    minDate.setDate(maxDate.getDate() - 6);
+  }
+
+  // Generar todos los días en el rango
+  const byDay: Record<string, number> = {};
+  const current = new Date(minDate);
+  while (current <= maxDate) {
+    byDay[current.toLocaleDateString('es-CO')] = 0;
+    current.setDate(current.getDate() + 1);
+  }
+
+  // Agrupar los datos
   data.forEach(s => {
     const d = toDateS(s.timestamp || s.createdAt);
     if (d) {

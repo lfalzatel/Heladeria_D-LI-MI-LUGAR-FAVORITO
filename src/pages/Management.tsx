@@ -50,7 +50,8 @@ import {
   MapPin,
   Save,
   Trash2,
-  Star
+  Star,
+  TrendingUp
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -66,8 +67,9 @@ import CategoryManager from '../components/CategoryManager';
 import { PurchaseModal, PurchaseDetailModal, Supply as SupplyType, PurchaseRecord } from '../components/PurchaseModals';
 import { WasteModal } from '../components/WasteModal';
 import { generatePurchasesPDF, captureReportImage } from '../utils/pdfGenerator';
-import { generatePurchasesExcel } from '../utils/excelGenerator';
-import ReportPreviewModal from '../components/ReportPreviewModal';
+import { generatePurchasesExcel, generateExpenseExcel } from '../utils/excelGenerator';
+import { ExpenseDetailModal, GastoRecord } from '../components/ExpenseDetailModal';
+import { ExpenseRankingModal } from '../components/ExpenseRankingModal';
 import { seedDatabase, DEFAULT_SUPPLIES } from '../services/seedService';
 import { syncProductImages } from '../services/imageFixService';
 import { StatCard, PurchaseCard } from '../components/SupplyStats';
@@ -82,6 +84,7 @@ import { Trophy } from 'lucide-react';
 import { ExpenseModal, ExpenseData } from '../components/ExpenseModal';
 import { ExpenseCategoryManager } from '../components/ExpenseCategoryManager';
 import { useExpenseCategoriesStore } from '../stores/useExpenseCategoriesStore';
+import ReportPreviewModal from '../components/ReportPreviewModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -222,6 +225,8 @@ export default function Management() {
   const [isGeneratingPurchasePDF, setIsGeneratingPurchasePDF] = useState(false);
   const [purchasePreviewData, setPurchasePreviewData] = useState<any>(null);
   const [purchasePreviewType, setPurchasePreviewType] = useState<'pdf' | 'excel' | 'image' | null>(null);
+  const [selectedGastoForDetail, setSelectedGastoForDetail] = useState<any | null>(null);
+  const [isExpenseRankingOpen, setIsExpenseRankingOpen] = useState(false);
 
   // ── Header Actions ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -461,6 +466,17 @@ export default function Management() {
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error('Error al registrar gasto');
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'gastos', id));
+      toast.success('Gasto eliminado exitosamente');
+      setSelectedGastoForDetail(null);
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error('Error al eliminar el gasto');
     }
   };
 
@@ -867,6 +883,20 @@ export default function Management() {
       toast.error('Ocurrió un error al procesar el reporte de compras');
       setIsPurchasePreviewModalOpen(false);
       setIsGeneratingPurchasePDF(false);
+    }
+  };
+
+  const handleExpensePreview = async (type: 'pdf' | 'excel' | 'image') => {
+    setShowPurchaseExportOptions(false);
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
+    const sellerName = currentUser?.name || 'Administrador';
+
+    if (type === 'excel') {
+      const totalGastado = filteredGastos.reduce((a, g) => a + (g.amount || 0), 0);
+      generateExpenseExcel(sellerName, dateStr, filteredGastos, totalGastado);
+      toast.success('Excel de Gastos descargado con éxito');
+    } else {
+       toast.error('Solo exportación Excel está soportada para gastos en este momento.');
     }
   };
 
@@ -1586,15 +1616,15 @@ export default function Management() {
                             <div className="px-3 py-2">
                               <p className="text-[10px] font-black uppercase tracking-widest text-secondary/60">Formato de Salida</p>
                             </div>
-                            <button onClick={() => handlePurchasePreview('excel')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                            <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('excel') : handlePurchasePreview('excel')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
                               <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">XLS</div>
                               <span className="font-bold text-on-surface">Descargar Excel</span>
                             </button>
-                            <button onClick={() => handlePurchasePreview('pdf')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                            <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('pdf') : handlePurchasePreview('pdf')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
                               <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-xs">PDF</div>
                               <span className="font-bold text-on-surface">Descargar PDF</span>
                             </button>
-                            <button onClick={() => handlePurchasePreview('image')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                            <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('image') : handlePurchasePreview('image')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
                               <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">JPG</div>
                               <span className="font-bold text-on-surface">Descargar Imagen</span>
                             </button>
@@ -1654,13 +1684,16 @@ export default function Management() {
                   <CalendarModal 
                     isOpen={showPurchaseCalendar}
                     onClose={() => setShowPurchaseCalendar(false)}
-                    allActivity={purchases.map(p => {
-                      let dateVal = new Date();
-                      if (p.createdAt?.toDate) dateVal = p.createdAt.toDate();
-                      else if (p.createdAt?.seconds) dateVal = new Date(p.createdAt.seconds * 1000);
-                      else if (p.createdAt) dateVal = new Date(p.createdAt);
-                      return { createdAt: dateVal };
-                    })}
+                    allActivity={operacionSubTab === 'gastos' 
+                      ? gastos.map(g => ({ createdAt: g.dateObj || new Date(g.createdAt) }))
+                      : purchases.map(p => {
+                          let dateVal = new Date();
+                          if (p.createdAt?.toDate) dateVal = p.createdAt.toDate();
+                          else if (p.createdAt?.seconds) dateVal = new Date(p.createdAt.seconds * 1000);
+                          else if (p.createdAt) dateVal = new Date(p.createdAt);
+                          return { createdAt: dateVal };
+                        })
+                    }
                     onSelectDate={(date) => {
                       setSelectedDate(date);
                       setPeriod('today');
@@ -1809,9 +1842,28 @@ export default function Management() {
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-red-600" />} label="Gastos Totales" value={formatCurrency(periodTotalGastos)} numericValue={periodTotalGastos} isCurrency={true} sub={`En ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
-                      <StatCard index={1} icon={<Package className="w-5 h-5 text-orange-500" />} label="Total Registros" value={filteredGastos.length.toString()} numericValue={filteredGastos.length} sub="Cantidad de gastos" accent="orange" />
-                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || '🏷️' : '🏷️'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" />
+                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-red-600" />} label="Gastos Totales" value={formatCurrency(periodTotalGastos)} numericValue={periodTotalGastos} isCurrency={true} sub={`En ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" onOpen={() => setIsExpenseRankingOpen(true)} />
+                      <StatCard index={1} icon={<Package className="w-5 h-5 text-orange-500" />} label="Total Registros" value={filteredGastos.length.toString()} numericValue={filteredGastos.length} sub="Cantidad de gastos" accent="orange" onOpen={() => setIsExpenseRankingOpen(true)} />
+                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || '🏷️' : '🏷️'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
+                    </div>
+                    
+                    <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-outline/10">
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-red-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-base text-on-surface">Tendencia de Gastos</h4>
+                            <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{PERIOD_LABELS[period]}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <TrendChart 
+                        data={filteredGastos.map(g => ({ createdAt: g.dateObj || new Date(g.createdAt), total: g.amount }))} 
+                        color="#dc2626" 
+                        label="Tendencia de Gastos" 
+                      />
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -1826,7 +1878,7 @@ export default function Management() {
                         </div>
                       ) : (
                         filteredGastos.map((g) => (
-                          <div key={g.id} className="bg-white rounded-2xl p-4 border border-outline/10 flex items-center justify-between shadow-sm">
+                          <div key={g.id} onClick={() => setSelectedGastoForDetail(g)} className="cursor-pointer bg-white rounded-2xl p-4 border border-outline/10 flex items-center justify-between shadow-sm hover:border-red-200 hover:shadow-md transition-all">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-lg">{g.categoryEmoji || '💸'}</div>
                               <div>
@@ -2469,6 +2521,24 @@ export default function Management() {
         onClose={() => setIsRankingModalOpen(false)} 
         filter={PERIOD_LABELS[period]} 
         ranking={ranking} 
+      />
+
+      <ExpenseDetailModal 
+        gasto={selectedGastoForDetail} 
+        onClose={() => setSelectedGastoForDetail(null)} 
+        onDelete={handleDeleteExpense}
+      />
+      
+      <ExpenseRankingModal 
+        isOpen={isExpenseRankingOpen} 
+        onClose={() => setIsExpenseRankingOpen(false)} 
+        filter={PERIOD_LABELS[period]} 
+        ranking={sortedExpenseCategories.map(c => ({
+          name: c.name,
+          emoji: c.emoji || '🏷️',
+          amount: c.amount,
+          percentage: periodTotalGastos > 0 ? (c.amount / periodTotalGastos) * 100 : 0
+        }))} 
       />
 
       <ReportPreviewModal
