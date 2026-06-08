@@ -2652,10 +2652,9 @@ export default function Management() {
             )}
           </div>
           
-          <div className="text-center mt-8 pt-4 border-t border-outline/10 text-xs font-bold text-secondary/50">
-            Sistema Integrado de Control - D'LI
           </div>
         </div>
+      </div>
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
         <div id="hidden-expense-image-report" className="bg-white p-8 w-[800px]">
           <div className="text-center mb-6 border-b border-outline/10 pb-4">
