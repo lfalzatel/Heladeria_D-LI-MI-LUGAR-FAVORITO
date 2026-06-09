@@ -75,7 +75,7 @@ export default function MovementDetailModal({
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
   const isOnlinePedido = !!data.clienteId;
   const isToday = data?.createdAt && new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toDateString() === new Date().toDateString();
-  const canEditPayment = isStaff && isToday;
+  const canEditPayment = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador';
 
   const handleSavePayment = async () => {
     try {
