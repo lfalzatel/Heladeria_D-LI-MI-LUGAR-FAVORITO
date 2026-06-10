@@ -231,7 +231,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                 <p className="text-xl font-black text-on-surface">{formatCurrency(activePrice)}</p>
               </div>
               <div className="bg-surface-container/30 border border-outline/10 p-3 rounded-2xl flex flex-col items-center justify-center text-center">
-                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Costo Prod.</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Costo Producción</p>
                 <p className="text-lg font-black text-orange-600">{formatCurrency(estimatedCost, true)}</p>
               </div>
               <div className="bg-surface-container/30 border border-outline/10 p-3 rounded-2xl flex flex-col items-center justify-center text-center">
