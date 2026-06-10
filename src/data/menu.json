@@ -283,8 +283,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 1,
-          "unit": "kg"
+          "quantity": 100,
+          "unit": "gr"
         }
       ]
     },
@@ -498,8 +498,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 1,
-              "unit": "und"
+              "quantity": 100,
+              "unit": "gr"
             }
           ]
         },
@@ -535,8 +535,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 2,
-              "unit": "und"
+              "quantity": 200,
+              "unit": "gr"
             }
           ]
         },
@@ -572,8 +572,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 3,
-              "unit": "und"
+              "quantity": 300,
+              "unit": "gr"
             }
           ]
         }
@@ -675,8 +675,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 1,
-              "unit": "und"
+              "quantity": 100,
+              "unit": "gr"
             }
           ]
         },
@@ -712,8 +712,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 2,
-              "unit": "und"
+              "quantity": 200,
+              "unit": "gr"
             }
           ]
         }
@@ -781,8 +781,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 3,
-          "unit": "kg"
+          "quantity": 80,
+          "unit": "gr"
         },
         {
           "supplyId": "rp58vljdMGtvlq1QPI1z",
@@ -868,8 +868,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 7,
-          "unit": "kg"
+          "quantity": 100,
+          "unit": "gr"
         },
         {
           "supplyId": "fOUftWtgphnmRHdvEQ04",
@@ -933,8 +933,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 2,
-          "unit": "por"
+          "quantity": 90,
+          "unit": "gr"
         },
         {
           "supplyId": "1iHkGY7x8hP3aPpSsTiF",
@@ -1018,8 +1018,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 2,
-          "unit": "por"
+          "quantity": 90,
+          "unit": "gr"
         },
         {
           "supplyId": "CiZcLsMlleKivYXP3aaq",
@@ -1126,8 +1126,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 1,
-          "unit": "por"
+          "quantity": 80,
+          "unit": "gr"
         },
         {
           "supplyId": "CiZcLsMlleKivYXP3aaq",
@@ -1208,8 +1208,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 1,
-              "unit": "und"
+              "quantity": 100,
+              "unit": "gr"
             }
           ]
         },
@@ -1245,8 +1245,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 2,
-              "unit": "und"
+              "quantity": 200,
+              "unit": "gr"
             }
           ]
         },
@@ -1282,8 +1282,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 3,
-              "unit": "und"
+              "quantity": 300,
+              "unit": "gr"
             }
           ]
         }
@@ -1355,8 +1355,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 2,
-          "unit": "por"
+          "quantity": 90,
+          "unit": "gr"
         },
         {
           "supplyId": "mtVxskso6RCadP9Es6XZ",
@@ -1413,8 +1413,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 2,
-          "unit": "kg"
+          "quantity": 80,
+          "unit": "gr"
         },
         {
           "supplyId": "CiZcLsMlleKivYXP3aaq",
@@ -1511,8 +1511,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "Helado",
-              "quantity": 1,
-              "unit": "kg"
+              "quantity": 80,
+              "unit": "gr"
             }
           ]
         },
@@ -1830,8 +1830,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 1,
-          "unit": "por"
+          "quantity": 100,
+          "unit": "gr"
         },
         {
           "supplyId": "QiSGiB8rBXXNvMkuOq3C",
@@ -2197,8 +2197,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 1,
-              "unit": "und"
+              "quantity": 100,
+              "unit": "gr"
             }
           ]
         },
@@ -2246,8 +2246,8 @@
             {
               "supplyId": "6wY8QFazQNFhy0ABmTQh",
               "name": "helado",
-              "quantity": 2,
-              "unit": "und"
+              "quantity": 200,
+              "unit": "gr"
             }
           ]
         }
@@ -2363,8 +2363,8 @@
         {
           "supplyId": "6wY8QFazQNFhy0ABmTQh",
           "name": "Helado",
-          "quantity": 1,
-          "unit": "por"
+          "quantity": 80,
+          "unit": "gr"
         },
         {
           "supplyId": "CiZcLsMlleKivYXP3aaq",
@@ -2580,7 +2580,7 @@
       "id": "6wY8QFazQNFhy0ABmTQh",
       "minLimit": 5,
       "stockMinimum": 5,
-      "unit": "kg",
+      "unit": "gr",
       "currentStock": 0,
       "updatedAt": {
         "seconds": 1779756244,
@@ -2590,9 +2590,9 @@
       "portionsPerUnit": 1,
       "isVirtual": true,
       "yieldDetails": "",
-      "purchaseUnit": "kg",
+      "purchaseUnit": "Caja",
       "name": "Helado",
-      "yieldPerUnit": 1,
+      "yieldPerUnit": 5000,
       "category": "Helados base",
       "stockQuantity": 0,
       "yieldPerSize": {
