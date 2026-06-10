@@ -385,7 +385,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
 
               {isVirtual && (
                 <div className="flex flex-col gap-2 bg-amber-50 p-4 rounded-3xl border border-amber-200">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-amber-700"> Costo Estándar (Referencia para Recetas)</label>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-amber-700"> Costo Estándar por {unit} (Referencia)</label>
                   <input
                     type="number"
                     min={0}
@@ -396,7 +396,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
                     className="w-full px-4 h-14 bg-white rounded-xl border border-amber-200 outline-none focus:ring-2 focus:ring-amber-500 transition-all font-black text-lg text-amber-700"
                   />
                   <p className="text-[10px] text-amber-700/80 mt-1 font-bold">
-                    Ingresa el precio promedio de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.
+                    Ingresa el precio promedio de <strong className="text-amber-900">1 {unit}</strong> de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.
                   </p>
                 </div>
               )}
