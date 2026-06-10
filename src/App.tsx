@@ -66,7 +66,7 @@ export default function App() {
         // 2. Update Products
         const getBaseWeight = (name) => {
           const n = name.toLowerCase();
-          if (n.includes('ensalada') || n.includes('salpic') || n.includes('copa d\\'li') || n.includes('oblea')) return 80;
+          if (n.includes('ensalada') || n.includes('salpic') || n.includes("copa d'li") || n.includes('oblea')) return 80;
           if (n.includes('capricho') || n.includes('queso') || n.includes('favorita')) return 90;
           return 100;
         };
