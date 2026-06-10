@@ -225,19 +225,27 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
               />
             </div>
             
-            <div className="flex items-center justify-between bg-surface-container/30 p-3 rounded-2xl border border-outline/10">
-              <div className="flex flex-col items-start">
-                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Costo Producción</p>
-                <p className="text-base font-black text-orange-600">{formatCurrency(estimatedCost, true)}</p>
+            <div className="flex flex-col bg-surface-container/30 p-4 rounded-2xl border border-outline/10 gap-3">
+              <div className="flex justify-center border-b border-outline/10 pb-3">
+                <div className="flex flex-col items-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">Precio de Venta</p>
+                  <p className="text-lg font-black text-on-surface">{formatCurrency(activePrice)}</p>
+                </div>
               </div>
-              <div className="flex flex-col items-end text-right">
-                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Ganancia (Margen Real)</p>
-                <p className="text-base font-black text-emerald-600">
-                  {formatCurrency(activePrice - estimatedCost, true)}
-                  <span className="text-xs font-bold ml-1 opacity-80">
-                    ({activePrice > 0 ? (((activePrice - estimatedCost) / activePrice) * 100).toFixed(1) : 0}%)
-                  </span>
-                </p>
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col items-start">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Costo Producción</p>
+                  <p className="text-base font-black text-orange-600">{formatCurrency(estimatedCost, true)}</p>
+                </div>
+                <div className="flex flex-col items-end text-right">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Ganancia (Margen Real)</p>
+                  <p className="text-base font-black text-emerald-600">
+                    {formatCurrency(activePrice - estimatedCost, true)}
+                    <span className="text-xs font-bold ml-1 opacity-80">
+                      ({activePrice > 0 ? (((activePrice - estimatedCost) / activePrice) * 100).toFixed(1) : 0}%)
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
 
