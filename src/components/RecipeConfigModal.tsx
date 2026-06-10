@@ -117,7 +117,8 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
       confetti({
         particleCount: 100,
         spread: 70,
-        origin: { y: 0.6 }
+        origin: { y: 0.6 },
+        zIndex: 9999
       });
     } catch (error) {
       console.error(error);
