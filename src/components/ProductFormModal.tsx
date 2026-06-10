@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { getAssetUrl, cn } from '../lib/utils';
 import { ProductImageUploader } from './ProductImageUploader';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
+import confetti from 'canvas-confetti';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -141,6 +142,12 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
       }
 
       await onSave(data);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        zIndex: 9999
+      });
       onClose();
     } catch (error) {
       console.error(error);
