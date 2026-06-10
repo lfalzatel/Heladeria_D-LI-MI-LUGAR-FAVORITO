@@ -378,6 +378,7 @@ export default function Management() {
         });
         setUserSales(data);
         setIsLoadingHistory(false);
+      },
       (err) => { console.error('History error:', err); setIsLoadingHistory(false); }
     );
     
