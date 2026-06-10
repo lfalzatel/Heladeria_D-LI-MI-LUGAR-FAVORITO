@@ -47,7 +47,7 @@ export default function App() {
       window.location.reload();
     }
 
-    return () => { btn.remove(); };
+
   }, []);
 
   useEffect(() => {
