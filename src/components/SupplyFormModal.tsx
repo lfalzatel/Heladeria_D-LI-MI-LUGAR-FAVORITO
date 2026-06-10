@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { X, Save, Package, Ghost } from 'lucide-react';
 import { Supply } from '../types';
 import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 
 interface SupplyFormModalProps {
   isOpen: boolean;
@@ -133,6 +134,11 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
       }
 
       await onSave(data);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
       onClose();
     } catch (error) {
       console.error(error);

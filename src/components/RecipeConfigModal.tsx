@@ -4,6 +4,7 @@ import { X, Plus, Trash2, Save, Database, Search, Calculator, Info, Minus } from
 import { Product, RecipeIngredient, Supply } from '../types';
 import { formatCurrency, cn } from '../lib/utils';
 import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 
 interface RecipeConfigModalProps {
   isOpen: boolean;
@@ -113,6 +114,11 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         activeVariant === 'base' ? undefined : activeVariant
       );
       toast.success('Receta guardada correctamente');
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
     } catch (error) {
       console.error(error);
       toast.error('Error al guardar la receta');
