@@ -32,43 +32,6 @@ export default function App() {
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    // ── BORRAR COMPRAS DEL 7 DE JUNIO TEMPORALMENTE ──
-    const btn = document.createElement('button');
-    btn.innerText = "Borrar compras 7 junio";
-    btn.style.position = 'fixed';
-    btn.style.bottom = '20px';
-    btn.style.right = '20px';
-    btn.style.zIndex = '99999';
-    btn.style.padding = '15px';
-    btn.style.borderRadius = '10px';
-    btn.style.background = '#ef4444';
-    btn.style.color = 'white';
-    btn.style.fontWeight = 'bold';
-    btn.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-    btn.onclick = async () => {
-      btn.innerText = "Borrando...";
-      try {
-        const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
-        const { db } = await import('./lib/firebase');
-        const snap = await getDocs(collection(db, 'supplyPurchases'));
-        let count = 0;
-        for (const d of snap.docs) {
-          const data = d.data();
-          if (!data.createdAt) continue;
-          const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-          if (date.getDate() === 7 && date.getMonth() === 5 && date.getFullYear() === 2026) {
-            await deleteDoc(doc(db, 'supplyPurchases', d.id));
-            count++;
-          }
-        }
-        alert('Se eliminaron ' + count + ' compras del 7 de junio exitosamente.');
-      } catch (err: any) {
-        alert('Error: ' + err.message);
-      }
-      btn.remove();
-    };
-    document.body.appendChild(btn);
-
     const CURRENT_VERSION = '1.0.7'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
