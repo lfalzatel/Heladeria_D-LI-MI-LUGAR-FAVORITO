@@ -685,12 +685,12 @@ export default function Dashboard() {
         {profile?.role !== 'vendedor' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white rounded-[2rem] p-6 border border-outline/10 shadow-sm relative overflow-hidden">
-              <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-4">Ingresos (7 días)</h4>
-              <TrendChart data={sales} color="#10b981" label="Ingresos" />
+              <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-4">Ingresos {filterLabel}</h4>
+              <TrendChart data={ingresosSales} color="#10b981" label="Ingresos" />
             </div>
             <div className="bg-white rounded-[2rem] p-6 border border-outline/10 shadow-sm relative overflow-hidden">
-              <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-4">Compras (7 días)</h4>
-              <TrendChart data={purchases} color="#f59e0b" label="Egresos" />
+              <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-4">Compras {filterLabel}</h4>
+              <TrendChart data={purchasesPeriod} color="#f59e0b" label="Egresos" />
             </div>
           </div>
         )}

@@ -135,8 +135,13 @@ service cloud.firestore {
     }
 
     match /supplyPurchases/{id} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    match /wasteRecords/{id} {
+      allow read: if isStaff();
+      allow write: if isStaff();
     }
 
     match /providers/{id} {

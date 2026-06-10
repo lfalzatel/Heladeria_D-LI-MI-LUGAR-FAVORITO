@@ -14,7 +14,7 @@ function toDate(ts: any): Date | null { if (!ts) return null; if (ts.toDate) ret
 function fmtDate(ts: any) { const d = toDate(ts); if (!d) return ''; return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
 
 /* ─── PURCHASE DETAIL MODAL ─── */
-export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseRecord | null; onClose: () => void }) {
+export function PurchaseDetailModal({ purchase, onClose, onDelete }: { purchase: PurchaseRecord | null; onClose: () => void; onDelete?: (id: string) => void }) {
   return (
     <AnimatePresence>
       {purchase && (
@@ -34,7 +34,12 @@ export function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseR
                   <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">{purchase.provider} · {fmtDate(purchase.createdAt)}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all"><X className="w-4 h-4" /></button>
+              <div className="flex gap-2">
+                {onDelete && (
+                  <button onClick={() => { if (window.confirm('¿Seguro que deseas eliminar esta compra? Se restará el stock ingresado del inventario.')) onDelete(purchase.id); }} className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-all"><Trash2 className="w-4 h-4" /></button>
+                )}
+                <button onClick={onClose} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all"><X className="w-4 h-4" /></button>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-3">
               {purchase.items?.map((item, i) => {

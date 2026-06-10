@@ -378,9 +378,9 @@ export default function Management() {
         });
         setUserSales(data);
         setIsLoadingHistory(false);
-      },
       (err) => { console.error('History error:', err); setIsLoadingHistory(false); }
     );
+    
     return () => unsub();
   }, [selectedUserForHistory]);
 
@@ -495,6 +495,34 @@ export default function Management() {
     } catch (error) {
       console.error("Error deleting expense:", error);
       toast.error('Error al eliminar el gasto');
+    }
+  };
+
+  const handleDeletePurchase = async (id: string) => {
+    try {
+      const purchase = purchases.find(p => p.id === id);
+      if (!purchase) return;
+      
+      const batch = writeBatch(db);
+      
+      batch.delete(doc(db, 'supplyPurchases', id));
+      
+      if (purchase.items && purchase.items.length > 0) {
+        for (const item of purchase.items) {
+          if (item.supplyId) {
+            batch.update(doc(db, 'supplies', item.supplyId), {
+              currentStock: increment(-item.quantity)
+            });
+          }
+        }
+      }
+      
+      await batch.commit();
+      toast.success('Compra eliminada y stock revertido');
+      setDetailPurchase(null);
+    } catch (error) {
+      console.error("Error deleting purchase:", error);
+      toast.error('Error al eliminar la compra');
     }
   };
 
@@ -2007,7 +2035,7 @@ export default function Management() {
             toast.success('¡Merma registrada exitosamente!');
           }}
         />
-        <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} />
+        <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
 
         {isProductModalOpen && (
           <ProductFormModal
