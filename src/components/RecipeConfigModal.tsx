@@ -225,25 +225,23 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
               />
             </div>
             
-            <div className="flex flex-col bg-surface-container/30 p-4 rounded-2xl border border-outline/10 gap-3">
-              <div className="flex justify-center border-b border-outline/10 pb-3">
-                <div className="flex flex-col items-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">Precio de Venta</p>
-                  <p className="text-lg font-black text-on-surface">{formatCurrency(activePrice)}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="col-span-2 bg-surface-container/30 border border-outline/10 p-3 rounded-2xl flex flex-col items-center justify-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">Precio de Venta</p>
+                <p className="text-xl font-black text-on-surface">{formatCurrency(activePrice)}</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col items-start">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Costo Producción</p>
-                  <p className="text-base font-black text-orange-600">{formatCurrency(estimatedCost, true)}</p>
-                </div>
-                <div className="flex flex-col items-end text-right">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Ganancia (Margen Real)</p>
-                  <p className="text-base font-black text-emerald-600">
+              <div className="bg-surface-container/30 border border-outline/10 p-3 rounded-2xl flex flex-col items-center justify-center text-center">
+                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Costo Prod.</p>
+                <p className="text-lg font-black text-orange-600">{formatCurrency(estimatedCost, true)}</p>
+              </div>
+              <div className="bg-surface-container/30 border border-outline/10 p-3 rounded-2xl flex flex-col items-center justify-center text-center">
+                <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Ganancia</p>
+                <div className="flex flex-col items-center">
+                  <p className="text-lg font-black text-emerald-600 leading-none">
                     {formatCurrency(activePrice - estimatedCost, true)}
-                    <span className="text-xs font-bold ml-1 opacity-80">
-                      ({activePrice > 0 ? (((activePrice - estimatedCost) / activePrice) * 100).toFixed(1) : 0}%)
-                    </span>
+                  </p>
+                  <p className="text-[10px] font-bold text-emerald-600/80 mt-1">
+                    Margen: {activePrice > 0 ? (((activePrice - estimatedCost) / activePrice) * 100).toFixed(1) : 0}%
                   </p>
                 </div>
               </div>
