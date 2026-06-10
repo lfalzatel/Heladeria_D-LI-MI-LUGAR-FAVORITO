@@ -128,6 +128,17 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
     return acc + (costPerPortion * (Number(ing.quantity) || 0));
   }, 0);
 
+  let activePrice = product.price || 0;
+  if (product.variants && product.variants.length > 0) {
+    if (activeVariant !== 'base') {
+      const v = product.variants.find(v => v.label === activeVariant);
+      if (v?.price) activePrice = v.price;
+    } else {
+      const minPrice = Math.min(...product.variants.map(v => v.price || 0));
+      activePrice = product.basePrice || (minPrice !== Infinity ? minPrice : 0);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <motion.div
@@ -222,9 +233,9 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
               <div className="flex flex-col items-end text-right">
                 <p className="text-[9px] font-black uppercase tracking-widest text-secondary opacity-60">Ganancia (Margen Real)</p>
                 <p className="text-base font-black text-emerald-600">
-                  {formatCurrency(product.price - estimatedCost)}
+                  {formatCurrency(activePrice - estimatedCost)}
                   <span className="text-xs font-bold ml-1 opacity-80">
-                    ({product.price > 0 ? (((product.price - estimatedCost) / product.price) * 100).toFixed(1) : 0}%)
+                    ({activePrice > 0 ? (((activePrice - estimatedCost) / activePrice) * 100).toFixed(1) : 0}%)
                   </span>
                 </p>
               </div>
