@@ -41,14 +41,14 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
       };
 
       if (activeVariant === 'base') {
-        setCurrentRecipe(syncWithSupplyYield(product.recipe || [], 'base'));
+        setCurrentRecipe(product.recipe || []);
       } else {
         const variant = product.variants?.find(v => v.label === activeVariant);
         if ((!variant?.recipe || variant.recipe.length === 0) && product.recipe && product.recipe.length > 0) {
           setCurrentRecipe(syncWithSupplyYield([...product.recipe], activeVariant));
           toast.info(`Cargada receta base para ${activeVariant}`);
         } else {
-          setCurrentRecipe(syncWithSupplyYield(variant?.recipe || [], activeVariant));
+          setCurrentRecipe(variant?.recipe || []);
         }
       }
     }
