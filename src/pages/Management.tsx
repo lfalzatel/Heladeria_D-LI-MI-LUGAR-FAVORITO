@@ -1108,25 +1108,10 @@ export default function Management() {
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
                       <div className="flex flex-col sm:flex-row gap-3">
                         <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-                          className="flex-[2] py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                          className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
                           <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo
                         </button>
-                        <button onClick={async () => {
-                          if(!window.confirm('¿Resetear precios viejos (excepto Helado)?')) return;
-                          toast.loading('Limpiando precios...');
-                          for (const s of supplies) {
-                            if (s.name.toLowerCase().includes('helado')) continue;
-                            if (s.lastPurchasePrice && s.lastPurchasePrice > 0) {
-                              await updateDoc(doc(db, 'supplies', s.id), { lastPurchasePrice: 0 });
-                            }
-                          }
-                          toast.dismiss();
-                          toast.success('Precios reseteados');
-                        }}
-                          className="flex-1 py-4 bg-orange-100 text-orange-600 rounded-3xl font-black text-xs uppercase tracking-widest shadow-sm flex items-center justify-center transition-all hover:bg-orange-200">
-                          Reset Precios Viejos
-                        </button>
-                        <div className="flex-[2] flex items-center bg-white rounded-3xl px-4 py-2 border border-outline/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
+                        <div className="flex-1 flex items-center bg-white rounded-3xl px-4 py-2 border border-outline/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
                           <Search className="w-5 h-5 text-secondary/50 mr-3 flex-shrink-0" />
                           <input 
                             type="text" 
