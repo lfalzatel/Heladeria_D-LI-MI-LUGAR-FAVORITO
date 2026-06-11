@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { compressImage } from '../utils/imageCompressor';
-import { doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, increment, deleteField } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
@@ -79,27 +79,59 @@ export default function MovementDetailModal({
 
   const handleSavePayment = async () => {
     try {
-      const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
+      // Determinar la colección correcta. Si tiene status que no sea completed/entregado, 
+      // o si explícitamente es un pedido no procesado en POS.
+      const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
+      const collectionName = isPedido ? 'pedidos' : 'sales';
+      
       const isMixto = editPaymentMethod === 'Mixto';
-      let splitDetails = null;
-      if (isMixto) {
-         splitDetails = {
-           efectivo: editEfectivo,
-           transferencia: data.total - editEfectivo
-         };
-      }
-      await updateDoc(doc(db, collectionName, data.id), {
+      
+      const updateData: any = {
         paymentMethod: editPaymentMethod,
         isMixto,
-        splitDetails
-      });
+      };
+
+      if (isMixto) {
+        const total = Number(data.total) || 0;
+        updateData.splitDetails = {
+          efectivo: Number(editEfectivo) || 0,
+          transferencia: Math.max(0, total - (Number(editEfectivo) || 0))
+        };
+      } else {
+        updateData.splitDetails = deleteField();
+      }
+
+      // Retry mechanism in case of WebChannel suspension errors (ERR_NETWORK_IO_SUSPENDED -> 400 Bad Request)
+      let saved = false;
+      let lastError = null;
+      for (let i = 0; i < 2; i++) {
+        try {
+          await updateDoc(doc(db, collectionName, data.id), updateData);
+          saved = true;
+          break;
+        } catch (e: any) {
+          lastError = e;
+          // Wait 500ms before retrying if it's a network glitch
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+
+      if (!saved) {
+        throw lastError;
+      }
+
       data.paymentMethod = editPaymentMethod;
       data.isMixto = isMixto;
-      data.splitDetails = splitDetails;
+      if (isMixto) {
+        data.splitDetails = updateData.splitDetails;
+      } else {
+        delete data.splitDetails;
+      }
       setIsEditingPayment(false);
+      toast.success('Pago actualizado correctamente');
     } catch (e) {
       console.error(e);
-      alert('Error guardando pago');
+      alert('Error guardando pago. Por favor intenta de nuevo.');
     }
   };
 
