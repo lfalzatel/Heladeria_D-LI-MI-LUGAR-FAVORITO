@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Save, Database, Search, Calculator, Info, Minus } from 'lucide-react';
 import { Product, RecipeIngredient, Supply } from '../types';
@@ -19,9 +19,12 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
   const [currentRecipe, setCurrentRecipe] = useState<RecipeIngredient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const loadedVariantRef = useRef<string | null>(null);
+
   // Cargar receta cuando cambia el producto o la variante activa
   useEffect(() => {
-    if (product && isOpen) {
+    if (product && isOpen && loadedVariantRef.current !== activeVariant) {
+      loadedVariantRef.current = activeVariant;
       const sizeHelper = (prodName: string, varLabel: string) => {
         const name = (prodName + ' ' + varLabel).toLowerCase();
         if (name.includes('mini')) return 'mini';
@@ -52,6 +55,11 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
           setCurrentRecipe(variant?.recipe || []);
         }
       }
+    }
+    
+    // Si se cierra el modal, reseteamos la referencia para que al volver a abrir se cargue
+    if (!isOpen) {
+      loadedVariantRef.current = null;
     }
   }, [product, activeVariant, isOpen, supplies]);
 
@@ -120,6 +128,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         origin: { y: 0.6 },
         zIndex: 9999
       });
+      onClose(); // Cerrar el modal después de guardar exitosamente
     } catch (error) {
       console.error(error);
       toast.error('Error al guardar la receta');
