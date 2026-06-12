@@ -29,6 +29,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
   const [expandedVariantIndex, setExpandedVariantIndex] = useState<number | null>(null);
   
   const [description, setDescription] = useState('');
+  const [recipeDescription, setRecipeDescription] = useState('');
 
   // Toggles
   const [reqFlavors, setReqFlavors] = useState(false);
@@ -46,6 +47,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setReqFruit(!!productToEdit.requiresFruitChoice);
         setCardColor(productToEdit.cardColor || '');
         setDescription(productToEdit.description || '');
+        setRecipeDescription(productToEdit.recipeDescription || '');
 
         if (productToEdit.variants && productToEdit.variants.length > 0) {
           setIsVariantBased(true);
@@ -63,6 +65,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setCategory('helados');
         setImageUrl('');
         setDescription('');
+        setRecipeDescription('');
         setIsVariantBased(false);
         setBasePrice('');
         setBaseScoops(1);
@@ -101,7 +104,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
     if (!name.trim()) return toast.error('El producto necesita un nombre');
     if (isVariantBased && variants.length === 0) return toast.error('Añade al menos una variante');
     if (isVariantBased && variants.some(v => !v.label || v.price <= 0)) return toast.error('Verifica los datos de las variantes');
-    if (!isVariantBased && (!basePrice || basePrice <= 0)) return toast.error('Verifica el precio base');
+    if (!isVariantBased && (!basePrice || Number(basePrice) <= 0)) return toast.error('Verifica el precio base');
 
     setLoading(true);
     try {
@@ -115,6 +118,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         requiresFruitChoice: reqFruit,
         cardColor: cardColor || null as any,
         description: description.trim() || null,
+        recipeDescription: recipeDescription.trim() || null,
       };
 
       if (isVariantBased) {
@@ -237,13 +241,24 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Descripción / Receta Sugerida</label>
+              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Descripción para Clientes</label>
               <textarea
                 placeholder="Ej. Mezcla de manzana, mango, fresa... Acompañada de queso rallado..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface min-h-[100px] resize-y"
+                className="w-full px-4 py-3 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface min-h-[80px] resize-y"
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-primary"> Receta Interna (Instrucciones o Cantidades)</label>
+              <textarea
+                placeholder="Ej. 300mL de leche, 100g de helado. Usar vaso de 13 onzas."
+                value={recipeDescription}
+                onChange={(e) => setRecipeDescription(e.target.value)}
+                className="w-full px-4 py-3 bg-primary/5 rounded-2xl border border-primary/20 outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-primary min-h-[80px] resize-y"
+              />
+              <p className="text-[9px] font-bold text-secondary">Este texto solo será visible al configurar las recetas, para que sirva de guía inalterable.</p>
             </div>
 
             <div className="h-px bg-outline/10 w-full my-2" />

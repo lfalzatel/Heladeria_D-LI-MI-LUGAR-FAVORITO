@@ -1030,8 +1030,10 @@ export const seedDatabase = async () => {
   });
 
   // 3. INSUMOS
-  DEFAULT_SUPPLIES.forEach(s => {
-    const ref = doc(collection(db, 'supplies'));
+  const supplies = menuData.supplies || [];
+  supplies.forEach(s => {
+    // Es crucial usar el ID original para que las recetas no se rompan
+    const ref = s.id ? doc(db, 'supplies', s.id) : doc(collection(db, 'supplies'));
     batch.set(ref, { ...s, updatedAt: serverTimestamp() });
   });
 

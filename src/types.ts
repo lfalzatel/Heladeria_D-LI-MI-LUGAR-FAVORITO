@@ -63,6 +63,7 @@ export interface Product {
   name: string;
   category: string;
   description?: string;
+  recipeDescription?: string;
   ingredients?: string[];
   basePrice?: number;
   variants?: ProductVariant[];

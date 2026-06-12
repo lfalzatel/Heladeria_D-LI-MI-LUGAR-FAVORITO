@@ -220,13 +220,31 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
             </div>
           )}
 
-          {/* Descripción del Producto */}
-          {product.description && (
-            <div className="bg-surface-container/50 p-4 rounded-2xl border border-outline/10">
-              <p className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Descripción / Receta Sugerida:</p>
-              <p className="text-xs text-on-surface font-medium whitespace-pre-wrap">{product.description}</p>
-            </div>
-          )}
+          {/* Descripción del Producto y Receta Detallada */}
+          <div className="bg-surface-container/50 p-4 rounded-2xl border border-outline/10 flex flex-col gap-4">
+            {product.description && (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60 mb-1">Descripción (Vista al Cliente):</p>
+                <p className="text-xs text-on-surface font-medium whitespace-pre-wrap">{product.description}</p>
+              </div>
+            )}
+            {product.recipeDescription && (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Guía Interna de Preparación:</p>
+                <p className="text-xs text-primary font-bold whitespace-pre-wrap">
+                  {product.recipeDescription}
+                </p>
+              </div>
+            )}
+            {!product.recipeDescription && (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Guía Interna de Preparación:</p>
+                <p className="text-[10px] text-secondary opacity-50 italic">
+                  No se ha configurado una guía de preparación. Puedes añadirla editando el producto.
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Buscador y Resumen de Costo */}
           <div className="flex flex-col gap-3">

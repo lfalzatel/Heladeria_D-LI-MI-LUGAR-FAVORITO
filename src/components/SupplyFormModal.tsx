@@ -14,7 +14,7 @@ interface SupplyFormModalProps {
 }
 
 const CATEGORIES = ['Lácteos', 'Frutas', 'Toppings', 'Insumos Venta', 'Helados base', 'Acompañamientos', 'Desechables', 'Limpieza', 'Galletas'];
-const UNITS = ['kg', 'g', 'Litro', 'Unidad', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata', 'Tarro'];
+const UNITS = ['kg', 'g', 'Litro', 'mL', 'Unidad', 'Paquete', 'Caja', 'Pouch', 'Bloque', 'Rollo', 'Lata', 'Tarro'];
 
 export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existingCategories = [], onSave }: SupplyFormModalProps) {
   const mergedCategories = Array.from(new Set([...CATEGORIES, ...existingCategories]));
@@ -129,7 +129,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         purchaseUnit: unit,
       };
 
-      if (isVirtual && virtualPrice !== '') {
+      if (virtualPrice !== '') {
         data.lastPurchasePrice = Number(virtualPrice);
       }
 
@@ -252,7 +252,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
             </div>
 
             {/* SMART YIELD SECTION */}
-            {['kg', 'g', 'Litro', 'Bloque', 'Tarro', 'Unidad', 'Lata'].includes(unit) ? (
+            {['kg', 'g', 'Litro', 'mL', 'Bloque', 'Tarro', 'Unidad', 'Lata'].includes(unit) ? (
               <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                   <Package className="w-4 h-4 text-primary" />
@@ -390,23 +390,25 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
                 </div>
               </button>
 
-              {isVirtual && (
-                <div className="flex flex-col gap-2 bg-amber-50 p-4 rounded-3xl border border-amber-200">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-amber-700"> Costo Estándar por {unit} (Referencia)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    placeholder="Ej. 77000"
-                    value={virtualPrice}
-                    onChange={(e) => setVirtualPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-4 h-14 bg-white rounded-xl border border-amber-200 outline-none focus:ring-2 focus:ring-amber-500 transition-all font-black text-lg text-amber-700"
-                  />
-                  <p className="text-[10px] text-amber-700/80 mt-1 font-bold">
-                    Ingresa el precio promedio de <strong className="text-amber-900">1 {unit}</strong> de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.
-                  </p>
-                </div>
-              )}
+              <div className={`flex flex-col gap-2 p-4 rounded-3xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
+                <label className={`text-[11px] font-black uppercase tracking-widest ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
+                  {isVirtual ? `Costo Estándar por ${unit} (Referencia)` : `Costo Promedio Histórico por ${unit}`}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  placeholder="Ej. 77000"
+                  value={virtualPrice}
+                  onChange={(e) => setVirtualPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                  className={`w-full px-4 h-14 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-lg ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
+                />
+                <p className={`text-[10px] mt-1 font-bold ${isVirtual ? 'text-amber-700/80' : 'text-secondary'}`}>
+                  {isVirtual 
+                    ? `Ingresa el precio promedio de 1 ${unit} de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.`
+                    : `Este costo se actualiza automáticamente al registrar compras. Si cambiaste la unidad (ej. de Litro a mL), puedes corregir este costo y el stock manualmente. Actualmente equivale a $${virtualPrice} por 1 ${unit}.`}
+                </p>
+              </div>
             </div>
 
           </form>
