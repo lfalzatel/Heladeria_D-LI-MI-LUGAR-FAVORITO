@@ -112,7 +112,7 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
       allow create: if isSignedIn() && isValidSale(incoming());
-      allow update, delete: if isAdmin();
+      allow update, delete: if isAdmin() || isPropietario();
     }
 
     // Carritos: Sincronización de carrito de compras
