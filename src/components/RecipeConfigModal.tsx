@@ -128,7 +128,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         origin: { y: 0.6 },
         zIndex: 9999
       });
-      onClose(); // Cerrar el modal después de guardar ééxitosamente
+      onClose(); // Cerrar el modal después de guardar éxitosamente
     } catch (error) {
       console.error(error);
       toast.error('Error al guardar la receta');

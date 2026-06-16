@@ -396,7 +396,7 @@ export default function Management() {
       await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { messages });
       setChatMessage('');
       if (isStaff) {
-        await notifyUser(selectedSaleDetail.clienteId, 'Ã°Å¸â€™Â¬ Nuevo mensaje de la HeladerÃƒÂ­a', `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id });
+        await notifyUser(selectedSaleDetail.clienteId, 'Ã°Å¸â€™Â¬ Nuevo mensaje de la Heladería', `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id });
       } else {
         await notifyAdmins(`Ã°Å¸â€™Â¬ Mensaje de ${currentUser?.name || 'Cliente'}`, `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id, fromName: currentUser?.name });
       }
@@ -482,7 +482,7 @@ export default function Management() {
         userName: currentUser?.name,
         date: serverTimestamp()
       });
-      toast.success('Gasto registrado con ÃƒÂééxito');
+      toast.success('Gasto registrado con éxito');
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error('Error al registrar gasto');
@@ -492,7 +492,7 @@ export default function Management() {
   const handleUpdateExpensePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'gastos', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeleteExpense = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'gastos', id));
-      toast.success('Gasto eliminado ééxitosamente');
+      toast.success('Gasto eliminado éxitosamente');
       setSelectedGastoForDetail(null);
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -531,7 +531,7 @@ export default function Management() {
   const handleSaveSupply = async (data: Partial<SupplyType>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
-      toast.success('Insumo actualizado ééxitosamente');
+      toast.success('Insumo actualizado éxitosamente');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
       toast.success('Nuevo insumo registrado en el catÃƒ¡logo base');
@@ -723,7 +723,7 @@ export default function Management() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success('Copia de seguridad descargada ééxitosamente');
+      toast.success('Copia de seguridad descargada éxitosamente');
     } catch (error: any) {
       console.error(error);
       toast.error('Error al descargar backup: ' + error.message);
@@ -786,20 +786,20 @@ export default function Management() {
       batch.update(doc(db, 'supplies', s.id!), { category: newCategoryName.trim() });
     });
     await batch.commit();
-    toast.success('CategorÃƒÂ­a renombrada');
+    toast.success('Categoría renombrada');
     setEditingCategory(null);
   };
 
   const handleDeleteCategory = async (catName: string) => {
     if (catName === 'Varios') return;
-    if (!window.confirm(`Ã‚¿EstÃƒ¡s seguro de eliminar la categorÃƒÂ­a "${catName}"? Sus insumos pasarÃƒ¡n a "Varios".`)) return;
+    if (!window.confirm(`Ã‚¿EstÃƒ¡s seguro de eliminar la categorÃƒÂ­a "${catName}"? Sus insumos pasarán a "Varios".`)) return;
     const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === catName);
     const batch = writeBatch(db);
     suppliesToUpdate.forEach(s => {
       batch.update(doc(db, 'supplies', s.id!), { category: 'Varios' });
     });
     await batch.commit();
-    toast.success('CategorÃƒÂ­a eliminada');
+    toast.success('Categoría eliminada');
   };
 
   const calculateRecipeCost = (recipe?: any[]) => {
@@ -985,17 +985,17 @@ export default function Management() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con ÃƒÂééxito');
+      toast.success('PDF descargado con éxito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con ÃƒÂééxito');
+      toast.success('Imagen descargada con éxito');
     } else if (type === 'excel') {
       const currentTotal = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
       generatePurchasesExcel(sellerName, dateStr, filtered, currentTotal);
-      toast.success('Excel descargado con ÃƒÂééxito');
+      toast.success('Excel descargado con éxito');
     }
   };
 
@@ -1084,7 +1084,7 @@ export default function Management() {
                       { id: 'insumos', label: 'Insumos' },
                       { id: 'productos', label: 'Productos' },
                       { id: 'sabores', label: 'Sabores' },
-                      { id: 'categorias', label: 'CategorÃƒÂ­as' },
+                      { id: 'categorias', label: 'Categorías' },
                     ] as { id: InventarioSubTab; label: string }[]
                   ).map((sub) => (
                     <button
@@ -1110,7 +1110,7 @@ export default function Management() {
                       <div className="flex flex-col sm:flex-row gap-3">
                         <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
                           className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                          <Plus className="w-5 h-5 stroke-[3]" /> AÃƒÂ±adir Insumo
+                          <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo
                         </button>
                         <div className="flex-1 flex items-center bg-white rounded-3xl px-4 py-2 border border-outline/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
                           <Search className="w-5 h-5 text-secondary/50 mr-3 flex-shrink-0" />
@@ -1322,7 +1322,7 @@ export default function Management() {
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
-                        <span className="truncate">AÃƒÂ±adir Nuevo Producto</span>
+                        <span className="truncate">Añadir Nuevo Producto</span>
                       </button>
 
                       {/* Toolbar: categories + search */}
@@ -1489,7 +1489,7 @@ export default function Management() {
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
-                        <span className="truncate">AÃƒÂ±adir Nuevo Sabor</span>
+                        <span className="truncate">Añadir Nuevo Sabor</span>
                       </button>
 
                       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -1875,7 +1875,7 @@ export default function Management() {
                     )}
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="InversiÃƒÂ³n" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
                       <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
                       <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="DÃƒÂ­as de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="DÃƒÂ­as con registros de compra" accent="orange" />
                       <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
@@ -1885,11 +1885,11 @@ export default function Management() {
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
                         <div>
-                          <h4 className="font-black text-base text-on-surface">Tendencia de InversiÃƒÂ³n</h4>
+                          <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
                           <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancÃƒÂ­a</p>
                         </div>
                       </div>
-                      <TrendChart data={filtered} color="#b30069" label="Tendencia de InversiÃƒÂ³n" />
+                      <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -1918,7 +1918,7 @@ export default function Management() {
                       </button>
                       <button onClick={() => setIsExpenseCategoryModalOpen(true)}
                         className="flex-1 py-4 bg-red-50 text-red-600 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
-                        CategorÃƒÂ­as
+                        Categorías
                       </button>
                     </div>
 
@@ -2034,7 +2034,7 @@ export default function Management() {
           onConfirm={async (supplyId, quantity, note) => {
             await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
             await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
-            toast.success('Ã‚¡Merma registrada ééxitosamente!');
+            toast.success('Ã‚¡Merma registrada éxitosamente!');
           }}
         />
         <PurchaseDetailModal purchase={detailPurchase} onEditPaymentMethod={handleUpdatePurchasePaymentMethod} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
@@ -2428,7 +2428,7 @@ export default function Management() {
                   </button>
                   <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
-                    AÃƒÂ±adir Insumos Faltantes (Seguro)
+                    Añadir Insumos Faltantes (Seguro)
                   </button>
                   <button 
                     onClick={async () => {
@@ -2566,7 +2566,7 @@ export default function Management() {
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsFlavorModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
-                <h2 className="text-2xl font-black mb-6">AÃƒÂ±adir Nuevo Sabor</h2>
+                <h2 className="text-2xl font-black mb-6">Añadir Nuevo Sabor</h2>
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Nombre del Sabor</label>
@@ -2724,8 +2724,8 @@ export default function Management() {
                   <tr className="bg-surface-container text-secondary">
                     <th className="p-3 font-bold rounded-l-xl">Fecha/Hora</th>
                     <th className="p-3 font-bold">Responsable</th>
-                    <th className="p-3 font-bold">CategorÃƒÂ­a</th>
-                    <th className="p-3 font-bold">DescripciÃƒÂ³n</th>
+                    <th className="p-3 font-bold">Categoría</th>
+                    <th className="p-3 font-bold">Descripción</th>
                     <th className="p-3 font-bold">Pago</th><th className="p-3 font-bold text-right rounded-r-xl">Total</th>
                   </tr>
                 </thead>
@@ -2741,7 +2741,7 @@ export default function Management() {
                           {g.userName || 'Usuario'}
                         </td>
                         <td className="p-3 align-top text-secondary">
-                          {g.categoryEmoji || ''} {g.categoryName || 'Sin CategorÃƒÂ­a'}
+                          {g.categoryEmoji || ''} {g.categoryName || 'Sin Categoría'}
                         </td>
                         <td className="p-3 align-top text-secondary">
                           {g.description || '-'}

@@ -250,7 +250,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     {selected.size > 0 && <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center">{selected.size}</span>}
                   </div>
                   <div>
-                    <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer HeladerÃƒÂ­a' : 'Revisar Compra'}</h3>
+                    <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer Heladería' : 'Revisar Compra'}</h3>
                     <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">
                       {selected.size} productos Ã‚· {step === 1 ? 'SelecciÃƒÂ³n' : 'Detalles finales'}
                     </p>
@@ -415,7 +415,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                 <div className="px-6 py-4 border-t border-outline/10 bg-white rounded-b-[2.5rem]">
                   <div className="flex flex-col gap-3 mb-4">
                     <div>
-                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-2">MÃƒÂ©todo de Pago</p>
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-2">Método de Pago</p>
                       <div className="grid grid-cols-3 gap-2">
                         <button 
                           onClick={() => setPaymentMethod('Efectivo')}
@@ -433,7 +433,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   </div>
                   
                   {paymentMethod === 'Mixto' && (<div className="flex gap-2 mb-3"><div className="flex-1"><label className="text-[9px] text-secondary font-bold uppercase mb-1 block">Efectivo</label><input type="number" value={splitEfectivo || ''} onChange={e => setSplitEfectivo(parseFloat(e.target.value)||0)} className="w-full h-10 px-3 rounded-xl border border-outline/20 text-sm font-bold focus:border-primary focus:ring-1" placeholder="Monto en efectivo" /></div><div className="flex-1"><label className="text-[9px] text-secondary font-bold uppercase mb-1 block">Transferencia</label><div className="w-full h-10 px-3 rounded-xl bg-surface-container flex items-center text-sm font-bold">{formatCurrency(total - splitEfectivo)}</div></div></div>)}<div className="flex items-center justify-between mb-3">
-                    <div><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Monto InversiÃƒÂ³n</p><p className="text-2xl font-black text-on-surface">{formatCurrency(total)}</p></div>
+                    <div><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Monto Inversión</p><p className="text-2xl font-black text-on-surface">{formatCurrency(total)}</p></div>
                     <div className="text-right"><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Items Totales</p><p className="text-2xl font-black text-on-surface">{items.length} uds</p></div>
                   </div>
                   <div className="flex gap-3">

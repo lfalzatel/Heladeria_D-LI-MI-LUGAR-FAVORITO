@@ -97,7 +97,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         if (data.simulated) {
           toast.info('Recibo guardado (simulado)', { description: 'Los parámetros SMTP no están configurados en desarrollo.' });
         } else {
-          toast.success('Recibo enviado al correo ééxitosamente ✓');
+          toast.success('Recibo enviado al correo éxitosamente ✓');
         }
       } else {
         throw new Error(data.error || 'Error al enviar');
@@ -188,7 +188,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       // Descontar insumos automáticamente (Frutas, Queso, etc) y empaques
       await deductInventory(cart.items, cart.packagingSupplies);
       
-      toast.success('¡Venta realizada con ééxito!');
+      toast.success('¡Venta realizada con éxito!');
       notifyAdmins(
         "🍦 Nueva venta realizada",
         `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : paymentMethod}`
@@ -216,7 +216,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       // Limpiar carrito local
       clearCart(activeTable);
       
-      // Activar modal de ééxito con los datos finales
+      // Activar modal de éxito con los datos finales
       setSuccessSale(completedSale);
 
       // Si el cliente tiene correo, disparar recibo automático
