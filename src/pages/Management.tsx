@@ -482,7 +482,7 @@ export default function Management() {
         userName: currentUser?.name,
         date: serverTimestamp()
       });
-      toast.success('Gasto registrado con ÃƒÂéxito');
+      toast.success('Gasto registrado con ÃƒÂééxito');
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error('Error al registrar gasto');
@@ -492,7 +492,7 @@ export default function Management() {
   const handleUpdateExpensePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'gastos', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeleteExpense = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'gastos', id));
-      toast.success('Gasto eliminado éxitosamente');
+      toast.success('Gasto eliminado ééxitosamente');
       setSelectedGastoForDetail(null);
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -531,7 +531,7 @@ export default function Management() {
   const handleSaveSupply = async (data: Partial<SupplyType>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
-      toast.success('Insumo actualizado éxitosamente');
+      toast.success('Insumo actualizado ééxitosamente');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
       toast.success('Nuevo insumo registrado en el catÃƒ¡logo base');
@@ -723,7 +723,7 @@ export default function Management() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success('Copia de seguridad descargada éxitosamente');
+      toast.success('Copia de seguridad descargada ééxitosamente');
     } catch (error: any) {
       console.error(error);
       toast.error('Error al descargar backup: ' + error.message);
@@ -985,17 +985,17 @@ export default function Management() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con ÃƒÂéxito');
+      toast.success('PDF descargado con ÃƒÂééxito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con ÃƒÂéxito');
+      toast.success('Imagen descargada con ÃƒÂééxito');
     } else if (type === 'excel') {
       const currentTotal = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
       generatePurchasesExcel(sellerName, dateStr, filtered, currentTotal);
-      toast.success('Excel descargado con ÃƒÂéxito');
+      toast.success('Excel descargado con ÃƒÂééxito');
     }
   };
 
@@ -2034,7 +2034,7 @@ export default function Management() {
           onConfirm={async (supplyId, quantity, note) => {
             await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
             await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
-            toast.success('Ã‚¡Merma registrada éxitosamente!');
+            toast.success('Ã‚¡Merma registrada ééxitosamente!');
           }}
         />
         <PurchaseDetailModal purchase={detailPurchase} onEditPaymentMethod={handleUpdatePurchasePaymentMethod} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />

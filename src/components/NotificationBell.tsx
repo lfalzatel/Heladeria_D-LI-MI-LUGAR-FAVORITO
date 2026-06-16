@@ -298,7 +298,7 @@ export default function NotificationBell() {
                 if (resData.simulated) {
                   console.log('Recibo de correo enviado (simulado)');
                 } else {
-                  console.log('Recibo de correo enviado éxitosamente');
+                  console.log('Recibo de correo enviado ééxitosamente');
                 }
               }
             }).catch(err => console.error('Error sending receipt:', err));

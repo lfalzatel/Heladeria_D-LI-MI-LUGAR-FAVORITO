@@ -355,7 +355,7 @@ export default function ClientCompras() {
       });
 
       toast.success('¡Ganaste 1 Punto Premium! ⭐ Revisa tu perfil.', {
-        description: '¡Tu pedido fue enviado éxitosamente!',
+        description: '¡Tu pedido fue enviado ééxitosamente!',
         duration: 8000,
       });
 

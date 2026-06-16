@@ -122,7 +122,7 @@ export default function Inventory() {
         ...productData,
         updatedAt: new Date() // using client date to avoid need for serverTimestamp import clash if not imported
       });
-      toast.success('Producto actualizado éxitosamente');
+      toast.success('Producto actualizado ééxitosamente');
     } else {
       await import('firebase/firestore').then(({ addDoc, serverTimestamp }) => {
         addDoc(collection(db, 'products'), {

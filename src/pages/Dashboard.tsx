@@ -417,13 +417,13 @@ export default function Dashboard() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con éxito');
+      toast.success('PDF descargado con ééxito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con éxito');
+      toast.success('Imagen descargada con ééxito');
     } else if (type === 'excel') {
       const metrics = {
         totalIngresos,
@@ -437,7 +437,7 @@ export default function Dashboard() {
         totalPremiosFidelidad
       };
       generateDashboardExcel(sellerName, dateStr, metrics, combinedActivity, ranking);
-      toast.success('Excel descargado con éxito');
+      toast.success('Excel descargado con ééxito');
     }
   };
 

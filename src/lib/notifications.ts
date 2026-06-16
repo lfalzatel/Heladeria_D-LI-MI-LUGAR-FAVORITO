@@ -71,7 +71,7 @@ export async function requestNotificationPermission(userId: string) {
     });
 
     if (currentToken) {
-      console.log("Token FCM obtenido con éxito");
+      console.log("Token FCM obtenido con ééxito");
       // Guardar el token en Firestore
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
