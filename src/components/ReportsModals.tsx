@@ -204,12 +204,15 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
 }
 
 // ── 3. GANANCIA MODAL ──
-export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito, onNavigate }: {
+export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito, ingresosEfectivo, comprasEfectivo, comprasTransferencia, gastosEfectivo, gastosTransferencia, onNavigate }: {
   isOpen: boolean; onClose: () => void; filter: string;
   totalIngresos: number; totalCompras: number; totalGastosOperativos: number; totalCredito: number;
+  ingresosEfectivo?: number; comprasEfectivo?: number; comprasTransferencia?: number;
+  gastosEfectivo?: number; gastosTransferencia?: number;
   onNavigate?: (subtab: 'compras' | 'gastos') => void;
 }) {
   const saldoFinal = totalIngresos - totalCompras - totalGastosOperativos;
+  const efectivoFisico = (ingresosEfectivo || 0) - (comprasEfectivo || 0) - (gastosEfectivo || 0);
   const costoRef = totalIngresos + totalCredito;
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
@@ -228,18 +231,46 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
         <div className="h-px bg-outline/10" />
         <button 
           onClick={() => { onClose(); onNavigate?.('compras'); }}
-          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-red-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+          className="flex flex-col py-2 px-3 -mx-3 rounded-xl hover:bg-red-50 transition-colors w-[calc(100%+1.5rem)] text-left"
         >
-          <p className="text-sm font-bold text-on-surface">Gasto en Compras (Mercancía)</p>
-          <p className="font-black text-red-500">- {formatCurrency(totalCompras)}</p>
+          <div className="flex justify-between items-center w-full mb-1">
+            <p className="text-sm font-bold text-on-surface">Gasto en Compras (Mercancía)</p>
+            <p className="font-black text-red-500">- {formatCurrency(totalCompras)}</p>
+          </div>
+          {comprasEfectivo !== undefined && comprasTransferencia !== undefined && (
+            <div className="flex flex-col gap-0.5 w-full pl-2">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Efectivo</p>
+                <p className="text-[11px] font-black text-red-400">{formatCurrency(comprasEfectivo)}</p>
+              </div>
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Transferencia</p>
+                <p className="text-[11px] font-black text-red-400">{formatCurrency(comprasTransferencia)}</p>
+              </div>
+            </div>
+          )}
         </button>
         <div className="h-px bg-outline/10" />
         <button 
           onClick={() => { onClose(); onNavigate?.('gastos'); }}
-          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-red-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+          className="flex flex-col py-2 px-3 -mx-3 rounded-xl hover:bg-red-50 transition-colors w-[calc(100%+1.5rem)] text-left"
         >
-          <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
-          <p className="font-black text-red-500">- {formatCurrency(totalGastosOperativos)}</p>
+          <div className="flex justify-between items-center w-full mb-1">
+            <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
+            <p className="font-black text-red-500">- {formatCurrency(totalGastosOperativos)}</p>
+          </div>
+          {gastosEfectivo !== undefined && gastosTransferencia !== undefined && (
+            <div className="flex flex-col gap-0.5 w-full pl-2">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Efectivo</p>
+                <p className="text-[11px] font-black text-red-400">{formatCurrency(gastosEfectivo)}</p>
+              </div>
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Transferencia</p>
+                <p className="text-[11px] font-black text-red-400">{formatCurrency(gastosTransferencia)}</p>
+              </div>
+            </div>
+          )}
         </button>
         {totalCredito > 0 && (
           <div className="p-4 bg-red-50 border border-red-100 rounded-2xl">
@@ -261,12 +292,20 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
             Valor de lo vendido en este periodo sin considerar inversión en stock.
           </p>
         </div>
-        <div className="p-5 bg-on-surface rounded-2xl flex items-center justify-between">
-          <div>
-            <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Saldo Final (Caja)</p>
-            <p className="text-3xl font-black text-white">{formatCurrency(saldoFinal)}</p>
+        <div className="p-5 bg-on-surface rounded-2xl flex flex-col gap-3">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div>
+              <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Total Ganancia (Todas las cuentas)</p>
+              <p className="text-3xl font-black text-white">{formatCurrency(saldoFinal)}</p>
+            </div>
+            <TrendingUp className={cn('w-7 h-7', saldoFinal >= 0 ? 'text-emerald-400' : 'text-red-400')} />
           </div>
-          <TrendingUp className={cn('w-7 h-7', saldoFinal >= 0 ? 'text-emerald-400' : 'text-red-400')} />
+          <div className="flex items-center justify-between pt-1">
+            <div>
+              <p className="text-[9px] font-black text-emerald-400/80 uppercase tracking-widest mb-1">Dinero Físico en Caja</p>
+              <p className="text-xl font-black text-emerald-400">{formatCurrency(efectivoFisico)}</p>
+            </div>
+          </div>
         </div>
       </div>
       <ModalFooter onClick={onClose} />
@@ -275,9 +314,11 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
 }
 
 // ── 3.B. EGRESOS MODAL ──
-export function EgresosModal({ isOpen, onClose, filter, totalCompras, totalGastosOperativos, onNavigate }: {
+export function EgresosModal({ isOpen, onClose, filter, totalCompras, totalGastosOperativos, comprasEfectivo, comprasTransferencia, gastosEfectivo, gastosTransferencia, onNavigate }: {
   isOpen: boolean; onClose: () => void; filter: string;
   totalCompras: number; totalGastosOperativos: number;
+  comprasEfectivo?: number; comprasTransferencia?: number;
+  gastosEfectivo?: number; gastosTransferencia?: number;
   onNavigate?: (subtab: 'compras' | 'gastos') => void;
 }) {
   const totalEgresos = totalCompras + totalGastosOperativos;
@@ -293,18 +334,46 @@ export function EgresosModal({ isOpen, onClose, filter, totalCompras, totalGasto
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
         <button 
           onClick={() => { onClose(); onNavigate?.('compras'); }}
-          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-amber-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+          className="flex flex-col py-2 px-3 -mx-3 rounded-xl hover:bg-amber-50 transition-colors w-[calc(100%+1.5rem)] text-left"
         >
-          <p className="text-sm font-bold text-on-surface">Compras de Mercancía</p>
-          <p className="font-black text-amber-600">{formatCurrency(totalCompras)}</p>
+          <div className="flex justify-between items-center w-full mb-1">
+            <p className="text-sm font-bold text-on-surface">Compras de Mercancía</p>
+            <p className="font-black text-amber-600">{formatCurrency(totalCompras)}</p>
+          </div>
+          {comprasEfectivo !== undefined && comprasTransferencia !== undefined && (
+            <div className="flex flex-col gap-0.5 w-full pl-2">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Efectivo</p>
+                <p className="text-[11px] font-black text-amber-500">{formatCurrency(comprasEfectivo)}</p>
+              </div>
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Transferencia</p>
+                <p className="text-[11px] font-black text-amber-500">{formatCurrency(comprasTransferencia)}</p>
+              </div>
+            </div>
+          )}
         </button>
         <div className="h-px bg-outline/10" />
         <button 
           onClick={() => { onClose(); onNavigate?.('gastos'); }}
-          className="flex justify-between items-center py-2 px-3 -mx-3 rounded-xl hover:bg-amber-50 transition-colors w-[calc(100%+1.5rem)] text-left"
+          className="flex flex-col py-2 px-3 -mx-3 rounded-xl hover:bg-amber-50 transition-colors w-[calc(100%+1.5rem)] text-left"
         >
-          <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
-          <p className="font-black text-amber-600">{formatCurrency(totalGastosOperativos)}</p>
+          <div className="flex justify-between items-center w-full mb-1">
+            <p className="text-sm font-bold text-on-surface">Gastos Operativos (Fijos/Var.)</p>
+            <p className="font-black text-amber-600">{formatCurrency(totalGastosOperativos)}</p>
+          </div>
+          {gastosEfectivo !== undefined && gastosTransferencia !== undefined && (
+            <div className="flex flex-col gap-0.5 w-full pl-2">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Efectivo</p>
+                <p className="text-[11px] font-black text-amber-500">{formatCurrency(gastosEfectivo)}</p>
+              </div>
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Transferencia</p>
+                <p className="text-[11px] font-black text-amber-500">{formatCurrency(gastosTransferencia)}</p>
+              </div>
+            </div>
+          )}
         </button>
 
         <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl mt-2">

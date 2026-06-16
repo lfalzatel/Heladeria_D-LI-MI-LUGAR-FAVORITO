@@ -10,6 +10,7 @@ export interface ExpenseData {
   categoryName: string;
   categoryEmoji: string;
   description: string;
+  paymentMethod?: 'Efectivo' | 'Transferencia';
 }
 
 interface Props {
@@ -24,6 +25,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
   const [amount, setAmount] = useState<string>('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
       setAmount('');
       setCategoryId(categories.length > 0 ? categories[0].id : '');
       setDescription('');
+      setPaymentMethod('Efectivo');
       setSaving(false);
     }
   }, [isOpen, categories]);
@@ -49,7 +52,8 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
         categoryId: cat.id,
         categoryName: cat.name,
         categoryEmoji: cat.emoji,
-        description: description.trim()
+        description: description.trim(),
+        paymentMethod
       });
       onClose();
     } finally {
@@ -128,6 +132,25 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                   rows={2}
                   className="w-full bg-surface-container rounded-2xl p-4 text-sm font-bold text-on-surface outline-none focus:border focus:border-red-300 resize-none"
                 />
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">Método de Pago</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => setPaymentMethod('Efectivo')}
+                    className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Efectivo' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
+                  >
+                    Efectivo
+                  </button>
+                  <button 
+                    onClick={() => setPaymentMethod('Transferencia')}
+                    className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Transferencia' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
+                  >
+                    Transf.
+                  </button>
+                </div>
               </div>
             </div>
 

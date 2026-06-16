@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 
 export interface Supply { id: string; name: string; currentStock: number; unit: string; minLimit: number; category: string; yieldDetails?: string; yieldPerSize?: { mini?: number; small?: number; medium?: number; large?: number; }; }
 export interface PurchaseItem { supplyId: string; name: string; unit: string; quantity: number; cost: number; portions: number; category: string; }
-export interface PurchaseRecord { id: string; provider: string; items: PurchaseItem[]; total: number; createdAt: any; }
+export interface PurchaseRecord { id: string; provider: string; items: PurchaseItem[]; total: number; createdAt: any; paymentMethod?: 'Efectivo' | 'Transferencia'; }
 
 const PROVIDERS = ['Colacteos', 'Frubana', 'DPA', 'Distribuidora El Heladero', 'Otro'];
 
@@ -88,7 +88,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   supplies: Supply[];
-  onConfirm: (provider: string, items: PurchaseItem[]) => Promise<void>;
+  onConfirm: (provider: string, items: PurchaseItem[], paymentMethod: 'Efectivo' | 'Transferencia') => Promise<void>;
 }
 
 export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
@@ -98,11 +98,12 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const [items, setItems] = useState<PurchaseItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
   
   const { providers } = useProvidersStore();
   const [isCreatingProvider, setIsCreatingProvider] = useState(false);
 
-  const reset = () => { setStep(1); setProvider('Otro'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); };
+  const reset = () => { setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); };
   const handleClose = () => { reset(); onClose(); };
 
   // Sort: critical stock first, then alphabetically
@@ -149,7 +150,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
     if (items.length === 0) return;
     setSaving(true);
     try { 
-      await onConfirm(finalProvider, items); 
+      await onConfirm(finalProvider, items, paymentMethod); 
       confetti({
         particleCount: 100,
         spread: 70,
@@ -347,6 +348,26 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   })}
                 </div>
                 <div className="px-6 py-4 border-t border-outline/10 bg-white rounded-b-[2.5rem]">
+                  <div className="flex flex-col gap-3 mb-4">
+                    <div>
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-2">Método de Pago</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button 
+                          onClick={() => setPaymentMethod('Efectivo')}
+                          className={`py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Efectivo' ? 'bg-primary text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
+                        >
+                          Efectivo
+                        </button>
+                        <button 
+                          onClick={() => setPaymentMethod('Transferencia')}
+                          className={`py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Transferencia' ? 'bg-primary text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
+                        >
+                          Transf.
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="flex items-center justify-between mb-3">
                     <div><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Monto Inversión</p><p className="text-2xl font-black text-on-surface">{formatCurrency(total)}</p></div>
                     <div className="text-right"><p className="text-[9px] text-secondary font-black uppercase tracking-widest">Items Totales</p><p className="text-2xl font-black text-on-surface">{items.length} uds</p></div>

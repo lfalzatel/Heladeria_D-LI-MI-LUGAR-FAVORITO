@@ -477,6 +477,7 @@ export default function Management() {
         categoryName: data.categoryName,
         categoryEmoji: data.categoryEmoji,
         description: data.description,
+        paymentMethod: data.paymentMethod,
         userId: currentUser?.uid,
         userName: currentUser?.name,
         date: serverTimestamp()
@@ -2006,9 +2007,9 @@ export default function Management() {
           isOpen={isPurchaseOpen}
           onClose={() => setIsPurchaseOpen(false)}
           supplies={supplies as any}
-          onConfirm={async (provider, items) => {
+          onConfirm={async (provider, items, paymentMethod) => {
             const total = items.reduce((a, i) => a + i.cost, 0); // Cost is now total cost per item
-            await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, createdAt: serverTimestamp() });
+            await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, paymentMethod, createdAt: serverTimestamp() });
             for (const item of items) {
               const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
               const supplyUpdate: any = { 

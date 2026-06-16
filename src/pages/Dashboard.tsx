@@ -218,10 +218,14 @@ export default function Dashboard() {
   // Supply purchases for current period
   const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
+  const comprasEfectivo = purchasesPeriod.filter(p => p.paymentMethod !== 'Transferencia').reduce((s, p) => s + (p.total || 0), 0);
+  const comprasTransferencia = purchasesPeriod.filter(p => p.paymentMethod === 'Transferencia').reduce((s, p) => s + (p.total || 0), 0);
 
   // Gastos operativos for current period
   const gastosPeriod = gastosOperativos.filter(g => isInPeriod(g.dateObj, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalGastosOperativos = gastosPeriod.reduce((s, g) => s + (g.amount || 0), 0);
+  const gastosEfectivo = gastosPeriod.filter(g => g.paymentMethod !== 'Transferencia').reduce((s, g) => s + (g.amount || 0), 0);
+  const gastosTransferencia = gastosPeriod.filter(g => g.paymentMethod === 'Transferencia').reduce((s, g) => s + (g.amount || 0), 0);
 
   // Ganancia
   const gananciaNeta = totalIngresos - totalCompras - totalGastosOperativos;
@@ -778,6 +782,10 @@ export default function Dashboard() {
         filter={filterLabel}
         totalCompras={totalCompras}
         totalGastosOperativos={totalGastosOperativos}
+        comprasEfectivo={comprasEfectivo}
+        comprasTransferencia={comprasTransferencia}
+        gastosEfectivo={gastosEfectivo}
+        gastosTransferencia={gastosTransferencia}
         onNavigate={(subtab) => navigate(`/admin/management?tab=operacion&subtab=${subtab}`)}
       />
       <GananciaModal
@@ -788,6 +796,11 @@ export default function Dashboard() {
         totalCompras={totalCompras}
         totalGastosOperativos={totalGastosOperativos}
         totalCredito={totalCredito}
+        ingresosEfectivo={efectivo}
+        comprasEfectivo={comprasEfectivo}
+        comprasTransferencia={comprasTransferencia}
+        gastosEfectivo={gastosEfectivo}
+        gastosTransferencia={gastosTransferencia}
         onNavigate={(subtab) => navigate(`/admin/management?tab=operacion&subtab=${subtab}`)}
       />
       <RankingModal
