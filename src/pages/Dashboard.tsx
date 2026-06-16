@@ -797,6 +797,7 @@ export default function Dashboard() {
         totalGastosOperativos={totalGastosOperativos}
         totalCredito={totalCredito}
         ingresosEfectivo={efectivo}
+        ingresosTransferencia={transferencia}
         comprasEfectivo={comprasEfectivo}
         comprasTransferencia={comprasTransferencia}
         gastosEfectivo={gastosEfectivo}

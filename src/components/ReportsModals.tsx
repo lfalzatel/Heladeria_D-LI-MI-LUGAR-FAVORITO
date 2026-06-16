@@ -204,10 +204,10 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
 }
 
 // ── 3. GANANCIA MODAL ──
-export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito, ingresosEfectivo, comprasEfectivo, comprasTransferencia, gastosEfectivo, gastosTransferencia, onNavigate }: {
+export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCompras, totalGastosOperativos, totalCredito, ingresosEfectivo, ingresosTransferencia, comprasEfectivo, comprasTransferencia, gastosEfectivo, gastosTransferencia, onNavigate }: {
   isOpen: boolean; onClose: () => void; filter: string;
   totalIngresos: number; totalCompras: number; totalGastosOperativos: number; totalCredito: number;
-  ingresosEfectivo?: number; comprasEfectivo?: number; comprasTransferencia?: number;
+  ingresosEfectivo?: number; ingresosTransferencia?: number; comprasEfectivo?: number; comprasTransferencia?: number;
   gastosEfectivo?: number; gastosTransferencia?: number;
   onNavigate?: (subtab: 'compras' | 'gastos') => void;
 }) {
@@ -224,9 +224,23 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
         onClose={onClose}
       />
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
-        <div className="flex justify-between items-center py-2">
-          <p className="text-sm font-bold text-on-surface">Ingresos Recibidos</p>
-          <p className="font-black text-emerald-600">+ {formatCurrency(totalIngresos)}</p>
+        <div className="flex flex-col py-2 px-3 -mx-3 rounded-xl">
+          <div className="flex justify-between items-center w-full mb-1">
+            <p className="text-sm font-bold text-on-surface">Ingresos Recibidos</p>
+            <p className="font-black text-emerald-600">+ {formatCurrency(totalIngresos)}</p>
+          </div>
+          {ingresosEfectivo !== undefined && ingresosTransferencia !== undefined && (
+            <div className="flex flex-col gap-0.5 w-full pl-2">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Efectivo</p>
+                <p className="text-[11px] font-black text-emerald-500">{formatCurrency(ingresosEfectivo)}</p>
+              </div>
+              <div className="flex justify-between items-center w-full">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">• Transferencia</p>
+                <p className="text-[11px] font-black text-emerald-500">{formatCurrency(ingresosTransferencia)}</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="h-px bg-outline/10" />
         <button 
