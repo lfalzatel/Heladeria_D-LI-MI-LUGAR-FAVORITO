@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, Wallet, Layers, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -54,7 +54,8 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
         categoryName: cat.name,
         categoryEmoji: cat.emoji,
         description: description.trim(),
-        paymentMethod
+        paymentMethod,
+        splitDetails: paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: amt - splitEfectivo } : undefined
       });
       onClose();
     } finally {
@@ -101,10 +102,10 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                 </div>
               </div>
 
-              {/* CategorÃ­a */}
+              {/* Categoría */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">CategorÃ­a</p>
+                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Categoría</p>
                   <button onClick={onOpenCategoryManager} className="text-[10px] font-black text-primary hover:underline">Gestionar</button>
                 </div>
                 <div className="relative">
@@ -114,7 +115,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                     className="w-full h-14 bg-surface-container rounded-2xl px-4 text-sm font-bold text-on-surface outline-none appearance-none cursor-pointer focus:border focus:border-red-300"
                   >
                     {categories.length === 0 ? (
-                      <option value="">(Sin categorÃ­as)</option>
+                      <option value="">(Sin categorías)</option>
                     ) : (
                       categories.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)
                     )}
@@ -123,9 +124,9 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                 </div>
               </div>
 
-              {/* DescripciÃ³n */}
+              {/* Descripción */}
               <div>
-                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">DescripciÃ³n (Opcional)</p>
+                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">Descripción (Opcional)</p>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -137,7 +138,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
 
               {/* Payment Method */}
               <div>
-                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">MÃ©todo de Pago</p>
+                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">Método de Pago</p>
                 <div className="grid grid-cols-3 gap-2">
                   <button 
                     onClick={() => setPaymentMethod('Efectivo')}
@@ -149,8 +150,38 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                     onClick={() => setPaymentMethod('Transferencia')}
                     className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Transferencia' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
                   >
-                    Transf.</button><button onClick={() => setPaymentMethod('Mixto')} className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Mixto' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}>Mixto</button>
+                    Transf.
+                  </button>
+                  <button 
+                    onClick={() => setPaymentMethod('Mixto')} 
+                    className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Mixto' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
+                  >
+                    Mixto
+                  </button>
                 </div>
+                {paymentMethod === 'Mixto' && (
+                  <div className="mt-3 bg-red-50/50 p-3 rounded-xl border border-red-100">
+                    <p className="text-[10px] text-red-800 font-bold mb-2">Distribución del Pago</p>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="text-[9px] text-secondary font-bold uppercase mb-1 block">Efectivo</label>
+                        <input 
+                          type="number" 
+                          value={splitEfectivo || ''} 
+                          onChange={e => setSplitEfectivo(parseFloat(e.target.value) || 0)} 
+                          className="w-full h-10 px-3 rounded-xl border border-outline/20 text-sm font-bold focus:border-red-300 focus:ring-1" 
+                          placeholder="0" 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-[9px] text-secondary font-bold uppercase mb-1 block">Transferencia</label>
+                        <div className="w-full h-10 px-3 rounded-xl bg-white border border-outline/10 flex items-center text-sm font-bold text-secondary">
+                          ${(parseFloat(amount) || 0) - splitEfectivo}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -1028,7 +1028,7 @@ export default function ClientHistorial() {
 
                 <button 
                   onClick={() => setSelectedExpenseDetail(null)}
-                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all mt-2"
+                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widestáshadow-xl active:scale-[0.98] transition-all mt-2"
                 >
                   Cerrar Detalle
                 </button>

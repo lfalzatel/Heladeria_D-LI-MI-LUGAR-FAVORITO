@@ -128,7 +128,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         origin: { y: 0.6 },
         zIndex: 9999
       });
-      onClose(); // Cerrar el modal después de guardar exitosamente
+      onClose(); // Cerrar el modal después de guardar éxitosamente
     } catch (error) {
       console.error(error);
       toast.error('Error al guardar la receta');
@@ -170,7 +170,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] sm:max-h-[90vh] overflow-hidden"
       >
         {/* Header */}
-        <div className="px-6 py-4 flex items-center justify-between border-b border-outline/10 bg-surface-container-lowest shrink-0">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-outline/10 bg-surface-container-lowestáshrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
               <Database className="w-6 h-6" />

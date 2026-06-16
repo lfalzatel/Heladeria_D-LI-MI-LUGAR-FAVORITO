@@ -97,7 +97,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         if (data.simulated) {
           toast.info('Recibo guardado (simulado)', { description: 'Los parámetros SMTP no están configurados en desarrollo.' });
         } else {
-          toast.success('Recibo enviado al correo exitosamente ✓');
+          toast.success('Recibo enviado al correo éxitosamente ✓');
         }
       } else {
         throw new Error(data.error || 'Error al enviar');

@@ -230,7 +230,7 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
     });
 
     await Promise.all(promises);
-    console.log(`Inventario estático y dinámico ${isRestore ? 'restaurado' : 'descontado'} exitosamente`, deductions);
+    console.log(`Inventario estático y dinámico ${isRestore ? 'restaurado' : 'descontado'} éxitosamente`, deductions);
 
   } catch (error) {
     console.error("Error descontando inventario:", error);

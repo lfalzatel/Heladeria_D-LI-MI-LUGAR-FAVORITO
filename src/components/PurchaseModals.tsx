@@ -50,12 +50,12 @@ export function PurchaseDetailModal({ purchase, onClose, onDelete, onEditPayment
                 <div className="w-11 h-11 bg-primary/10 rounded-2xl flex items-center justify-center"><Receipt className="w-5 h-5 text-primary" /></div>
                 <div>
                   <h3 className="font-black text-base text-on-surface">Detalle de Compra</h3>
-                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">{purchase.provider} Ã‚Â· {fmtDate(purchase.createdAt)}</p>
+                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">{purchase.provider} Ã‚· {fmtDate(purchase.createdAt)}</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 {onDelete && (
-                  <button onClick={() => { if (window.confirm('Ã‚Â¿Seguro que deseas eliminar esta compra? Se restarÃƒÂ¡ el stock ingresado del inventario.')) onDelete(purchase.id); }} className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-all"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => { if (window.confirm('Ã‚¿Seguro que deseas eliminar esta compra? Se restarÃƒ¡ el stock ingresado del inventario.')) onDelete(purchase.id); }} className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-all"><Trash2 className="w-4 h-4" /></button>
                 )}
                 <button onClick={onClose} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all"><X className="w-4 h-4" /></button>
               </div>
@@ -252,7 +252,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   <div>
                     <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer HeladerÃƒÂ­a' : 'Revisar Compra'}</h3>
                     <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">
-                      {selected.size} productos Ã‚Â· {step === 1 ? 'SelecciÃƒÂ³n' : 'Detalles finales'}
+                      {selected.size} productos Ã‚· {step === 1 ? 'SelecciÃƒÂ³n' : 'Detalles finales'}
                     </p>
                   </div>
                 </div>
@@ -378,7 +378,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                                 <div className="col-span-2">
                                   <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Rendimiento</p>
                                   <div className="flex items-center bg-amber-50 rounded-xl px-3 h-9 border border-amber-200">
-                                    <span className="text-xs font-bold text-amber-700">Rendimiento variable (por tamaÃƒÂ±os) ya configurado en catÃƒÂ¡logo.</span>
+                                    <span className="text-xs font-bold text-amber-700">Rendimiento variable (por tamaÃƒÂ±os) ya configurado en catÃƒ¡logo.</span>
                                   </div>
                                 </div>
                               );
@@ -458,7 +458,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
         <div className="absolute inset-0 bg-on-surface/60 backdrop-blur-md" onClick={() => setIsCreatingProvider(false)} />
         <div className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
           <h3 className="font-black text-lg text-on-surface mb-4">Nuevo Proveedor</h3>
-          <p className="text-sm text-secondary mb-4">Agrega un proveedor a tu lista. Lo podrÃƒÂ¡s seleccionar enseguida.</p>
+          <p className="text-sm text-secondary mb-4">Agrega un proveedor a tu lista. Lo podrÃƒ¡s seleccionar enseguida.</p>
           <div className="mb-6">
             <label className="text-[11px] font-black uppercase tracking-widest text-secondary block mb-1">Nombre</label>
             <input id="newProviderName" type="text" autoFocus className="w-full h-12 px-4 rounded-xl border border-outline/20 outline-none focus:border-primary focus:ring-1" placeholder="Ej. Distribuidora XYZ" />

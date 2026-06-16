@@ -252,7 +252,7 @@ export default function Management() {
     const canAdmin = currentUser?.role === 'admin';
     
     setHeader({
-      title: "GestiÃƒÂ³n D'LI",
+      title: "Gestión D'LI",
       subtitle: "Panel Administrativo",
       actions: canAdmin ? (
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -261,7 +261,7 @@ export default function Management() {
               const { notifyAdmins } = await import('../lib/notifications');
               toast.promise(
                 notifyAdmins('Ã°Å¸â€â€ Prueba de Sistema', `NotificaciÃƒÂ³n enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
-                { loading: 'Enviando...', success: 'Ã‚Â¡NotificaciÃƒÂ³n enviada!', error: 'Error al enviar' }
+                { loading: 'Enviando...', success: 'Ã‚¡NotificaciÃƒÂ³n enviada!', error: 'Error al enviar' }
               );
             }}
             className="p-2 sm:px-3 sm:py-2 bg-surface-container text-on-surface rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
@@ -482,7 +482,7 @@ export default function Management() {
         userName: currentUser?.name,
         date: serverTimestamp()
       });
-      toast.success('Gasto registrado con ÃƒÂ©xito');
+      toast.success('Gasto registrado con ÃƒÂéxito');
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error('Error al registrar gasto');
@@ -492,7 +492,7 @@ export default function Management() {
   const handleUpdateExpensePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'gastos', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeleteExpense = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'gastos', id));
-      toast.success('Gasto eliminado exitosamente');
+      toast.success('Gasto eliminado éxitosamente');
       setSelectedGastoForDetail(null);
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -531,10 +531,10 @@ export default function Management() {
   const handleSaveSupply = async (data: Partial<SupplyType>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
-      toast.success('Insumo actualizado exitosamente');
+      toast.success('Insumo actualizado éxitosamente');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-      toast.success('Nuevo insumo registrado en el catÃƒÂ¡logo base');
+      toast.success('Nuevo insumo registrado en el catÃƒ¡logo base');
     }
   };
 
@@ -576,11 +576,11 @@ export default function Management() {
   };
 
   const handleFullSeed = async () => {
-    if (!window.confirm('Ã‚Â¿EstÃƒÂ¡s seguro? Esto borrarÃƒÂ¡ todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
+    if (!window.confirm('Ã‚¿EstÃƒ¡s seguro? Esto borrarÃƒ¡ todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
     setSyncAction('seed');
     try {
       await seedDatabase();
-      toast.success('Ã‚Â¡CatÃƒÂ¡logo recargado completamente!');
+      toast.success('Ã‚¡CatÃƒ¡logo recargado completamente!');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -593,7 +593,7 @@ export default function Management() {
     try {
       setSyncAction('images');
       const count = await syncProductImages();
-      toast.success(`Ã‚Â¡Se actualizaron ${count} imÃƒÂ¡genes correctamente!`);
+      toast.success(`Ã‚¡Se actualizaron ${count} imÃƒ¡genes correctamente!`);
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -629,7 +629,7 @@ export default function Management() {
           }
         }
       }
-      repairedCount > 0 ? toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`) : toast.info('Todo el historial de ventas estÃƒÂ¡ sincronizado correctamente.');
+      repairedCount > 0 ? toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`) : toast.info('Todo el historial de ventas estÃƒ¡ sincronizado correctamente.');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error al reparar historial: ' + error.message);
@@ -639,7 +639,7 @@ export default function Management() {
   };
 
   const handleRecalculatePoints = async () => {
-    if (!window.confirm('Esto revisarÃƒÂ¡ todas las compras anteriores y asignarÃƒÂ¡ puntos y niveles a los clientes que no los hayan recibido. Ã‚Â¿Continuar?')) return;
+    if (!window.confirm('Esto revisarÃƒ¡ todas las compras anteriores y asignarÃƒ¡ puntos y niveles a los clientes que no los hayan recibido. Ã‚¿Continuar?')) return;
     try {
       setSyncAction('points');
       const usersSnap = await getDocs(collection(db, 'users'));
@@ -723,7 +723,7 @@ export default function Management() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success('Copia de seguridad descargada exitosamente');
+      toast.success('Copia de seguridad descargada éxitosamente');
     } catch (error: any) {
       console.error(error);
       toast.error('Error al descargar backup: ' + error.message);
@@ -752,7 +752,7 @@ export default function Management() {
       }
 
       if (addedCount > 0) {
-        toast.success(`Ã‚Â¡Se aÃƒÂ±adieron ${addedCount} insumos faltantes correctamente!`);
+        toast.success(`Ã‚¡Se aÃƒÂ±adieron ${addedCount} insumos faltantes correctamente!`);
       } else {
         toast.info('Todos los insumos ya existen en el sistema.');
       }
@@ -766,7 +766,7 @@ export default function Management() {
   };
 
   const handleDeleteSupply = async (supplyId: string) => {
-    if (window.confirm('Ã‚Â¿EstÃƒÂ¡s seguro de eliminar este insumo?')) {
+    if (window.confirm('Ã‚¿EstÃƒ¡s seguro de eliminar este insumo?')) {
       try {
         await deleteDoc(doc(db, 'supplies', supplyId));
       } catch (error) {
@@ -792,7 +792,7 @@ export default function Management() {
 
   const handleDeleteCategory = async (catName: string) => {
     if (catName === 'Varios') return;
-    if (!window.confirm(`Ã‚Â¿EstÃƒÂ¡s seguro de eliminar la categorÃƒÂ­a "${catName}"? Sus insumos pasarÃƒÂ¡n a "Varios".`)) return;
+    if (!window.confirm(`Ã‚¿EstÃƒ¡s seguro de eliminar la categorÃƒÂ­a "${catName}"? Sus insumos pasarÃƒ¡n a "Varios".`)) return;
     const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === catName);
     const batch = writeBatch(db);
     suppliesToUpdate.forEach(s => {
@@ -925,7 +925,7 @@ export default function Management() {
         }, 100);
       }
     } catch (e) {
-      toast.error('OcurriÃƒÂ³ un error al procesar el reporte de compras');
+      toast.error('OcurrióƒÂ³ un error al procesar el reporte de compras');
       setIsPurchasePreviewModalOpen(false);
       setIsGeneratingPurchasePDF(false);
     }
@@ -953,7 +953,7 @@ export default function Management() {
           toast.error('Error al generar el PDF de gastos');
         }
       } catch (e) {
-        toast.error('OcurriÃƒÂ³ un error al procesar el PDF de gastos');
+        toast.error('OcurrióƒÂ³ un error al procesar el PDF de gastos');
       } finally {
         setIsGeneratingPurchasePDF(false);
       }
@@ -972,7 +972,7 @@ export default function Management() {
           }
         }, 100);
       } catch (e) {
-        toast.error('OcurriÃƒÂ³ un error al procesar la imagen de gastos');
+        toast.error('OcurrióƒÂ³ un error al procesar la imagen de gastos');
         setIsGeneratingPurchasePDF(false);
       }
     }
@@ -985,17 +985,17 @@ export default function Management() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con ÃƒÂ©xito');
+      toast.success('PDF descargado con ÃƒÂéxito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con ÃƒÂ©xito');
+      toast.success('Imagen descargada con ÃƒÂéxito');
     } else if (type === 'excel') {
       const currentTotal = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
       generatePurchasesExcel(sellerName, dateStr, filtered, currentTotal);
-      toast.success('Excel descargado con ÃƒÂ©xito');
+      toast.success('Excel descargado con ÃƒÂéxito');
     }
   };
 
@@ -1026,7 +1026,7 @@ export default function Management() {
           files: [fileToShare]
         });
       } else {
-        toast.info('Compartir no estÃƒÂ¡ soportado en este navegador');
+        toast.info('Compartir no estÃƒ¡ soportado en este navegador');
       }
     } catch (err) {
       console.error(err);
@@ -1104,7 +1104,7 @@ export default function Management() {
 
                 <AnimatePresence mode="wait">
 
-                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo CatÃƒÂ¡logo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo CatÃƒ¡logo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
                       <div className="flex flex-col sm:flex-row gap-3">
@@ -1240,7 +1240,7 @@ export default function Management() {
                                             ) : s.portionsPerUnit > 0 ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
                                                 <div>
-                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento EstÃƒÂ¡ndar</p>
+                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento EstÃƒ¡ndar</p>
                                                   <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} uds/porc</p>
                                                 </div>
                                                 {s.lastPurchasePrice > 0 && (
@@ -1317,7 +1317,7 @@ export default function Management() {
                       {/* Add product button */}
                       <button
                         onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
-                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
+                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widestáshadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
                       >
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1484,7 +1484,7 @@ export default function Management() {
                       {/* Add flavor button */}
                       <button
                         onClick={() => setIsFlavorModalOpen(true)}
-                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
+                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widestáshadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
                       >
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1925,7 +1925,7 @@ export default function Management() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <StatCard index={0} icon={<Wallet className="w-5 h-5 text-red-600" />} label="Gastos Totales" value={formatCurrency(periodTotalGastos)} numericValue={periodTotalGastos} isCurrency={true} sub={`En ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" onOpen={() => setIsExpenseRankingOpen(true)} />
                       <StatCard index={1} icon={<Package className="w-5 h-5 text-orange-500" />} label="Total Registros" value={filteredGastos.length.toString()} numericValue={filteredGastos.length} sub="Cantidad de gastos" accent="orange" onOpen={() => setIsExpenseRankingOpen(true)} />
-                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || 'Ã°Å¸ÂÂ·Ã¯Â¸Â' : 'Ã°Å¸ÂÂ·Ã¯Â¸Â'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
+                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || 'Ã°Å¸Â·Ã¯Â¸Â' : 'Ã°Å¸Â·Ã¯Â¸Â'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
                     </div>
                     
                     <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-outline/10">
@@ -1965,7 +1965,7 @@ export default function Management() {
                               <div>
                                 <p className="font-black text-sm text-on-surface">{g.categoryName}</p>
                                 <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{g.description || 'Sin descripciÃƒÂ³n'}</p>
-                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} Ã‚Â· {g.userName}</p>
+                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} Ã‚· {g.userName}</p>
                               </div>
                             </div>
                             <div className="flex items-center"><p className="font-black text-red-600">{formatCurrency(g.amount)}</p><div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary ml-3 group-hover:bg-primary/10 group-hover:text-primary transition-all"><Plus className="w-4 h-4" /></div></div>
@@ -2024,7 +2024,7 @@ export default function Management() {
               }
               await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
             }
-            toast.success('Ã‚Â¡Compra registrada y stock actualizado!');
+            toast.success('Ã‚¡Compra registrada y stock actualizado!');
           }}
         />
         <WasteModal
@@ -2034,7 +2034,7 @@ export default function Management() {
           onConfirm={async (supplyId, quantity, note) => {
             await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
             await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
-            toast.success('Ã‚Â¡Merma registrada exitosamente!');
+            toast.success('Ã‚¡Merma registrada éxitosamente!');
           }}
         />
         <PurchaseDetailModal purchase={detailPurchase} onEditPaymentMethod={handleUpdatePurchasePaymentMethod} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
@@ -2388,7 +2388,7 @@ export default function Management() {
                   <button 
                     onClick={handleUpdateUser} 
                     disabled={isSavingUser || !editFormData.name.trim()}
-                    className="flex-1 py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
+                    className="flex-1 py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widestáshadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
                   >
                     <Save className="w-4 h-4" />
                     {isSavingUser ? 'Guardando...' : 'Guardar Cambios'}
@@ -2414,17 +2414,17 @@ export default function Management() {
                 </div>
                 <p className="text-xs text-secondary font-medium leading-relaxed mb-8">Selecciona el tipo de actualizaciÃƒÂ³n que deseas realizar en el sistema.</p>
                 <div className="flex flex-col gap-3">
-                  <button onClick={handleImageSync} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                  <button onClick={handleImageSync} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widestáshadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'images' ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
-                    Sincronizar Solo ImÃƒÂ¡genes
+                    Sincronizar Solo ImÃƒ¡genes
                   </button>
-                  <button onClick={handleRepairSales} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                  <button onClick={handleRepairSales} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widestáshadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'sales' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <History className="w-4 h-4" />}
                     Reparar Todo el Historial de Ventas
                   </button>
                   <button onClick={handleFullSeed} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'full' ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-                    Recargar CatÃƒÂ¡logo Completo
+                    Recargar CatÃƒ¡logo Completo
                   </button>
                   <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -2484,7 +2484,7 @@ export default function Management() {
                             count++;
                           }
                         }
-                        toast.success(`Ã‚Â¡Se actualizaron recetas y descripciones de ${count} productos!`);
+                        toast.success(`Ã‚¡Se actualizaron recetas y descripciones de ${count} productos!`);
                       } catch(e: any) {
                         toast.error('Error: ' + e.message);
                       } finally {
@@ -2529,7 +2529,7 @@ export default function Management() {
                             count++;
                           }
                         }
-                        toast.success(`Ã‚Â¡Se aÃƒÂ±adieron ${count} insumos de helado!`);
+                        toast.success(`Ã‚¡Se aÃƒÂ±adieron ${count} insumos de helado!`);
                       } catch(e: any) {
                         toast.error('Error: ' + e.message);
                       } finally {
@@ -2614,7 +2614,7 @@ export default function Management() {
         filter={PERIOD_LABELS[period]} 
         ranking={sortedExpenseCategories.map(c => ({
           name: c.name,
-          emoji: c.emoji || 'Ã°Å¸ÂÂ·Ã¯Â¸Â',
+          emoji: c.emoji || 'Ã°Å¸Â·Ã¯Â¸Â',
           amount: c.amount,
           percentage: periodTotalGastos > 0 ? (c.amount / periodTotalGastos) * 100 : 0
         }))} 

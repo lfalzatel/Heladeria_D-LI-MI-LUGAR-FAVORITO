@@ -93,9 +93,9 @@ export function StatCard({ icon, label, value, sub, accent, index = 0, numericVa
 /* â”€â”€â”€ PURCHASE HISTORY CARD â”€â”€â”€ */
 export function PurchaseCard({ purchase, onClick, index = 0 }: { purchase: PurchaseRecord, onClick: () => void, index?: number }) {
   const d = toDateS(purchase.createdAt);
-  const days = ['Dom', 'Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b'];
+  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-  const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} Â· ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
+  const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
 
   return (
     <motion.button 
@@ -121,7 +121,7 @@ export function PurchaseCard({ purchase, onClick, index = 0 }: { purchase: Purch
           <span key={i} className="px-2 py-0.5 bg-surface-container text-secondary text-[9px] font-bold rounded-lg border border-outline/10">{item.name} Ã—{item.quantity}</span>
         ))}
         {(purchase.items?.length || 0) > 4 && (
-          <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} mÃ¡s</span>
+          <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} más</span>
         )}
       </div>
     </motion.button>

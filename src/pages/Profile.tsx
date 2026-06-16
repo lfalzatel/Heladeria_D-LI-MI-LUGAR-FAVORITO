@@ -423,7 +423,7 @@ export default function Profile() {
             <button 
               onClick={handleSave}
               disabled={isSaving || isUploading}
-              className="w-full bg-primary text-white py-4 mt-2 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
+              className="w-full bg-primary text-white py-4 mt-2 rounded-2xl font-black text-xs uppercase tracking-widestáshadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

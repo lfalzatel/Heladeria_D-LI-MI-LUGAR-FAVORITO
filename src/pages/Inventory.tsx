@@ -122,7 +122,7 @@ export default function Inventory() {
         ...productData,
         updatedAt: new Date() // using client date to avoid need for serverTimestamp import clash if not imported
       });
-      toast.success('Producto actualizado exitosamente');
+      toast.success('Producto actualizado éxitosamente');
     } else {
       await import('firebase/firestore').then(({ addDoc, serverTimestamp }) => {
         addDoc(collection(db, 'products'), {
@@ -167,7 +167,7 @@ export default function Inventory() {
               setIsFlavorModalOpen(true);
             }
           }}
-          className="w-full py-4 sm:py-5 bg-on-surface text-white rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all px-4"
+          className="w-full py-4 sm:py-5 bg-on-surface text-white rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widestásm:tracking-[0.2em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all px-4"
         >
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
             <span className="text-lg sm:text-xl leading-none font-light">+</span>

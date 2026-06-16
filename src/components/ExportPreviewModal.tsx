@@ -102,7 +102,7 @@ export default function ExportPreviewModal({
               <button
                 disabled={isGenerating}
                 onClick={onShare}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white border border-outline/50 text-on-surface font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-surface-container transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white border border-outline/50 text-on-surface font-black text-[11px] uppercase tracking-widestáshadow-sm hover:bg-surface-container transition-all disabled:opacity-50"
               >
                 <Share2 className="w-4 h-4" />
                 Compartir
@@ -110,7 +110,7 @@ export default function ExportPreviewModal({
               <button
                 disabled={isGenerating}
                 onClick={onDownload}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-white font-black text-[11px] uppercase tracking-widest shadow-sm hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-white font-black text-[11px] uppercase tracking-widestáshadow-sm hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
                 <Download className="w-4 h-4" />
                 Descargar

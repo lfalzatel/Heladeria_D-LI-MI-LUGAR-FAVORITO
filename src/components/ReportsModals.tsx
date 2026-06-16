@@ -617,7 +617,7 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
         </button>
         <button
           onClick={() => { onClose(); navigate('/admin/management?tab=operacion'); }}
-          className="flex-1 py-3 rounded-2xl bg-on-surface text-white text-xs font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+          className="flex-1 py-3 rounded-2xl bg-on-surface text-white text-xs font-black uppercase tracking-widestáshadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all"
         >
           <ShoppingCart className="w-4 h-4" /> Ir a Comprar
         </button>

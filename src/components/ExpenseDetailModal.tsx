@@ -59,7 +59,7 @@ export function ExpenseDetailModal({ gasto, onClose, onDelete, onEditPaymentMeth
                 <div>
                   <h3 className="font-black text-base text-red-900">Detalle de Gasto</h3>
                   <p className="text-[10px] text-red-600/70 font-bold uppercase tracking-widest">
-                    {gasto.dateObj.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} Â· {gasto.dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                    {gasto.dateObj.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} · {gasto.dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>
@@ -67,7 +67,7 @@ export function ExpenseDetailModal({ gasto, onClose, onDelete, onEditPaymentMeth
                 {onDelete && (
                   <button 
                     onClick={() => {
-                      if (window.confirm('Â¿EstÃ¡s seguro de que deseas eliminar este gasto?')) {
+                      if (window.confirm('¿Estás seguro de que deseas eliminar este gasto?')) {
                         setIsDeleting(true);
                         onDelete(gasto.id);
                       }
@@ -90,14 +90,14 @@ export function ExpenseDetailModal({ gasto, onClose, onDelete, onEditPaymentMeth
                     {gasto.categoryEmoji}
                   </span>
                   <div>
-                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest">CategorÃ­a</p>
+                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Categoría</p>
                     <p className="font-black text-lg text-on-surface leading-tight">{gasto.categoryName}</p>
                   </div>
                 </div>
 
                 {gasto.description && (
                   <div className="bg-white rounded-xl p-3 border border-outline/10">
-                    <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">DescripciÃ³n</p>
+                    <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Descripción</p>
                     <p className="text-sm font-bold text-on-surface whitespace-pre-wrap">{gasto.description}</p>
                   </div>
                 )}

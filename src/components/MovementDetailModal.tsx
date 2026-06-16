@@ -724,7 +724,7 @@ export default function MovementDetailModal({
               <div className="p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem]">
                 <button 
                   onClick={onClose}
-                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widestáshadow-xl active:scale-[0.98] transition-all"
                 >
                   Cerrar Detalle
                 </button>

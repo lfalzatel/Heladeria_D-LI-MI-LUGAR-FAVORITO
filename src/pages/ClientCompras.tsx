@@ -355,7 +355,7 @@ export default function ClientCompras() {
       });
 
       toast.success('¡Ganaste 1 Punto Premium! ⭐ Revisa tu perfil.', {
-        description: '¡Tu pedido fue enviado exitosamente!',
+        description: '¡Tu pedido fue enviado éxitosamente!',
         duration: 8000,
       });
 
@@ -843,7 +843,7 @@ export default function ClientCompras() {
                     <button 
                       onClick={() => setCheckoutStep(2)} 
                       disabled={cart.length === 0}
-                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widestáshadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
                     >
                       Continuar con el pedido <ChevronRight className="w-5 h-5" />
                     </button>
@@ -859,7 +859,7 @@ export default function ClientCompras() {
                     <button 
                       onClick={handlePlaceOrder} 
                       disabled={!address.trim() || cart.length === 0 || placing} 
-                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widestáshadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
                     >
                       {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> Confirmar Pedido </>}
                     </button>
