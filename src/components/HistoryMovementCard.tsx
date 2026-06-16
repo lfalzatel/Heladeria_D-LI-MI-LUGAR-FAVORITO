@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'motion/react';
 import { cn, formatCurrency } from '../lib/utils';
 import { 
@@ -113,10 +113,9 @@ export default function HistoryMovementCard({
             {date}
           </span>
         </div>
-        <span className="text-[9px] font-mono text-secondary/20 font-bold">
-          ID: {id.slice(-8).toUpperCase()}
-        </span>
+        <div className="flex items-center gap-2"><span className="text-[9px] font-mono text-secondary/20 font-bold">ID: {id.slice(-8).toUpperCase()}</span><span className="text-[10px] text-primary/70 font-black uppercase tracking-widest flex items-center gap-0.5 bg-primary/5 px-2 py-1 rounded-md">Ver <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></div>
       </div>
     </motion.button>
   );
 }
+

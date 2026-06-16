@@ -331,22 +331,24 @@ export async function generatePurchasesPDF(
           dateString,
           p.provider || 'Proveedor Gral',
           itemsStr,
+          p.paymentMethod || 'Efectivo',
           formatMoney(p.total || 0)
         ];
       });
 
       autoTable(pdf, {
         startY: startY,
-        head: [['Fecha/Hora', 'Proveedor', 'Insumos', 'Total']],
+        head: [['Fecha/Hora', 'Proveedor', 'Insumos', 'Pago', 'Total']],
         body: purchasesBody,
         theme: 'striped',
         headStyles: { fillColor: [248, 113, 113], textColor: 255, fontStyle: 'bold' }, // red-400
         styles: { fontSize: 8, cellPadding: 3 },
         columnStyles: {
-          0: { cellWidth: 35 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 70 },
-          3: { cellWidth: 35, halign: 'right', fontStyle: 'bold' }
+          0: { cellWidth: 30 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 60 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
         }
       });
     }
@@ -480,23 +482,25 @@ export async function generateExpensePDF(
           g.userName || 'Usuario',
           `${g.categoryEmoji || ''} ${g.categoryName || 'Sin Categoría'}`,
           g.description || '-',
+          g.paymentMethod || 'Efectivo',
           formatMoney(g.amount || 0)
         ];
       });
 
       autoTable(pdf, {
         startY: startY,
-        head: [['Fecha/Hora', 'Responsable', 'Categoría', 'Descripción', 'Total']],
+        head: [['Fecha/Hora', 'Responsable', 'Categoría', 'Descripción', 'Pago', 'Total']],
         body: gastosBody,
         theme: 'striped',
         headStyles: { fillColor: [248, 113, 113], textColor: 255, fontStyle: 'bold' }, // red-400
         styles: { fontSize: 8, cellPadding: 3 },
         columnStyles: {
-          0: { cellWidth: 35 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 50 },
-          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+          0: { cellWidth: 30 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 40 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
         }
       });
     }

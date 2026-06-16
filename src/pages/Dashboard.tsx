@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useHeaderStore } from '../stores/useHeaderStore';
@@ -185,7 +185,7 @@ export default function Dashboard() {
       });
   }, [allUnfilteredActivity, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
 
-  // ── COMPUTED METRICS ──
+  // â”€â”€ COMPUTED METRICS â”€â”€
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
   const totalIngresos = ingresosSales.reduce((s, x) => s + (x.total || 0), 0);
   
@@ -201,7 +201,7 @@ export default function Dashboard() {
       const pm = (s.paymentMethod || '').toLowerCase();
       if (['cash', 'efectivo', 'cash/efectivo'].includes(pm)) {
         efectivo += (s.total || 0);
-      } else if (['datafono', 'card', 'tarjeta', 'débito', 'crédito'].includes(pm)) {
+      } else if (['datafono', 'card', 'tarjeta', 'dÃ©bito', 'crÃ©dito'].includes(pm)) {
         tarjeta += (s.total || 0);
       } else if (['transfer', 'transferencia', 'digital', 'nequi', 'daviplata'].includes(pm)) {
         transferencia += (s.total || 0);
@@ -218,14 +218,14 @@ export default function Dashboard() {
   // Supply purchases for current period
   const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
-  const comprasEfectivo = purchasesPeriod.filter(p => p.paymentMethod !== 'Transferencia').reduce((s, p) => s + (p.total || 0), 0);
-  const comprasTransferencia = purchasesPeriod.filter(p => p.paymentMethod === 'Transferencia').reduce((s, p) => s + (p.total || 0), 0);
+  const comprasEfectivo = purchasesPeriod.reduce((s, p) => s + (p.paymentMethod === 'Mixto' ? (p.splitDetails?.efectivo || 0) : (p.paymentMethod === 'Transferencia' ? 0 : (p.total || 0))), 0);
+  const comprasTransferencia = purchasesPeriod.reduce((s, p) => s + (p.paymentMethod === 'Mixto' ? (p.splitDetails?.transferencia || 0) : (p.paymentMethod === 'Transferencia' ? (p.total || 0) : 0)), 0);
 
   // Gastos operativos for current period
   const gastosPeriod = gastosOperativos.filter(g => isInPeriod(g.dateObj, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalGastosOperativos = gastosPeriod.reduce((s, g) => s + (g.amount || 0), 0);
-  const gastosEfectivo = gastosPeriod.filter(g => g.paymentMethod !== 'Transferencia').reduce((s, g) => s + (g.amount || 0), 0);
-  const gastosTransferencia = gastosPeriod.filter(g => g.paymentMethod === 'Transferencia').reduce((s, g) => s + (g.amount || 0), 0);
+  const gastosEfectivo = gastosPeriod.reduce((s, g) => s + (g.paymentMethod === 'Mixto' ? (g.splitDetails?.efectivo || 0) : (g.paymentMethod === 'Transferencia' ? 0 : (g.amount || 0))), 0);
+  const gastosTransferencia = gastosPeriod.reduce((s, g) => s + (g.paymentMethod === 'Mixto' ? (g.splitDetails?.transferencia || 0) : (g.paymentMethod === 'Transferencia' ? (g.amount || 0) : 0)), 0);
 
   // Ganancia
   const gananciaNeta = totalIngresos - totalCompras - totalGastosOperativos;
@@ -289,7 +289,7 @@ export default function Dashboard() {
         title: `Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`,
         subtitle: profile?.role === 'vendedor' 
           ? `Resumen de tu actividad (${filterLabel})` 
-          : `Estado de la Heladería (${filterLabel})`,
+          : `Estado de la HeladerÃ­a (${filterLabel})`,
         actions: (
           <div className="flex items-center gap-2 relative z-50">
             <button 
@@ -404,7 +404,7 @@ export default function Dashboard() {
         }, 100);
       }
     } catch (e) {
-      toast.error('Ocurrió un error al procesar');
+      toast.error('OcurriÃ³ un error al procesar');
       setIsPreviewModalOpen(false);
       setIsGeneratingPDF(false);
     }
@@ -417,13 +417,13 @@ export default function Dashboard() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con éxito');
+      toast.success('PDF descargado con Ã©xito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con éxito');
+      toast.success('Imagen descargada con Ã©xito');
     } else if (type === 'excel') {
       const metrics = {
         totalIngresos,
@@ -437,7 +437,7 @@ export default function Dashboard() {
         totalPremiosFidelidad
       };
       generateDashboardExcel(sellerName, dateStr, metrics, combinedActivity, ranking);
-      toast.success('Excel descargado con éxito');
+      toast.success('Excel descargado con Ã©xito');
     }
   };
 
@@ -457,7 +457,7 @@ export default function Dashboard() {
         const blob = await response.blob();
         fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
       } else if (type === 'excel') {
-         toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
+         toast.error('Compartir Excel directamente no soportado aÃºn, usa Descargar.');
          return;
       }
 
@@ -468,7 +468,7 @@ export default function Dashboard() {
           files: [fileToShare]
         });
       } else {
-        toast.info('Compartir no está soportado en este navegador');
+        toast.info('Compartir no estÃ¡ soportado en este navegador');
       }
     } catch (err) {
       console.error(err);
@@ -602,7 +602,7 @@ export default function Dashboard() {
           />
           <MetricCard
             icon={<CreditCard className="w-5 h-5" />}
-            label="Vtas. a Crédito"
+            label="Vtas. a CrÃ©dito"
             value={formatCurrency(totalCredito)}
             numericValue={totalCredito}
             isCurrency={true}
@@ -632,7 +632,7 @@ export default function Dashboard() {
               numericValue={Math.abs(gananciaNeta)}
               isCurrency={true}
               sub={filterLabel}
-              badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÉRDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
+              badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÃ‰RDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
               accent="blue"
               onOpen={() => open('ganancia')}
               index={3}
@@ -654,7 +654,7 @@ export default function Dashboard() {
               value={formatCurrency(totalDeuda)}
               numericValue={totalDeuda}
               isCurrency={true}
-              sub="Total Histórico"
+              sub="Total HistÃ³rico"
               accent="orange"
               onOpen={() => open('deuda')}
               index={5}
@@ -666,7 +666,7 @@ export default function Dashboard() {
             value={criticalSupplies.length.toString()}
             numericValue={criticalSupplies.length}
             isCurrency={false}
-            sub="Items críticos"
+            sub="Items crÃ­ticos"
             badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-[#fee2e2] text-[#b91c1c]' } : null}
             accent="orange"
             onOpen={() => setIsStockModalOpen(true)}
@@ -868,3 +868,4 @@ export default function Dashboard() {
     </>
   );
 }
+

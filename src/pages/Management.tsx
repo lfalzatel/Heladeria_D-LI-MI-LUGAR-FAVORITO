@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   onSnapshot, 
@@ -86,7 +86,7 @@ import { ExpenseCategoryManager } from '../components/ExpenseCategoryManager';
 import { useExpenseCategoriesStore } from '../stores/useExpenseCategoriesStore';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 type MainTab = 'inventario' | 'personas' | 'operacion';
 type InventarioSubTab = 'insumos' | 'productos' | 'sabores' | 'categorias';
@@ -127,7 +127,7 @@ interface Supply {
   updatedAt?: any;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Component Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export default function Management() {
   const location = useLocation();
@@ -159,11 +159,11 @@ export default function Management() {
     currentUser?.role === 'propietario' ||
     currentUser?.role === 'vendedor';
 
-  // ── Equipo (Personas) State ──────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Equipo (Personas) State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState('');
 
-  // ── Insumos (Supplies) State ─────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Insumos (Supplies) State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [period, setPeriod] = useState<PeriodFilter>('today');
@@ -184,7 +184,7 @@ export default function Management() {
   const [supplySearch, setSupplySearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
-  // ── Productos State (from Inventory.tsx) ─────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Productos State (from Inventory.tsx) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [products, setProducts] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
@@ -193,7 +193,7 @@ export default function Management() {
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
   const [productForRecipe, setProductForRecipe] = useState<Product | null>(null);
 
-  // ── User History State ───────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ User History State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<any | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
   const [userSales, setUserSales] = useState<any[]>([]);
@@ -205,7 +205,7 @@ export default function Management() {
   const [showPurchaseCalendar, setShowPurchaseCalendar] = useState(false);
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<Date | null>(null);
 
-  // ── User Edit State ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ User Edit State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<UserProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -218,17 +218,17 @@ export default function Management() {
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
-  // ── Sabores State ────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Sabores State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [isFlavorModalOpen, setIsFlavorModalOpen] = useState(false);
   const [newFlavorName, setNewFlavorName] = useState('');
   const [isSavingFlavor, setIsSavingFlavor] = useState(false);
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
 
-  // ── Category Edit State ──────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Category Edit State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  // ── Purchase Export States ──────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Purchase Export States Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [showPurchaseExportOptions, setShowPurchaseExportOptions] = useState(false);
   const [isPurchasePreviewModalOpen, setIsPurchasePreviewModalOpen] = useState(false);
   const [isGeneratingPurchasePDF, setIsGeneratingPurchasePDF] = useState(false);
@@ -246,13 +246,13 @@ export default function Management() {
   const [selectedGastoForDetail, setSelectedGastoForDetail] = useState<any | null>(null);
   const [isExpenseRankingOpen, setIsExpenseRankingOpen] = useState(false);
 
-  // ── Header Actions ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Header Actions Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     // Solo mostrar acciones si es admin
     const canAdmin = currentUser?.role === 'admin';
     
     setHeader({
-      title: "Gestión D'LI",
+      title: "GestiÃƒÂ³n D'LI",
       subtitle: "Panel Administrativo",
       actions: canAdmin ? (
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -260,8 +260,8 @@ export default function Management() {
             onClick={async () => {
               const { notifyAdmins } = await import('../lib/notifications');
               toast.promise(
-                notifyAdmins('🔔 Prueba de Sistema', `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
-                { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
+                notifyAdmins('Ã°Å¸â€â€ Prueba de Sistema', `NotificaciÃƒÂ³n enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
+                { loading: 'Enviando...', success: 'Ã‚Â¡NotificaciÃƒÂ³n enviada!', error: 'Error al enviar' }
               );
             }}
             className="p-2 sm:px-3 sm:py-2 bg-surface-container text-on-surface rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
@@ -287,10 +287,10 @@ export default function Management() {
     return () => clearHeader();
   }, [setHeader, clearHeader, currentUser, setIsSyncModalOpen]);
 
-  // ── Sync URL with tab ────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Sync URL with tab Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // Removed redundancy - URL is now the source of truth for activeTab
 
-  // ── Firebase Listeners ───────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Firebase Listeners Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     if (!currentUser) return;
 
@@ -352,7 +352,7 @@ export default function Management() {
     };
   }, [currentUser]);
 
-  // ── User History Effect ──────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ User History Effect Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     if (!selectedUserForHistory) { setUserSales([]); return; }
 
@@ -385,7 +385,7 @@ export default function Management() {
     return () => unsub();
   }, [selectedUserForHistory]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Handlers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   const handleSendMessage = async () => {
     if (!chatMessage.trim() || !selectedSaleDetail || !currentUser) return;
@@ -396,9 +396,9 @@ export default function Management() {
       await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { messages });
       setChatMessage('');
       if (isStaff) {
-        await notifyUser(selectedSaleDetail.clienteId, '💬 Nuevo mensaje de la Heladería', `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id });
+        await notifyUser(selectedSaleDetail.clienteId, 'Ã°Å¸â€™Â¬ Nuevo mensaje de la HeladerÃƒÂ­a', `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id });
       } else {
-        await notifyAdmins(`💬 Mensaje de ${currentUser?.name || 'Cliente'}`, `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id, fromName: currentUser?.name });
+        await notifyAdmins(`Ã°Å¸â€™Â¬ Mensaje de ${currentUser?.name || 'Cliente'}`, `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id, fromName: currentUser?.name });
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -418,7 +418,7 @@ export default function Management() {
     setIsSavingUser(true);
     try {
       await updateDoc(doc(db, 'users', selectedUserForEdit.uid), { ...editFormData, updatedAt: serverTimestamp() });
-      toast.success('Información de usuario actualizada');
+      toast.success('InformaciÃƒÂ³n de usuario actualizada');
       setIsEditModalOpen(false);
     } catch {
       toast.error('Error al actualizar usuario');
@@ -482,14 +482,14 @@ export default function Management() {
         userName: currentUser?.name,
         date: serverTimestamp()
       });
-      toast.success('Gasto registrado con éxito');
+      toast.success('Gasto registrado con ÃƒÂ©xito');
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error('Error al registrar gasto');
     }
   };
 
-  const handleDeleteExpense = async (id: string) => {
+  const handleUpdateExpensePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'gastos', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeleteExpense = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'gastos', id));
       toast.success('Gasto eliminado exitosamente');
@@ -500,7 +500,7 @@ export default function Management() {
     }
   };
 
-  const handleDeletePurchase = async (id: string) => {
+  const handleUpdatePurchasePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'supplyPurchases', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeletePurchase = async (id: string) => {
     try {
       const purchase = purchases.find(p => p.id === id);
       if (!purchase) return;
@@ -534,7 +534,7 @@ export default function Management() {
       toast.success('Insumo actualizado exitosamente');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-      toast.success('Nuevo insumo registrado en el catálogo base');
+      toast.success('Nuevo insumo registrado en el catÃƒÂ¡logo base');
     }
   };
 
@@ -576,11 +576,11 @@ export default function Management() {
   };
 
   const handleFullSeed = async () => {
-    if (!window.confirm('¿Estás seguro? Esto borrará todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
+    if (!window.confirm('Ã‚Â¿EstÃƒÂ¡s seguro? Esto borrarÃƒÂ¡ todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
     setSyncAction('seed');
     try {
       await seedDatabase();
-      toast.success('¡Catálogo recargado completamente!');
+      toast.success('Ã‚Â¡CatÃƒÂ¡logo recargado completamente!');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -593,7 +593,7 @@ export default function Management() {
     try {
       setSyncAction('images');
       const count = await syncProductImages();
-      toast.success(`¡Se actualizaron ${count} imágenes correctamente!`);
+      toast.success(`Ã‚Â¡Se actualizaron ${count} imÃƒÂ¡genes correctamente!`);
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -629,7 +629,7 @@ export default function Management() {
           }
         }
       }
-      repairedCount > 0 ? toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`) : toast.info('Todo el historial de ventas está sincronizado correctamente.');
+      repairedCount > 0 ? toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`) : toast.info('Todo el historial de ventas estÃƒÂ¡ sincronizado correctamente.');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error al reparar historial: ' + error.message);
@@ -639,7 +639,7 @@ export default function Management() {
   };
 
   const handleRecalculatePoints = async () => {
-    if (!window.confirm('Esto revisará todas las compras anteriores y asignará puntos y niveles a los clientes que no los hayan recibido. ¿Continuar?')) return;
+    if (!window.confirm('Esto revisarÃƒÂ¡ todas las compras anteriores y asignarÃƒÂ¡ puntos y niveles a los clientes que no los hayan recibido. Ã‚Â¿Continuar?')) return;
     try {
       setSyncAction('points');
       const usersSnap = await getDocs(collection(db, 'users'));
@@ -656,7 +656,7 @@ export default function Management() {
 
         let points = 0;
         
-        // Ventas físicas
+        // Ventas fÃƒÂ­sicas
         salesSnap.docs.forEach(sale => {
           const s = sale.data();
           if (s.clienteId === uid && s.type !== 'online') {
@@ -708,7 +708,7 @@ export default function Management() {
           const snap = await getDocs(collection(db, col));
           data[col] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (e) {
-          console.warn(`No se pudo respaldar la colección ${col}:`, e);
+          console.warn(`No se pudo respaldar la colecciÃƒÂ³n ${col}:`, e);
           // Continue to the next collection even if one fails
         }
       }
@@ -752,7 +752,7 @@ export default function Management() {
       }
 
       if (addedCount > 0) {
-        toast.success(`¡Se añadieron ${addedCount} insumos faltantes correctamente!`);
+        toast.success(`Ã‚Â¡Se aÃƒÂ±adieron ${addedCount} insumos faltantes correctamente!`);
       } else {
         toast.info('Todos los insumos ya existen en el sistema.');
       }
@@ -766,7 +766,7 @@ export default function Management() {
   };
 
   const handleDeleteSupply = async (supplyId: string) => {
-    if (window.confirm('¿Estás seguro de eliminar este insumo?')) {
+    if (window.confirm('Ã‚Â¿EstÃƒÂ¡s seguro de eliminar este insumo?')) {
       try {
         await deleteDoc(doc(db, 'supplies', supplyId));
       } catch (error) {
@@ -786,20 +786,20 @@ export default function Management() {
       batch.update(doc(db, 'supplies', s.id!), { category: newCategoryName.trim() });
     });
     await batch.commit();
-    toast.success('Categoría renombrada');
+    toast.success('CategorÃƒÂ­a renombrada');
     setEditingCategory(null);
   };
 
   const handleDeleteCategory = async (catName: string) => {
     if (catName === 'Varios') return;
-    if (!window.confirm(`¿Estás seguro de eliminar la categoría "${catName}"? Sus insumos pasarán a "Varios".`)) return;
+    if (!window.confirm(`Ã‚Â¿EstÃƒÂ¡s seguro de eliminar la categorÃƒÂ­a "${catName}"? Sus insumos pasarÃƒÂ¡n a "Varios".`)) return;
     const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === catName);
     const batch = writeBatch(db);
     suppliesToUpdate.forEach(s => {
       batch.update(doc(db, 'supplies', s.id!), { category: 'Varios' });
     });
     await batch.commit();
-    toast.success('Categoría eliminada');
+    toast.success('CategorÃƒÂ­a eliminada');
   };
 
   const calculateRecipeCost = (recipe?: any[]) => {
@@ -814,7 +814,7 @@ export default function Management() {
     }, 0);
   };
 
-  // ── Derived values ────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Derived values Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const filtered = purchases.filter((p) => isInPeriod(p.createdAt, period, selectedDate, selectedMonth, selectedWeek));
   const periodTotal = filtered.reduce((a, p) => a + (p.total || 0), 0);
   const totalUnits = filtered.reduce((a, p) => a + (p.items?.length || 0), 0);
@@ -871,9 +871,9 @@ export default function Management() {
     return matchesSearch && matchesCategory;
   });
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // REPORT EXPORT HANDLERS (COMPRAS)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handlePurchasePreview = async (type: 'pdf' | 'excel' | 'image') => {
     setShowPurchaseExportOptions(false);
     setPurchasePreviewType(type);
@@ -881,7 +881,7 @@ export default function Management() {
     setPurchasePreviewData(null);
     setIsGeneratingPurchasePDF(true);
     
-    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico');
     const sellerName = currentUser?.name || 'Administrador';
 
     try {
@@ -925,7 +925,7 @@ export default function Management() {
         }, 100);
       }
     } catch (e) {
-      toast.error('Ocurrió un error al procesar el reporte de compras');
+      toast.error('OcurriÃƒÂ³ un error al procesar el reporte de compras');
       setIsPurchasePreviewModalOpen(false);
       setIsGeneratingPurchasePDF(false);
     }
@@ -933,7 +933,7 @@ export default function Management() {
 
   const handleExpensePreview = async (type: 'pdf' | 'excel' | 'image') => {
     setShowPurchaseExportOptions(false);
-    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico');
     const sellerName = currentUser?.name || 'Administrador';
     const totalGastado = filteredGastos.reduce((a, g) => a + (g.amount || 0), 0);
 
@@ -953,7 +953,7 @@ export default function Management() {
           toast.error('Error al generar el PDF de gastos');
         }
       } catch (e) {
-        toast.error('Ocurrió un error al procesar el PDF de gastos');
+        toast.error('OcurriÃƒÂ³ un error al procesar el PDF de gastos');
       } finally {
         setIsGeneratingPurchasePDF(false);
       }
@@ -972,7 +972,7 @@ export default function Management() {
           }
         }, 100);
       } catch (e) {
-        toast.error('Ocurrió un error al procesar la imagen de gastos');
+        toast.error('OcurriÃƒÂ³ un error al procesar la imagen de gastos');
         setIsGeneratingPurchasePDF(false);
       }
     }
@@ -985,17 +985,17 @@ export default function Management() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con éxito');
+      toast.success('PDF descargado con ÃƒÂ©xito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con éxito');
+      toast.success('Imagen descargada con ÃƒÂ©xito');
     } else if (type === 'excel') {
       const currentTotal = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
       generatePurchasesExcel(sellerName, dateStr, filtered, currentTotal);
-      toast.success('Excel descargado con éxito');
+      toast.success('Excel descargado con ÃƒÂ©xito');
     }
   };
 
@@ -1015,7 +1015,7 @@ export default function Management() {
         const blob = await response.blob();
         fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
       } else if (type === 'excel') {
-         toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
+         toast.error('Compartir Excel directamente no soportado aÃƒÂºn, usa Descargar.');
          return;
       }
 
@@ -1026,16 +1026,16 @@ export default function Management() {
           files: [fileToShare]
         });
       } else {
-        toast.info('Compartir no está soportado en este navegador');
+        toast.info('Compartir no estÃƒÂ¡ soportado en este navegador');
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   return (
     <>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex flex-col gap-6 pb-32 overflow-x-hidden min-w-0">
@@ -1045,7 +1045,7 @@ export default function Management() {
             [
               { id: 'inventario', label: 'Inventario', labelShort: 'Inv.', icon: <Package className="w-4 h-4" /> },
               { id: 'personas', label: 'Personas', labelShort: 'Pers.', icon: <UsersIcon className="w-4 h-4" /> },
-              { id: 'operacion', label: 'Operación', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
+              { id: 'operacion', label: 'OperaciÃƒÂ³n', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
             ] as { id: MainTab; label: string; labelShort: string; icon: React.ReactNode }[]
           ).map((tab) => (
             <button
@@ -1063,12 +1063,12 @@ export default function Management() {
           ))}
         </div>
 
-        {/* Tab Content ───────────────────────────────────────────────── */}
+        {/* Tab Content Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
         <AnimatePresence mode="wait">
 
-            {/* ═══════════════════════════════════════════════════════════════
+            {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
                 TAB: INVENTARIO
-            ═══════════════════════════════════════════════════════════════ */}
+            Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
             {activeTab === 'inventario' && (
               <motion.div
                 key="inventario"
@@ -1084,7 +1084,7 @@ export default function Management() {
                       { id: 'insumos', label: 'Insumos' },
                       { id: 'productos', label: 'Productos' },
                       { id: 'sabores', label: 'Sabores' },
-                      { id: 'categorias', label: 'Categorías' },
+                      { id: 'categorias', label: 'CategorÃƒÂ­as' },
                     ] as { id: InventarioSubTab; label: string }[]
                   ).map((sub) => (
                     <button
@@ -1104,19 +1104,19 @@ export default function Management() {
 
                 <AnimatePresence mode="wait">
 
-                  {/* ── Sub-tab: INSUMOS (Solo Catálogo) ────────────────────────── */}
+                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo CatÃƒÂ¡logo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
                       <div className="flex flex-col sm:flex-row gap-3">
                         <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
                           className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                          <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo
+                          <Plus className="w-5 h-5 stroke-[3]" /> AÃƒÂ±adir Insumo
                         </button>
                         <div className="flex-1 flex items-center bg-white rounded-3xl px-4 py-2 border border-outline/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
                           <Search className="w-5 h-5 text-secondary/50 mr-3 flex-shrink-0" />
                           <input 
                             type="text" 
-                            placeholder="Buscar insumo o categoría..." 
+                            placeholder="Buscar insumo o categorÃƒÂ­a..." 
                             value={supplySearch}
                             onChange={(e) => setSupplySearch(e.target.value)}
                             className="bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-secondary/40 text-on-surface"
@@ -1207,7 +1207,7 @@ export default function Management() {
                                           <div key={s.id} className={cn('bg-surface-container/30 rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30 hover:shadow-md hover:bg-white', isLow && 'border-orange-200 bg-orange-50/30', s.isVirtual && 'border-amber-200 bg-amber-50/30 hover:border-amber-400')}>
                                             <div className="flex justify-between items-start mb-3">
                                               <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', s.isVirtual ? 'bg-amber-100 text-amber-600' : isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
-                                                {s.isVirtual ? '👻 Virtual' : isLow ? '⚠ ' + (s.category || 'Varios') : (s.category || 'Varios')}
+                                                {s.isVirtual ? 'Ã°Å¸â€˜Â» Virtual' : isLow ? 'Ã¢Å¡Â  ' + (s.category || 'Varios') : (s.category || 'Varios')}
                                               </span>
                                               <div className="flex gap-1.5 opacity-100">
                                                 <button onClick={(e) => { e.stopPropagation(); setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
@@ -1229,7 +1229,7 @@ export default function Management() {
                                               </div>
                                             ) : (s.yieldPerSize?.mini || s.yieldPerSize?.small || s.yieldPerSize?.medium || s.yieldPerSize?.large) ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100">
-                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1.5">Rendimiento por Tamaños (1 {s.unit})</p>
+                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1.5">Rendimiento por TamaÃƒÂ±os (1 {s.unit})</p>
                                                 <div className="grid grid-cols-4 gap-1">
                                                   {s.yieldPerSize.mini && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Mini</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.mini}</p></div>}
                                                   {s.yieldPerSize.small && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Peq</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.small}</p></div>}
@@ -1240,7 +1240,7 @@ export default function Management() {
                                             ) : s.portionsPerUnit > 0 ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
                                                 <div>
-                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento Estándar</p>
+                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento EstÃƒÂ¡ndar</p>
                                                   <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} uds/porc</p>
                                                 </div>
                                                 {s.lastPurchasePrice > 0 && (
@@ -1253,7 +1253,7 @@ export default function Management() {
                                             ) : s.yieldDetails && (
                                               <div className="mt-2 mb-4 p-3 bg-primary/5 rounded-2xl border border-primary/10">
                                                 <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado (Legado)</p>
-                                                <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
+                                                <p className="text-[10px] font-bold text-on-surface leading-tight italic">Ã¢Å“Â¨ {s.yieldDetails}</p>
                                               </div>
                                             )}
 
@@ -1278,7 +1278,7 @@ export default function Management() {
                                             )}
                                             {!s.isVirtual && s.lastRestockDate && (
                                                 <div className="mt-3 pt-2 border-t border-outline/5 text-right">
-                                                    <p className="text-[8px] font-black text-secondary uppercase tracking-widest">Últ. Abastecimiento</p>
+                                                    <p className="text-[8px] font-black text-secondary uppercase tracking-widest">ÃƒÅ¡lt. Abastecimiento</p>
                                                     <p className="text-[10px] font-bold text-secondary mt-0.5">
                                                       {new Date(s.lastRestockDate?.toDate ? s.lastRestockDate.toDate() : s.lastRestockDate).toLocaleDateString('es-CO', {day: '2-digit', month: 'short', year: 'numeric'})}
                                                     </p>
@@ -1298,14 +1298,14 @@ export default function Management() {
                           <div className="py-24 flex flex-col items-center justify-center opacity-40 bg-white rounded-[2rem] border border-dashed border-outline/50">
                             <Search className="w-16 h-16 mb-4 text-secondary" />
                             <p className="text-lg font-bold text-on-surface">No se encontraron insumos</p>
-                            <p className="text-xs text-secondary mt-1">Prueba con otra búsqueda</p>
+                            <p className="text-xs text-secondary mt-1">Prueba con otra bÃƒÂºsqueda</p>
                           </div>
                         )}
                       </div>
                     </motion.div>
                   )}
 
-                  {/* ── Sub-tab: PRODUCTOS ────────────────────────────────── */}
+                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: PRODUCTOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'productos' && (
                     <motion.div 
                       key="productos" 
@@ -1322,7 +1322,7 @@ export default function Management() {
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
-                        <span className="truncate">Añadir Nuevo Producto</span>
+                        <span className="truncate">AÃƒÂ±adir Nuevo Producto</span>
                       </button>
 
                       {/* Toolbar: categories + search */}
@@ -1437,7 +1437,7 @@ export default function Management() {
                             </div>
                             <div className="flex flex-col gap-3 pt-4 border-t border-outline/30">
                               <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado en Menú</span>
+                                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado en MenÃƒÂº</span>
                                 <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-md', product.isActive ? 'text-success bg-success/10' : 'text-slate-500 bg-slate-100')}>
                                   {product.isActive ? 'Visible' : 'Oculto'}
                                 </span>
@@ -1478,7 +1478,7 @@ export default function Management() {
                     </motion.div>
                   )}
 
-                  {/* ── Sub-tab: SABORES ──────────────────────────────────── */}
+                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: SABORES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'sabores' && (
                     <motion.div key="sabores" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-4">
                       {/* Add flavor button */}
@@ -1489,7 +1489,7 @@ export default function Management() {
                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
-                        <span className="truncate">Añadir Nuevo Sabor</span>
+                        <span className="truncate">AÃƒÂ±adir Nuevo Sabor</span>
                       </button>
 
                       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -1539,9 +1539,9 @@ export default function Management() {
               </motion.div>
             )}
 
-            {/* ═══════════════════════════════════════════════════════════════
+            {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
                 TAB: PERSONAS (Equipo y Clientes)
-            ═══════════════════════════════════════════════════════════════ */}
+            Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
             {activeTab === 'personas' && (
               <motion.div
                 key="personas"
@@ -1649,9 +1649,9 @@ export default function Management() {
               </motion.div>
             )}
 
-            {/* ═══════════════════════════════════════════════════════════════
-                TAB: OPERACIÓN (Compras)
-            ═══════════════════════════════════════════════════════════════ */}
+            {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+                TAB: OPERACIÃƒâ€œN (Compras)
+            Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
             {activeTab === 'operacion' && (
               <motion.div
                 key="operacion"
@@ -1712,7 +1712,7 @@ export default function Management() {
                     </div>
                   </div>
                   
-                  {/* Operación Sub-tabs */}
+                  {/* OperaciÃƒÂ³n Sub-tabs */}
                   <div className="flex gap-2 bg-surface-container p-1.5 rounded-2xl">
                     {(['compras', 'gastos'] as OperacionSubTab[]).map(tab => (
                       <button
@@ -1869,15 +1869,15 @@ export default function Management() {
                         className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
                       >
                         <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                        <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
+                        <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crÃƒÂ­tico.</p>
                         <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
                       </motion.button>
                     )}
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
+                      <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="InversiÃƒÂ³n" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
                       <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
-                      <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
+                      <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="DÃƒÂ­as de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="DÃƒÂ­as con registros de compra" accent="orange" />
                       <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
                     </div>
 
@@ -1885,11 +1885,11 @@ export default function Management() {
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
                         <div>
-                          <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
-                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
+                          <h4 className="font-black text-base text-on-surface">Tendencia de InversiÃƒÂ³n</h4>
+                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancÃƒÂ­a</p>
                         </div>
                       </div>
-                      <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
+                      <TrendChart data={filtered} color="#b30069" label="Tendencia de InversiÃƒÂ³n" />
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -1900,7 +1900,7 @@ export default function Management() {
                       {filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 opacity-20">
                           <ShoppingCart className="w-12 h-12 mb-3" />
-                          <p className="text-sm font-bold">Sin compras en este período</p>
+                          <p className="text-sm font-bold">Sin compras en este perÃƒÂ­odo</p>
                         </div>
                       ) : (
                         filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
@@ -1918,14 +1918,14 @@ export default function Management() {
                       </button>
                       <button onClick={() => setIsExpenseCategoryModalOpen(true)}
                         className="flex-1 py-4 bg-red-50 text-red-600 rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-sm border border-red-100 flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all">
-                        Categorías
+                        CategorÃƒÂ­as
                       </button>
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <StatCard index={0} icon={<Wallet className="w-5 h-5 text-red-600" />} label="Gastos Totales" value={formatCurrency(periodTotalGastos)} numericValue={periodTotalGastos} isCurrency={true} sub={`En ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" onOpen={() => setIsExpenseRankingOpen(true)} />
                       <StatCard index={1} icon={<Package className="w-5 h-5 text-orange-500" />} label="Total Registros" value={filteredGastos.length.toString()} numericValue={filteredGastos.length} sub="Cantidad de gastos" accent="orange" onOpen={() => setIsExpenseRankingOpen(true)} />
-                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || '🏷️' : '🏷️'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
+                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || 'Ã°Å¸ÂÂ·Ã¯Â¸Â' : 'Ã°Å¸ÂÂ·Ã¯Â¸Â'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
                     </div>
                     
                     <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-outline/10">
@@ -1959,16 +1959,16 @@ export default function Management() {
                         </div>
                       ) : (
                         filteredGastos.map((g) => (
-                          <div key={g.id} onClick={() => setSelectedGastoForDetail(g)} className="cursor-pointer bg-white rounded-2xl p-4 border border-outline/10 flex items-center justify-between shadow-sm hover:border-red-200 hover:shadow-md transition-all">
+                          <div key={g.id} onClick={() => setSelectedGastoForDetail(g)} className="cursor-pointer bg-white rounded-2xl p-4 border border-outline/10 flex items-center justify-between shadow-sm hover:border-red-200 hover:shadow-md transition-all group">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-lg">{g.categoryEmoji || '💸'}</div>
+                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-lg">{g.categoryEmoji || 'Ã°Å¸â€™Â¸'}</div>
                               <div>
                                 <p className="font-black text-sm text-on-surface">{g.categoryName}</p>
-                                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{g.description || 'Sin descripción'}</p>
-                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} · {g.userName}</p>
+                                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{g.description || 'Sin descripciÃƒÂ³n'}</p>
+                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} Ã‚Â· {g.userName}</p>
                               </div>
                             </div>
-                            <p className="font-black text-red-600">{formatCurrency(g.amount)}</p>
+                            <div className="flex items-center"><p className="font-black text-red-600">{formatCurrency(g.amount)}</p><div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary ml-3 group-hover:bg-primary/10 group-hover:text-primary transition-all"><Plus className="w-4 h-4" /></div></div>
                           </div>
                         ))
                       )}
@@ -1981,7 +1981,7 @@ export default function Management() {
           </AnimatePresence>
         </div>
 
-        {/* ── MODALS (todos preservados) ──────────────────────────────────── */}
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬ MODALS (todos preservados) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
 
         <ExpenseCategoryManager 
           isOpen={isExpenseCategoryModalOpen}
@@ -2024,7 +2024,7 @@ export default function Management() {
               }
               await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
             }
-            toast.success('¡Compra registrada y stock actualizado!');
+            toast.success('Ã‚Â¡Compra registrada y stock actualizado!');
           }}
         />
         <WasteModal
@@ -2034,10 +2034,10 @@ export default function Management() {
           onConfirm={async (supplyId, quantity, note) => {
             await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
             await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
-            toast.success('¡Merma registrada exitosamente!');
+            toast.success('Ã‚Â¡Merma registrada exitosamente!');
           }}
         />
-        <PurchaseDetailModal purchase={detailPurchase} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
+        <PurchaseDetailModal purchase={detailPurchase} onEditPaymentMethod={handleUpdatePurchasePaymentMethod} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
 
         {isProductModalOpen && (
           <ProductFormModal
@@ -2282,7 +2282,7 @@ export default function Management() {
                       });
                     } catch (error) {
                       console.error("Error updating item preparation state:", error);
-                      toast.error("Error al actualizar el estado de preparación");
+                      toast.error("Error al actualizar el estado de preparaciÃƒÂ³n");
                     }
                   }}
                 />
@@ -2351,7 +2351,7 @@ export default function Management() {
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Cédula</label>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">CÃƒÂ©dula</label>
                     <input 
                       type="text" 
                       value={editFormData.cedula} 
@@ -2361,7 +2361,7 @@ export default function Management() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Teléfono</label>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">TelÃƒÂ©fono</label>
                     <input 
                       type="tel" 
                       value={editFormData.phone} 
@@ -2371,7 +2371,7 @@ export default function Management() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Dirección</label>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">DirecciÃƒÂ³n</label>
                     <input 
                       type="text" 
                       value={editFormData.address} 
@@ -2408,15 +2408,15 @@ export default function Management() {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary"><Database className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="text-xl font-black text-on-surface">Sincronización</h3>
+                    <h3 className="text-xl font-black text-on-surface">SincronizaciÃƒÂ³n</h3>
                     <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Base de datos D'LI</p>
                   </div>
                 </div>
-                <p className="text-xs text-secondary font-medium leading-relaxed mb-8">Selecciona el tipo de actualización que deseas realizar en el sistema.</p>
+                <p className="text-xs text-secondary font-medium leading-relaxed mb-8">Selecciona el tipo de actualizaciÃƒÂ³n que deseas realizar en el sistema.</p>
                 <div className="flex flex-col gap-3">
                   <button onClick={handleImageSync} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'images' ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
-                    Sincronizar Solo Imágenes
+                    Sincronizar Solo ImÃƒÂ¡genes
                   </button>
                   <button onClick={handleRepairSales} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'sales' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <History className="w-4 h-4" />}
@@ -2424,11 +2424,11 @@ export default function Management() {
                   </button>
                   <button onClick={handleFullSeed} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'full' ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-                    Recargar Catálogo Completo
+                    Recargar CatÃƒÂ¡logo Completo
                   </button>
                   <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
-                    Añadir Insumos Faltantes (Seguro)
+                    AÃƒÂ±adir Insumos Faltantes (Seguro)
                   </button>
                   <button 
                     onClick={async () => {
@@ -2484,7 +2484,7 @@ export default function Management() {
                             count++;
                           }
                         }
-                        toast.success(`¡Se actualizaron recetas y descripciones de ${count} productos!`);
+                        toast.success(`Ã‚Â¡Se actualizaron recetas y descripciones de ${count} productos!`);
                       } catch(e: any) {
                         toast.error('Error: ' + e.message);
                       } finally {
@@ -2529,7 +2529,7 @@ export default function Management() {
                             count++;
                           }
                         }
-                        toast.success(`¡Se añadieron ${count} insumos de helado!`);
+                        toast.success(`Ã‚Â¡Se aÃƒÂ±adieron ${count} insumos de helado!`);
                       } catch(e: any) {
                         toast.error('Error: ' + e.message);
                       } finally {
@@ -2566,7 +2566,7 @@ export default function Management() {
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsFlavorModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
-                <h2 className="text-2xl font-black mb-6">Añadir Nuevo Sabor</h2>
+                <h2 className="text-2xl font-black mb-6">AÃƒÂ±adir Nuevo Sabor</h2>
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase text-secondary/40 ml-4 tracking-widest">Nombre del Sabor</label>
@@ -2604,9 +2604,7 @@ export default function Management() {
         ranking={ranking} 
       />
 
-      <ExpenseDetailModal 
-        gasto={selectedGastoForDetail} 
-        onClose={() => setSelectedGastoForDetail(null)} 
+      <ExpenseDetailModal gasto={selectedGastoForDetail} onEditPaymentMethod={handleUpdateExpensePaymentMethod} onClose={() => setSelectedGastoForDetail(null)} 
         onDelete={handleDeleteExpense}
       />
       
@@ -2616,7 +2614,7 @@ export default function Management() {
         filter={PERIOD_LABELS[period]} 
         ranking={sortedExpenseCategories.map(c => ({
           name: c.name,
-          emoji: c.emoji || '🏷️',
+          emoji: c.emoji || 'Ã°Å¸ÂÂ·Ã¯Â¸Â',
           amount: c.amount,
           percentage: periodTotalGastos > 0 ? (c.amount / periodTotalGastos) * 100 : 0
         }))} 
@@ -2638,7 +2636,7 @@ export default function Management() {
             <h1 className="text-3xl font-black text-primary mb-2">D'LI - LUGAR FAVORITO</h1>
             <h2 className="text-xl font-bold text-secondary">Reporte de Compras</h2>
             <p className="text-sm text-secondary/70 mt-2">
-              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico')} | 
+              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico')} | 
               Generado por: {currentUser?.name || 'Administrador'}
             </p>
           </div>
@@ -2656,15 +2654,14 @@ export default function Management() {
           <div className="mb-4">
             <h3 className="text-lg font-black text-secondary mb-4 border-b border-outline/10 pb-2">Detalle de Compras</h3>
             {filtered.length === 0 ? (
-              <p className="text-secondary/70 italic text-center py-4">No hay compras registradas en este período.</p>
+              <p className="text-secondary/70 italic text-center py-4">No hay compras registradas en este perÃƒÂ­odo.</p>
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-surface-container text-secondary">
                     <th className="p-3 font-bold rounded-l-xl">Fecha/Hora</th>
                     <th className="p-3 font-bold">Proveedor</th>
-                    <th className="p-3 font-bold">Insumos</th>
-                    <th className="p-3 font-bold text-right rounded-r-xl">Total</th>
+                    <th className="p-3 font-bold">Insumos</th><th className="p-3 font-bold">Pago</th><th className="p-3 font-bold">Pago</th><th className="p-3 font-bold text-right rounded-r-xl">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline/5">
@@ -2683,9 +2680,7 @@ export default function Management() {
                             <div key={idx}>{i.quantity}x {i.name}</div>
                           )) : 'N/A'}
                         </td>
-                        <td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">
-                          {formatCurrency(p.total || 0)}
-                        </td>
+                        <td className="p-3 align-top font-medium text-on-surface whitespace-nowrap">{p.paymentMethod || 'Efectivo'}</td><td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">{formatCurrency(p.total || 0)}</td>
                       </tr>
                     );
                   })}
@@ -2704,7 +2699,7 @@ export default function Management() {
             <h1 className="text-3xl font-black text-primary mb-2">D'LI - LUGAR FAVORITO</h1>
             <h2 className="text-xl font-bold text-secondary">Reporte de Gastos</h2>
             <p className="text-sm text-secondary/70 mt-2">
-              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico')} | 
+              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico')} | 
               Generado por: {currentUser?.name || 'Administrador'}
             </p>
           </div>
@@ -2722,16 +2717,16 @@ export default function Management() {
           <div className="mb-4">
             <h3 className="text-lg font-black text-secondary mb-4 border-b border-outline/10 pb-2">Detalle de Gastos</h3>
             {filteredGastos.length === 0 ? (
-              <p className="text-secondary/70 italic text-center py-4">No hay gastos registrados en este período.</p>
+              <p className="text-secondary/70 italic text-center py-4">No hay gastos registrados en este perÃƒÂ­odo.</p>
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-surface-container text-secondary">
                     <th className="p-3 font-bold rounded-l-xl">Fecha/Hora</th>
                     <th className="p-3 font-bold">Responsable</th>
-                    <th className="p-3 font-bold">Categoría</th>
-                    <th className="p-3 font-bold">Descripción</th>
-                    <th className="p-3 font-bold text-right rounded-r-xl">Total</th>
+                    <th className="p-3 font-bold">CategorÃƒÂ­a</th>
+                    <th className="p-3 font-bold">DescripciÃƒÂ³n</th>
+                    <th className="p-3 font-bold">Pago</th><th className="p-3 font-bold text-right rounded-r-xl">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline/5">
@@ -2746,14 +2741,12 @@ export default function Management() {
                           {g.userName || 'Usuario'}
                         </td>
                         <td className="p-3 align-top text-secondary">
-                          {g.categoryEmoji || ''} {g.categoryName || 'Sin Categoría'}
+                          {g.categoryEmoji || ''} {g.categoryName || 'Sin CategorÃƒÂ­a'}
                         </td>
                         <td className="p-3 align-top text-secondary">
                           {g.description || '-'}
                         </td>
-                        <td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">
-                          {formatCurrency(g.amount || 0)}
-                        </td>
+                        <td className="p-3 align-top font-medium text-on-surface whitespace-nowrap">{g.paymentMethod || 'Efectivo'}</td><td className="p-3 align-top text-right font-black text-on-surface whitespace-nowrap">{formatCurrency(g.amount || 0)}</td>
                       </tr>
                     );
                   })}
@@ -2770,4 +2763,15 @@ export default function Management() {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 

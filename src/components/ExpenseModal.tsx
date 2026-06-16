@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, Wallet, Layers, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -10,7 +10,7 @@ export interface ExpenseData {
   categoryName: string;
   categoryEmoji: string;
   description: string;
-  paymentMethod?: 'Efectivo' | 'Transferencia';
+  paymentMethod?: 'Efectivo' | 'Transferencia' | 'Mixto'; splitDetails?: { efectivo: number; transferencia: number; };
 }
 
 interface Props {
@@ -25,7 +25,8 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
   const [amount, setAmount] = useState<string>('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Mixto'>('Efectivo');
+  const [splitEfectivo, setSplitEfectivo] = useState(0);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -100,10 +101,10 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                 </div>
               </div>
 
-              {/* Categoría */}
+              {/* CategorÃ­a */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Categoría</p>
+                  <p className="text-[10px] text-secondary font-black uppercase tracking-widest">CategorÃ­a</p>
                   <button onClick={onOpenCategoryManager} className="text-[10px] font-black text-primary hover:underline">Gestionar</button>
                 </div>
                 <div className="relative">
@@ -113,7 +114,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                     className="w-full h-14 bg-surface-container rounded-2xl px-4 text-sm font-bold text-on-surface outline-none appearance-none cursor-pointer focus:border focus:border-red-300"
                   >
                     {categories.length === 0 ? (
-                      <option value="">(Sin categorías)</option>
+                      <option value="">(Sin categorÃ­as)</option>
                     ) : (
                       categories.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)
                     )}
@@ -122,9 +123,9 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                 </div>
               </div>
 
-              {/* Descripción */}
+              {/* DescripciÃ³n */}
               <div>
-                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">Descripción (Opcional)</p>
+                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">DescripciÃ³n (Opcional)</p>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -136,8 +137,8 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
 
               {/* Payment Method */}
               <div>
-                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">Método de Pago</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">MÃ©todo de Pago</p>
+                <div className="grid grid-cols-3 gap-2">
                   <button 
                     onClick={() => setPaymentMethod('Efectivo')}
                     className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Efectivo' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
@@ -148,8 +149,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                     onClick={() => setPaymentMethod('Transferencia')}
                     className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Transferencia' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}
                   >
-                    Transf.
-                  </button>
+                    Transf.</button><button onClick={() => setPaymentMethod('Mixto')} className={`py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${paymentMethod === 'Mixto' ? 'bg-red-600 text-white shadow-md' : 'bg-surface-container text-on-surface hover:bg-outline/10'}`}>Mixto</button>
                 </div>
               </div>
             </div>
@@ -157,7 +157,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
             <div className="px-6 py-4 border-t border-outline/10 bg-surface-container/50">
               <button 
                 onClick={handleConfirm} 
-                disabled={saving || !amount || !categoryId}
+                disabled={saving || !amount || !categoryId || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > (parseFloat(amount) || 0)))}
                 className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 disabled:opacity-40 hover:bg-red-700 transition-all"
               >
                 <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : 'Registrar Gasto'}
@@ -169,3 +169,4 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
     </AnimatePresence>
   );
 }
+

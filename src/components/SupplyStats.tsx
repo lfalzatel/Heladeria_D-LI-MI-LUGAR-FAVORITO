@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Box, Plus, BarChart3, ChevronRight } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -7,7 +7,7 @@ import { PurchaseRecord } from './PurchaseModals';
 import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod } from '../lib/dateUtils';
 
 
-/* ─── STAT CARD ─── */
+/* â”€â”€â”€ STAT CARD â”€â”€â”€ */
 export function StatCard({ icon, label, value, sub, accent, index = 0, numericValue, isCurrency, onOpen }: { icon: React.ReactNode, label: string, value: string, sub?: string, accent: 'primary' | 'orange' | 'blue' | 'slate' | 'amber', index?: number, numericValue?: number, isCurrency?: boolean, onOpen?: () => void }) {
   const map = { primary: 'bg-primary/5 border-primary/10', orange: 'bg-orange-50 border-orange-100', blue: 'bg-blue-50 border-blue-100', slate: 'bg-slate-50 border-slate-100', amber: 'bg-amber-50 border-amber-100' };
   
@@ -90,12 +90,12 @@ export function StatCard({ icon, label, value, sub, accent, index = 0, numericVa
   );
 }
 
-/* ─── PURCHASE HISTORY CARD ─── */
+/* â”€â”€â”€ PURCHASE HISTORY CARD â”€â”€â”€ */
 export function PurchaseCard({ purchase, onClick, index = 0 }: { purchase: PurchaseRecord, onClick: () => void, index?: number }) {
   const d = toDateS(purchase.createdAt);
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const days = ['Dom', 'Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b'];
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-  const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
+  const dateStr = d ? `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} Â· ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '';
 
   return (
     <motion.button 
@@ -114,16 +114,17 @@ export function PurchaseCard({ purchase, onClick, index = 0 }: { purchase: Purch
           <p className="font-black text-sm text-on-surface">{purchase.provider}</p>
           <p className="text-[10px] text-secondary font-bold mt-0.5">{dateStr}</p>
         </div>
-        <p className="font-black text-primary text-base">{formatCurrency(purchase.total)}</p>
+        <p className="font-black text-primary text-base">{formatCurrency(purchase.total)}</p><div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary ml-3 group-hover:bg-primary/10 group-hover:text-primary transition-all"><Plus className="w-4 h-4" /></div>
       </div>
       <div className="flex flex-wrap gap-1.5 mt-2">
         {purchase.items?.slice(0, 4).map((item, i) => (
-          <span key={i} className="px-2 py-0.5 bg-surface-container text-secondary text-[9px] font-bold rounded-lg border border-outline/10">{item.name} ×{item.quantity}</span>
+          <span key={i} className="px-2 py-0.5 bg-surface-container text-secondary text-[9px] font-bold rounded-lg border border-outline/10">{item.name} Ã—{item.quantity}</span>
         ))}
         {(purchase.items?.length || 0) > 4 && (
-          <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} más</span>
+          <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} mÃ¡s</span>
         )}
       </div>
     </motion.button>
   );
 }
+

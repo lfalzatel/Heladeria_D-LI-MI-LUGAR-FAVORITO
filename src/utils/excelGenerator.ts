@@ -137,10 +137,10 @@ export function generatePurchasesExcel(
 
   reportData.push([]);
   reportData.push(['--- DETALLE DE COMPRAS ---']);
-  reportData.push(['Fecha/Hora', 'Proveedor', 'Insumos', 'Total']);
+  reportData.push(['Fecha/Hora', 'Proveedor', 'Insumos', 'Pago', 'Total']);
 
   if (purchases.length === 0) {
-    reportData.push(['No hay compras registradas en este período', '', '', '']);
+    reportData.push(['No hay compras registradas en este período', '', '', '', '']);
   } else {
     purchases.forEach(p => {
       const dateObj = p.createdAt ? (p.createdAt.toDate ? p.createdAt.toDate() : (p.createdAt.seconds ? new Date(p.createdAt.seconds * 1000) : new Date(p.createdAt))) : new Date();
@@ -154,6 +154,7 @@ export function generatePurchasesExcel(
         dateObj.toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
         p.provider || 'Proveedor Gral',
         itemsStr,
+        p.paymentMethod || 'Efectivo',
         p.total || 0
       ]);
     });
@@ -165,6 +166,7 @@ export function generatePurchasesExcel(
     { wch: 25 }, // Fecha/Hora
     { wch: 25 }, // Proveedor
     { wch: 60 }, // Insumos
+    { wch: 15 }, // Pago
     { wch: 15 }  // Total
   ];
 
@@ -214,10 +216,10 @@ export function generateExpenseExcel(
 
   reportData.push([]);
   reportData.push(['--- DETALLE DE GASTOS ---']);
-  reportData.push(['Fecha/Hora', 'Categoría', 'Descripción', 'Usuario', 'Monto']);
+  reportData.push(['Fecha/Hora', 'Categoría', 'Descripción', 'Usuario', 'Pago', 'Monto']);
 
   if (gastos.length === 0) {
-    reportData.push(['No hay gastos registrados en este período', '', '', '', '']);
+    reportData.push(['No hay gastos registrados en este período', '', '', '', '', '']);
   } else {
     gastos.forEach(g => {
       const dateObj = g.dateObj || (g.createdAt ? (g.createdAt.toDate ? g.createdAt.toDate() : (g.createdAt.seconds ? new Date(g.createdAt.seconds * 1000) : new Date(g.createdAt))) : new Date());
@@ -227,6 +229,7 @@ export function generateExpenseExcel(
         `${g.categoryEmoji || ''} ${g.categoryName || 'Sin Categoría'}`,
         g.description || 'N/A',
         g.userName || 'Usuario',
+        g.paymentMethod || 'Efectivo',
         g.amount || 0
       ]);
     });
@@ -239,6 +242,7 @@ export function generateExpenseExcel(
     { wch: 25 }, // Categoría
     { wch: 45 }, // Descripción
     { wch: 20 }, // Usuario
+    { wch: 15 }, // Pago
     { wch: 15 }  // Monto
   ];
 
