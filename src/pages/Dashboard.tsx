@@ -201,7 +201,7 @@ export default function Dashboard() {
       const pm = (s.paymentMethod || '').toLowerCase();
       if (['cash', 'efectivo', 'cash/efectivo'].includes(pm)) {
         efectivo += (s.total || 0);
-      } else if (['datafono', 'card', 'tarjeta', 'dÃ©bito', 'crÃ©dito'].includes(pm)) {
+      } else if (['datafono', 'card', 'tarjeta', 'débito', 'crédito'].includes(pm)) {
         tarjeta += (s.total || 0);
       } else if (['transfer', 'transferencia', 'digital', 'nequi', 'daviplata'].includes(pm)) {
         transferencia += (s.total || 0);
@@ -289,7 +289,7 @@ export default function Dashboard() {
         title: `Bienvenido, ${profile?.name?.split(' ')[0] || 'Usuario'}`,
         subtitle: profile?.role === 'vendedor' 
           ? `Resumen de tu actividad (${filterLabel})` 
-          : `Estado de la HeladerÃ­a (${filterLabel})`,
+          : `Estado de la Heladería (${filterLabel})`,
         actions: (
           <div className="flex items-center gap-2 relative z-50">
             <button 
@@ -404,7 +404,7 @@ export default function Dashboard() {
         }, 100);
       }
     } catch (e) {
-      toast.error('OcurriÃ³ un error al procesar');
+      toast.error('Ocurrió un error al procesar');
       setIsPreviewModalOpen(false);
       setIsGeneratingPDF(false);
     }
@@ -417,13 +417,13 @@ export default function Dashboard() {
     
     if (type === 'pdf' && pdf) {
       pdf.save(`${fileName}.pdf`);
-      toast.success('PDF descargado con Ã©xito');
+      toast.success('PDF descargado con éxito');
     } else if (type === 'image' && imgData) {
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `${fileName}.jpg`;
       link.click();
-      toast.success('Imagen descargada con Ã©xito');
+      toast.success('Imagen descargada con éxito');
     } else if (type === 'excel') {
       const metrics = {
         totalIngresos,
@@ -437,7 +437,7 @@ export default function Dashboard() {
         totalPremiosFidelidad
       };
       generateDashboardExcel(sellerName, dateStr, metrics, combinedActivity, ranking);
-      toast.success('Excel descargado con Ã©xito');
+      toast.success('Excel descargado con éxito');
     }
   };
 
@@ -457,7 +457,7 @@ export default function Dashboard() {
         const blob = await response.blob();
         fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
       } else if (type === 'excel') {
-         toast.error('Compartir Excel directamente no soportado aÃºn, usa Descargar.');
+         toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
          return;
       }
 
@@ -468,7 +468,7 @@ export default function Dashboard() {
           files: [fileToShare]
         });
       } else {
-        toast.info('Compartir no estÃ¡ soportado en este navegador');
+        toast.info('Compartir no está soportado en este navegador');
       }
     } catch (err) {
       console.error(err);
@@ -602,7 +602,7 @@ export default function Dashboard() {
           />
           <MetricCard
             icon={<CreditCard className="w-5 h-5" />}
-            label="Vtas. a CrÃ©dito"
+            label="Vtas. a Crédito"
             value={formatCurrency(totalCredito)}
             numericValue={totalCredito}
             isCurrency={true}
@@ -632,7 +632,7 @@ export default function Dashboard() {
               numericValue={Math.abs(gananciaNeta)}
               isCurrency={true}
               sub={filterLabel}
-              badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÃ‰RDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
+              badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÉRDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
               accent="blue"
               onOpen={() => open('ganancia')}
               index={3}
@@ -654,7 +654,7 @@ export default function Dashboard() {
               value={formatCurrency(totalDeuda)}
               numericValue={totalDeuda}
               isCurrency={true}
-              sub="Total HistÃ³rico"
+              sub="Total Histórico"
               accent="orange"
               onOpen={() => open('deuda')}
               index={5}
@@ -666,7 +666,7 @@ export default function Dashboard() {
             value={criticalSupplies.length.toString()}
             numericValue={criticalSupplies.length}
             isCurrency={false}
-            sub="Items crÃ­ticos"
+            sub="Items críticos"
             badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-[#fee2e2] text-[#b91c1c]' } : null}
             accent="orange"
             onOpen={() => setIsStockModalOpen(true)}
