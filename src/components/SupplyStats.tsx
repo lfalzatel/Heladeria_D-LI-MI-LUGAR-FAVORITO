@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Box, Plus, BarChart3, ChevronRight } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -118,7 +118,7 @@ export function PurchaseCard({ purchase, onClick, index = 0 }: { purchase: Purch
       </div>
       <div className="flex flex-wrap gap-1.5 mt-2">
         {purchase.items?.slice(0, 4).map((item, i) => (
-          <span key={i} className="px-2 py-0.5 bg-surface-container text-secondary text-[9px] font-bold rounded-lg border border-outline/10">{item.name} Ã—{item.quantity}</span>
+          <span key={i} className="px-2 py-0.5 bg-surface-container text-secondary text-[9px] font-bold rounded-lg border border-outline/10">{item.name} x{item.quantity}</span>
         ))}
         {(purchase.items?.length || 0) > 4 && (
           <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded-lg">+{purchase.items.length - 4} más</span>
