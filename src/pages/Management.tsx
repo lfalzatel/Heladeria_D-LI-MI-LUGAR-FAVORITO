@@ -1605,11 +1605,15 @@ export default function Management() {
                         className="bg-white rounded-3xl p-4 border border-outline/10 shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all hover:shadow-md"
                       >
                         <div className="relative shrink-0">
-                          <div className="w-14 h-14 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-primary font-black text-xl">
-                            {user.imageUrl ? (
-                              <img src={user.imageUrl} alt={user.name} className="w-full h-full object-cover" />
-                            ) : (
-                              user.name[0].toUpperCase()
+                          <div className="w-14 h-14 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-primary font-black text-xl relative">
+                            <span className="absolute inset-0 flex items-center justify-center">{user.name[0].toUpperCase()}</span>
+                            {user.imageUrl && (
+                              <img 
+                                src={user.imageUrl} 
+                                alt={user.name} 
+                                className="absolute inset-0 w-full h-full object-cover" 
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
                             )}
                           </div>
                         </div>
@@ -1713,7 +1717,7 @@ export default function Management() {
                     </div>
                   </div>
                   
-                  {/* OperaciÃƒÂ³n Sub-tabs */}
+                  {/* Operación Sub-tabs */}
                   <div className="flex gap-2 bg-surface-container p-1.5 rounded-2xl">
                     {(['compras', 'gastos'] as OperacionSubTab[]).map(tab => (
                       <button
@@ -1870,7 +1874,7 @@ export default function Management() {
                         className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl hover:bg-orange-100 transition-all group"
                       >
                         <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                        <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crÃƒÂ­tico.</p>
+                        <p className="text-xs font-bold text-orange-700">{lowStock} insumo{lowStock > 1 ? 's' : ''} con stock crítico.</p>
                         <ChevronRight className="w-4 h-4 text-orange-400 ml-auto" />
                       </motion.button>
                     )}
@@ -1878,7 +1882,7 @@ export default function Management() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <StatCard index={0} icon={<Wallet className="w-5 h-5 text-primary" />} label="Inversión" value={formatCurrency(periodTotal)} numericValue={periodTotal} isCurrency={true} sub={`Gasto total en ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" />
                       <StatCard index={1} icon={<Package className="w-5 h-5 text-blue-500" />} label="Lotes Ingresados" value={totalUnits.toString()} numericValue={totalUnits} sub="Total de insumos adquiridos" accent="blue" />
-                      <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="DÃƒÂ­as de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="DÃƒÂ­as con registros de compra" accent="orange" />
+                      <StatCard index={2} icon={<Calendar className="w-5 h-5 text-orange-500" />} label="Días de Actividad" value={activeDays.toString()} numericValue={activeDays} sub="Días con registros de compra" accent="orange" />
                       <StatCard index={3} icon={<Trophy className="w-5 h-5 text-amber-500" />} label="Insumo Estrella" value={starSupply?.name || 'N/A'} sub={starSupply ? `${formatCurrency(starSupply.revenue)} invertidos` : 'Sin datos'} accent="amber" onOpen={() => setIsRankingModalOpen(true)} />
                     </div>
 
@@ -1887,7 +1891,7 @@ export default function Management() {
                         <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center"><Wallet className="w-5 h-5 text-primary" /></div>
                         <div>
                           <h4 className="font-black text-base text-on-surface">Tendencia de Inversión</h4>
-                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancÃƒÂ­a</p>
+                          <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Historial de gastos en mercancía</p>
                         </div>
                       </div>
                       <TrendChart data={filtered} color="#b30069" label="Tendencia de Inversión" />
@@ -1901,7 +1905,7 @@ export default function Management() {
                       {filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 opacity-20">
                           <ShoppingCart className="w-12 h-12 mb-3" />
-                          <p className="text-sm font-bold">Sin compras en este perÃƒÂ­odo</p>
+                          <p className="text-sm font-bold">Sin compras en este período</p>
                         </div>
                       ) : (
                         filtered.map((p) => <PurchaseCard key={p.id} purchase={p} onClick={() => setDetailPurchase(p)} />)
@@ -1926,7 +1930,7 @@ export default function Management() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <StatCard index={0} icon={<Wallet className="w-5 h-5 text-red-600" />} label="Gastos Totales" value={formatCurrency(periodTotalGastos)} numericValue={periodTotalGastos} isCurrency={true} sub={`En ${PERIOD_LABELS[period].toLowerCase()}`} accent="primary" onOpen={() => setIsExpenseRankingOpen(true)} />
                       <StatCard index={1} icon={<Package className="w-5 h-5 text-orange-500" />} label="Total Registros" value={filteredGastos.length.toString()} numericValue={filteredGastos.length} sub="Cantidad de gastos" accent="orange" onOpen={() => setIsExpenseRankingOpen(true)} />
-                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || 'Ã°Å¸Â·Ã¯Â¸Â' : 'Ã°Å¸Â·Ã¯Â¸Â'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
+                      <StatCard index={2} icon={<span className="text-xl">{topExpenseCategory ? gastosCategoryMap[topExpenseCategory.name]?.emoji || '💸' : '💸'}</span>} label="Mayor Gasto" value={topExpenseCategory?.name || 'N/A'} sub={topExpenseCategory ? formatCurrency(topExpenseCategory.amount) : 'Sin datos'} accent="amber" onOpen={() => setIsExpenseRankingOpen(true)} />
                     </div>
                     
                     <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-outline/10">
@@ -1962,11 +1966,11 @@ export default function Management() {
                         filteredGastos.map((g) => (
                           <div key={g.id} onClick={() => setSelectedGastoForDetail(g)} className="cursor-pointer bg-white rounded-2xl p-4 border border-outline/10 flex items-center justify-between shadow-sm hover:border-red-200 hover:shadow-md transition-all group">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-lg">{g.categoryEmoji || 'Ã°Å¸â€™Â¸'}</div>
+                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-lg">{g.categoryEmoji || '💸'}</div>
                               <div>
                                 <p className="font-black text-sm text-on-surface">{g.categoryName}</p>
-                                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{g.description || 'Sin descripciÃƒÂ³n'}</p>
-                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} Ã‚· {g.userName}</p>
+                                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{g.description || 'Sin descripción'}</p>
+                                <p className="text-[10px] font-bold text-primary mt-1">{new Date(g.dateObj).toLocaleDateString()} · {g.userName}</p>
                               </div>
                             </div>
                             <div className="flex items-center"><p className="font-black text-red-600">{formatCurrency(g.amount)}</p><div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary ml-3 group-hover:bg-primary/10 group-hover:text-primary transition-all"><Plus className="w-4 h-4" /></div></div>
@@ -1982,7 +1986,7 @@ export default function Management() {
           </AnimatePresence>
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ MODALS (todos preservados) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* ─── MODALS (todos preservados) ──────────────────────────────────────────────────────────────────────────────────────────────────────── */}
 
         <ExpenseCategoryManager 
           isOpen={isExpenseCategoryModalOpen}
@@ -2043,7 +2047,7 @@ export default function Management() {
           onConfirm={async (supplyId, quantity, note) => {
             await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
             await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
-            toast.success('Ã‚¡Merma registrada éxitosamente!');
+            toast.success('¡Merma registrada éxitosamente!');
           }}
         />
         <PurchaseDetailModal purchase={detailPurchase} onEditPaymentMethod={handleUpdatePurchasePaymentMethod} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
@@ -2084,8 +2088,16 @@ export default function Management() {
                     <X className="w-6 h-6" />
                   </button>
                   <div className="flex items-center gap-5 w-full">
-                    <div className="w-16 h-16 rounded-[1.5rem] bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-3xl font-black overflow-hidden shadow-xl">
-                      {selectedUserForHistory.imageUrl ? <img src={selectedUserForHistory.imageUrl} alt="" className="w-full h-full object-cover" /> : selectedUserForHistory.name[0]}
+                    <div className="w-16 h-16 rounded-[1.5rem] bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-3xl font-black overflow-hidden shadow-xl relative">
+                      <span className="absolute inset-0 flex items-center justify-center">{selectedUserForHistory.name[0].toUpperCase()}</span>
+                      {selectedUserForHistory.imageUrl && (
+                        <img 
+                          src={selectedUserForHistory.imageUrl} 
+                          alt="" 
+                          className="absolute inset-0 w-full h-full object-cover" 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-white font-brand font-black text-xl leading-tight uppercase truncate">{selectedUserForHistory.name}</h3>
@@ -2291,7 +2303,7 @@ export default function Management() {
                       });
                     } catch (error) {
                       console.error("Error updating item preparation state:", error);
-                      toast.error("Error al actualizar el estado de preparaciÃƒÂ³n");
+                      toast.error("Error al actualizar el estado de preparación");
                     }
                   }}
                 />
@@ -2315,11 +2327,15 @@ export default function Management() {
                 
                 {selectedUserForEdit && (
                   <div className="flex items-center gap-4 p-4 bg-surface-container-low rounded-2xl mb-6 border border-outline/10">
-                    <div className="w-14 h-14 rounded-full bg-surface-container border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 text-primary font-black">
-                      {selectedUserForEdit.imageUrl ? (
-                        <img src={selectedUserForEdit.imageUrl} alt="Foto" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xl">{selectedUserForEdit.name.charAt(0).toUpperCase()}</span>
+                    <div className="w-14 h-14 rounded-full bg-surface-container border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 text-primary font-black relative">
+                      <span className="absolute inset-0 flex items-center justify-center text-xl">{selectedUserForEdit.name.charAt(0).toUpperCase()}</span>
+                      {selectedUserForEdit.imageUrl && (
+                        <img 
+                          src={selectedUserForEdit.imageUrl} 
+                          alt="Foto" 
+                          className="absolute inset-0 w-full h-full object-cover" 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -2360,7 +2376,7 @@ export default function Management() {
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">CÃƒÂ©dula</label>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Cédula</label>
                     <input 
                       type="text" 
                       value={editFormData.cedula} 
@@ -2370,7 +2386,7 @@ export default function Management() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">TelÃƒÂ©fono</label>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Teléfono</label>
                     <input 
                       type="tel" 
                       value={editFormData.phone} 
@@ -2380,7 +2396,7 @@ export default function Management() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">DirecciÃƒÂ³n</label>
+                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Dirección</label>
                     <input 
                       type="text" 
                       value={editFormData.address} 
@@ -2417,15 +2433,15 @@ export default function Management() {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary"><Database className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="text-xl font-black text-on-surface">SincronizaciÃƒÂ³n</h3>
+                    <h3 className="text-xl font-black text-on-surface">Sincronización</h3>
                     <p className="text-[10px] text-secondary font-black uppercase tracking-widest">Base de datos D'LI</p>
                   </div>
                 </div>
-                <p className="text-xs text-secondary font-medium leading-relaxed mb-8">Selecciona el tipo de actualizaciÃƒÂ³n que deseas realizar en el sistema.</p>
+                <p className="text-xs text-secondary font-medium leading-relaxed mb-8">Selecciona el tipo de actualización que deseas realizar en el sistema.</p>
                 <div className="flex flex-col gap-3">
                   <button onClick={handleImageSync} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widestáshadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'images' ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
-                    Sincronizar Solo ImÃƒ¡genes
+                    Sincronizar Solo Imágenes
                   </button>
                   <button onClick={handleRepairSales} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widestáshadow-sm hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'sales' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <History className="w-4 h-4" />}
@@ -2433,7 +2449,7 @@ export default function Management() {
                   </button>
                   <button onClick={handleFullSeed} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                     {syncAction === 'full' ? <div className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-                    Recargar CatÃƒ¡logo Completo
+                    Recargar Catálogo Completo
                   </button>
                   <button onClick={handleAddMissingSupplies} disabled={!!syncAction} className="w-full py-4 rounded-2xl bg-success/10 text-success font-black text-[10px] uppercase tracking-widest hover:bg-success/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-2">
                     {syncAction === 'missing_supplies' ? <div className="w-4 h-4 border-2 border-success/30 border-t-success rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -2493,7 +2509,7 @@ export default function Management() {
                             count++;
                           }
                         }
-                        toast.success(`Ã‚¡Se actualizaron recetas y descripciones de ${count} productos!`);
+                        toast.success(`¡Se actualizaron recetas y descripciones de ${count} productos!`);
                       } catch(e: any) {
                         toast.error('Error: ' + e.message);
                       } finally {
@@ -2538,7 +2554,7 @@ export default function Management() {
                             count++;
                           }
                         }
-                        toast.success(`Ã‚¡Se aÃƒÂ±adieron ${count} insumos de helado!`);
+                        toast.success(`¡Se añadieron ${count} insumos de helado!`);
                       } catch(e: any) {
                         toast.error('Error: ' + e.message);
                       } finally {
@@ -2623,7 +2639,7 @@ export default function Management() {
         filter={PERIOD_LABELS[period]} 
         ranking={sortedExpenseCategories.map(c => ({
           name: c.name,
-          emoji: c.emoji || 'Ã°Å¸Â·Ã¯Â¸Â',
+          emoji: c.emoji || '💸',
           amount: c.amount,
           percentage: periodTotalGastos > 0 ? (c.amount / periodTotalGastos) * 100 : 0
         }))} 
