@@ -11,6 +11,7 @@ export interface ExpenseData {
   categoryEmoji: string;
   description: string;
   paymentMethod?: 'Efectivo' | 'Transferencia' | 'Mixto'; splitDetails?: { efectivo: number; transferencia: number; };
+  date?: string;
 }
 
 interface Props {
@@ -20,6 +21,14 @@ interface Props {
   onOpenCategoryManager: () => void;
 }
 
+const getTodayString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager }: Props) {
   const { categories } = useExpenseCategoriesStore();
   const [amount, setAmount] = useState<string>('');
@@ -27,6 +36,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
   const [description, setDescription] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Mixto'>('Efectivo');
   const [splitEfectivo, setSplitEfectivo] = useState(0);
+  const [date, setDate] = useState<string>(getTodayString());
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -35,6 +45,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
       setCategoryId(categories.length > 0 ? categories[0].id : '');
       setDescription('');
       setPaymentMethod('Efectivo');
+      setDate(getTodayString());
       setSaving(false);
     }
   }, [isOpen, categories]);
@@ -55,7 +66,8 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
         categoryEmoji: cat.emoji,
         description: description.trim(),
         paymentMethod,
-        splitDetails: paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: amt - splitEfectivo } : undefined
+        splitDetails: paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: amt - splitEfectivo } : undefined,
+        date
       });
       onClose();
     } finally {
@@ -133,6 +145,17 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                   placeholder="Ej: Papel aluminio D1..."
                   rows={2}
                   className="w-full bg-surface-container rounded-2xl p-4 text-sm font-bold text-on-surface outline-none focus:border focus:border-red-300 resize-none"
+                />
+              </div>
+
+              {/* Fecha */}
+              <div>
+                <p className="text-[10px] text-secondary font-black uppercase tracking-widest mb-1.5">Fecha del Gasto</p>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="w-full h-14 bg-surface-container rounded-2xl px-4 text-sm font-bold text-on-surface outline-none focus:border focus:border-red-300 focus:bg-red-50/30 transition-all cursor-pointer mb-1.5"
                 />
               </div>
 

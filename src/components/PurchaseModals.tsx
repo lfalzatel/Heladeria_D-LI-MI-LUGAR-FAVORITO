@@ -152,8 +152,16 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   supplies: Supply[];
-  onConfirm: (provider: string, items: PurchaseItem[], paymentMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => Promise<void>;
+  onConfirm: (provider: string, items: PurchaseItem[], paymentMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}, date?: string) => Promise<void>;
 }
+
+const getTodayString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
@@ -163,12 +171,13 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Mixto'>('Efectivo');
-    const [splitEfectivo, setSplitEfectivo] = useState(0);
+  const [splitEfectivo, setSplitEfectivo] = useState(0);
+  const [date, setDate] = useState<string>(getTodayString());
   
   const { providers } = useProvidersStore();
   const [isCreatingProvider, setIsCreatingProvider] = useState(false);
 
-  const reset = () => { setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); };
+  const reset = () => { setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); };
   const handleClose = () => { reset(); onClose(); };
 
   // Sort: critical stock first, then alphabetically
@@ -252,7 +261,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   <div>
                     <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer Heladería' : 'Revisar Compra'}</h3>
                     <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">
-                      {selected.size} productos Ã‚· {step === 1 ? 'SelecciÃƒÂ³n' : 'Detalles finales'}
+                      {selected.size} productos · {step === 1 ? 'Selección' : 'Detalles finales'}
                     </p>
                   </div>
                 </div>
@@ -316,21 +325,32 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
               </>
             )}
 
-            {/* STEP 2 Ã¢â‚¬â€ proveedor + detalles */}
+            {/* STEP 2 — proveedor + detalles */}
             {step === 2 && (
               <>
                 <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-                  {/* Proveedor Ã¢â‚¬â€ ahora en el paso 2 */}
-                  <div>
-                    <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Proveedor</p>
-                    <div className="flex gap-2">
-                      <select value={provider} onChange={e => setProvider(e.target.value)} className="flex-1 h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all">
-                        <option value="">Seleccionar proveedor...</option>
-                        {providers.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                      </select>
-                      <button onClick={() => setIsCreatingProvider(true)} className="w-11 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary/90 transition-all">
-                        <Plus className="w-5 h-5" />
-                      </button>
+                  {/* Proveedor y Fecha */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Proveedor</p>
+                      <div className="flex gap-2">
+                        <select value={provider} onChange={e => setProvider(e.target.value)} className="flex-1 h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs focus:border-primary outline-none transition-all">
+                          <option value="">Seleccionar...</option>
+                          {providers.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                        </select>
+                        <button onClick={() => setIsCreatingProvider(true)} className="w-10 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary/90 transition-all flex-shrink-0">
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Fecha de Compra</p>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={e => setDate(e.target.value)}
+                        className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs focus:border-primary outline-none transition-all cursor-pointer"
+                      />
                     </div>
                   </div>
                   {items.map(item => {
@@ -396,9 +416,9 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                                 </div>
                                 {/* Cost/portion auto-calculated */}
                                 <div>
-                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo / PorciÃƒÂ³n</p>
+                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Costo / Porción</p>
                                   <div className={cn("flex items-center rounded-xl px-3 h-9 border", costPerPortion(item) > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-container border-outline/20')}>
-                                    <span className={cn("text-sm font-black", costPerPortion(item) > 0 ? 'text-emerald-700' : 'text-secondary')}>{costPerPortion(item) > 0 ? formatCurrency(costPerPortion(item)) : 'Ã¢â‚¬â€'}</span>
+                                    <span className={cn("text-sm font-black", costPerPortion(item) > 0 ? 'text-emerald-700' : 'text-secondary')}>{costPerPortion(item) > 0 ? formatCurrency(costPerPortion(item)) : '—'}</span>
                                   </div>
                                 </div>
                               </>
@@ -440,7 +460,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border border-outline/30 text-on-surface font-black text-xs uppercase tracking-widest hover:bg-surface-container transition-all flex items-center justify-center gap-2">
                       <ChevronLeft className="w-4 h-4" /> Editar
                     </button>
-                    <button onClick={() => onConfirm(provider === 'Otro' ? (document.getElementById('newProviderName2') as HTMLInputElement)?.value || 'Otro' : provider, items, paymentMethod, paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined).then(() => {setStep(1); setItems([]); setPaymentMethod('Efectivo'); setSplitEfectivo(0); onClose();}).finally(() => setSaving(false))} disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
+                    <button onClick={() => onConfirm(provider === 'Otro' ? (document.getElementById('newProviderName2') as HTMLInputElement)?.value || 'Otro' : provider, items, paymentMethod, paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined, date).then(() => {setStep(1); setItems([]); setPaymentMethod('Efectivo'); setSplitEfectivo(0); setDate(getTodayString()); onClose();}).finally(() => setSaving(false))} disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
                       className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
                       <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : 'Confirmar y Abastecer'}
                     </button>

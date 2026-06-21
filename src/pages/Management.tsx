@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   onSnapshot, 
@@ -478,9 +478,10 @@ export default function Management() {
         categoryEmoji: data.categoryEmoji,
         description: data.description,
         paymentMethod: data.paymentMethod,
+        splitDetails: data.splitDetails || null,
         userId: currentUser?.uid,
         userName: currentUser?.name,
-        date: serverTimestamp()
+        date: data.date ? new Date(data.date + 'T12:00:00') : serverTimestamp()
       });
       toast.success('Gasto registrado con éxito');
     } catch (error) {
@@ -792,7 +793,7 @@ export default function Management() {
 
   const handleDeleteCategory = async (catName: string) => {
     if (catName === 'Varios') return;
-    if (!window.confirm(`Ã‚¿EstÃƒ¡s seguro de eliminar la categorÃƒÂ­a "${catName}"? Sus insumos pasarán a "Varios".`)) return;
+    if (!window.confirm(`¿Estás seguro de eliminar la categoría "${catName}"? Sus insumos pasarán a "Varios".`)) return;
     const suppliesToUpdate = supplies.filter(s => (s.category || 'Varios') === catName);
     const batch = writeBatch(db);
     suppliesToUpdate.forEach(s => {
@@ -1045,7 +1046,7 @@ export default function Management() {
             [
               { id: 'inventario', label: 'Inventario', labelShort: 'Inv.', icon: <Package className="w-4 h-4" /> },
               { id: 'personas', label: 'Personas', labelShort: 'Pers.', icon: <UsersIcon className="w-4 h-4" /> },
-              { id: 'operacion', label: 'OperaciÃƒÂ³n', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
+              { id: 'operacion', label: 'Operación', labelShort: 'Op.', icon: <Boxes className="w-4 h-4" /> },
             ] as { id: MainTab; label: string; labelShort: string; icon: React.ReactNode }[]
           ).map((tab) => (
             <button
@@ -1116,7 +1117,7 @@ export default function Management() {
                           <Search className="w-5 h-5 text-secondary/50 mr-3 flex-shrink-0" />
                           <input 
                             type="text" 
-                            placeholder="Buscar insumo o categorÃƒÂ­a..." 
+                            placeholder="Buscar insumo o categoría..." 
                             value={supplySearch}
                             onChange={(e) => setSupplySearch(e.target.value)}
                             className="bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-secondary/40 text-on-surface"
@@ -2007,15 +2008,23 @@ export default function Management() {
           isOpen={isPurchaseOpen}
           onClose={() => setIsPurchaseOpen(false)}
           supplies={supplies as any}
-          onConfirm={async (provider, items, paymentMethod) => {
+          onConfirm={async (provider, items, paymentMethod, splitDetails, date) => {
             const total = items.reduce((a, i) => a + i.cost, 0); // Cost is now total cost per item
-            await addDoc(collection(db, 'supplyPurchases'), { provider, items, total, paymentMethod, createdAt: serverTimestamp() });
+            const purchaseDate = date ? new Date(date + 'T12:00:00') : new Date();
+            await addDoc(collection(db, 'supplyPurchases'), { 
+              provider, 
+              items, 
+              total, 
+              paymentMethod, 
+              splitDetails: splitDetails || null,
+              createdAt: purchaseDate 
+            });
             for (const item of items) {
               const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
               const supplyUpdate: any = { 
                 currentStock: increment(item.quantity),
                 lastPurchasePrice: unitCost,
-                lastRestockDate: serverTimestamp(),
+                lastRestockDate: purchaseDate,
                 updatedAt: serverTimestamp()
               };
               if (item.portions > 0) {
@@ -2024,7 +2033,7 @@ export default function Management() {
               }
               await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
             }
-            toast.success('Ã‚¡Compra registrada y stock actualizado!');
+            toast.success('¡Compra registrada y stock actualizado!');
           }}
         />
         <WasteModal
