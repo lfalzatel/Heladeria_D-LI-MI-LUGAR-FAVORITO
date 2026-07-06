@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, updateDoc, doc, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
@@ -122,7 +122,7 @@ export default function Inventory() {
         ...productData,
         updatedAt: new Date() // using client date to avoid need for serverTimestamp import clash if not imported
       });
-      toast.success('Producto actualizado éxitosamente');
+      toast.success('Producto actualizado exitosamente');
     } else {
       await import('firebase/firestore').then(({ addDoc, serverTimestamp }) => {
         addDoc(collection(db, 'products'), {
@@ -416,3 +416,4 @@ export default function Inventory() {
     </div>
   );
 }
+

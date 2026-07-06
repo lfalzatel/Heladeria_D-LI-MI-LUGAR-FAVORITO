@@ -15,7 +15,7 @@ function toDate(ts: any): Date | null { if (!ts) return null; if (ts.toDate) ret
 function fmtDate(ts: any) { const d = toDate(ts); if (!d) return ''; return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PURCHASE DETAIL MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-export function PurchaseDetailModal({ purchase, onClose, onDelete, onEditPaymentMethod }: { purchase: PurchaseRecord | null; onClose: () => void; onDelete?: (id: string) => void; onEditPaymentMethod?: (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => void }) {
+export function PurchaseDetailModal({ purchase, onClose, onDelete, onEdit, onEditPaymentMethod }: { purchase: PurchaseRecord | null; onClose: () => void; onDelete?: (id: string) => void; onEdit?: (purchase: PurchaseRecord) => void; onEditPaymentMethod?: (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => void }) {
   const [editedMethod, setEditedMethod] = React.useState<'Efectivo' | 'Transferencia' | 'Mixto' | null>(null);
   const [editedSplit, setEditedSplit] = React.useState<{efectivo: number; transferencia: number} | null>(null);
 
@@ -54,8 +54,11 @@ export function PurchaseDetailModal({ purchase, onClose, onDelete, onEditPayment
                 </div>
               </div>
               <div className="flex gap-2">
+                {onEdit && (
+                  <button onClick={() => { if (purchase) onEdit(purchase); }} className="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-3"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+                )}
                 {onDelete && (
-                  <button onClick={() => { if (window.confirm('Ã‚¿Seguro que deseas eliminar esta compra? Se restarÃƒ¡ el stock ingresado del inventario.')) onDelete(purchase.id); }} className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-all"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => { if (window.confirm('¿Seguro que deseas eliminar esta compra? Se restará el stock ingresado del inventario.')) onDelete(purchase.id); }} className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-all"><Trash2 className="w-4 h-4" /></button>
                 )}
                 <button onClick={onClose} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all"><X className="w-4 h-4" /></button>
               </div>
@@ -153,6 +156,7 @@ interface Props {
   onClose: () => void;
   supplies: Supply[];
   onConfirm: (provider: string, items: PurchaseItem[], paymentMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}, date?: string) => Promise<void>;
+  purchaseToEdit?: PurchaseRecord | null;
 }
 
 const getTodayString = () => {
@@ -163,7 +167,7 @@ const getTodayString = () => {
   return `${year}-${month}-${day}`;
 };
 
-export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
+export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseToEdit }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
   const [provider, setProvider] = useState('Otro');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -176,6 +180,29 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
   
   const { providers } = useProvidersStore();
   const [isCreatingProvider, setIsCreatingProvider] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (purchaseToEdit) {
+        setStep(2); // In edit mode, we can start at step 2 or 1, let's start at 2
+        setProvider(purchaseToEdit.provider || 'Otro');
+        setPaymentMethod(purchaseToEdit.paymentMethod || 'Efectivo');
+        setSplitEfectivo(purchaseToEdit.splitDetails?.efectivo || 0);
+        
+        const d = purchaseToEdit.createdAt?.toDate ? purchaseToEdit.createdAt.toDate() : (purchaseToEdit.createdAt ? new Date(purchaseToEdit.createdAt) : new Date());
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dNum = String(d.getDate()).padStart(2, '0');
+        setDate(`${y}-${m}-${dNum}`);
+
+        const itemSet = new Set(purchaseToEdit.items.map((i: any) => i.supplyId));
+        setSelected(itemSet);
+        setItems(purchaseToEdit.items.map((i: any) => ({ ...i })));
+      } else {
+        setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString());
+      }
+    }
+  }, [isOpen, purchaseToEdit]);
 
   const reset = () => { setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); };
   const handleClose = () => { reset(); onClose(); };
@@ -259,7 +286,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                     {selected.size > 0 && <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center">{selected.size}</span>}
                   </div>
                   <div>
-                    <h3 className="font-black text-base text-on-surface">{step === 1 ? 'Abastecer Heladería' : 'Revisar Compra'}</h3>
+                    <h3 className="font-black text-base text-on-surface">{purchaseToEdit ? (step === 1 ? 'Editar Selección' : 'Editar Compra') : (step === 1 ? 'Abastecer Heladería' : 'Revisar Compra')}</h3>
                     <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">
                       {selected.size} productos · {step === 1 ? 'Selección' : 'Detalles finales'}
                     </p>
@@ -458,11 +485,11 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm }: Props) {
                   </div>
                   <div className="flex gap-3">
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border border-outline/30 text-on-surface font-black text-xs uppercase tracking-widest hover:bg-surface-container transition-all flex items-center justify-center gap-2">
-                      <ChevronLeft className="w-4 h-4" /> Editar
+                      <ChevronLeft className="w-4 h-4" /> Editar Selección
                     </button>
                     <button onClick={() => onConfirm(provider === 'Otro' ? (document.getElementById('newProviderName2') as HTMLInputElement)?.value || 'Otro' : provider, items, paymentMethod, paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined, date).then(() => {setStep(1); setItems([]); setPaymentMethod('Efectivo'); setSplitEfectivo(0); setDate(getTodayString()); onClose();}).finally(() => setSaving(false))} disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
                       className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
-                      <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : 'Confirmar y Abastecer'}
+                      <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : (purchaseToEdit ? 'Guardar Cambios' : 'Confirmar y Abastecer')}
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'motion/react';
+﻿import { motion, AnimatePresence } from 'motion/react';
 import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -97,7 +97,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         if (data.simulated) {
           toast.info('Recibo guardado (simulado)', { description: 'Los parámetros SMTP no están configurados en desarrollo.' });
         } else {
-          toast.success('Recibo enviado al correo éxitosamente ✓');
+          toast.success('Recibo enviado al correo exitosamente ✓');
         }
       } else {
         throw new Error(data.error || 'Error al enviar');
@@ -901,3 +901,4 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
     </>
   );
 }
+

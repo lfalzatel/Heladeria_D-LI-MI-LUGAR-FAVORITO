@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   collection, onSnapshot, query, orderBy, where, doc, updateDoc,
   getDoc, addDoc, serverTimestamp, increment, limit
@@ -144,7 +144,7 @@ export default function ClientPedidos() {
                 if (resData.simulated) {
                   console.log('Recibo de correo enviado (simulado)');
                 } else {
-                  console.log('Recibo de correo enviado éxitosamente');
+                  console.log('Recibo de correo enviado exitosamente');
                 }
               }
             }).catch(err => console.error('Error sending receipt:', err));
@@ -387,3 +387,4 @@ export default function ClientPedidos() {
     </>
   );
 }
+

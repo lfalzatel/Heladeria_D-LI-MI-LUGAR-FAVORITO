@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   onSnapshot, 
@@ -177,6 +177,8 @@ export default function Management() {
   const [supplyToEdit, setSupplyToEdit] = useState<Supply | null>(null);
   const [gastos, setGastos] = useState<any[]>([]);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [gastoToEdit, setGastoToEdit] = useState<any | null>(null);
+  const [purchaseToEdit, setPurchaseToEdit] = useState<PurchaseRecord | null>(null);
   const [isExpenseCategoryModalOpen, setIsExpenseCategoryModalOpen] = useState(false);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [syncAction, setSyncAction] = useState<string | null>(null);
@@ -471,29 +473,44 @@ export default function Management() {
 
   const handleSaveExpense = async (data: ExpenseData) => {
     try {
-      await addDoc(collection(db, 'gastos'), {
-        amount: data.amount,
-        categoryId: data.categoryId,
-        categoryName: data.categoryName,
-        categoryEmoji: data.categoryEmoji,
-        description: data.description,
-        paymentMethod: data.paymentMethod,
-        splitDetails: data.splitDetails || null,
-        userId: currentUser?.uid,
-        userName: currentUser?.name,
-        date: data.date ? new Date(data.date + 'T12:00:00') : serverTimestamp()
-      });
-      toast.success('Gasto registrado con éxito');
+      if (gastoToEdit) {
+        await updateDoc(doc(db, 'gastos', gastoToEdit.id), {
+          amount: data.amount,
+          categoryId: data.categoryId,
+          categoryName: data.categoryName,
+          categoryEmoji: data.categoryEmoji,
+          description: data.description,
+          paymentMethod: data.paymentMethod,
+          splitDetails: data.splitDetails || null,
+          date: data.date ? new Date(data.date + 'T12:00:00') : serverTimestamp()
+        });
+        toast.success('Gasto actualizado con éxito');
+        setGastoToEdit(null);
+      } else {
+        await addDoc(collection(db, 'gastos'), {
+          amount: data.amount,
+          categoryId: data.categoryId,
+          categoryName: data.categoryName,
+          categoryEmoji: data.categoryEmoji,
+          description: data.description,
+          paymentMethod: data.paymentMethod,
+          splitDetails: data.splitDetails || null,
+          userId: currentUser?.uid,
+          userName: currentUser?.name,
+          date: data.date ? new Date(data.date + 'T12:00:00') : serverTimestamp()
+        });
+        toast.success('Gasto registrado con éxito');
+      }
     } catch (error) {
       console.error("Error saving expense:", error);
-      toast.error('Error al registrar gasto');
+      toast.error('Error al guardar gasto');
     }
   };
 
   const handleUpdateExpensePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'gastos', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeleteExpense = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'gastos', id));
-      toast.success('Gasto eliminado éxitosamente');
+      toast.success('Gasto eliminado exitosamente');
       setSelectedGastoForDetail(null);
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -532,7 +549,7 @@ export default function Management() {
   const handleSaveSupply = async (data: Partial<SupplyType>) => {
     if (supplyToEdit) {
       await updateDoc(doc(db, 'supplies', supplyToEdit.id), { ...data, updatedAt: serverTimestamp() });
-      toast.success('Insumo actualizado éxitosamente');
+      toast.success('Insumo actualizado exitosamente');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
       toast.success('Nuevo insumo registrado en el catÃƒ¡logo base');
@@ -724,7 +741,7 @@ export default function Management() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success('Copia de seguridad descargada éxitosamente');
+      toast.success('Copia de seguridad descargada exitosamente');
     } catch (error: any) {
       console.error(error);
       toast.error('Error al descargar backup: ' + error.message);
@@ -2010,34 +2027,79 @@ export default function Management() {
 
         <PurchaseModal
           isOpen={isPurchaseOpen}
-          onClose={() => setIsPurchaseOpen(false)}
+          onClose={() => { setIsPurchaseOpen(false); setPurchaseToEdit(null); }}
           supplies={supplies as any}
+          purchaseToEdit={purchaseToEdit}
           onConfirm={async (provider, items, paymentMethod, splitDetails, date) => {
             const total = items.reduce((a, i) => a + i.cost, 0); // Cost is now total cost per item
             const purchaseDate = date ? new Date(date + 'T12:00:00') : new Date();
-            await addDoc(collection(db, 'supplyPurchases'), { 
-              provider, 
-              items, 
-              total, 
-              paymentMethod, 
-              splitDetails: splitDetails || null,
-              createdAt: purchaseDate 
-            });
-            for (const item of items) {
-              const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
-              const supplyUpdate: any = { 
-                currentStock: increment(item.quantity),
-                lastPurchasePrice: unitCost,
-                lastRestockDate: purchaseDate,
-                updatedAt: serverTimestamp()
-              };
-              if (item.portions > 0) {
-                supplyUpdate.portionsPerUnit = item.portions;
-                supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+            
+            if (purchaseToEdit) {
+              const batch = writeBatch(db);
+              
+              // 1. Revert old stock
+              for (const oldItem of purchaseToEdit.items) {
+                if (oldItem.supplyId) {
+                  batch.update(doc(db, 'supplies', oldItem.supplyId), {
+                    currentStock: increment(-oldItem.quantity)
+                  });
+                }
               }
-              await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
+              
+              // 2. Update purchase document
+              batch.update(doc(db, 'supplyPurchases', purchaseToEdit.id), {
+                provider, 
+                items, 
+                total, 
+                paymentMethod, 
+                splitDetails: splitDetails || null,
+                createdAt: purchaseDate 
+              });
+              
+              // 3. Apply new stock
+              for (const item of items) {
+                const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
+                const supplyUpdate: any = { 
+                  currentStock: increment(item.quantity),
+                  lastPurchasePrice: unitCost,
+                  lastRestockDate: purchaseDate,
+                  updatedAt: serverTimestamp()
+                };
+                if (item.portions > 0) {
+                  supplyUpdate.portionsPerUnit = item.portions;
+                  supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+                }
+                batch.update(doc(db, 'supplies', item.supplyId), supplyUpdate);
+              }
+              
+              await batch.commit();
+              toast.success('¡Compra actualizada y stock recalculado!');
+              setPurchaseToEdit(null);
+            } else {
+              await addDoc(collection(db, 'supplyPurchases'), { 
+                provider, 
+                items, 
+                total, 
+                paymentMethod, 
+                splitDetails: splitDetails || null,
+                createdAt: purchaseDate 
+              });
+              for (const item of items) {
+                const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
+                const supplyUpdate: any = { 
+                  currentStock: increment(item.quantity),
+                  lastPurchasePrice: unitCost,
+                  lastRestockDate: purchaseDate,
+                  updatedAt: serverTimestamp()
+                };
+                if (item.portions > 0) {
+                  supplyUpdate.portionsPerUnit = item.portions;
+                  supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+                }
+                await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
+              }
+              toast.success('¡Compra registrada y stock actualizado!');
             }
-            toast.success('¡Compra registrada y stock actualizado!');
           }}
         />
         <WasteModal
@@ -2047,10 +2109,20 @@ export default function Management() {
           onConfirm={async (supplyId, quantity, note) => {
             await addDoc(collection(db, 'wasteRecords'), { supplyId, quantity, note, createdAt: serverTimestamp() });
             await updateDoc(doc(db, 'supplies', supplyId), { currentStock: increment(-quantity) });
-            toast.success('¡Merma registrada éxitosamente!');
+            toast.success('¡Merma registrada exitosamente!');
           }}
         />
-        <PurchaseDetailModal purchase={detailPurchase} onEditPaymentMethod={handleUpdatePurchasePaymentMethod} onClose={() => setDetailPurchase(null)} onDelete={handleDeletePurchase} />
+        <PurchaseDetailModal 
+          purchase={detailPurchase} 
+          onEditPaymentMethod={handleUpdatePurchasePaymentMethod} 
+          onClose={() => setDetailPurchase(null)} 
+          onDelete={handleDeletePurchase} 
+          onEdit={(purchase) => {
+            setDetailPurchase(null);
+            setPurchaseToEdit(purchase);
+            setIsPurchaseOpen(true);
+          }}
+        />
 
         {isProductModalOpen && (
           <ProductFormModal
@@ -2629,8 +2701,16 @@ export default function Management() {
         ranking={ranking} 
       />
 
-      <ExpenseDetailModal gasto={selectedGastoForDetail} onEditPaymentMethod={handleUpdateExpensePaymentMethod} onClose={() => setSelectedGastoForDetail(null)} 
+      <ExpenseDetailModal 
+        gasto={selectedGastoForDetail} 
+        onEditPaymentMethod={handleUpdateExpensePaymentMethod} 
+        onClose={() => setSelectedGastoForDetail(null)} 
         onDelete={handleDeleteExpense}
+        onEdit={(gasto) => {
+          setSelectedGastoForDetail(null);
+          setGastoToEdit(gasto);
+          setIsExpenseModalOpen(true);
+        }}
       />
       
       <ExpenseRankingModal 
@@ -2788,6 +2868,7 @@ export default function Management() {
     </>
   );
 }
+
 
 
 

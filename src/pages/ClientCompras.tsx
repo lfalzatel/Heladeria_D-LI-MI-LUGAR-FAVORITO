@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -355,7 +355,7 @@ export default function ClientCompras() {
       });
 
       toast.success('¡Ganaste 1 Punto Premium! ⭐ Revisa tu perfil.', {
-        description: '¡Tu pedido fue enviado éxitosamente!',
+        description: '¡Tu pedido fue enviado exitosamente!',
         duration: 8000,
       });
 
@@ -901,3 +901,4 @@ export default function ClientCompras() {
       </main>
     );
 }
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Save, Database, Search, Calculator, Info, Minus } from 'lucide-react';
 import { Product, RecipeIngredient, Supply } from '../types';
@@ -128,7 +128,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         origin: { y: 0.6 },
         zIndex: 9999
       });
-      onClose(); // Cerrar el modal después de guardar éxitosamente
+      onClose(); // Cerrar el modal después de guardar exitosamente
     } catch (error) {
       console.error(error);
       toast.error('Error al guardar la receta');
@@ -393,3 +393,4 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
     </div>
   );
 }
+

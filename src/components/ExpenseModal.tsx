@@ -19,17 +19,18 @@ interface Props {
   onClose: () => void;
   onConfirm: (expense: ExpenseData) => Promise<void>;
   onOpenCategoryManager: () => void;
+  gastoToEdit?: any; // We can pass GastoRecord
 }
 
-const getTodayString = () => {
-  const d = new Date();
+const getTodayString = (dateObj?: Date) => {
+  const d = dateObj || new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager }: Props) {
+export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager, gastoToEdit }: Props) {
   const { categories } = useExpenseCategoriesStore();
   const [amount, setAmount] = useState<string>('');
   const [categoryId, setCategoryId] = useState('');
@@ -41,14 +42,24 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
 
   useEffect(() => {
     if (isOpen) {
-      setAmount('');
-      setCategoryId(categories.length > 0 ? categories[0].id : '');
-      setDescription('');
-      setPaymentMethod('Efectivo');
-      setDate(getTodayString());
+      if (gastoToEdit) {
+        setAmount(gastoToEdit.amount.toString());
+        setCategoryId(gastoToEdit.categoryId);
+        setDescription(gastoToEdit.description || '');
+        setPaymentMethod(gastoToEdit.paymentMethod || 'Efectivo');
+        setSplitEfectivo(gastoToEdit.splitDetails?.efectivo || 0);
+        setDate(gastoToEdit.dateObj ? getTodayString(gastoToEdit.dateObj) : getTodayString());
+      } else {
+        setAmount('');
+        setCategoryId(categories.length > 0 ? categories[0].id : '');
+        setDescription('');
+        setPaymentMethod('Efectivo');
+        setSplitEfectivo(0);
+        setDate(getTodayString());
+      }
       setSaving(false);
     }
-  }, [isOpen, categories]);
+  }, [isOpen, categories, gastoToEdit]);
 
   const handleConfirm = async () => {
     const amt = parseFloat(amount);
@@ -90,7 +101,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                   <Wallet className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-red-900">Registrar Gasto</h3>
+                  <h3 className="font-black text-base text-red-900">{gastoToEdit ? 'Editar Gasto' : 'Registrar Gasto'}</h3>
                   <p className="text-[10px] text-red-600/70 font-bold uppercase tracking-widest">Gasto Operativo</p>
                 </div>
               </div>
@@ -214,7 +225,7 @@ export function ExpenseModal({ isOpen, onClose, onConfirm, onOpenCategoryManager
                 disabled={saving || !amount || !categoryId || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > (parseFloat(amount) || 0)))}
                 className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 disabled:opacity-40 hover:bg-red-700 transition-all"
               >
-                <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : 'Registrar Gasto'}
+                <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : gastoToEdit ? 'Guardar Cambios' : 'Registrar Gasto'}
               </button>
             </div>
           </motion.div>

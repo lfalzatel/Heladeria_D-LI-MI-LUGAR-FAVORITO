@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check, XCircle, MessageCircle, ChevronRight, Clock, Package } from 'lucide-react';
 import { collection, query, where, onSnapshot, updateDoc, doc, getDoc, addDoc, serverTimestamp, orderBy, increment, limit } from 'firebase/firestore';
@@ -298,7 +298,7 @@ export default function NotificationBell() {
                 if (resData.simulated) {
                   console.log('Recibo de correo enviado (simulado)');
                 } else {
-                  console.log('Recibo de correo enviado éxitosamente');
+                  console.log('Recibo de correo enviado exitosamente');
                 }
               }
             }).catch(err => console.error('Error sending receipt:', err));
@@ -575,3 +575,4 @@ export default function NotificationBell() {
     </div>
   );
 }
+
