@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, Receipt, MapPin } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
@@ -364,11 +364,21 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                         <select value={provider} onChange={e => setProvider(e.target.value)} className="flex-1 h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs focus:border-primary outline-none transition-all">
                           <option value="">Seleccionar...</option>
                           {providers.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                          <option value="Otro">Otro (Escribir)...</option>
                         </select>
-                        <button onClick={() => setIsCreatingProvider(true)} className="w-10 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary/90 transition-all flex-shrink-0">
+                        <button onClick={() => setIsCreatingProvider(true)} className="w-10 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary/90 transition-all flex-shrink-0" title="Agregar a base de datos">
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
+                      {provider === 'Otro' && (
+                        <input
+                          id="newProviderName2"
+                          type="text"
+                          placeholder="Nombre del proveedor..."
+                          className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs mt-2 focus:border-primary outline-none transition-all"
+                          autoFocus
+                        />
+                      )}
                     </div>
                     <div>
                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Fecha de Compra</p>
