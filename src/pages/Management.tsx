@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   onSnapshot, 
@@ -1296,7 +1296,7 @@ export default function Management() {
                                             )}
                                             {!s.isVirtual && s.lastRestockDate && (
                                                 <div className="mt-3 pt-2 border-t border-outline/5 text-right">
-                                                    <p className="text-[8px] font-black text-secondary uppercase tracking-widest">ÃƒÅ¡lt. Abastecimiento</p>
+                                                    <p className="text-[8px] font-black text-secondary uppercase tracking-widest">Últ. Abastecimiento</p>
                                                     <p className="text-[10px] font-bold text-secondary mt-0.5">
                                                       {new Date(s.lastRestockDate?.toDate ? s.lastRestockDate.toDate() : s.lastRestockDate).toLocaleDateString('es-CO', {day: '2-digit', month: 'short', year: 'numeric'})}
                                                     </p>
