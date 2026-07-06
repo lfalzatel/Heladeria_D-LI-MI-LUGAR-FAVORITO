@@ -359,16 +359,19 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                   {/* Proveedor y Fecha */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Proveedor</p>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Proveedor</p>
+                        <button onClick={() => setIsCreatingProvider(true)} className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors">
+                          <Plus className="w-3 h-3" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">Nuevo</span>
+                        </button>
+                      </div>
                       <div className="flex gap-2">
-                        <select value={provider} onChange={e => setProvider(e.target.value)} className="flex-1 h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs focus:border-primary outline-none transition-all">
+                        <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs focus:border-primary outline-none transition-all truncate">
                           <option value="">Seleccionar...</option>
                           {providers.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                           <option value="Otro">Otro (Escribir)...</option>
                         </select>
-                        <button onClick={() => setIsCreatingProvider(true)} className="w-10 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary/90 transition-all flex-shrink-0" title="Agregar a base de datos">
-                          <Plus className="w-4 h-4" />
-                        </button>
                       </div>
                       {provider === 'Otro' && (
                         <input
