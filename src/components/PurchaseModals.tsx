@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, Receipt, MapPin } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
@@ -425,7 +425,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                                 <div className="col-span-2">
                                   <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Rendimiento</p>
                                   <div className="flex items-center bg-amber-50 rounded-xl px-3 h-9 border border-amber-200">
-                                    <span className="text-xs font-bold text-amber-700">Rendimiento variable (por tamaÃƒÂ±os) ya configurado en catÃƒ¡logo.</span>
+                                    <span className="text-xs font-bold text-amber-700">Rendimiento variable (por tamaños) ya configurado en catálogo.</span>
                                   </div>
                                 </div>
                               );
@@ -532,5 +532,6 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
     </>
   );
 }
+
 
 

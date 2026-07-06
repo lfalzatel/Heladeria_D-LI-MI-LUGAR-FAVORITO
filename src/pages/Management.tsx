@@ -1258,7 +1258,7 @@ export default function Management() {
                                             ) : s.portionsPerUnit > 0 ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
                                                 <div>
-                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento EstÃƒ¡ndar</p>
+                                                  <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-0.5">Rendimiento Estándar</p>
                                                   <p className="text-[10px] font-bold text-emerald-900 leading-tight">1 {s.unit} = {s.portionsPerUnit} uds/porc</p>
                                                 </div>
                                                 {s.lastPurchasePrice > 0 && (
@@ -1271,7 +1271,7 @@ export default function Management() {
                                             ) : s.yieldDetails && (
                                               <div className="mt-2 mb-4 p-3 bg-primary/5 rounded-2xl border border-primary/10">
                                                 <p className="text-[8px] font-black text-primary uppercase tracking-tighter mb-0.5">Rendimiento Estimado (Legado)</p>
-                                                <p className="text-[10px] font-bold text-on-surface leading-tight italic">Ã¢Å“Â¨ {s.yieldDetails}</p>
+                                                <p className="text-[10px] font-bold text-on-surface leading-tight italic">✨ {s.yieldDetails}</p>
                                               </div>
                                             )}
 
@@ -2868,6 +2868,7 @@ export default function Management() {
     </>
   );
 }
+
 
 
 
