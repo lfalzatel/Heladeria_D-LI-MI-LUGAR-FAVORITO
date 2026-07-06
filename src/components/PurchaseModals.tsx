@@ -169,7 +169,7 @@ const getTodayString = () => {
 
 export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseToEdit }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
-  const [provider, setProvider] = useState('Otro');
+  const [provider, setProvider] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<PurchaseItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -185,7 +185,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
     if (isOpen) {
       if (purchaseToEdit) {
         setStep(2); // In edit mode, we can start at step 2 or 1, let's start at 2
-        setProvider(purchaseToEdit.provider || 'Otro');
+        setProvider(purchaseToEdit.provider || '');
         setPaymentMethod(purchaseToEdit.paymentMethod || 'Efectivo');
         setSplitEfectivo(purchaseToEdit.splitDetails?.efectivo || 0);
         
@@ -199,12 +199,12 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
         setSelected(itemSet);
         setItems(purchaseToEdit.items.map((i: any) => ({ ...i })));
       } else {
-        setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString());
+        setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString());
       }
     }
   }, [isOpen, purchaseToEdit]);
 
-  const reset = () => { setStep(1); setProvider('Otro'); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); };
+  const reset = () => { setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); };
   const handleClose = () => { reset(); onClose(); };
 
   // Sort: critical stock first, then alphabetically
@@ -247,7 +247,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
   const costPerPortion = (item: PurchaseItem) => item.portions > 0 && item.cost > 0 ? item.cost / item.portions : 0;
 
   const handleConfirm = async () => {
-    const finalProvider = provider.trim() === '' ? 'Otro' : provider;
+    const finalProvider = provider.trim() === '' ? 'Desconocido' : provider;
     if (items.length === 0) return;
     setSaving(true);
     try { 
@@ -370,18 +370,8 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                         <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs focus:border-primary outline-none transition-all truncate">
                           <option value="">Seleccionar...</option>
                           {providers.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                          <option value="Otro">Otro (Escribir)...</option>
                         </select>
                       </div>
-                      {provider === 'Otro' && (
-                        <input
-                          id="newProviderName2"
-                          type="text"
-                          placeholder="Nombre del proveedor..."
-                          className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-3 font-bold text-xs mt-2 focus:border-primary outline-none transition-all"
-                          autoFocus
-                        />
-                      )}
                     </div>
                     <div>
                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1.5">Fecha de Compra</p>
@@ -500,7 +490,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border border-outline/30 text-on-surface font-black text-xs uppercase tracking-widest hover:bg-surface-container transition-all flex items-center justify-center gap-2">
                       <ChevronLeft className="w-4 h-4" /> Editar Selección
                     </button>
-                    <button onClick={() => onConfirm(provider === 'Otro' ? (document.getElementById('newProviderName2') as HTMLInputElement)?.value || 'Otro' : provider, items, paymentMethod, paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined, date).then(() => {setStep(1); setItems([]); setPaymentMethod('Efectivo'); setSplitEfectivo(0); setDate(getTodayString()); onClose();}).finally(() => setSaving(false))} disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
+                    <button onClick={() => onConfirm(provider || 'Desconocido', items, paymentMethod, paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined, date).then(() => {setStep(1); setItems([]); setPaymentMethod('Efectivo'); setSplitEfectivo(0); setDate(getTodayString()); onClose();}).finally(() => setSaving(false))} disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
                       className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
                       <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : (purchaseToEdit ? 'Guardar Cambios' : 'Confirmar y Abastecer')}
                     </button>
