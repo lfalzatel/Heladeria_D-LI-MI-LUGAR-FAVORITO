@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   onSnapshot, 
@@ -598,7 +598,7 @@ export default function Management() {
     setSyncAction('seed');
     try {
       await seedDatabase();
-      toast.success('Ã‚¡CatÃƒ¡logo recargado completamente!');
+      toast.success('Ã‚¡Catálogo recargado completamente!');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -899,7 +899,7 @@ export default function Management() {
     setPurchasePreviewData(null);
     setIsGeneratingPurchasePDF(true);
     
-    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico');
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
     const sellerName = currentUser?.name || 'Administrador';
 
     try {
@@ -951,7 +951,7 @@ export default function Management() {
 
   const handleExpensePreview = async (type: 'pdf' | 'excel' | 'image') => {
     setShowPurchaseExportOptions(false);
-    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico');
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico');
     const sellerName = currentUser?.name || 'Administrador';
     const totalGastado = filteredGastos.reduce((a, g) => a + (g.amount || 0), 0);
 
@@ -1122,7 +1122,7 @@ export default function Management() {
 
                 <AnimatePresence mode="wait">
 
-                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo CatÃƒ¡logo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo Catálogo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
                       <div className="flex flex-col sm:flex-row gap-3">
@@ -1225,7 +1225,7 @@ export default function Management() {
                                           <div key={s.id} className={cn('bg-surface-container/30 rounded-3xl p-5 border shadow-sm flex flex-col justify-between transition-all hover:border-primary/30 hover:shadow-md hover:bg-white', isLow && 'border-orange-200 bg-orange-50/30', s.isVirtual && 'border-amber-200 bg-amber-50/30 hover:border-amber-400')}>
                                             <div className="flex justify-between items-start mb-3">
                                               <span className={cn('px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest', s.isVirtual ? 'bg-amber-100 text-amber-600' : isLow ? 'bg-orange-100 text-orange-600' : 'bg-primary/10 text-primary')}>
-                                                {s.isVirtual ? 'Ã°Å¸â€˜Â» Virtual' : isLow ? 'Ã¢Å¡Â  ' + (s.category || 'Varios') : (s.category || 'Varios')}
+                                                {s.isVirtual ? '✨ Virtual' : isLow ? '⚠️ ' + (s.category || 'Varios') : (s.category || 'Varios')}
                                               </span>
                                               <div className="flex gap-1.5 opacity-100">
                                                 <button onClick={(e) => { e.stopPropagation(); setSupplyToEdit(s); setIsSupplyModalOpen(true); }}
@@ -1247,7 +1247,7 @@ export default function Management() {
                                               </div>
                                             ) : (s.yieldPerSize?.mini || s.yieldPerSize?.small || s.yieldPerSize?.medium || s.yieldPerSize?.large) ? (
                                               <div className="mt-2 mb-4 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100">
-                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1.5">Rendimiento por TamaÃƒÂ±os (1 {s.unit})</p>
+                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1.5">Rendimiento por Tamaños (1 {s.unit})</p>
                                                 <div className="grid grid-cols-4 gap-1">
                                                   {s.yieldPerSize.mini && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Mini</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.mini}</p></div>}
                                                   {s.yieldPerSize.small && <div className="text-center bg-white rounded-lg py-1 border border-emerald-100"><p className="text-[8px] font-bold text-emerald-600">Peq</p><p className="text-[10px] font-black text-emerald-900">{s.yieldPerSize.small}</p></div>}
@@ -1455,7 +1455,7 @@ export default function Management() {
                             </div>
                             <div className="flex flex-col gap-3 pt-4 border-t border-outline/30">
                               <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado en MenÃƒÂº</span>
+                                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado en Menú</span>
                                 <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-md', product.isActive ? 'text-success bg-success/10' : 'text-slate-500 bg-slate-100')}>
                                   {product.isActive ? 'Visible' : 'Oculto'}
                                 </span>
@@ -1672,7 +1672,7 @@ export default function Management() {
             )}
 
             {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-                TAB: OPERACIÃƒâ€œN (Compras)
+                TAB: OPERACIÓN (Compras)
             Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
             {activeTab === 'operacion' && (
               <motion.div
@@ -2741,7 +2741,7 @@ export default function Management() {
             <h1 className="text-3xl font-black text-primary mb-2">D'LI - LUGAR FAVORITO</h1>
             <h2 className="text-xl font-bold text-secondary">Reporte de Compras</h2>
             <p className="text-sm text-secondary/70 mt-2">
-              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico')} | 
+              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico')} | 
               Generado por: {currentUser?.name || 'Administrador'}
             </p>
           </div>
@@ -2759,7 +2759,7 @@ export default function Management() {
           <div className="mb-4">
             <h3 className="text-lg font-black text-secondary mb-4 border-b border-outline/10 pb-2">Detalle de Compras</h3>
             {filtered.length === 0 ? (
-              <p className="text-secondary/70 italic text-center py-4">No hay compras registradas en este perÃƒÂ­odo.</p>
+              <p className="text-secondary/70 italic text-center py-4">No hay compras registradas en este período.</p>
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
@@ -2804,7 +2804,7 @@ export default function Management() {
             <h1 className="text-3xl font-black text-primary mb-2">D'LI - LUGAR FAVORITO</h1>
             <h2 className="text-xl font-bold text-secondary">Reporte de Gastos</h2>
             <p className="text-sm text-secondary/70 mt-2">
-              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'HistÃƒÂ³rico')} | 
+              Fecha: {selectedDate ? selectedDate.toLocaleDateString('es-CO') : (PERIOD_LABELS[period as PeriodFilter] || 'Histórico')} | 
               Generado por: {currentUser?.name || 'Administrador'}
             </p>
           </div>
@@ -2822,7 +2822,7 @@ export default function Management() {
           <div className="mb-4">
             <h3 className="text-lg font-black text-secondary mb-4 border-b border-outline/10 pb-2">Detalle de Gastos</h3>
             {filteredGastos.length === 0 ? (
-              <p className="text-secondary/70 italic text-center py-4">No hay gastos registrados en este perÃƒÂ­odo.</p>
+              <p className="text-secondary/70 italic text-center py-4">No hay gastos registrados en este período.</p>
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
