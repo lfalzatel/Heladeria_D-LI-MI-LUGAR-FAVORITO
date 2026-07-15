@@ -195,6 +195,24 @@ export default function UserMenu() {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleShareApk = async () => {
+    setIsOpen(false);
+    const apkUrl = 'https://drive.google.com/file/d/1qYrsXav8uuIFL0gR3cH-6n9iOg7Wvl70/view?usp=drive_link';
+    const whatsappMsg = encodeURIComponent(`¡Hola! Descarga la aplicación de Android (APK) de D'LI Heladería desde aquí: ${apkUrl}`);
+    const whatsappUrl = `https://wa.me/?text=${whatsappMsg}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ 
+          title: "D'LI Heladería (Android)", 
+          text: "Instala la app oficial de D'LI Heladería directamente en tu celular Android.", 
+          url: apkUrl 
+        });
+        return;
+      } catch {}
+    }
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleInstall = async () => {
     setIsOpen(false);
     
@@ -448,6 +466,13 @@ export default function UserMenu() {
                 label="Compartir app"
                 sublabel="Invitar por WhatsApp u otras apps"
                 onClick={handleShare}
+                closeMenu={() => setIsOpen(false)}
+              />
+              <MenuItem
+                icon={<Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                label="Compartir APK"
+                sublabel="Descarga directa para Android"
+                onClick={handleShareApk}
                 closeMenu={() => setIsOpen(false)}
               />
               {!isStandalone && (
