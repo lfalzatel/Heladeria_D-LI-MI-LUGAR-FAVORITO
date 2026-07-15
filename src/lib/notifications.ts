@@ -140,11 +140,14 @@ export async function listenToForegroundMessages() {
     onMessage(messaging, (payload) => {
       console.log('Mensaje recibido en primer plano:', payload);
       
-      // 1. Toast visual (sonner)
-      toast.info(payload.notification?.title || 'Nueva notificación', {
-        description: payload.notification?.body,
-        duration: 5000,
-      });
+      // 1. Mostrar toast dentro de la app (In-App)
+      const showInApp = localStorage.getItem('notifications_inapp_enabled') !== 'false';
+      if (showInApp) {
+        toast.info(payload.notification?.title || "Nuevo Pedido", {
+          description: payload.notification?.body,
+          duration: 5000,
+        });
+      }
 
       // 2. Vibración (funciona en Android)
       if ('vibrate' in navigator) {
@@ -152,15 +155,9 @@ export async function listenToForegroundMessages() {
       }
 
       // 3. Sonido
-      try {
-        const audio = new Audio('/notification-sound.mp3');
-        audio.volume = 0.7;
-        audio.play().catch(() => {
-          // El navegador puede bloquear el audio si no hay interacción previa
-          console.warn('Reproducción de audio bloqueada por el navegador');
-        });
-      } catch (err) {
-        console.warn('Error al reproducir sonido:', err);
+      const soundEnabled = localStorage.getItem('notifications_sound_enabled') !== 'false';
+      if (soundEnabled) {
+        playNotificationSound();
       }
 
       // 4. Notificación nativa del sistema (para que aparezca en la barra aunque la app esté abierta)
@@ -244,5 +241,30 @@ export async function notifyUser(userId: string, title: string, body: string, da
   } catch (error) {
     console.error(`Error al notificar al usuario ${userId}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Reproduce el tono de notificación configurado por el usuario en localStorage.
+ */
+export function playNotificationSound() {
+  const soundEnabled = localStorage.getItem('notifications_sound_enabled') !== 'false';
+  if (!soundEnabled) return;
+
+  const tone = localStorage.getItem('notifications_sound_tone') || 'default';
+  let path = '/notification-sound/notification-sound.mp3'; // Default order sound
+  
+  if (tone === 'notification') {
+    path = '/notification-sound/notification.mp3';
+  } else if (tone === 'slick') {
+    path = '/notification-sound/slick-notification.mp3';
+  }
+
+  try {
+    const audio = new Audio(path);
+    audio.volume = 0.8;
+    audio.play().catch(e => console.warn('Audio playback blocked by browser policies:', e));
+  } catch (err) {
+    console.warn('Error al reproducir el audio de la alerta:', err);
   }
 }

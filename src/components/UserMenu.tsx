@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark' | 'system' | 'glass' | 'cyber' | 'kilo';
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
@@ -114,6 +114,10 @@ export default function UserMenu() {
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [activeThemesOrder, setActiveThemesOrder] = useState<string[]>(() => {
+    const saved = localStorage.getItem('active_themes_order');
+    return saved ? JSON.parse(saved) : ['light', 'dark', 'glass'];
+  });
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -140,6 +144,15 @@ export default function UserMenu() {
     } else {
       document.body.style.overflow = 'unset';
     }
+    
+    // Sync themes list on menu open
+    if (isOpen) {
+      const saved = localStorage.getItem('active_themes_order');
+      if (saved) {
+        setActiveThemesOrder(JSON.parse(saved));
+      }
+    }
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -175,10 +188,16 @@ export default function UserMenu() {
   useEffect(() => {
     localStorage.setItem('theme', theme);
     const root = window.document.documentElement;
+    root.classList.remove('dark', 'theme-cyber', 'theme-kilo', 'theme-glass');
+    
     if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    } else if (theme === 'cyber') {
+      root.classList.add('dark', 'theme-cyber');
+    } else if (theme === 'kilo') {
+      root.classList.add('dark', 'theme-kilo');
+    } else if (theme === 'glass') {
+      root.classList.add('theme-glass');
     }
   }, [theme]);
 
@@ -260,11 +279,20 @@ export default function UserMenu() {
   const initials = getInitials(profile?.name);
   const avatarUrl = profile?.imageUrl || user?.photoURL;
 
-  const THEMES: { id: Theme; icon: React.ReactNode; label: string }[] = [
-    { id: 'light', icon: <Sun className="w-3.5 h-3.5" />, label: 'Claro' },
-    { id: 'dark', icon: <Moon className="w-3.5 h-3.5" />, label: 'Oscuro' },
-    { id: 'system', icon: <Monitor className="w-3.5 h-3.5" />, label: 'Sistema' },
-  ];
+  const ALL_THEME_ITEMS: Record<string, { icon: React.ReactNode; label: string }> = {
+    light: { icon: <Sun className="w-3.5 h-3.5" />, label: 'Claro' },
+    dark: { icon: <Moon className="w-3.5 h-3.5" />, label: 'Oscuro' },
+    system: { icon: <Monitor className="w-3.5 h-3.5" />, label: 'Sistema' },
+    glass: { icon: <Layers className="w-3.5 h-3.5" />, label: 'Cristal' },
+    cyber: { icon: <Sparkles className="w-3.5 h-3.5 text-cyan-500" />, label: 'Cyber' },
+    kilo: { icon: <Sparkles className="w-3.5 h-3.5 text-emerald-500" />, label: 'Kilo' },
+  };
+
+  const THEMES = activeThemesOrder.map(id => ({
+    id: id as Theme,
+    icon: ALL_THEME_ITEMS[id]?.icon || <Sparkles className="w-3.5 h-3.5" />,
+    label: ALL_THEME_ITEMS[id]?.label || id
+  }));
 
   return (
     <div className="relative" ref={menuRef}>
@@ -486,7 +514,7 @@ export default function UserMenu() {
                     icon={<Settings className="w-4 h-4" />}
                     label="Configuración"
                     sublabel="Ajustes del sistema"
-                    onClick={() => toast.info('Configuración del sistema próximamente')}
+                    onClick={() => navigate('/settings')}
                     closeMenu={() => setIsOpen(false)}
                   />
                 </>

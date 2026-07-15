@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check, XCircle, MessageCircle, ChevronRight, Clock, Package } from 'lucide-react';
 import { collection, query, where, onSnapshot, updateDoc, doc, getDoc, addDoc, serverTimestamp, orderBy, increment, limit } from 'firebase/firestore';
@@ -8,7 +8,7 @@ import { formatCurrency, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { Truck } from 'lucide-react';
-import { notifyAdmins, notifyUser } from '../lib/notifications';
+import { notifyAdmins, notifyUser, playNotificationSound } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import MovementDetailModal from './MovementDetailModal';
 
@@ -112,13 +112,7 @@ export default function NotificationBell() {
     }
 
     // 3. Sonido
-    try {
-      const audio = new Audio('/notification-sound.mp3');
-      audio.volume = 1.0;
-      audio.play().catch(e => console.warn('Audio play blocked:', e));
-    } catch (e) {
-      console.warn('Error al reproducir sonido:', e);
-    }
+    playNotificationSound();
   };
 
   useEffect(() => {

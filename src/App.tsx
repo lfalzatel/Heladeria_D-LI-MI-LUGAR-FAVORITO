@@ -21,6 +21,7 @@ import ClientCompras from './pages/ClientCompras';
 import ClientPedidos from './pages/ClientPedidos';
 import ClientHistorial from './pages/ClientHistorial';
 import MainLayout from './components/MainLayout';
+import Settings from './pages/Settings';
 
 export default function App() {
   const { initialize, user, profile, isLoading: authLoading } = useAuthStore();
@@ -201,6 +202,7 @@ export default function App() {
           } />
 
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
 
           {/* Client routes */}
           <Route path="/cliente/compras" element={
