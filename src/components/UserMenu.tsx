@@ -341,11 +341,21 @@ export default function UserMenu() {
             {notifPermission === 'denied' && (
               <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-100 rounded-2xl flex gap-3 animate-in fade-in slide-in-from-top-2">
                 <CircleAlert className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <p className="text-xs font-black text-red-600">Notificaciones Bloqueadas</p>
-                  <p className="text-[10px] text-red-500/80 font-medium leading-relaxed">
-                    Has bloqueado las notificaciones en este navegador. Haz clic en el <b>candado</b> junto a la dirección web y actívalas para recibir alertas de pedidos.
-                  </p>
+                  {isStandalone ? (
+                    <div className="text-[10px] text-red-500/90 font-medium leading-relaxed mt-1 space-y-1.5">
+                      <p>Para desbloquearlas en la app instalada:</p>
+                      <ol className="list-decimal pl-3 space-y-1">
+                        <li>Ve a <b>Ajustes de tu celular</b> &rarr; <b>Aplicaciones</b> &rarr; <b>D'LI Heladería</b> &rarr; <b>Notificaciones</b> y marca <b>Permitir</b>.</li>
+                        <li>Como la APK usa el motor de Chrome por debajo, si bloqueaste las notificaciones en la web anteriormente, abre <b>Google Chrome</b> en tu celular, ve a <code>heladeria-d-li-mi-lugar-favorito.vercel.app</code>, toca el <b>candado</b> al lado de la dirección y cámbialas a <b>Permitir</b>.</li>
+                      </ol>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-red-500/80 font-medium leading-relaxed">
+                      Has bloqueado las notificaciones en este navegador. Haz clic en el <b>candado</b> junto a la dirección web y actívalas para recibir alertas de pedidos.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

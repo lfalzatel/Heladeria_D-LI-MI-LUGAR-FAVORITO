@@ -32,7 +32,7 @@ export default function App() {
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    const CURRENT_VERSION = '1.0.8'; // Incrementa esto para forzar recarga en todos los clientes
+    const CURRENT_VERSION = '1.0.9'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
       localStorage.setItem('app_version', CURRENT_VERSION);
