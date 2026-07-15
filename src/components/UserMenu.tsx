@@ -370,6 +370,28 @@ export default function UserMenu() {
                 onClick={() => navigate('/profile')}
                 closeMenu={() => setIsOpen(false)}
               />
+
+              {/* Theme switcher (moved here) */}
+              <div className="px-2 py-1.5 border-b border-outline/5">
+                <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-1.5 px-1">Apariencia</p>
+                <div className="flex gap-1.5 bg-surface-container rounded-2xl p-1">
+                  {THEMES.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTheme(t.id)}
+                      className={cn(
+                        "flex-1 flex flex-col items-center gap-1 py-1.5 rounded-xl text-[9px] font-bold transition-all",
+                        theme === t.id
+                          ? "bg-white shadow-sm text-on-surface"
+                          : "text-secondary hover:text-on-surface"
+                      )}
+                    >
+                      {t.icon}
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {/* Notifications toggle */}
               <button 
                  disabled={isRequestingPermission}
@@ -504,28 +526,6 @@ export default function UserMenu() {
               />
             </div>
 
-            {/* Theme switcher */}
-            <div className="px-4 py-3 border-b border-outline/10">
-              <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-2">Apariencia</p>
-              <div className="flex gap-1.5 bg-surface-container rounded-2xl p-1">
-                {THEMES.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTheme(t.id)}
-                    className={cn(
-                      "flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-[9px] font-bold transition-all",
-                      theme === t.id
-                        ? "bg-white shadow-sm text-on-surface"
-                        : "text-secondary hover:text-on-surface"
-                    )}
-                  >
-                    {t.icon}
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Account Switcher */}
             <div className="px-2 py-3 border-b border-outline/10">
               <p className="text-[9px] font-black text-secondary uppercase tracking-widest mb-2 px-2">Cambiar Cuenta</p>
@@ -602,13 +602,15 @@ export default function UserMenu() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] flex items-center justify-center p-4"
+            onClick={() => setIsHelpModalOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] overflow-y-auto p-4 flex justify-center items-start"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-surface-container rounded-3xl p-6 max-w-md w-full shadow-2xl border border-outline/20 relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-surface-container rounded-3xl p-6 max-w-md w-full shadow-2xl border border-outline/20 relative my-auto"
             >
               <button
                 onClick={() => setIsHelpModalOpen(false)}
