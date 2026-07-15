@@ -5,7 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { 
   Sun, Moon, Monitor, LogOut, Settings, Package, Share2, Download, 
-  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight, CircleAlert 
+  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight, CircleAlert, X 
 } from 'lucide-react';
 import { requestNotificationPermission, unregisterNotifications } from '../lib/notifications';
 import { motion, AnimatePresence } from 'motion/react';
@@ -112,6 +112,7 @@ export default function UserMenu() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default');
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -495,10 +496,10 @@ export default function UserMenu() {
                 />
               )}
               <MenuItem
-                icon={<HelpCircle className="w-4 h-4" />}
-                label="Ayuda y soporte"
-                sublabel="Guía de uso de la app"
-                onClick={() => toast.info('Centro de ayuda próximamente')}
+                icon={<HelpCircle className="w-4 h-4 text-primary" />}
+                label="Guía de Notificaciones"
+                sublabel="Cómo activar alertas en celular"
+                onClick={() => { setIsHelpModalOpen(true); setIsOpen(false); }}
                 closeMenu={() => setIsOpen(false)}
               />
             </div>
@@ -592,6 +593,87 @@ export default function UserMenu() {
           </motion.div>
         </>
       )}
+      </AnimatePresence>
+
+      {/* Help Modal */}
+      <AnimatePresence>
+        {isHelpModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-surface-container rounded-3xl p-6 max-w-md w-full shadow-2xl border border-outline/20 relative max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setIsHelpModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container transition-all"
+              >
+                <X className="w-5 h-5 text-secondary" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <HelpCircle className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-on-surface">Guía de Notificaciones</h3>
+                  <p className="text-[10px] text-secondary uppercase font-bold tracking-wider">Activar alertas en celular</p>
+                </div>
+              </div>
+
+              <div className="space-y-6 text-sm text-on-surface">
+                {/* Android section */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-outline/10 pb-1.5">
+                    <span className="text-base font-black text-primary">🤖 Android (App / APK)</span>
+                  </div>
+                  <p className="text-xs text-secondary leading-relaxed">
+                    Si no te llegan las notificaciones de ventas, pedidos o la app te dice que están bloqueadas, sigue estos pasos:
+                  </p>
+                  <ol className="list-decimal pl-5 text-xs space-y-2 leading-relaxed text-secondary-800">
+                    <li>
+                      <b>Ajustes del Celular:</b> Ve a los <i>Ajustes de tu celular</i> &rarr; <i>Aplicaciones</i> &rarr; <i>D'LI Heladería</i> &rarr; <i>Notificaciones</i> y asegúrate de marcar <b>"Permitir"</b>.
+                    </li>
+                    <li>
+                      <b>Ajustes de Google Chrome:</b> Como la app usa el motor de Chrome, si los permisos están bloqueados en la web también se bloquearán en la APK. Abre <b>Chrome</b>, visita la web <code>heladeria-d-li-mi-lugar-favorito.vercel.app</code>, toca el icono del <b>candado</b> al lado de la dirección y asegúrate de cambiar Notificaciones a <b>"Permitir"</b>.
+                    </li>
+                  </ol>
+                </div>
+
+                {/* iOS section */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-outline/10 pb-1.5">
+                    <span className="text-base font-black text-primary">🍎 iPhone / iPad (Safari)</span>
+                  </div>
+                  <p className="text-xs text-secondary leading-relaxed">
+                    En dispositivos Apple, la instalación y activación se hace así:
+                  </p>
+                  <ol className="list-decimal pl-5 text-xs space-y-2 leading-relaxed text-secondary-800">
+                    <li>
+                      <b>Instalación:</b> Abre Safari, visita la web de la heladería, toca el botón de <b>Compartir</b> (el cuadrado con la flecha) y selecciona <b>"Añadir a la pantalla de inicio"</b>.
+                    </li>
+                    <li>
+                      <b>Notificaciones:</b> Abre la app desde tu pantalla de inicio, ve al menú de perfil y activa las notificaciones. Si no te deja, ve a <i>Ajustes de tu iPhone</i> &rarr; <i>Notificaciones</i> &rarr; <i>D'LI Heladería</i> y actívalas.
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsHelpModalOpen(false)}
+                className="mt-6 w-full py-3 bg-primary text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-primary-hover shadow-lg shadow-primary/30 transition-all active:scale-95 text-center"
+              >
+                Entendido
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
