@@ -68,9 +68,13 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
                  // Check if it's a real supply
                  const supplyInfo = suppliesMap[rItem.supplyId] || Object.values(suppliesMap).find(s => s.id === rItem.supplyId);
                  if (supplyInfo && !supplyInfo.isVirtual) {
-                     const yieldPerUnit = supplyInfo.portionsPerUnit || supplyInfo.yieldPerUnit || 1;
-                     const deductedUnits = (rItem.quantity * item.quantity) / yieldPerUnit;
-                     deductions[rItem.supplyId] = (deductions[rItem.supplyId] || 0) + deductedUnits;
+                      let yieldPerUnit = supplyInfo.portionsPerUnit || supplyInfo.yieldPerUnit || 1;
+                      const lowerUnit = (supplyInfo.unit || '').toLowerCase();
+                      if (lowerUnit === 'und' || lowerUnit === 'unidad' || lowerUnit === 'unidades' || lowerUnit === 'uds') {
+                          yieldPerUnit = 1;
+                      }
+                      const deductedUnits = (rItem.quantity * item.quantity) / yieldPerUnit;
+                      deductions[rItem.supplyId] = (deductions[rItem.supplyId] || 0) + deductedUnits;
                  }
              }
          }
@@ -199,7 +203,9 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
                   } 
                   // 2. Fallback a rendimiento estándar si no hay por tamaño
                   else if (supply.yieldPerUnit && supply.yieldPerUnit > 0) {
-                      deductionAmount = 1 / supply.yieldPerUnit;
+                      const lowerUnit = (supply.unit || '').toLowerCase();
+                      const yieldVal = (lowerUnit === 'und' || lowerUnit === 'unidad' || lowerUnit === 'unidades' || lowerUnit === 'uds') ? 1 : supply.yieldPerUnit;
+                      deductionAmount = 1 / yieldVal;
                   } 
                   // 3. Fallback a 1 unidad completa en el peor caso
                   else {

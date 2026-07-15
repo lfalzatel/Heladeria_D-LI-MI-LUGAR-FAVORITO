@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   onSnapshot, 
@@ -2012,9 +2012,10 @@ export default function Management() {
 
         <ExpenseModal
           isOpen={isExpenseModalOpen}
-          onClose={() => setIsExpenseModalOpen(false)}
+          onClose={() => { setIsExpenseModalOpen(false); setGastoToEdit(null); }}
           onConfirm={handleSaveExpense}
           onOpenCategoryManager={() => setIsExpenseCategoryModalOpen(true)}
+          gastoToEdit={gastoToEdit}
         />
 
         <SupplyFormModal
