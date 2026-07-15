@@ -56,7 +56,7 @@ export default function Login() {
           imageUrl: user.photoURL || '',
           createdAt: serverTimestamp()
         });
-        toast.success(isAdminEmail ? 'Cuenta vinculada como Administrador' : 'Cuenta vinculada como Vendedor');
+        toast.success(isAdminEmail ? 'Cuenta vinculada como Administrador' : 'Cuenta vinculada como Cliente');
       } else {
         assignedRole = userSnap.data().role || 'cliente';
       }

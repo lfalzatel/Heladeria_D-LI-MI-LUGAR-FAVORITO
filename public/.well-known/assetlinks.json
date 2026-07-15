@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.heladeria_d_li_mi_lugar_favorito.twa",
+    "sha256_cert_fingerprints": ["9C:8E:35:5F:FC:62:8C:AB:4D:3F:D1:A4:7E:61:A5:A5:91:CA:53:76:BB:A4:F5:79:B2:20:12:84:2E:9B:A7:B2"]
+  }
+}]
