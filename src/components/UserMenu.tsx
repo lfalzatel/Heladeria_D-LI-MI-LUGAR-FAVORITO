@@ -5,7 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { 
   Sun, Moon, Monitor, LogOut, Settings, Package, Share2, Download, 
-  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight, CircleAlert, X 
+  ChevronDown, Bell, BellOff, HelpCircle, User, ChevronRight, CircleAlert, X, Layers, Sparkles 
 } from 'lucide-react';
 import { requestNotificationPermission, unregisterNotifications } from '../lib/notifications';
 import { motion, AnimatePresence } from 'motion/react';
