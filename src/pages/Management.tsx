@@ -143,7 +143,7 @@ export default function Management() {
     const sub = queryParams.get('subtab');
     if (sub) {
       if (['compras', 'gastos', 'mesas'].includes(sub)) setOperacionSubTab(sub as OperacionSubTab);
-      if (['insumos', 'sabores'].includes(sub)) setInventarioSubTab(sub as InventarioSubTab);
+      if (['insumos', 'productos', 'sabores', 'categorias'].includes(sub)) setInventarioSubTab(sub as InventarioSubTab);
       if (['equipo', 'clientes', 'fidelidad'].includes(sub)) setPersonasSubTab(sub as PersonasSubTab);
     }
   }, [location.search]);

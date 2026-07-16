@@ -50,7 +50,17 @@ export default function Settings() {
   });
 
   const toggleSection = (section: string) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setOpenSections(prev => {
+      const isCurrentlyOpen = prev[section];
+      return {
+        cuenta: false,
+        notificaciones: false,
+        gestion: false,
+        apariencia: false,
+        privacidad: false,
+        [section]: !isCurrentlyOpen
+      };
+    });
   };
 
   // ── NOTIFICATIONS STATE ────────────────────────────────────────────────
@@ -533,7 +543,7 @@ export default function Settings() {
                   <div className="p-4 space-y-3">
                     {/* Categorías */}
                     <div 
-                      onClick={() => navigate('/admin/management?tab=categorias')}
+                      onClick={() => navigate('/admin/management?tab=inventario&subtab=categorias')}
                       className="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
@@ -550,7 +560,7 @@ export default function Settings() {
 
                     {/* Usuarios */}
                     <div 
-                      onClick={() => navigate('/admin/management?tab=usuarios')}
+                      onClick={() => navigate('/admin/management?tab=personas&subtab=equipo')}
                       className="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
