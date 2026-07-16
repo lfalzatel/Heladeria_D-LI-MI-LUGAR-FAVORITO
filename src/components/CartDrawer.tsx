@@ -12,6 +12,7 @@ import { notifyAdmins } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
 import html2canvas from 'html2canvas';
+import { toBlob as htmlToBlob } from 'html-to-image';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -868,78 +869,102 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                    />
                    <button
                      onClick={async () => {
-                       const num = manualPhone;
-                       if (!num) return;
-                       
-                       setImageGenerating(true);
-                       
-                       // Limpiar el número de teléfono
-                       let cleanPhone = num.replace(/\D/g, '');
-                       if (cleanPhone.length === 10) {
-                         cleanPhone = '57' + cleanPhone;
-                       }
+                        const num = manualPhone;
+                        if (!num) return;
+                        
+                        setImageGenerating(true);
+                        
+                        // Limpiar el número de teléfono
+                        let cleanPhone = num.replace(/\D/g, '');
+                        if (cleanPhone.length === 10) {
+                          cleanPhone = '57' + cleanPhone;
+                        }
 
-                       const element = document.getElementById('receipt-download-ticket');
-                       if (element) {
-                         try {
-                           const canvas = await html2canvas(element, {
-                             scale: 2,
-                             useCORS: true,
-                             backgroundColor: '#ffffff',
-                           });
-                           
-                           canvas.toBlob(async (blob) => {
-                             if (!blob) {
-                               setImageGenerating(false);
-                               return;
-                             }
-                             
-                             const file = new File([blob], `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`, { type: 'image/png' });
-                             
-                             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                               try {
-                                 await navigator.share({
-                                   files: [file],
-                                   title: 'Comprobante de Pago - Heladería D\'LI',
-                                   text: `Recibo de pago de tu compra en Heladería D'LI`
-                                 });
-                               } catch (shareErr) {
-                                 console.warn('Native share cancelled or failed, falling back to download', shareErr);
-                                 const url = URL.createObjectURL(blob);
-                                 const a = document.createElement('a');
-                                 a.href = url;
-                                 a.download = `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`;
-                                 a.click();
-                                 toast.success('Recibo descargado como imagen.');
-                               }
-                             } else {
-                               const url = URL.createObjectURL(blob);
-                               const a = document.createElement('a');
-                               a.href = url;
-                               a.download = `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`;
-                               a.click();
-                               toast.success('Recibo descargado como imagen en tu dispositivo.');
-                             }
+                        const triggerTextFallback = () => {
+                          const link = generateWhatsAppReceiptLink(num, successSale);
+                          window.open(link, '_blank');
+                          toast.info('Se envió el comprobante en formato de texto.');
+                          setImageGenerating(false);
+                        };
 
-                             // De todas formas abrir el chat de whatsapp pre-llenado
-                             setTimeout(() => {
-                               const textMsg = `¡Hola! Aquí tienes el comprobante de tu compra en Heladería D'LI 🍦`;
-                               const link = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMsg)}`;
-                               window.open(link, '_blank');
-                             }, 500);
+                        const downloadBlob = (blob: Blob) => {
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`;
+                          a.click();
+                          toast.success('Recibo descargado como imagen.');
+                        };
 
-                           }, 'image/png');
-                         } catch (err) {
-                           console.error('Error generating canvas:', err);
-                           toast.error('No se pudo generar la imagen del recibo.');
-                         } finally {
-                           setImageGenerating(false);
-                         }
-                       } else {
-                         setImageGenerating(false);
-                         toast.error('Elemento del recibo no encontrado.');
-                       }
-                     }}
+                        const handleBlobSharing = async (blob: Blob) => {
+                          const file = new File([blob], `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`, { type: 'image/png' });
+                          
+                          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                            try {
+                              await navigator.share({
+                                files: [file],
+                                title: 'Comprobante de Pago - Heladería D\'LI',
+                                text: `Recibo de pago de tu compra en Heladería D'LI`
+                              });
+                            } catch (shareErr) {
+                              console.warn('Native share cancelled or failed, downloading instead', shareErr);
+                              downloadBlob(blob);
+                            }
+                          } else {
+                            downloadBlob(blob);
+                          }
+
+                          // Abrir WhatsApp de todas formas
+                          setTimeout(() => {
+                            const textMsg = `¡Hola! Aquí tienes el comprobante de tu compra en Heladería D'LI 🍦`;
+                            const link = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMsg)}`;
+                            window.open(link, '_blank');
+                          }, 500);
+                          
+                          setImageGenerating(false);
+                        };
+
+                        const element = document.getElementById('receipt-download-ticket');
+                        if (element) {
+                          try {
+                            // 1. Intentar con html-to-image
+                            const blob = await htmlToBlob(element, {
+                              style: {
+                                transform: 'scale(1)',
+                                transformOrigin: 'top left',
+                              },
+                              backgroundColor: '#ffffff',
+                            });
+                            
+                            if (!blob) throw new Error('Blob is null');
+                            
+                            await handleBlobSharing(blob);
+                          } catch (htmlToImageError) {
+                            console.warn('html-to-image failed, trying html2canvas...', htmlToImageError);
+                            try {
+                              // 2. Intentar con html2canvas
+                              const canvas = await html2canvas(element, {
+                                scale: 2,
+                                useCORS: true,
+                                backgroundColor: '#ffffff',
+                              });
+                              
+                              canvas.toBlob(async (blob) => {
+                                if (!blob) {
+                                  triggerTextFallback();
+                                  return;
+                                }
+                                await handleBlobSharing(blob);
+                              }, 'image/png');
+                            } catch (html2canvasError) {
+                              console.error('Both image generators failed, falling back to text:', html2canvasError);
+                              triggerTextFallback();
+                            }
+                          }
+                        } else {
+                          triggerTextFallback();
+                        }
+                      }}
                      disabled={!manualPhone || imageGenerating}
                      className="bg-success text-white hover:bg-success/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40 flex items-center justify-center min-w-[80px]"
                    >
@@ -988,7 +1013,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
           </motion.div>
           {/* Hidden Ticket Container for html2canvas rendering */}
           {successSale && (
-            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+            <div style={{ position: 'fixed', left: 0, top: 0, opacity: 0, pointerEvents: 'none', zIndex: -100 }}>
               <div id="receipt-download-ticket" className="w-[380px] bg-white p-8 font-sans text-[#1c1917] flex flex-col border border-stone-200">
                  {/* Brand Header */}
                  <div className="text-center mb-6">
