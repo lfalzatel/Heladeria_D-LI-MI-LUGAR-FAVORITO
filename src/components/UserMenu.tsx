@@ -116,7 +116,11 @@ export default function UserMenu() {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [activeThemesOrder, setActiveThemesOrder] = useState<string[]>(() => {
     const saved = localStorage.getItem('active_themes_order');
-    return saved ? JSON.parse(saved) : ['light', 'dark', 'glass'];
+    try {
+      return saved ? JSON.parse(saved) : ['light', 'dark', 'glass'];
+    } catch {
+      return ['light', 'dark', 'glass'];
+    }
   });
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -149,7 +153,11 @@ export default function UserMenu() {
     if (isOpen) {
       const saved = localStorage.getItem('active_themes_order');
       if (saved) {
-        setActiveThemesOrder(JSON.parse(saved));
+        try {
+          setActiveThemesOrder(JSON.parse(saved));
+        } catch (e) {
+          console.warn("Error parsing active themes order:", e);
+        }
       }
     }
 

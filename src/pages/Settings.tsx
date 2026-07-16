@@ -132,7 +132,11 @@ export default function Settings() {
   // ── THEME & APARIENCIA STATE ──────────────────────────────────────────
   const [selectedThemesOrder, setSelectedThemesOrder] = useState<string[]>(() => {
     const saved = localStorage.getItem('active_themes_order');
-    return saved ? JSON.parse(saved) : ['light', 'dark', 'glass']; // Default 3 themes
+    try {
+      return saved ? JSON.parse(saved) : ['light', 'dark', 'glass'];
+    } catch {
+      return ['light', 'dark', 'glass'];
+    }
   });
 
   const [activeTheme, setActiveTheme] = useState(() => {
