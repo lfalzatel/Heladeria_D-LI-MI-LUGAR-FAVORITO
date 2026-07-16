@@ -33,22 +33,34 @@ export default function App() {
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    const CURRENT_VERSION = '1.0.17'; // Incrementa esto para forzar recarga en todos los clientes
+    const CURRENT_VERSION = '1.0.18'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
-      localStorage.setItem('app_version', CURRENT_VERSION);
-      // Limpiar cachés básicas y recargar
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (let registration of registrations) {
-            registration.update();
+      // 1. Limpiar todos los almacenes de caché del navegador
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          for (let name of names) {
+            caches.delete(name);
           }
         });
       }
-      window.location.reload();
+      
+      // 2. Desregistrar Service Workers viejos
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      
+      localStorage.setItem('app_version', CURRENT_VERSION);
+      
+      // 3. Recargar con delay para asegurar que los procesos de borrado terminen
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }
-
-
   }, []);
 
   useEffect(() => {
