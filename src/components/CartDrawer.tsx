@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { notifyAdmins } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
+import html2canvas from 'html2canvas';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -41,8 +42,16 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
 
   const [successSale, setSuccessSale] = useState<any | null>(null);
   const [emailSending, setEmailSending] = useState(false);
+  const [imageGenerating, setImageGenerating] = useState(false);
   const [manualPhone, setManualPhone] = useState('');
   const [manualEmail, setManualEmail] = useState('');
+
+  useEffect(() => {
+    if (successSale) {
+      setManualPhone(successSale.clientePhone || '');
+      setManualEmail(successSale.clienteEmail || '');
+    }
+  }, [successSale]);
 
   const [packagingSuppliesData, setPackagingSuppliesData] = useState<any[]>([]);
   const [packagingSearch, setPackagingSearch] = useState('');
@@ -840,60 +849,128 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               </div>
             </div>
 
-            {/* Opciones de Recibo Digital */}
-            <div className="flex flex-col gap-4 text-left">
-              <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-1">Enviar Recibo Digital</h4>
-              
-              {/* WhatsApp Option */}
-              <div>
-                <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-success" /> Número de WhatsApp
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="tel"
-                    placeholder="Celular (ej: 3001234567)"
-                    value={successSale.clientePhone || manualPhone}
-                    onChange={(e) => setManualPhone(e.target.value)}
-                    className="flex-1 bg-surface-container border border-outline/10 focus:border-primary rounded-xl px-3 py-2 text-xs font-bold outline-none"
-                  />
-                  <button
-                    onClick={() => {
-                      const num = successSale.clientePhone || manualPhone;
-                      const link = generateWhatsAppReceiptLink(num, successSale);
-                      window.open(link, '_blank');
-                    }}
-                    disabled={!(successSale.clientePhone || manualPhone)}
-                    className="bg-success text-white hover:bg-success/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40"
-                  >
-                    Enviar
-                  </button>
-                </div>
-              </div>
+             {/* Opciones de Recibo Digital */}
+             <div className="flex flex-col gap-4 text-left">
+               <h4 className="font-bold text-xs uppercase tracking-widest text-secondary mb-1">Enviar Recibo Digital</h4>
+               
+               {/* WhatsApp Option */}
+               <div>
+                 <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1">
+                   <Phone className="w-3.5 h-3.5 text-success" /> Número de WhatsApp
+                 </label>
+                 <div className="flex gap-2">
+                   <input
+                     type="tel"
+                     placeholder="Celular (ej: 3001234567)"
+                     value={manualPhone}
+                     onChange={(e) => setManualPhone(e.target.value)}
+                     className="flex-1 bg-surface-container border border-outline/10 focus:border-primary rounded-xl px-3 py-2 text-xs font-bold outline-none"
+                   />
+                   <button
+                     onClick={async () => {
+                       const num = manualPhone;
+                       if (!num) return;
+                       
+                       setImageGenerating(true);
+                       
+                       // Limpiar el número de teléfono
+                       let cleanPhone = num.replace(/\D/g, '');
+                       if (cleanPhone.length === 10) {
+                         cleanPhone = '57' + cleanPhone;
+                       }
 
-              {/* Email Option */}
-              <div>
-                <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-primary" /> Correo Electrónico
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    placeholder="Correo (ej: cliente@gmail.com)"
-                    value={successSale.clienteEmail || manualEmail}
-                    onChange={(e) => setManualEmail(e.target.value)}
-                    className="flex-1 bg-surface-container border border-outline/10 focus:border-primary rounded-xl px-3 py-2 text-xs font-bold outline-none"
-                  />
-                  <button
-                    onClick={() => sendEmailReceipt(successSale.clienteEmail || manualEmail, successSale)}
-                    disabled={!(successSale.clienteEmail || manualEmail) || emailSending}
-                    className="bg-primary text-white hover:bg-primary/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40 flex items-center gap-1.5"
-                  >
-                    {emailSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enviar'}
-                  </button>
-                </div>
-              </div>
-            </div>
+                       const element = document.getElementById('receipt-download-ticket');
+                       if (element) {
+                         try {
+                           const canvas = await html2canvas(element, {
+                             scale: 2,
+                             useCORS: true,
+                             backgroundColor: '#ffffff',
+                           });
+                           
+                           canvas.toBlob(async (blob) => {
+                             if (!blob) {
+                               setImageGenerating(false);
+                               return;
+                             }
+                             
+                             const file = new File([blob], `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`, { type: 'image/png' });
+                             
+                             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                               try {
+                                 await navigator.share({
+                                   files: [file],
+                                   title: 'Comprobante de Pago - Heladería D\'LI',
+                                   text: `Recibo de pago de tu compra en Heladería D'LI`
+                                 });
+                               } catch (shareErr) {
+                                 console.warn('Native share cancelled or failed, falling back to download', shareErr);
+                                 const url = URL.createObjectURL(blob);
+                                 const a = document.createElement('a');
+                                 a.href = url;
+                                 a.download = `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`;
+                                 a.click();
+                                 toast.success('Recibo descargado como imagen.');
+                               }
+                             } else {
+                               const url = URL.createObjectURL(blob);
+                               const a = document.createElement('a');
+                               a.href = url;
+                               a.download = `Recibo-${successSale.id.slice(-6).toUpperCase()}.png`;
+                               a.click();
+                               toast.success('Recibo descargado como imagen en tu dispositivo.');
+                             }
+
+                             // De todas formas abrir el chat de whatsapp pre-llenado
+                             setTimeout(() => {
+                               const textMsg = `¡Hola! Aquí tienes el comprobante de tu compra en Heladería D'LI 🍦`;
+                               const link = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMsg)}`;
+                               window.open(link, '_blank');
+                             }, 500);
+
+                           }, 'image/png');
+                         } catch (err) {
+                           console.error('Error generating canvas:', err);
+                           toast.error('No se pudo generar la imagen del recibo.');
+                         } finally {
+                           setImageGenerating(false);
+                         }
+                       } else {
+                         setImageGenerating(false);
+                         toast.error('Elemento del recibo no encontrado.');
+                       }
+                     }}
+                     disabled={!manualPhone || imageGenerating}
+                     className="bg-success text-white hover:bg-success/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40 flex items-center justify-center min-w-[80px]"
+                   >
+                     {imageGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enviar'}
+                   </button>
+                 </div>
+               </div>
+
+               {/* Email Option */}
+               <div>
+                 <label className="block text-xs font-bold text-on-surface mb-1.5 flex items-center gap-1">
+                   <Mail className="w-3.5 h-3.5 text-primary" /> Correo Electrónico
+                 </label>
+                 <div className="flex gap-2">
+                   <input
+                     type="email"
+                     placeholder="Correo (ej: cliente@gmail.com)"
+                     value={manualEmail}
+                     onChange={(e) => setManualEmail(e.target.value)}
+                     className="flex-1 bg-surface-container border border-outline/10 focus:border-primary rounded-xl px-3 py-2 text-xs font-bold outline-none"
+                   />
+                   <button
+                     onClick={() => sendEmailReceipt(manualEmail, successSale)}
+                     disabled={!manualEmail || emailSending}
+                     className="bg-primary text-white hover:bg-primary/90 transition-colors px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-40 flex items-center gap-1.5"
+                   >
+                     {emailSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enviar'}
+                   </button>
+                 </div>
+               </div>
+             </div>
 
             <button
               onClick={() => {
@@ -909,6 +986,106 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               Finalizar y Cerrar
             </button>
           </motion.div>
+          {/* Hidden Ticket Container for html2canvas rendering */}
+          {successSale && (
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+              <div id="receipt-download-ticket" className="w-[380px] bg-white p-8 font-sans text-[#1c1917] flex flex-col border border-stone-200">
+                 {/* Brand Header */}
+                 <div className="text-center mb-6">
+                    <h1 className="text-3xl font-black text-rose-500 tracking-tight">D'LI</h1>
+                    <p className="text-[10px] font-black tracking-[0.3em] text-stone-400 uppercase">Lugar Favorito</p>
+                    <div className="w-12 h-0.5 bg-rose-500/20 mx-auto mt-3" />
+                 </div>
+                 
+                 {/* Title */}
+                 <div className="text-center mb-6 bg-rose-50 py-2.5 rounded-2xl">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-rose-600">Comprobante de Pago</h2>
+                 </div>
+                 
+                 {/* Sale Info */}
+                 <div className="space-y-2 text-xs border-b border-dashed border-stone-200 pb-4 mb-4">
+                    <div className="flex justify-between">
+                       <span className="text-stone-500 font-bold">Número de Recibo:</span>
+                       <span className="font-black text-stone-800">#{successSale.id.slice(-6).toUpperCase()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                       <span className="text-stone-500 font-bold">Fecha:</span>
+                       <span className="font-bold text-stone-800">{successSale.date || new Date().toLocaleDateString('es-CO')} {successSale.hour || ''}</span>
+                    </div>
+                    {successSale.clienteName && (
+                      <div className="flex justify-between">
+                         <span className="text-stone-500 font-bold">Cliente:</span>
+                         <span className="font-black text-stone-800 uppercase">{successSale.clienteName}</span>
+                      </div>
+                    )}
+                    {successSale.tableName && (
+                      <div className="flex justify-between">
+                         <span className="text-stone-500 font-bold">Ubicación / Mesa:</span>
+                         <span className="font-bold text-stone-800 uppercase">{successSale.tableName}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                       <span className="text-stone-500 font-bold">Vendedor:</span>
+                       <span className="font-bold text-stone-800 uppercase">{successSale.soldByName || 'Personal D\'LI'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                       <span className="text-stone-500 font-bold">Método de Pago:</span>
+                       <span className="font-black text-rose-500 uppercase">{successSale.isMixto || successSale.splitDetails ? 'Mixto' : successSale.paymentMethod}</span>
+                    </div>
+                    {successSale.splitDetails && (
+                      <div className="text-[10px] text-stone-500 text-right pl-4">
+                         Efectivo: {formatCurrency(successSale.splitDetails.efectivo)} / Transferencia: {formatCurrency(successSale.splitDetails.transferencia)}
+                      </div>
+                    )}
+                 </div>
+
+                 {/* Items List */}
+                 <div className="space-y-4 border-b border-dashed border-stone-200 pb-4 mb-4 text-xs">
+                    {successSale.items.map((item: any, idx: number) => (
+                       <div key={idx} className="flex flex-col gap-1">
+                          <div className="flex justify-between font-bold text-stone-800">
+                             <span>{item.quantity}x {item.productName} {item.variantLabel && <span className="text-rose-500 text-[10px]">({item.variantLabel})</span>}</span>
+                             <span>{formatCurrency(item.subtotal)}</span>
+                          </div>
+                          
+                          {/* Sabores / Frutas / Adiciones */}
+                          {((item.flavors?.length > 0) || (item.fruitChoices?.length > 0) || (item.additions?.length > 0) || item.notes) && (
+                             <div className="pl-3 border-l-2 border-rose-100 text-[10px] text-stone-500 space-y-0.5">
+                                {item.flavors?.length > 0 && (
+                                   <div>Sabores: {item.flavors.map((f: any) => typeof f === 'object' ? f.name || f.label : f).join(', ')}</div>
+                                )}
+                                {item.fruitChoices?.length > 0 && (
+                                   <div>Frutas: {item.fruitChoices.map((f: any) => typeof f === 'object' ? f.name || f.label : f).join(', ')}</div>
+                                )}
+                                {item.additions?.length > 0 && (
+                                   <div>Adiciones: {item.additions.join(', ')}</div>
+                                )}
+                                {item.notes && <div>Nota: {item.notes}</div>}
+                             </div>
+                          )}
+                       </div>
+                    ))}
+                 </div>
+
+                 {/* Total */}
+                 <div className="flex justify-between items-center mb-6">
+                    <span className="font-bold text-sm text-stone-800">Total Pagado:</span>
+                    <span className="text-xl font-black text-rose-500">{formatCurrency(successSale.total)}</span>
+                 </div>
+
+                 {/* Domicilio Note */}
+                 <div className="bg-rose-50 border border-rose-100 rounded-xl p-3 text-[10px] text-rose-600 font-bold text-center leading-normal mb-6">
+                    Domicilio: El valor del servicio de envío a domicilio no está incluido y se cancela por separado al repartidor.
+                 </div>
+
+                 {/* Footer */}
+                 <div className="text-center text-[10px] text-stone-400">
+                    <p className="font-bold text-stone-600">🍨 ¡Muchas gracias por tu compra! 🍨</p>
+                    <p className="mt-1">D'LI - Tu Lugar Favorito</p>
+                 </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </AnimatePresence>
