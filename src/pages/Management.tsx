@@ -2202,6 +2202,12 @@ export default function Management() {
                             Fidelidad: {selectedUserForHistory.loyaltyPoints || 0}/9 compras
                           </span>
                         </div>
+                        <div className="flex items-center gap-1 mt-2 text-white w-full">
+                          <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-xl border border-white/10">
+                            {selectedUserForHistory.role === 'cliente' ? 'Compras Totales: ' : 'Ventas Registradas: '}
+                            <span className="text-white font-black">{formatCurrency(userSales.reduce((sum, s) => sum + (s.total || 0), 0))}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -15,12 +15,15 @@ import {
   CreditCard,
   Phone,
   MapPin,
-  Star
+  Star,
+  TrendingUp,
+  ShoppingBag,
+  Wallet
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useHeaderStore } from '../stores/useHeaderStore';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency } from '../lib/utils';
 import { toast } from 'sonner';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -150,6 +153,36 @@ export default function Profile() {
     };
     
     fetchHeladoCoins();
+  }, [profile, user]);
+
+  const [staffSalesData, setStaffSalesData] = useState({ totalSold: 0, salesCount: 0 });
+
+  useEffect(() => {
+    const fetchStaffSales = async () => {
+      const currentUserId = profile?.uid || user?.uid;
+      if (!currentUserId) return;
+      
+      const isStaff = ['admin', 'propietario', 'vendedor'].includes(profile?.role || '');
+      if (!isStaff) return;
+
+      try {
+        const q = query(
+          collection(db, 'sales'),
+          where('soldBy', '==', currentUserId)
+        );
+        const snapshot = await getDocs(q);
+        let totalSold = 0;
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          totalSold += (data.total || 0);
+        });
+        setStaffSalesData({ totalSold, salesCount: snapshot.size });
+      } catch (error) {
+        console.error("Error fetching staff sales:", error);
+      }
+    };
+    
+    fetchStaffSales();
   }, [profile, user]);
 
   if (!profile && !user) return null;
@@ -449,13 +482,54 @@ export default function Profile() {
             <p className="text-[9px] font-black text-secondary uppercase tracking-widest">Días Activo</p>
             <p className="text-xl font-black text-on-surface">{daysActive}</p>
           </button>
+          
           <div className="bg-white p-6 rounded-[2rem] border border-outline/50 shadow-sm flex flex-col items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
               <Clock className="w-5 h-5" />
             </div>
             <p className="text-[9px] font-black text-secondary uppercase tracking-widest">Estado</p>
-            <p className="text-base font-black text-success uppercase tracking-widest">Verificado</p>
+            <p className="text-base font-black text-success uppercase tracking-widest">Activo</p>
           </div>
+
+          {['admin', 'propietario', 'vendedor'].includes(profile?.role || '') ? (
+            <>
+              {/* Cards para personal/empleados */}
+              <div className="bg-white p-6 rounded-[2rem] border border-outline/50 shadow-sm flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <p className="text-[9px] font-black text-secondary uppercase tracking-widest text-center">Ventas Procesadas</p>
+                <p className="text-lg font-black text-on-surface">{formatCurrency(staffSalesData.totalSold)}</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-[2rem] border border-outline/50 shadow-sm flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <p className="text-[9px] font-black text-secondary uppercase tracking-widest text-center">Transacciones</p>
+                <p className="text-lg font-black text-on-surface">{staffSalesData.salesCount} Ventas</p>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Cards para Clientes */}
+              <div className="bg-white p-6 rounded-[2rem] border border-outline/50 shadow-sm flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <p className="text-[9px] font-black text-secondary uppercase tracking-widest text-center">Compras Totales</p>
+                <p className="text-lg font-black text-on-surface">{formatCurrency(coinsData.totalSpent)}</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-[2rem] border border-outline/50 shadow-sm flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <p className="text-[9px] font-black text-secondary uppercase tracking-widest text-center font-bold">Pedidos Entregados</p>
+                <p className="text-lg font-black text-on-surface">{coinsData.orderCount} Pedidos</p>
+              </div>
+            </>
+          )}
         </div>
 
         <button 
