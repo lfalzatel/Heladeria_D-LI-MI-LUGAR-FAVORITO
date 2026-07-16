@@ -467,7 +467,7 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-4 right-4 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[400px] bg-white/70 dark:bg-surface-container/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-outline/20 overflow-hidden z-[200]"
+            className="fixed left-4 right-4 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[400px] bg-white dark:bg-surface-container rounded-[2.5rem] shadow-2xl border border-outline/30 overflow-hidden z-[200]"
           >
 
             {/* Header */}
