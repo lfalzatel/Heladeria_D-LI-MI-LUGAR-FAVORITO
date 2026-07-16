@@ -1,4 +1,4 @@
-﻿import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -171,16 +171,30 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       
       // Update Loyalty Points
       if (selectedCliente) {
-        let pointsChange = 1; // +1 point for the sale
         const hasReward = cart.items.some(item => item.isLoyaltyReward);
+        const hasPaidItems = cart.items.some(item => !item.isLoyaltyReward);
+        let pointsChange = hasPaidItems ? 1 : 0;
+        
         if (hasReward) {
-          pointsChange -= 9; // -9 points for redeeming
+          pointsChange -= 9; // Consumir 9 puntos del premio
         }
+
+        const currentPoints = selectedCliente.loyaltyPoints || 0;
+        const newPoints = currentPoints + pointsChange;
+
         updatePromises.push(
           updateDoc(doc(db, 'users', selectedCliente.id), {
             loyaltyPoints: increment(pointsChange)
           })
         );
+
+        // Notificar a los administradores si alcanza el premio
+        if (newPoints >= 9 && currentPoints < 9) {
+          notifyAdmins(
+            "🎉 ¡Fidelidad completada!",
+            `El cliente ${selectedCliente.name} ha alcanzado los ${newPoints} puntos y ya puede reclamar su premio.`
+          );
+        }
       }
 
       await Promise.all(updatePromises);

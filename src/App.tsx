@@ -33,7 +33,7 @@ export default function App() {
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    const CURRENT_VERSION = '1.0.21'; // Incrementa esto para forzar recarga en todos los clientes
+    const CURRENT_VERSION = '1.0.22'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
       // 1. Limpiar todos los almacenes de caché del navegador

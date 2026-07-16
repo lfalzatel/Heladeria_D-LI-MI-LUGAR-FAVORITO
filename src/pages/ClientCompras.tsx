@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -337,9 +337,19 @@ export default function ClientCompras() {
 
       // Incrementar puntos de fidelidad en el perfil del cliente
       try {
+        const currentPoints = profile?.loyaltyPoints || 0;
+        const newPoints = currentPoints + 1;
+
         await updateDoc(doc(db, 'users', profile.uid), {
           loyaltyPoints: increment(1)
         });
+
+        if (newPoints >= 9 && currentPoints < 9) {
+          notifyAdmins(
+            "🎉 ¡Fidelidad completada!",
+            `El cliente ${profile.name || 'Invitado'} ha alcanzado los ${newPoints} puntos y ya puede reclamar su premio.`
+          );
+        }
       } catch (err) {
         console.warn('Error al incrementar puntos de fidelidad:', err);
       }
