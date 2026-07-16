@@ -121,16 +121,16 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
               
               // REGLAS ESPECÍFICAS DE GRAMAJES (Custom Logic)
               if (choice.type === 'flavor') {
-                  const isGrams = supplyInfo.unit?.toLowerCase() === 'g' || supplyInfo.unit?.toLowerCase() === 'gramos';
+                  const isGrams = supply.unit?.toLowerCase() === 'g' || supply.unit?.toLowerCase() === 'gramos';
 
                   if (productName.includes('cuchareable') || productName.includes('ensalada') || productName.includes('salpicón') || productName.includes('salpicon') || productName.includes("copa d'li") || productName.includes("copa d´li")) {
-                      const val = supplyInfo.yieldPerSize?.mini || (isGrams ? 80 : 62);
+                      const val = supply.yieldPerSize?.mini || (isGrams ? 80 : 62);
                       deductionAmount = isGrams ? val : 1 / val;
                   } else if (productName.includes("capricho") || productName.includes('copa queso') || productName.includes('copa favorita')) {
-                      const val = supplyInfo.yieldPerSize?.small || (isGrams ? 90 : 55);
+                      const val = supply.yieldPerSize?.small || (isGrams ? 90 : 55);
                       deductionAmount = isGrams ? val : 1 / val;
                   } else {
-                      const val = supplyInfo.yieldPerSize?.medium || (isGrams ? 100 : 50);
+                      const val = supply.yieldPerSize?.medium || (isGrams ? 100 : 50);
                       deductionAmount = isGrams ? val : 1 / val;
                   }
               }
