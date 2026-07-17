@@ -74,14 +74,14 @@ export default function ShareMenuButton() {
         filename: 'Carta_DLI.pdf',
         mimeType: 'application/pdf',
         title: "Carta D'LI — Mi Lugar Favorito",
-        text: '🍦 Mira nuestra carta completa con todos los productos y precios de D\'LI Boutique',
+        text: '🍦 Mira nuestra carta completa con todos los productos y precios de D\'LI — Mi Lugar Favorito',
       },
       qr: {
         url: '/qr-dli.png',
         filename: 'QR_DLI.png',
         mimeType: 'image/png',
-        title: "Código QR — D'LI Boutique",
-        text: '📱 Escanea este QR para ver la carta completa de D\'LI Boutique',
+        title: "Código QR — D'LI — Mi Lugar Favorito",
+        text: '📱 Escanea este QR para ver la carta completa de D\'LI — Mi Lugar Favorito',
       },
     }[type];
 
