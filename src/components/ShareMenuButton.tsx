@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Share2, FileText, QrCode, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { shareFileNative } from '../utils/nativeShareHelper';
 
 /**
  * Botón "Compartir Menú" — D'LI Boutique
@@ -93,9 +94,10 @@ export default function ShareMenuButton() {
       const file = new File([blob], config.filename, { type: config.mimeType });
 
       // Intentar Web Share API (nativa del móvil)
-      let shared = false;
+      // Intentar Web Share API o Capacitor Share Nativo
+      let shared = await shareFileNative(blob, config.filename, config.title, config.text);
 
-      if (navigator.share) {
+      if (!shared && navigator.share) {
         // 1. Intentar compartir el archivo físico si está soportado
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {

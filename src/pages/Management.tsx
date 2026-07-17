@@ -85,6 +85,7 @@ import { ExpenseModal, ExpenseData } from '../components/ExpenseModal';
 import { ExpenseCategoryManager } from '../components/ExpenseCategoryManager';
 import { useExpenseCategoriesStore } from '../stores/useExpenseCategoriesStore';
 import ReportPreviewModal from '../components/ReportPreviewModal';
+import { shareFileNative } from '../utils/nativeShareHelper';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
@@ -1024,14 +1025,15 @@ export default function Management() {
       const fileName = `${isExpense ? 'Gastos' : 'Compras'}_${dateStr.replace(/\//g, '-')}_${sellerName}`;
       
       let fileToShare: File | null = null;
+      let rawBlob: Blob | null = null;
 
       if (type === 'pdf' && pdf) {
-        const blob = pdf.output('blob');
-        fileToShare = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
+        rawBlob = pdf.output('blob');
+        fileToShare = new File([rawBlob], `${fileName}.pdf`, { type: 'application/pdf' });
       } else if (type === 'image' && imgData) {
         const response = await fetch(imgData);
-        const blob = await response.blob();
-        fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+        rawBlob = await response.blob();
+        fileToShare = new File([rawBlob], `${fileName}.jpg`, { type: 'image/jpeg' });
       } else if (type === 'excel') {
          toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
          return;
@@ -1039,7 +1041,18 @@ export default function Management() {
 
       const textSummary = `📊 *Reporte de ${isExpense ? 'Gastos' : 'Compras'} D'LI*\n📅 *Periodo:* ${dateStr}\n👤 *Generado por:* ${sellerName}\n💰 *Total:* $${totalGastado.toLocaleString()}`;
 
-      if (fileToShare && navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+      // 0. Intentar Capacitor Share Nativo
+      let shared = false;
+      if (rawBlob) {
+        shared = await shareFileNative(
+          rawBlob, 
+          `${fileName}.${type === 'pdf' ? 'pdf' : 'jpg'}`,
+          `Reporte de ${isExpense ? 'Gastos' : 'Compras'} D'LI`,
+          textSummary
+        );
+      }
+
+      if (!shared && fileToShare && navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
         try {
           await navigator.share({
             title: `Reporte de ${isExpense ? 'Gastos' : 'Compras'} D'LI`,
