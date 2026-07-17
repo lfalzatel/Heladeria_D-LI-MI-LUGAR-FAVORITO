@@ -180,19 +180,16 @@ export default function Menu() {
       </main>
 
       {/* Product Details Modal (Reuses ProductDetailsCarousel component) */}
-      <AnimatePresence>
-        {detailsProduct && (
-          <ProductDetailsCarousel
-            product={detailsProduct}
-            onClose={() => setDetailsProduct(null)}
-            onAddToOrder={(qty, variant, notes, selectedFlavors, fruitChoices, additions) => {
-              setDetailsProduct(null);
-              setShowAuthAlert(true);
-            }}
-            ctaText="Ordenar ahora"
-          />
-        )}
-      </AnimatePresence>
+      <ProductDetailsCarousel
+        products={filteredProducts}
+        initialProductId={detailsProduct?.id || null}
+        isOpen={!!detailsProduct}
+        onClose={() => setDetailsProduct(null)}
+        onAddToCart={() => {
+          setDetailsProduct(null);
+          setShowAuthAlert(true);
+        }}
+      />
 
       {/* Auth Alert Dialog */}
       <AnimatePresence>
