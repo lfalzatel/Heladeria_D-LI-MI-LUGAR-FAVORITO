@@ -93,21 +93,29 @@ export default function ShareMenuButton() {
       const file = new File([blob], config.filename, { type: config.mimeType });
 
       // Intentar Web Share API (nativa del móvil)
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: config.title,
-            text: config.text,
-          });
-          toast.success('¡Compartido exitosamente!');
-        } catch (shareErr: any) {
-          if (shareErr?.name === 'AbortError') {
-            return; // Cancelado por el usuario
+      let shared = false;
+
+      if (navigator.share) {
+        // 1. Intentar compartir el archivo físico si está soportado
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: config.title,
+              text: config.text,
+            });
+            toast.success('¡Compartido exitosamente!');
+            shared = true;
+          } catch (shareErr: any) {
+            if (shareErr?.name === 'AbortError') {
+              return; // Cancelado por el usuario
+            }
+            console.warn('Fallo al compartir archivo físico, intentando con texto...', shareErr);
           }
-          console.warn('Fallo al compartir archivo físicamente, intentando enlace...', shareErr);
-          
-          // Fallback nivel 2: Compartir enlace de descarga directa en vez del archivo físico
+        }
+
+        // 2. Si no se ha compartido (por fallo o falta de soporte para archivos), intentar compartir texto/enlace
+        if (!shared) {
           try {
             const absoluteLink = window.location.origin + config.url;
             await navigator.share({
@@ -115,16 +123,18 @@ export default function ShareMenuButton() {
               text: `${config.text}\n🔗 Ver carta: ${absoluteLink}`,
             });
             toast.success('¡Enlace de la carta compartido!');
+            shared = true;
           } catch (linkShareErr: any) {
             if (linkShareErr?.name === 'AbortError') {
               return;
             }
-            console.error('Fallo también al compartir enlace, descargando...', linkShareErr);
-            triggerDownloadFallback(blob, config.filename);
+            console.error('Fallo al compartir texto/enlace...', linkShareErr);
           }
         }
-      } else {
-        // Fallback nivel 3: Descarga directa
+      }
+
+      // 3. Fallback final: Descarga directa si no se pudo compartir de ninguna forma
+      if (!shared) {
         triggerDownloadFallback(blob, config.filename);
       }
     } catch (error: any) {
