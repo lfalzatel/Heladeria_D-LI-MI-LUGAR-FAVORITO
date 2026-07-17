@@ -18,6 +18,7 @@ import Management from './pages/Management';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import ClientCompras from './pages/ClientCompras';
+import Menu from './pages/Menu';
 import ClientPedidos from './pages/ClientPedidos';
 import ClientHistorial from './pages/ClientHistorial';
 import MainLayout from './components/MainLayout';
@@ -190,6 +191,7 @@ export default function App() {
         <Route path="/admin/supplies" element={<Navigate to="/admin/management?tab=operacion" replace />} />
 
         <Route path="/login" element={user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin'} /> : <Login />} />
+        <Route path="/menu" element={<Menu />} />
         
         {/* Rutas Protegidas con Layout Global */}
         <Route element={user && profile ? <MainLayout /> : (authLoading ? null : <Navigate to="/login" />)}>
