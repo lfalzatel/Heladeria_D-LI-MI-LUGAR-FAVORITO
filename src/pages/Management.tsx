@@ -1020,8 +1020,8 @@ export default function Management() {
   const handlePurchaseShare = async () => {
     if (!purchasePreviewData) return;
     try {
-      const { type, pdf, imgData, dateStr, sellerName } = purchasePreviewData;
-      const fileName = `Compras_${dateStr.replace(/\//g, '-')}_${sellerName}`;
+      const { type, pdf, imgData, dateStr, sellerName, totalGastado, isExpense } = purchasePreviewData;
+      const fileName = `${isExpense ? 'Gastos' : 'Compras'}_${dateStr.replace(/\//g, '-')}_${sellerName}`;
       
       let fileToShare: File | null = null;
 
@@ -1033,21 +1033,47 @@ export default function Management() {
         const blob = await response.blob();
         fileToShare = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
       } else if (type === 'excel') {
-         toast.error('Compartir Excel directamente no soportado aÃƒÂºn, usa Descargar.');
+         toast.error('Compartir Excel directamente no soportado aún, usa Descargar.');
          return;
       }
 
-      if (fileToShare && navigator.share) {
-        await navigator.share({
-          title: `Reporte de Compras ${dateStr}`,
-          text: `Adjunto reporte de compras generado por ${sellerName}`,
-          files: [fileToShare]
-        });
-      } else {
-        toast.info('Compartir no estÃƒ¡ soportado en este navegador');
+      const textSummary = `📊 *Reporte de ${isExpense ? 'Gastos' : 'Compras'} D'LI*\n📅 *Periodo:* ${dateStr}\n👤 *Generado por:* ${sellerName}\n💰 *Total:* $${totalGastado.toLocaleString()}`;
+
+      if (fileToShare && navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+        try {
+          await navigator.share({
+            title: `Reporte de ${isExpense ? 'Gastos' : 'Compras'} D'LI`,
+            text: textSummary,
+            files: [fileToShare]
+          });
+          toast.success('Reporte compartido con éxito');
+          return;
+        } catch (shareErr) {
+          console.warn('Fallo al compartir archivo físico en Management, intentando texto plano...', shareErr);
+        }
       }
+
+      // Fallback 1: Compartir resumen de texto nativo
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Reporte de ${isExpense ? 'Gastos' : 'Compras'} D'LI`,
+            text: textSummary,
+          });
+          toast.success('Resumen de reporte compartido');
+          return;
+        } catch (textErr) {
+          console.warn('Fallo al compartir texto plano nativo, intentando por WhatsApp direct link...', textErr);
+        }
+      }
+
+      // Fallback 2: WhatsApp direct API link
+      const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(textSummary)}`;
+      window.open(waLink, '_blank');
+      toast.success('Abriendo WhatsApp con el resumen del reporte.');
     } catch (err) {
       console.error(err);
+      toast.error('No se pudo compartir el reporte.');
     }
   };
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useHeaderStore } from '../stores/useHeaderStore';
@@ -461,17 +461,43 @@ export default function Dashboard() {
          return;
       }
 
-      if (fileToShare && navigator.share) {
-        await navigator.share({
-          title: `Reporte ${dateStr}`,
-          text: `Adjunto reporte generado por ${sellerName}`,
-          files: [fileToShare]
-        });
-      } else {
-        toast.info('Compartir no está soportado en este navegador');
+      const textSummary = `📊 *Reporte General D'LI*\n📅 *Periodo:* ${dateStr}\n👤 *Generado por:* ${sellerName}\n💰 *Ingresos:* $${totalIngresos.toLocaleString()}\n💵 *Ganancia Neta:* $${gananciaNeta.toLocaleString()}`;
+
+      if (fileToShare && navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+        try {
+          await navigator.share({
+            title: `Reporte General D'LI`,
+            text: textSummary,
+            files: [fileToShare]
+          });
+          toast.success('Reporte compartido con éxito');
+          return;
+        } catch (shareErr) {
+          console.warn('Fallo al compartir archivo físico en Dashboard, intentando texto plano...', shareErr);
+        }
       }
+
+      // Fallback 1: Compartir resumen de texto nativo
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Reporte General D'LI`,
+            text: textSummary,
+          });
+          toast.success('Resumen de reporte compartido');
+          return;
+        } catch (textErr) {
+          console.warn('Fallo al compartir texto plano nativo, intentando por WhatsApp direct link...', textErr);
+        }
+      }
+
+      // Fallback 2: WhatsApp direct API link
+      const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(textSummary)}`;
+      window.open(waLink, '_blank');
+      toast.success('Abriendo WhatsApp con el resumen del reporte.');
     } catch (err) {
       console.error(err);
+      toast.error('No se pudo compartir el reporte.');
     }
   };
 
