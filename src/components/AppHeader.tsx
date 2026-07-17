@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
+import ShareMenuButton from './ShareMenuButton';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { motion, AnimatePresence } from 'motion/react';
 import { createPortal } from 'react-dom';
@@ -67,6 +68,9 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
       {/* ── Lado derecho ── */}
       <div className="flex items-center gap-3">
         {rightExtra}
+        
+        {/* Share Menu Button */}
+        <ShareMenuButton />
         
         {/* WhatsApp Button */}
         <a 
