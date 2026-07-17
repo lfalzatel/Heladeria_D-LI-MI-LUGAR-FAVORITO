@@ -52,6 +52,18 @@ export default function ShareMenuButton() {
    * Descarga el archivo desde /public/, lo convierte a File y usa navigator.share()
    * Si no hay soporte, hace descarga directa como fallback
    */
+   const triggerDownloadFallback = (blob: Blob, filename: string) => {
+     const url = URL.createObjectURL(blob);
+     const a = document.createElement('a');
+     a.href = url;
+     a.download = filename;
+     document.body.appendChild(a);
+     a.click();
+     document.body.removeChild(a);
+     URL.revokeObjectURL(url);
+     toast.info('Archivo descargado — compártelo desde tu galería o descargas.');
+   };
+
   const handleShare = async (type: 'pdf' | 'qr') => {
     setSharing(type);
     setOpen(false);
@@ -82,27 +94,42 @@ export default function ShareMenuButton() {
 
       // Intentar Web Share API (nativa del móvil)
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: config.title,
-          text: config.text,
-        });
-        toast.success('¡Compartido exitosamente!');
+        try {
+          await navigator.share({
+            files: [file],
+            title: config.title,
+            text: config.text,
+          });
+          toast.success('¡Compartido exitosamente!');
+        } catch (shareErr: any) {
+          if (shareErr?.name === 'AbortError') {
+            return; // Cancelado por el usuario
+          }
+          console.warn('Fallo al compartir archivo físicamente, intentando enlace...', shareErr);
+          
+          // Fallback nivel 2: Compartir enlace de descarga directa en vez del archivo físico
+          try {
+            const absoluteLink = window.location.origin + config.url;
+            await navigator.share({
+              title: config.title,
+              text: `${config.text}\n🔗 Ver carta: ${absoluteLink}`,
+            });
+            toast.success('¡Enlace de la carta compartido!');
+          } catch (linkShareErr: any) {
+            if (linkShareErr?.name === 'AbortError') {
+              return;
+            }
+            console.error('Fallo también al compartir enlace, descargando...', linkShareErr);
+            triggerDownloadFallback(blob, config.filename);
+          }
+        }
       } else {
-        // Fallback: descarga directa
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = config.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast.info('Comprobante descargado — ya puedes enviarlo por tus aplicaciones.');
+        // Fallback nivel 3: Descarga directa
+        triggerDownloadFallback(blob, config.filename);
       }
     } catch (error: any) {
       if (error?.name === 'AbortError') {
-        return; // El usuario simplemente canceló
+        return;
       }
       console.error('Error al compartir:', error);
       toast.error('No se pudo compartir el archivo.');
