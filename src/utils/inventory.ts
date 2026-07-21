@@ -143,56 +143,58 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
                   else if (productName.includes('oblea tradicional') || choiceName === 'adición queso') deductionAmount = 150;
                   else if (productName.includes('oblea cuchareable') || productName.includes('copa queso')) deductionAmount = 200;
                   else deductionAmount = 100; // Default
-                  
-                  if (supply.unit?.toLowerCase() === 'kg') deductionAmount /= 1000;
               }
               else if (choiceName === 'arequipe' || choiceName === 'salsa arequipe') {
-                  // asumiendo unit = Kg (1000g) o Litro
-                  if (productName.includes('cuchareable')) deductionAmount = 50 / 1000;
-                  else if (productName.includes('oblea')) deductionAmount = 30 / 1000;
-                  else if (productName.includes('copa')) deductionAmount = 30 / 1000;
-                  else if (productName.includes('malteada')) deductionAmount = 30 / 1000;
-                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
-                  else deductionAmount = 30 / 1000; // Default
+                  // assumed amounts in grams/ml
+                  if (productName.includes('cuchareable')) deductionAmount = 50;
+                  else if (productName.includes('oblea')) deductionAmount = 30;
+                  else if (productName.includes('copa')) deductionAmount = 30;
+                  else if (productName.includes('malteada')) deductionAmount = 30;
+                  else if (productName.includes('helado')) deductionAmount = 6;
+                  else deductionAmount = 30; // Default
               }
               else if (choiceName === 'lechera' || choiceName === 'lecherita') { 
-                  // asumiendo unit = Pouch/Kg (1000g)
-                  if (productName.includes('cuchareable')) deductionAmount = 50 / 1000;
-                  else if (productName.includes('oblea') || (productName.includes('frutas') && productName.includes('crema'))) deductionAmount = 100 / 1000;
-                  else if (productName.includes('copa')) deductionAmount = 30 / 1000;
-                  else if (productName.includes('salpicón') || productName.includes('salpicon')) deductionAmount = 20 / 1000;
-                  else if (productName.includes('ensalada')) deductionAmount = 35 / 1000;
-                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
-                  else deductionAmount = 30 / 1000;
+                  // assumed amounts in grams/ml
+                  if (productName.includes('cuchareable')) deductionAmount = 50;
+                  else if (productName.includes('oblea') || (productName.includes('frutas') && productName.includes('crema'))) deductionAmount = 100;
+                  else if (productName.includes('copa')) deductionAmount = 30;
+                  else if (productName.includes('salpicón') || productName.includes('salpicon')) deductionAmount = 20;
+                  else if (productName.includes('ensalada')) deductionAmount = 35;
+                  else if (productName.includes('helado')) deductionAmount = 6;
+                  else deductionAmount = 30;
               }
               else if (choiceName === 'salsa mora' || choiceName === 'mora') { 
-                  // asumiendo unit = Litro (1000g/ml)
-                  if (productName.includes('malteada')) deductionAmount = 30 / 1000;
-                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
-                  else deductionAmount = 30 / 1000;
+                  // assumed amounts in grams/ml
+                  if (productName.includes('malteada')) deductionAmount = 30;
+                  else if (productName.includes('helado')) deductionAmount = 6;
+                  else deductionAmount = 30;
               }
               else if (choiceName === 'salsa chocolate' || choiceName === 'chocolate') { 
-                  // asumiendo unit = Litro (1000g/ml)
-                  if (productName.includes('copa')) deductionAmount = 30 / 1000;
-                  else if (productName.includes('helado')) deductionAmount = 6 / 1000;
-                  else deductionAmount = 30 / 1000;
+                  // assumed amounts in grams/ml
+                  if (productName.includes('copa')) deductionAmount = 30;
+                  else if (productName.includes('helado')) deductionAmount = 6;
+                  else deductionAmount = 30;
               }
               else if (choiceName === 'chantilly' || choiceName === 'adición chantilly') {
                   deductionAmount = 1; // It deductions from Chantilly, or directly from crema? 
                   // Wait, if it deducts from "Chantilly", that's 1 portion.
               }
               else if (choiceName === 'uva') { 
-                  // asumiendo unit = Kg (1000g)
-                  if (productName.includes('ensalada')) deductionAmount = 21.1 / 1000; // basado en 443g / 21
+                  if (productName.includes('ensalada')) deductionAmount = 21.1; // basado en 443g / 21
               }
-
               else if (choiceName === 'maní' || choiceName === 'mani') {
-                  // The user requested 2gr de maní
-                  deductionAmount = 2 / 1000;
+                  deductionAmount = 2;
               }
               else if (choiceName === 'bolitas de colores' || choiceName === 'bolitas') {
-                  // The user requested 1gr de bolitas de colores
-                  deductionAmount = 1 / 1000;
+                  deductionAmount = 1;
+              }
+
+              // Si la base de datos dice que la unidad es Kg o Litros, convertimos el gramaje base a fracción
+              if (deductionAmount > 0) {
+                  const u = supply.unit?.toLowerCase() || '';
+                  if (u === 'kg' || u === 'l' || u === 'litro' || u === 'litros') {
+                      deductionAmount /= 1000;
+                  }
               }
 
               // Fallback a las reglas estándar si no encajó en ninguna regla específica

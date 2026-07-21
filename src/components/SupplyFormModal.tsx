@@ -66,7 +66,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         const loadedMinLimit = supplyToEdit.minLimit ?? supplyToEdit.stockMinimum ?? 5;
         setMinLimit(loadedMinLimitUnit === 'internal' ? loadedMinLimit * ppu : loadedMinLimit);
         
-        setCurrentStock(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0);
+        setCurrentStock(parseFloat(Number(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0).toFixed(2)));
         setYieldMini(supplyToEdit.yieldPerSize?.mini || '');
         setYieldSmall(supplyToEdit.yieldPerSize?.small || '');
         setYieldMedium(supplyToEdit.yieldPerSize?.medium || '');
