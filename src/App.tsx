@@ -90,19 +90,29 @@ export default function App() {
           });
         } 
         // 2. Si no ha decidido (default), pedir permiso automáticamente al ingresar
-        else if (Notification.permission === 'default') {
+        // Solo si nunca le hemos preguntado antes, para evitar bucles en APKs que no guardan el estado
+        else if (Notification.permission === 'default' && !localStorage.getItem('has_prompted_notifs')) {
           hasRequestedNotifs.current = true;
+          localStorage.setItem('has_prompted_notifs', 'true');
           // Pequeño delay para no interrumpir el splash screen
           setTimeout(() => {
             requestNotificationPermission(user.uid).then(token => {
               if (token) localStorage.setItem('notifications_enabled', 'true');
             }).catch(err => {
               console.error('Error pidiendo permiso:', err);
-              hasRequestedNotifs.current = false;
+              // No reseteamos hasRequestedNotifs para no volver a preguntar en la misma sesión
             });
           }, 2000);
         }
       }
+
+      // 3. Automated background tasks (only run if admin or superadmin)
+      if (profile.role === 'admin' || profile.role === 'superadmin') {
+        import('./utils/inventory').then(module => {
+          module.processWeeklyBagsDeduction();
+        }).catch(err => console.error("Failed to load inventory module for background task", err));
+      }
+
       return () => {
         unsubProviders();
       };

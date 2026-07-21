@@ -242,3 +242,59 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
     console.error("Error descontando inventario:", error);
   }
 }
+
+/**
+ * Descuenta 1 unidad de cada bolsa de basura (Verde grande, Negra grande, Verde pequeña)
+ * los días Lunes (1) y Sábados (6).
+ */
+export async function processWeeklyBagsDeduction() {
+  try {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Domingo, 1 = Lunes, 6 = Sábado
+    if (dayOfWeek !== 1 && dayOfWeek !== 6) return;
+
+    const dateStr = today.toISOString().split('T')[0];
+    
+    if (localStorage.getItem('bags_deducted_date') === dateStr) return;
+
+    const { doc, getDoc, collection, getDocs, writeBatch, increment } = await import('firebase/firestore');
+    
+    const systemRef = doc(db, 'system', 'tasks_status');
+    const sysDoc = await getDoc(systemRef);
+    if (sysDoc.exists() && sysDoc.data().lastBagsDeduction === dateStr) {
+       localStorage.setItem('bags_deducted_date', dateStr);
+       return;
+    }
+
+    const bagsNames = [
+      'Bolsa de Basura Verde', 
+      'Bolsa de Basura Negra', 
+      'Bolsa de Basura Pequeña',
+      'Bolsa Blanca Grande',
+      'Bolsa Blanca Pequeña'
+    ]; // Añadimos variaciones posibles por si acaso
+
+    const suppliesSnap = await getDocs(collection(db, 'supplies'));
+    const bagsToDeduct = suppliesSnap.docs.filter(d => {
+      const name = d.data().name?.trim();
+      return name === 'Bolsa de Basura Verde' || 
+             name === 'Bolsa de Basura Negra' || 
+             name === 'Bolsa de Basura Pequeña';
+    });
+    
+    if (bagsToDeduct.length === 0) return;
+
+    const batch = writeBatch(db);
+    bagsToDeduct.forEach(bagDoc => {
+      batch.update(doc(db, 'supplies', bagDoc.id), { currentStock: increment(-1) });
+    });
+    batch.set(systemRef, { lastBagsDeduction: dateStr }, { merge: true });
+
+    await batch.commit();
+    localStorage.setItem('bags_deducted_date', dateStr);
+    console.log("Bolsas de basura descontadas automáticamente para:", dateStr);
+
+  } catch (error) {
+    console.error("Error en processWeeklyBagsDeduction:", error);
+  }
+}
