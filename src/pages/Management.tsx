@@ -1315,13 +1315,15 @@ export default function Management() {
                                             )}
 
                                             {!s.isVirtual && (
-                                              <div className="flex border-t border-outline/10 pt-4 mt-auto">
-                                                <div className="flex-1">
-                                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest">En Stock</p>
-                                                  <p className={cn('text-xl font-black mt-0.5', isLow ? 'text-orange-600' : 'text-on-surface')}>{s.currentStock} <span className="text-xs font-bold opacity-60 uppercase">{s.unit}</span></p>
-                                                </div>
-                                                <div className="flex-1 text-right border-l border-outline/10 pl-4">
-                                                  <p className="text-[9px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
+                                                <div className="flex border-t border-outline/10 pt-4 mt-auto">
+                                                  <div className="flex-1">
+                                                    <p className="text-[9px] text-secondary font-black uppercase tracking-widest">En Stock</p>
+                                                    <p className={cn('text-xl font-black mt-0.5', isLow ? 'text-orange-600' : 'text-on-surface')}>
+                                                      {parseFloat(Number(s.currentStock || 0).toFixed(2))} <span className="text-xs font-bold opacity-60 uppercase">{s.unit}</span>
+                                                    </p>
+                                                  </div>
+                                                  <div className="flex-1 text-right border-l border-outline/10 pl-4">
+                                                    <p className="text-[9px] text-secondary font-bold uppercase tracking-widest">Alerta en</p>
                                                   <p className="text-sm font-bold text-secondary mt-1.5">
                                                     {s.minLimitUnit === 'internal' 
                                                       ? `${Math.round((s.minLimit || 0) * (s.portionsPerUnit || s.yieldPerUnit || 1))} `
