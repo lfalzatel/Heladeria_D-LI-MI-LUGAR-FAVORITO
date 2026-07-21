@@ -602,7 +602,7 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
                 'flex items-center gap-1 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest',
                 isCero ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
               )}>
-                Stock: {s.currentStock}
+                Stock: {parseFloat(Number(s.currentStock || 0).toFixed(2))}
               </div>
             </div>
           );

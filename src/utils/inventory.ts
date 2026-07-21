@@ -199,15 +199,17 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
 
               // Fallback a las reglas estándar si no encajó en ninguna regla específica
               if (deductionAmount === 0) {
+                  const lowerUnit = (supply.unit || '').toLowerCase();
+                  const isGramsOrMl = (lowerUnit === 'g' || lowerUnit === 'ml' || lowerUnit === 'gramos' || lowerUnit === 'mililitros');
+
                   // 1. Usar rendimiento específico del tamaño de la porción (Ej. porción pequeña = 1/80, porción grande = 1/40)
                   if (supply.yieldPerSize && supply.yieldPerSize[size]) {
-                      deductionAmount = 1 / supply.yieldPerSize[size];
+                      deductionAmount = isGramsOrMl ? supply.yieldPerSize[size] : (1 / supply.yieldPerSize[size]);
                   } 
                   // 2. Fallback a rendimiento estándar si no hay por tamaño
                   else if (supply.yieldPerUnit && supply.yieldPerUnit > 0) {
-                      const lowerUnit = (supply.unit || '').toLowerCase();
                       const yieldVal = (lowerUnit === 'und' || lowerUnit === 'unidad' || lowerUnit === 'unidades' || lowerUnit === 'uds') ? 1 : supply.yieldPerUnit;
-                      deductionAmount = 1 / yieldVal;
+                      deductionAmount = isGramsOrMl ? yieldVal : (1 / yieldVal);
                   } 
                   // 3. Fallback a 1 unidad completa en el peor caso
                   else {
