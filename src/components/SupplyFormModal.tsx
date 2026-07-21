@@ -26,7 +26,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
   const [unit, setUnit] = useState(UNITS[0]);
   const [minLimit, setMinLimit] = useState<number>(5);
   const [minLimitUnit, setMinLimitUnit] = useState<string>('base');
-  const [currentStock, setCurrentStock] = useState<number>(0);
+  const [currentStock, setCurrentStock] = useState<number | string>(0);
   const [portionsPerUnit, setPortionsPerUnit] = useState<number>(1);
   const [yieldMini, setYieldMini] = useState<number | ''>('');
   const [yieldSmall, setYieldSmall] = useState<number | ''>('');
@@ -66,7 +66,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         const loadedMinLimit = supplyToEdit.minLimit ?? supplyToEdit.stockMinimum ?? 5;
         setMinLimit(loadedMinLimitUnit === 'internal' ? loadedMinLimit * ppu : loadedMinLimit);
         
-        setCurrentStock(parseFloat(Number(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0).toFixed(2)));
+        setCurrentStock(supplyToEdit.currentStock ?? supplyToEdit.stockQuantity ?? 0);
         setYieldMini(supplyToEdit.yieldPerSize?.mini || '');
         setYieldSmall(supplyToEdit.yieldPerSize?.small || '');
         setYieldMedium(supplyToEdit.yieldPerSize?.medium || '');
@@ -112,7 +112,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         unit, // we are mapping this to the UI
         minLimit: finalMinLimit,
         minLimitUnit,
-        currentStock,
+        currentStock: currentStock === '' ? 0 : Number(currentStock),
         portionsPerUnit,
         yieldPerUnit: portionsPerUnit, // compatibility
         yieldPerSize: {
@@ -125,7 +125,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         isVirtual,
         // Fallbacks for older structure compatibility
         stockMinimum: finalMinLimit,
-        stockQuantity: currentStock,
+        stockQuantity: currentStock === '' ? 0 : Number(currentStock),
         purchaseUnit: unit,
       };
 
@@ -354,7 +354,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
                    min={0}
                    step="any"
                    value={currentStock}
-                   onChange={(e) => setCurrentStock(Number(e.target.value))}
+                   onChange={(e) => setCurrentStock(e.target.value)}
                    className="w-full px-4 h-14 bg-white rounded-xl border border-outline/20 outline-none focus:ring-2 focus:ring-primary transition-all font-black text-lg text-primary"
                  />
                  <p className="text-xs text-primary/70 mt-1">
