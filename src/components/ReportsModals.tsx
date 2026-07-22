@@ -213,6 +213,9 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
 }) {
   const saldoFinal = totalIngresos - totalCompras - totalGastosOperativos;
   const efectivoFisico = (ingresosEfectivo || 0) - (comprasEfectivo || 0) - (gastosEfectivo || 0);
+  const transferenciaBruta = (ingresosTransferencia || 0) - (comprasTransferencia || 0) - (gastosTransferencia || 0);
+  const impuesto4x1000 = transferenciaBruta > 0 ? transferenciaBruta * 0.004 : 0;
+  const dineroEnCuenta = transferenciaBruta - impuesto4x1000;
   const costoRef = totalIngresos + totalCredito;
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
@@ -314,11 +317,27 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
             </div>
             <TrendingUp className={cn('w-7 h-7', saldoFinal >= 0 ? 'text-emerald-400' : 'text-red-400')} />
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <div>
-              <p className="text-[9px] font-black text-emerald-400/80 uppercase tracking-widest mb-1">Dinero Físico en Caja</p>
-              <p className="text-xl font-black text-emerald-400">{formatCurrency(efectivoFisico)}</p>
+          <div className="flex flex-col gap-2 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-black text-emerald-400/80 uppercase tracking-widest mb-1">Dinero Físico en Caja</p>
+                <p className="text-xl font-black text-emerald-400">{formatCurrency(efectivoFisico)}</p>
+              </div>
             </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-black text-blue-400/80 uppercase tracking-widest mb-1">Dinero en la Cuenta</p>
+                <p className="text-xl font-black text-blue-400">{formatCurrency(dineroEnCuenta)}</p>
+              </div>
+            </div>
+            {impuesto4x1000 > 0 && (
+              <div className="flex items-center justify-between pl-2 border-l-2 border-red-500/30">
+                <div>
+                  <p className="text-[8px] font-black text-red-400/80 uppercase tracking-widest mb-0.5">Descuento 4x1000 (Aprox.)</p>
+                  <p className="text-sm font-black text-red-400">- {formatCurrency(impuesto4x1000)}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
