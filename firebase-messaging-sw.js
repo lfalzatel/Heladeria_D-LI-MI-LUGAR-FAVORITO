@@ -17,9 +17,9 @@ messaging.onBackgroundMessage((payload) => {
   console.log('[SW] Mensaje en background:', payload);
 
   // Mostrar notificación nativa en la barra del sistema
-  return self.registration.showNotification(
-    payload.notification?.title || "D'LI Boutique", {
-      body: payload.notification?.body || 'Nueva actualización',
+  return  self.registration.showNotification(
+    payload.notification?.title || "D'LI — Mi Lugar Favorito", {
+      body: payload.notification?.body || "Tienes un nuevo mensaje.",
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
       vibrate: [200, 100, 200],
