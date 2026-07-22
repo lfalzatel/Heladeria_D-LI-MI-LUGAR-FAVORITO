@@ -302,11 +302,11 @@ export function GananciaModal({ isOpen, onClose, filter, totalIngresos, totalCom
         )}
         <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
           <div className="flex justify-between items-center mb-1">
-            <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Referencia de Costo de Venta</p>
+            <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Ventas Totales (Pagado + Fiado)</p>
             <p className="font-black text-amber-600">{formatCurrency(costoRef)}</p>
           </div>
           <p className="text-[10px] text-amber-600/70 font-medium leading-snug">
-            Valor de lo vendido en este periodo sin considerar inversión en stock.
+            Suma de todo lo vendido en este periodo (Ingresos recibidos + Créditos pendientes).
           </p>
         </div>
         <div className="p-5 bg-on-surface rounded-2xl flex flex-col gap-3">
