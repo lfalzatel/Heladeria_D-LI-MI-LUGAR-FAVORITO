@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle, ShoppingBag, Plus, Minus, Save } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
+import { useTableCartStore } from '../stores/useTableCartStore';
 import { compressImage } from '../utils/imageCompressor';
 import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -257,6 +258,64 @@ export default function MovementDetailModal({
     }
   };
 
+  const handleEditSale = async () => {
+    if (!window.confirm('¿Editar esta venta? Los productos volverán al punto de venta y este registro se eliminará para que puedas cobrarlo nuevamente.')) return;
+
+    setIsDeleting(true);
+    try {
+      if (data.items?.length > 0) {
+         await restoreInventory(data.items, data.packagingSupplies || []);
+         const updatePromises = data.items.map((item: any) => 
+           updateDoc(doc(db, 'products', item.productId), {
+             salesCount: increment(-item.quantity)
+           })
+         );
+         if (data.clienteId) {
+           let pointsChange = -1;
+           const hasReward = data.items.some((item: any) => item.isLoyaltyReward);
+           if (hasReward) pointsChange += 9;
+           updatePromises.push(
+             updateDoc(doc(db, 'users', data.clienteId), {
+               loyaltyPoints: increment(pointsChange)
+             })
+           );
+         }
+         await Promise.all(updatePromises).catch(e => console.error('Error restaurando extras', e));
+      }
+
+      const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
+      await deleteDoc(doc(db, collectionName, data.id));
+
+      // Load into cart
+      const tableId = data.tableId || 'directa';
+      useTableCartStore.setState((state) => ({
+        ...state,
+        activeTable: tableId,
+        carts: {
+          ...state.carts,
+          [tableId]: {
+            ...state.carts[tableId],
+            items: data.items,
+            note: data.note || '',
+            isTakeout: data.tableName?.toLowerCase().includes('llevar') || false,
+            packagingSupplies: data.packagingSupplies || [],
+            openedAt: data.createdAt ? new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toISOString() : new Date().toISOString()
+          }
+        }
+      }));
+
+      toast.success('Venta cargada en el mostrador para edición');
+      onClose();
+      // Redirect to POS if needed, hash routing usually used
+      window.location.hash = '#/';
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al editar la venta');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !data?.id || !profile) return;
@@ -311,9 +370,21 @@ export default function MovementDetailModal({
                     <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-1">Ref: #{data.id.slice(-6).toUpperCase()}</p>
                  </div>
               </div>
-              <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
-                <X className="w-5 h-5 text-secondary" />
-              </button>
+              <div className="flex items-center gap-2">
+                {(profile?.role === 'admin' || profile?.role === 'propietario') && data.type === 'sale' && (
+                  <button 
+                    onClick={handleEditSale} 
+                    disabled={isDeleting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-xs"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Editar Venta</span>
+                  </button>
+                )}
+                <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
+                  <X className="w-5 h-5 text-secondary" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
