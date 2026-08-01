@@ -104,7 +104,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
 
     setLoading(true);
     try {
-      const finalMinLimit = minLimitUnit === 'internal' ? minLimit / (portionsPerUnit || 1) : minLimit;
+      const finalMinLimit = minLimit;
 
       const data: Partial<Supply> = {
         name: name.trim(),
@@ -113,15 +113,15 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
         minLimit: finalMinLimit,
         minLimitUnit,
         currentStock: currentStock === '' ? 0 : Number(currentStock),
-        portionsPerUnit,
-        yieldPerUnit: portionsPerUnit, // compatibility
+        portionsPerUnit: 1,
+        yieldPerUnit: 1, // compatibility
         yieldPerSize: {
-          mini: yieldMini === '' ? null : Number(yieldMini),
-          small: yieldSmall === '' ? null : Number(yieldSmall),
-          medium: yieldMedium === '' ? null : Number(yieldMedium),
-          large: yieldLarge === '' ? null : Number(yieldLarge),
+          mini: null,
+          small: null,
+          medium: null,
+          large: null,
         },
-        yieldDetails,
+        yieldDetails: '',
         isVirtual,
         // Fallbacks for older structure compatibility
         stockMinimum: finalMinLimit,
@@ -251,68 +251,7 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
               </select>
             </div>
 
-            {/* SMART YIELD SECTION */}
-            {['kg', 'g', 'Litro', 'mL', 'Bloque', 'Tarro', 'Unidad', 'Lata'].includes(unit) ? (
-              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <Package className="w-4 h-4 text-primary" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-primary">Rendimiento por {unit}</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-secondary">
-                      {category.toLowerCase().includes('helado') 
-                        ? (unit.toLowerCase() === 'g' || unit.toLowerCase() === 'gramos' ? 'Peso Bola Ensaladas (Ej. 80)' : 'Bolas 80g (Ej. Ensaladas)') 
-                        : 'Porciones Mini'}
-                    </label>
-                    <input type="number" step="any" min={0} value={yieldMini} onChange={e => setYieldMini(e.target.value as any)} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-secondary">
-                      {category.toLowerCase().includes('helado') 
-                        ? (unit.toLowerCase() === 'g' || unit.toLowerCase() === 'gramos' ? 'Peso Bola Copas (Ej. 90)' : 'Bolas 90g (Ej. Capricho)') 
-                        : 'Porciones Pequeñas'}
-                    </label>
-                    <input type="number" step="any" min={0} value={yieldSmall} onChange={e => setYieldSmall(e.target.value as any)} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-secondary">
-                      {category.toLowerCase().includes('helado') 
-                        ? (unit.toLowerCase() === 'g' || unit.toLowerCase() === 'gramos' ? 'Peso Bola Helados (Ej. 100)' : 'Bolas 100g (Ej. Helados)') 
-                        : 'Porciones Medianas'}
-                    </label>
-                    <input type="number" step="any" min={0} value={yieldMedium} onChange={e => setYieldMedium(e.target.value as any)} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-secondary">
-                      {category.toLowerCase().includes('helado') ? 'Bolas Grandes (Opcional)' : 'Porciones Grandes'}
-                    </label>
-                    <input type="number" step="any" min={0} value={yieldLarge} onChange={e => setYieldLarge(e.target.value as any)} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1 mt-2">
-                  <label className="text-[10px] font-bold text-secondary">Rendimiento Estándar (si aplica)</label>
-                  <input type="number" step="any" min={0} value={portionsPerUnit} onChange={e => setPortionsPerUnit(e.target.value as any)} className="w-full px-3 h-10 bg-white rounded-xl border border-outline/10 text-sm font-bold" />
-                  <p className="text-[9px] text-secondary/60 italic">Útil para insumos que no varían por tamaño (ej. cerezas).</p>
-                </div>
-              </div>
-            ) : ['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa'].includes(unit) ? (
-              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-4 flex flex-col gap-3">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Unidades por {unit}</label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    min={0}
-                    value={portionsPerUnit}
-                    onChange={(e) => setPortionsPerUnit(e.target.value as any)}
-                    className="w-full px-4 py-3 bg-white rounded-2xl border-2 border-outline/10 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-black text-xl text-primary"
-                  />
-                  <p className="text-[9px] text-secondary/60 font-bold px-1 italic">Para calcular el costo por unidad interna.</p>
-                </div>
-              </div>
-            ) : null}
+
 
             <div className="grid grid-cols-2 gap-4 items-end">
                <div className="flex flex-col gap-2">

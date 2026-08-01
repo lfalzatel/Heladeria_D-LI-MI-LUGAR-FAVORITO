@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2, Save, Database, Search, Calculator, Info, Minus } from 'lucide-react';
 import { Product, RecipeIngredient, Supply } from '../types';
@@ -139,8 +139,8 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
 
   const estimatedCost = currentRecipe.reduce((acc, ing) => {
     const supply = supplies.find(s => s.id === ing.supplyId);
-    if (!supply || !supply.lastPurchasePrice || !supply.yieldPerUnit) return acc;
-    const costPerPortion = supply.lastPurchasePrice / supply.yieldPerUnit;
+    if (!supply || supply.lastPurchasePrice == null) return acc;
+    const costPerPortion = supply.lastPurchasePrice;
     return acc + (costPerPortion * (Number(ing.quantity) || 0));
   }, 0);
 

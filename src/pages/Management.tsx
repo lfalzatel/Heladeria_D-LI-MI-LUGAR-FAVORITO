@@ -827,8 +827,7 @@ export default function Management() {
       const supply = supplies.find(s => s.id === ing.supplyId);
       if (!supply) return acc;
       const lastPrice = supply.lastPurchasePrice || 0;
-      const yieldU = supply.portionsPerUnit || supply.yieldPerUnit || 1;
-      const costPerPortion = lastPrice / yieldU;
+      const costPerPortion = lastPrice / 1;
       return acc + (costPerPortion * (ing.quantity || 1));
     }, 0);
   };
