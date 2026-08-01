@@ -705,24 +705,24 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               </AnimatePresence>
 
               {/* Pedido Para Llevar Toggle */}
-              <div className="p-2 sm:p-3 rounded-xl bg-indigo-50/50 border border-indigo-100">
+              <div className="p-3 sm:p-4 rounded-xl bg-indigo-50 border-2 border-indigo-200 shadow-sm transition-all hover:border-indigo-300">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-indigo-500" />
-                    <span className="font-bold text-indigo-900 text-xs">Pedido Para Llevar</span>
+                  <div className="flex items-center gap-2.5">
+                    <ShoppingBag className="w-5 h-5 text-indigo-600" />
+                    <span className="font-black text-indigo-950 text-sm tracking-wide">PEDIDO PARA LLEVAR</span>
                   </div>
                   <button
                     onClick={() => setTakeout(activeTable, !cart.isTakeout)}
                     className={cn(
-                      "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                      cart.isTakeout ? "bg-indigo-500" : "bg-outline/20"
+                      "relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner",
+                      cart.isTakeout ? "bg-indigo-600" : "bg-outline/20"
                     )}
                   >
                     <span className="sr-only">Toggle Para Llevar</span>
                     <span
                       className={cn(
-                        "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                        cart.isTakeout ? "translate-x-4" : "translate-x-0"
+                        "pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                        cart.isTakeout ? "translate-x-5" : "translate-x-0"
                       )}
                     />
                   </button>
@@ -747,9 +747,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                         />
                       </div>
                       
-                      <div className="space-y-1.5 overflow-y-auto max-h-[25vh] pr-1 styled-scrollbar">
+                      <div className="space-y-1.5 overflow-y-auto max-h-[30vh] pr-1 styled-scrollbar">
                         {packagingSuppliesData
                           .filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase()))
+                          .sort((a, b) => a.name.localeCompare(b.name))
                           .map(supply => {
                             const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
                             return (

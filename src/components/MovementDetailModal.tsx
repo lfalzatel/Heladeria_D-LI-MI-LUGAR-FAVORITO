@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle } from 'lucide-react';
+import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle, ShoppingBag, Plus, Minus, Save } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { compressImage } from '../utils/imageCompressor';
-import { doc, updateDoc, deleteDoc, increment, deleteField } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
@@ -64,6 +64,90 @@ export default function MovementDetailModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isEditingPackaging, setIsEditingPackaging] = useState(false);
+  const [allPackaging, setAllPackaging] = useState<any[]>([]);
+  const [editingPackagingData, setEditingPackagingData] = useState<any[]>([]);
+  const [isSavingPackaging, setIsSavingPackaging] = useState(false);
+
+  const handleStartEditingPackaging = async () => {
+    setIsEditingPackaging(true);
+    setEditingPackagingData(data.packagingSupplies || []);
+    try {
+      const q = query(collection(db, 'supplies'), where('category', '==', 'Empaques'));
+      const snap = await getDocs(q);
+      const packs = snap.docs.map(d => ({id: d.id, ...d.data()})).filter((s: any) => s.status !== 'inactivo');
+      setAllPackaging(packs.sort((a,b) => a.name.localeCompare(b.name)));
+    } catch (e) {
+      console.error(e);
+      toast.error('Error cargando empaques');
+    }
+  };
+
+  const handleUpdatePackagingQuantity = (supplyId: string, delta: number) => {
+    setEditingPackagingData(prev => {
+      const existing = prev.find(p => p.supplyId === supplyId);
+      const supply = allPackaging.find(p => p.id === supplyId);
+      if (!supply) return prev;
+      
+      const currentQty = existing ? existing.quantity : 0;
+      const newQty = Math.max(0, currentQty + delta);
+      
+      if (newQty === 0) {
+        return prev.filter(p => p.supplyId !== supplyId);
+      }
+      
+      if (existing) {
+        return prev.map(p => p.supplyId === supplyId ? { ...p, quantity: newQty } : p);
+      } else {
+        return [...prev, { supplyId, name: supply.name, unitPrice: supply.lastPurchasePrice || 0, quantity: newQty }];
+      }
+    });
+  };
+
+  const handleSavePackaging = async () => {
+    if (!data.id) return;
+    setIsSavingPackaging(true);
+    try {
+      const oldPacks = data.packagingSupplies || [];
+      const newPacks = editingPackagingData;
+      
+      const diffs: Record<string, number> = {}; 
+      oldPacks.forEach((o: any) => {
+        diffs[o.supplyId] = (diffs[o.supplyId] || 0) - o.quantity;
+      });
+      newPacks.forEach(n => {
+        diffs[n.supplyId] = (diffs[n.supplyId] || 0) + n.quantity;
+      });
+
+      const batchPromises: Promise<void>[] = [];
+      Object.entries(diffs).forEach(([supplyId, delta]) => {
+        if (delta !== 0) {
+          batchPromises.push(
+            updateDoc(doc(db, 'supplies', supplyId), {
+              stock: increment(-delta)
+            })
+          );
+        }
+      });
+      await Promise.all(batchPromises);
+
+      const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
+      const collectionName = isPedido ? 'pedidos' : 'sales';
+      await updateDoc(doc(db, collectionName, data.id), {
+        packagingSupplies: newPacks
+      });
+      
+      toast.success('Empaques actualizados y stock ajustado');
+      data.packagingSupplies = newPacks; // update local for UI
+      setIsEditingPackaging(false);
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al guardar empaques');
+    } finally {
+      setIsSavingPackaging(false);
+    }
+  };
 
   const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [editPaymentMethod, setEditPaymentMethod] = useState('');
@@ -591,6 +675,18 @@ export default function MovementDetailModal({
                    </button>
                  </div>
                )}
+
+               {(data.status === 'entregado' || data.status === 'completed' || data.type === 'sale') && (
+                 <div className="px-4 sm:px-8 mt-2 pb-4">
+                   <button 
+                     onClick={handleStartEditingPackaging}
+                     className="w-full py-4 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-[11px] uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
+                   >
+                     <ShoppingBag className="w-4 h-4" />
+                     Modificar Empaques (Para Llevar)
+                   </button>
+                 </div>
+               )}
             </div>
 
             {/* Botones de acción */}
@@ -730,6 +826,62 @@ export default function MovementDetailModal({
                 </button>
               </div>
             )}
+
+             <AnimatePresence>
+               {isEditingPackaging && (
+                 <motion.div 
+                   initial={{ opacity: 0, y: 50 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: 50 }}
+                   className="absolute inset-0 bg-surface-container-lowest z-50 flex flex-col rounded-[2.5rem] overflow-hidden"
+                 >
+                   {/* header */}
+                   <div className="p-5 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
+                     <div>
+                       <h3 className="font-black text-indigo-900 text-lg">Modificar Empaques</h3>
+                       <p className="text-xs text-indigo-600">Ajusta los desechables de esta venta</p>
+                     </div>
+                     <button onClick={() => setIsEditingPackaging(false)} className="p-2 bg-white rounded-full text-indigo-400 hover:text-indigo-600">
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+                   
+                   <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                     {allPackaging.map(supply => {
+                       const qty = editingPackagingData.find(p => p.supplyId === supply.id)?.quantity || 0;
+                       return (
+                         <div key={supply.id} className="flex items-center justify-between p-3 bg-white border border-indigo-50 rounded-2xl shadow-sm">
+                           <div>
+                             <p className="text-sm font-bold text-indigo-950">{supply.name}</p>
+                             <p className="text-[10px] text-indigo-400">{supply.stock} en inventario</p>
+                           </div>
+                           <div className="flex items-center gap-3 bg-indigo-50/50 rounded-xl p-1 border border-indigo-100">
+                             <button onClick={() => handleUpdatePackagingQuantity(supply.id, -1)} disabled={qty <= 0} className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-indigo-600 disabled:opacity-30">
+                               <Minus className="w-4 h-4" />
+                             </button>
+                             <span className="font-black text-indigo-900 w-4 text-center">{qty}</span>
+                             <button onClick={() => handleUpdatePackagingQuantity(supply.id, 1)} className="w-8 h-8 flex items-center justify-center bg-indigo-500 rounded-lg shadow-sm text-white">
+                               <Plus className="w-4 h-4" />
+                             </button>
+                           </div>
+                         </div>
+                       );
+                     })}
+                   </div>
+
+                   <div className="p-4 border-t border-outline/10 bg-white">
+                     <button 
+                       onClick={handleSavePackaging}
+                       disabled={isSavingPackaging}
+                       className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 disabled:opacity-50"
+                     >
+                       <Save className="w-4 h-4" />
+                       {isSavingPackaging ? 'Guardando...' : 'Guardar Cambios'}
+                     </button>
+                   </div>
+                 </motion.div>
+               )}
+             </AnimatePresence>
           </motion.div>
         </div>
       )}

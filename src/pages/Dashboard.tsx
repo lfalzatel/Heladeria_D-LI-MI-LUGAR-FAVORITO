@@ -163,13 +163,7 @@ export default function Dashboard() {
       }
     });
 
-    return items.filter(item => {
-      // Enforce Seller Role Filtering
-      if (profile?.role === 'vendedor' && item.sellerId !== profile.uid) {
-        return false;
-      }
-      return true;
-    });
+    return items;
   }, [sales, pedidosData, profile]);
 
   // Combined Activity filtered

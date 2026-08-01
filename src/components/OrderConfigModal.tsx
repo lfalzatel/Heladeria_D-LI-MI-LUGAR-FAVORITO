@@ -91,6 +91,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     return base;
   };
   const maxScoops = getMaxScoops();
+  const currentScoops = selectedFlavors.reduce((acc, f) => acc + (f.quantity || 1), 0);
 
   // Base options
   if (selectedVariant?.steps && selectedVariant.steps.length > 0) {
@@ -294,8 +295,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
       }
     }
 
-    if (effectiveCurrentStepType === 'flavors' && selectedFlavors.length === 0) {
-      toast.error('Selecciona al menos un sabor');
+    if (effectiveCurrentStepType === 'flavors' && currentScoops < maxScoops) {
+      toast.info(`Debes seleccionar ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
       return;
     }
 
@@ -412,7 +413,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
   const toggleFlavor = (flavor: string) => {
     if (selectedFlavors.includes(flavor)) {
       setSelectedFlavors(selectedFlavors.filter(f => f !== flavor));
-    } else if (selectedFlavors.length < maxScoops) {
+    } else if (currentScoops < maxScoops) {
       setSelectedFlavors([...selectedFlavors, flavor]);
     } else {
       toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
@@ -552,11 +553,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   {effectiveCurrentStepType === 'flavors' && (
                     <div className={cn(
                       "px-3 py-1.5 rounded-xl text-[10px] font-black ring-1 transition-all shadow-sm",
-                      selectedFlavors.length === maxScoops 
+                      currentScoops === maxScoops 
                       ? "bg-success/10 text-success ring-success/20" 
                       : "bg-primary text-white ring-primary shadow-primary/20"
                     )}>
-                      {selectedFlavors.length} / {maxScoops}
+                      {currentScoops} / {maxScoops}
                     </div>
                   )}
                 </div>
@@ -824,7 +825,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                 : "bg-white border-outline/10 hover:bg-surface-container-low cursor-pointer"
                             )}
                             onClick={count === 0 ? () => {
-                              if (selectedFlavors.length < maxScoops) {
+                              if (currentScoops < maxScoops) {
                                 setSelectedFlavors([...selectedFlavors, flavor.name]);
                               } else {
                                 toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
@@ -860,13 +861,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                 <span className="font-brand font-black text-primary text-base w-5 text-center">{count}</span>
                                 <button 
                                   onClick={() => {
-                                    if (selectedFlavors.length < maxScoops) {
+                                    if (currentScoops < maxScoops) {
                                       setSelectedFlavors([...selectedFlavors, flavor.name]);
                                     } else {
                                       toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
                                     }
                                   }}
-                                  disabled={selectedFlavors.length >= maxScoops}
+                                  disabled={currentScoops >= maxScoops}
                                   className="w-7 h-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-container active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
                                 >
                                   <Plus className="w-3.5 h-3.5 stroke-[3]" />
@@ -876,7 +877,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               <div
                                 className={cn(
                                   "w-full py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-bold text-[10px] uppercase tracking-widest transition-all text-center",
-                                  selectedFlavors.length >= maxScoops ? "opacity-50" : ""
+                                  currentScoops >= maxScoops ? "opacity-50" : ""
                                 )}
                               >
                                 Agregar
@@ -934,7 +935,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
 
                   {effectiveCurrentStepType === 'sauces' && (
                     <div className="flex flex-col gap-2">
-                      {(product.sauceOptions || SALSAS).map(sauce => (
+                      {[...(product.sauceOptions || SALSAS), 'Sin Salsa'].map(sauce => (
                         <button
                           key={sauce}
                           onClick={() => toggleSauce(sauce)}
