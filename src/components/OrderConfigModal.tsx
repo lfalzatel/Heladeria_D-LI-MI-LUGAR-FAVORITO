@@ -772,8 +772,8 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   )}
 
                   {effectiveCurrentStepType === 'includedToppings' && (
-                    <div className="flex flex-col gap-2">
-                      {['Maní', 'Bolitas de colores'].map(topping => {
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Maní', 'Bolitas de colores', 'Sin Toppings'].map(topping => {
                         const isSelected = selectedIncludedToppings.includes(topping);
                         return (
                           <button
@@ -786,17 +786,22 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               }
                             }}
                             className={cn(
-                              "relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all border-2 w-full text-left",
+                              "relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all border-2 text-left",
+                              topping === 'Sin Toppings' ? "col-span-2" : "col-span-1",
                               isSelected
-                                ? "bg-primary border-primary text-white shadow-md"
-                                : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low"
+                                ? (topping === 'Sin Toppings' ? "bg-slate-800 border-slate-800 text-white shadow-md" : "bg-primary border-primary text-white shadow-md")
+                                : (topping === 'Sin Toppings' ? "bg-red-50/60 border-red-200 text-red-600 border-dashed hover:bg-red-100/50" : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low")
                             )}
                           >
-                            <div className={cn("w-2 h-2 rounded-full shrink-0", isSelected ? "bg-white" : "bg-primary")} />
+                            {topping === 'Sin Toppings' ? (
+                              <Ban className={cn("w-4 h-4 shrink-0", isSelected ? "text-white" : "text-red-500")} />
+                            ) : (
+                              <div className={cn("w-2 h-2 rounded-full shrink-0", isSelected ? "bg-white" : "bg-primary")} />
+                            )}
                             <span className="font-black text-sm flex-1">{topping}</span>
                             {isSelected && (
-                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
-                                <Check className="w-3 h-3 text-primary stroke-[4]" />
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md shrink-0">
+                                <Check className={cn("w-3 h-3 stroke-[4]", topping === 'Sin Toppings' ? "text-slate-800" : "text-primary")} />
                               </motion.div>
                             )}
                           </button>
