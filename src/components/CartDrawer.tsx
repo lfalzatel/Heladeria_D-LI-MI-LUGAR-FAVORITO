@@ -754,9 +754,23 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                           .map(supply => {
                             const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
                             return (
-                              <div key={supply.id} className="flex items-center justify-between bg-white p-1.5 rounded-lg border border-indigo-50 shadow-sm">
-                                <span className="text-[10px] font-bold text-indigo-900">{supply.name}</span>
-                                <div className="flex items-center gap-2 bg-surface-container-low rounded p-0.5">
+                              <div 
+                                key={supply.id} 
+                                onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                className={cn(
+                                  "flex items-center justify-between p-1.5 rounded-lg border transition-all cursor-pointer select-none",
+                                  quantity > 0 
+                                    ? "bg-indigo-50/60 border-indigo-200 shadow-sm" 
+                                    : "bg-white border-indigo-50/30 opacity-70 hover:opacity-100"
+                                )}
+                              >
+                                <span className={cn("text-[10px] font-bold", quantity > 0 ? "text-indigo-900" : "text-slate-500")}>
+                                  {supply.name}
+                                </span>
+                                <div 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center gap-2 bg-surface-container-low rounded p-0.5"
+                                >
                                   <button
                                     onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
                                     disabled={quantity <= 0}

@@ -889,12 +889,24 @@ export default function MovementDetailModal({
                      {allPackaging.map(supply => {
                        const qty = editingPackagingData.find(p => p.supplyId === supply.id)?.quantity || 0;
                        return (
-                         <div key={supply.id} className="flex items-center justify-between p-3 bg-white border border-indigo-50 rounded-2xl shadow-sm">
+                         <div 
+                           key={supply.id} 
+                           onClick={() => handleUpdatePackagingQuantity(supply.id, 1)}
+                           className={cn(
+                             "flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer select-none",
+                             qty > 0 
+                               ? "bg-indigo-50/60 border-indigo-200 shadow-md" 
+                               : "bg-white border-indigo-50/30 opacity-70 hover:opacity-100 shadow-sm"
+                           )}
+                         >
                            <div>
-                             <p className="text-sm font-bold text-indigo-950">{supply.name}</p>
+                             <p className={cn("text-sm font-bold", qty > 0 ? "text-indigo-950" : "text-slate-500")}>{supply.name}</p>
                              <p className="text-[10px] text-indigo-400">{supply.stock} en inventario</p>
                            </div>
-                           <div className="flex items-center gap-3 bg-indigo-50/50 rounded-xl p-1 border border-indigo-100">
+                           <div 
+                             onClick={(e) => e.stopPropagation()}
+                             className="flex items-center gap-3 bg-indigo-50/50 rounded-xl p-1 border border-indigo-100"
+                           >
                              <button onClick={() => handleUpdatePackagingQuantity(supply.id, -1)} disabled={qty <= 0} className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-indigo-600 disabled:opacity-30">
                                <Minus className="w-4 h-4" />
                              </button>
