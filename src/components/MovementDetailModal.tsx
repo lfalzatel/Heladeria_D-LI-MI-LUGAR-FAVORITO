@@ -65,6 +65,7 @@ export default function MovementDetailModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'edit' | 'delete' | null>(null);
 
   const [isEditingPackaging, setIsEditingPackaging] = useState(false);
   const [allPackaging, setAllPackaging] = useState<any[]>([]);
@@ -166,8 +167,6 @@ export default function MovementDetailModal({
 
   const handleSavePayment = async () => {
     try {
-      // Determinar la colección correcta. Si tiene status que no sea completed/entregado, 
-      // o si explícitamente es un pedido no procesado en POS.
       const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
       const collectionName = isPedido ? 'pedidos' : 'sales';
       
@@ -188,7 +187,6 @@ export default function MovementDetailModal({
         updateData.splitDetails = deleteField();
       }
 
-      // Retry mechanism in case of WebChannel suspension errors (ERR_NETWORK_IO_SUSPENDED -> 400 Bad Request)
       let saved = false;
       let lastError = null;
       for (let i = 0; i < 2; i++) {
@@ -198,7 +196,6 @@ export default function MovementDetailModal({
           break;
         } catch (e: any) {
           lastError = e;
-          // Wait 500ms before retrying if it's a network glitch
           await new Promise(r => setTimeout(r, 500));
         }
       }
@@ -222,9 +219,7 @@ export default function MovementDetailModal({
     }
   };
 
-  const handleDeleteSale = async () => {
-    if (!window.confirm('⚠️ ADVERTENCIA: ¿Estás completamente seguro de que deseas eliminar esta venta? Esto restaurará los insumos al inventario y eliminará el registro monetario. Esta acción no se puede deshacer.')) return;
-
+  const executeDeleteSale = async () => {
     setIsDeleting(true);
     try {
       if (data.items?.length > 0) {
@@ -257,12 +252,11 @@ export default function MovementDetailModal({
       toast.error('Error al eliminar: ' + e.message);
     } finally {
       setIsDeleting(false);
+      setConfirmAction(null);
     }
   };
 
-  const handleEditSale = async () => {
-    if (!window.confirm('¿Editar esta venta? Los productos volverán al punto de venta y este registro se eliminará para que puedas cobrarlo nuevamente.')) return;
-
+  const executeEditSale = async () => {
     setIsDeleting(true);
     try {
       if (data.items?.length > 0) {
@@ -288,7 +282,6 @@ export default function MovementDetailModal({
       const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
       await deleteDoc(doc(db, collectionName, data.id));
 
-      // Load into cart
       const tableId = data.tableId || 'directa';
       useTableCartStore.setState((state) => ({
         ...state,
@@ -308,13 +301,13 @@ export default function MovementDetailModal({
 
       toast.success('Venta cargada en el mostrador para edición');
       onClose();
-      // Redirect to POS if needed, hash routing usually used
       window.location.hash = '#/';
     } catch (e) {
       console.error(e);
       toast.error('Error al editar la venta');
     } finally {
       setIsDeleting(false);
+      setConfirmAction(null);
     }
   };
 
@@ -324,13 +317,10 @@ export default function MovementDetailModal({
 
     setIsUploadingImage(true);
     try {
-      // Comprimir la imagen localmente a un string Base64 liviano (máximo 800px, calidad 0.6)
       const base64Image = await compressImage(file, 800, 800, 0.6);
 
-      // Enviar el mensaje con la imagen en base64
       if (setChatMessage && onSendMessage) {
         setChatMessage(`[IMG]${base64Image}`);
-        // Pequeño delay para que el estado se actualice
         setTimeout(() => onSendMessage(), 100);
       }
     } catch (err) {
@@ -338,7 +328,6 @@ export default function MovementDetailModal({
       alert('No se pudo procesar la imagen.');
     } finally {
       setIsUploadingImage(false);
-      // Reset el input
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -361,7 +350,6 @@ export default function MovementDetailModal({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] overflow-hidden"
           >
-            {/* Header */}
             <div className="px-6 pt-5 pb-4 border-b border-outline/10 flex items-center justify-between bg-white sticky top-0 z-10">
               <div className="flex items-center gap-4">
                  <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
@@ -375,7 +363,7 @@ export default function MovementDetailModal({
               <div className="flex items-center gap-2">
                 {(profile?.role === 'admin' || profile?.role === 'propietario') && isSale && (
                   <button 
-                    onClick={handleEditSale} 
+                    onClick={() => setConfirmAction('edit')} 
                     disabled={isDeleting}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-xs"
                   >
@@ -390,23 +378,18 @@ export default function MovementDetailModal({
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
-               {/* Status & Info */}
                {(() => {
                  const { date, time } = formatDateTime(data.createdAt);
                  return (
                    <div className="grid grid-cols-2 gap-3">
-                     {/* Estado */}
                       <div className={cn("rounded-2xl px-4 py-2 flex items-center justify-between ring-1 border shadow-sm col-span-2", cfg.ring, cfg.bg)}>
                         <p className={cn("text-[9px] font-black uppercase tracking-[0.2em]", cfg.color)}>Estado</p>
                         <p className={cn("font-headline font-black text-sm", cfg.color)}>{cfg.label}</p>
                       </div>
 
-                     {/* Origen (Cliente, Mesa o POS) */}
                      {(() => {
                         const cName = data.clienteName || data.userName || data.customerName || data.nombre || data.clientName;
                         const tName = data.tableName || data.mesa;
-
-                        // Detectar si es pedido a domicilio
                         const isDelivery = data.type === 'domicilio' || data.orderType === 'domicilio' || (!!data.address && data.address.trim().length > 0);
                         const isOnline   = data.type === 'online' || data.tableName === 'Pedido Online';
 
@@ -458,7 +441,6 @@ export default function MovementDetailModal({
 
                          return (
                            <div className="bg-surface-container/30 rounded-2xl px-4 py-3 flex flex-col gap-2 border border-outline/5 shadow-sm col-span-2">
-                             {/* Origen de venta */}
                              <div>
                                <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Origen de Venta</p>
                                <div className="flex items-center gap-2 mt-0.5">
@@ -471,7 +453,6 @@ export default function MovementDetailModal({
                                  </div>
                                </div>
                              </div>
-                             {/* Atendido por — en su propia fila para no desbordar */}
                              {(data.sellerName || data.staffName || data.vendorName || data.atendidoPor) && (
                                <div className="border-t border-outline/10 pt-2">
                                  <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Atendido por</p>
@@ -481,13 +462,11 @@ export default function MovementDetailModal({
                            </div>
                          );
                       })()}
-                     {/* Fecha y hora */}
                      <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm">
                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
                        <p className="font-headline font-bold text-on-surface text-xs">{date}</p>
                        <p className="text-[9px] text-secondary flex items-center gap-1"><Clock className="w-3 h-3" />{time}</p>
                      </div>
-                     {/* Método de pago */}
                      <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-1 border border-outline/5 shadow-sm relative">
                        <div className="flex items-center justify-between">
                          <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Pago</p>
@@ -572,7 +551,6 @@ export default function MovementDetailModal({
                  );
                })()}
 
-               {/* Nota General */}
                {data.note && (
                  <div className="bg-orange-500/10 rounded-2xl p-4 border border-orange-500/20 shadow-sm mb-4">
                    <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
@@ -665,7 +643,6 @@ export default function MovementDetailModal({
                   </div>
                </section>
 
-               {/* Address / Total */}
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {data.address && (
                     <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
@@ -682,7 +659,6 @@ export default function MovementDetailModal({
                   </div>
                </div>
 
-               {/* Chat Section (Optional) */}
                {isOnlinePedido && (
                  <section className="bg-surface-container/40 rounded-[2rem] p-5 border border-outline/10 h-[280px] flex flex-col shadow-inner">
                     <div className="flex items-center gap-2 text-secondary mb-4">
@@ -739,7 +715,7 @@ export default function MovementDetailModal({
                {(profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador') && (
                  <div className="px-4 sm:px-8 mt-6 pb-4">
                    <button 
-                     onClick={handleDeleteSale}
+                     onClick={() => setConfirmAction('delete')}
                      disabled={isDeleting}
                      className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-bold text-[11px] uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                    >
@@ -762,14 +738,12 @@ export default function MovementDetailModal({
                )}
             </div>
 
-            {/* Botones de acción */}
             {data && (
               (data.status !== 'entregado' && data.status !== 'rechazado' && data.status !== 'completed') ||
               (data.status === 'rechazado' && isStaff)
             ) && (onUpdateStatus || !isStaff) && (
               <div className="p-4 bg-white border-t border-outline/10 flex gap-2 rounded-b-[2.5rem]">
 
-                {/* STAFF: pendiente → Aceptar + Rechazar */}
                 {onUpdateStatus && data.status === 'pendiente' && (
                   <>
                     <button
@@ -792,7 +766,6 @@ export default function MovementDetailModal({
                   </>
                 )}
 
-                {/* STAFF: rechazado → Revertir Rechazo (Aceptar) */}
                 {onUpdateStatus && data.status === 'rechazado' && isStaff && (
                   <button
                     onClick={(e) => {
@@ -807,7 +780,6 @@ export default function MovementDetailModal({
                   </button>
                 )}
 
-                {/* STAFF: aceptado → Pedido Enviado (→ celebrado) */}
                 {onUpdateStatus && data.status === 'aceptado' && (
                   <button
                     onClick={(e) => { onUpdateStatus(data.id, 'celebrado', e); onClose(); }}
@@ -817,7 +789,6 @@ export default function MovementDetailModal({
                   </button>
                 )}
 
-                {/* STAFF: celebrado → Marcar Entregado */}
                 {onUpdateStatus && data.status === 'celebrado' && (
                   <button
                     onClick={(e) => { onUpdateStatus(data.id, 'entregado', e); onClose(); }}
@@ -827,7 +798,6 @@ export default function MovementDetailModal({
                   </button>
                 )}
 
-                {/* CLIENTE: puede confirmar entrega cuando está aceptado o celebrado */}
                 {!onUpdateStatus && (data.status === 'aceptado' || data.status === 'celebrado') && (
                   <button
                     onClick={(e) => onClose()}
@@ -844,11 +814,8 @@ export default function MovementDetailModal({
               </div>
             )}
 
-
-            {/* Chat footer */}
             {isOnlinePedido && setChatMessage && onSendMessage && (
               <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-2 rounded-b-[2.5rem]">
-                 {/* Botón adjuntar imagen */}
                  <input
                    ref={fileInputRef}
                    type="file"
@@ -908,7 +875,6 @@ export default function MovementDetailModal({
                    exit={{ opacity: 0, y: 50 }}
                    className="absolute inset-0 bg-surface-container-lowest z-50 flex flex-col rounded-[2.5rem] overflow-hidden"
                  >
-                   {/* header */}
                    <div className="p-5 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
                      <div>
                        <h3 className="font-black text-indigo-900 text-lg">Modificar Empaques</h3>
@@ -955,6 +921,71 @@ export default function MovementDetailModal({
                  </motion.div>
                )}
              </AnimatePresence>
+
+             <AnimatePresence>
+                {confirmAction && (
+                  <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setConfirmAction(null)}
+                      className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+                    />
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                      className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col items-center text-center gap-4 border border-outline/5 z-[260]"
+                    >
+                      <div className={cn(
+                        "w-14 h-14 rounded-2xl flex items-center justify-center",
+                        confirmAction === 'edit' ? "bg-primary/10 text-primary" : "bg-red-50 text-red-500"
+                      )}>
+                        {confirmAction === 'edit' ? <Edit3 className="w-7 h-7" /> : <AlertTriangle className="w-7 h-7" />}
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-headline font-black text-lg text-on-surface">
+                          {confirmAction === 'edit' ? '¿Deseas editar esta venta?' : '¿Eliminar esta venta?'}
+                        </h4>
+                        <p className="text-xs text-secondary font-semibold mt-2 leading-relaxed px-2">
+                          {confirmAction === 'edit' 
+                            ? 'Los productos volverán al punto de venta y este registro se eliminará para que puedas cobrarlo nuevamente con los cambios correspondientes.'
+                            : 'Esta acción no se puede deshacer. Se restaurarán los insumos al inventario y se eliminará el registro monetario definitivamente.'
+                          }
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3 w-full mt-2">
+                        <button
+                          onClick={() => setConfirmAction(null)}
+                          disabled={isDeleting}
+                          className="flex-1 h-12 rounded-xl border border-outline/10 text-xs font-bold text-secondary hover:bg-surface-container transition-all"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={confirmAction === 'edit' ? executeEditSale : executeDeleteSale}
+                          disabled={isDeleting}
+                          className={cn(
+                            "flex-1 h-12 rounded-xl text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg transition-all",
+                            confirmAction === 'edit' 
+                              ? "bg-primary hover:scale-[1.02] shadow-primary/15" 
+                              : "bg-red-600 hover:scale-[1.02] shadow-red-600/15"
+                          )}
+                        >
+                          {isDeleting ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            confirmAction === 'edit' ? 'Sí, Editar' : 'Sí, Eliminar'
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
           </motion.div>
         </div>
       )}
