@@ -160,7 +160,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         timestamp: serverTimestamp(),
         createdAt: serverTimestamp(), // Required by Firestore rules
         date: new Date().toISOString().split('T')[0],
-        hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
+        hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+        packagingSupplies: cart.packagingSupplies || [],
       };
 
       if (selectedCliente) {

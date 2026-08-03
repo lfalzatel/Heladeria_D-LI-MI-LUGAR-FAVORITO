@@ -68,12 +68,14 @@ export default function MovementDetailModal({
   const [confirmAction, setConfirmAction] = useState<'edit' | 'delete' | null>(null);
 
   const [isEditingPackaging, setIsEditingPackaging] = useState(false);
+  const [packagingSearch, setPackagingSearch] = useState('');
   const [allPackaging, setAllPackaging] = useState<any[]>([]);
   const [editingPackagingData, setEditingPackagingData] = useState<any[]>([]);
   const [isSavingPackaging, setIsSavingPackaging] = useState(false);
 
   const handleStartEditingPackaging = async () => {
     setIsEditingPackaging(true);
+    setPackagingSearch('');
     setEditingPackagingData(data.packagingSupplies || []);
     try {
       const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
@@ -655,6 +657,33 @@ export default function MovementDetailModal({
                   </div>
                </section>
 
+                {data.packagingSupplies && data.packagingSupplies.filter((p: any) => p.quantity > 0).length > 0 && (
+                  <section className="mt-2 mb-2">
+                    <div className="flex items-center justify-between mb-3 ml-1">
+                      <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-indigo-500/80">Empaques / Desechables</h4>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {data.packagingSupplies.filter((p: any) => p.quantity > 0).map((supply: any, idx: number) => (
+                        <div key={supply.supplyId || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-indigo-50 bg-indigo-50/20 shadow-sm">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0">
+                              <ShoppingBag className="w-5 h-5 text-indigo-500" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-xs text-indigo-950 truncate">{supply.name}</span>
+                              <span className="text-[9px] text-indigo-400 font-medium">Insumo de empaque</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100 flex-shrink-0">
+                            <span className="text-[10px] font-black text-indigo-900">Cant:</span>
+                            <span className="font-black text-indigo-950 text-xs">{supply.quantity}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {data.address && (
                     <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
@@ -740,7 +769,7 @@ export default function MovementDetailModal({
                {(data.status === 'entregado' || data.status === 'completed' || data.type === 'sale') && (
                  <div className="px-4 sm:px-8 mt-2 pb-4">
                    <button 
-                     onClick={handleStartEditingPackaging}
+                     onClick={() => { setPackagingSearch(''); handleStartEditingPackaging(); }}
                      className="w-full py-4 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-[11px] uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
                    >
                      <ShoppingBag className="w-4 h-4" />
@@ -897,8 +926,21 @@ export default function MovementDetailModal({
                      </button>
                    </div>
                    
+                   <div className="p-4 bg-indigo-50/50 border-b border-indigo-100 flex items-center gap-2">
+                     <ShoppingBag className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                     <input
+                       type="text"
+                       placeholder="Buscar empaques..."
+                       value={packagingSearch}
+                       onChange={(e) => setPackagingSearch(e.target.value)}
+                       className="flex-1 bg-white border border-indigo-100 rounded-xl text-xs px-3 py-2 outline-none focus:border-indigo-300 shadow-sm placeholder:text-slate-400"
+                     />
+                   </div>
+                   
                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                     {allPackaging.map(supply => {
+                     {allPackaging
+                       .filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase()))
+                       .map(supply => {
                        const qty = editingPackagingData.find(p => p.supplyId === supply.id)?.quantity || 0;
                        return (
                          <div 
