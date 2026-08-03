@@ -56,6 +56,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
 
   const [packagingSuppliesData, setPackagingSuppliesData] = useState<any[]>([]);
   const [packagingSearch, setPackagingSearch] = useState('');
+  const [isPackagingExpanded, setIsPackagingExpanded] = useState(false);
 
   // Fetch packaging supplies
   useEffect(() => {
@@ -713,7 +714,11 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                     <span className="font-black text-indigo-950 text-sm tracking-wide">PEDIDO PARA LLEVAR</span>
                   </div>
                   <button
-                    onClick={() => setTakeout(activeTable, !cart.isTakeout)}
+                    onClick={() => {
+                      const nextVal = !cart.isTakeout;
+                      setTakeout(activeTable, nextVal);
+                      setIsPackagingExpanded(nextVal);
+                    }}
                     className={cn(
                       "relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner",
                       cart.isTakeout ? "bg-indigo-600" : "bg-outline/20"
@@ -737,63 +742,89 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden pt-2 mt-2 border-t border-indigo-100 flex flex-col"
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="text-[9px] uppercase font-black tracking-widest text-indigo-400">Empaques</p>
-                        <input
-                          type="text"
-                          placeholder="Buscar..."
-                          value={packagingSearch}
-                          onChange={(e) => setPackagingSearch(e.target.value)}
-                          className="flex-1 bg-white border border-indigo-100 rounded text-[10px] px-2 py-1 outline-none focus:border-indigo-300"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1.5 overflow-y-auto max-h-[30vh] pr-1 styled-scrollbar">
-                        {packagingSuppliesData
-                          .filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase()))
-                          .sort((a, b) => a.name.localeCompare(b.name))
-                          .map(supply => {
-                            const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
-                            return (
-                              <div 
-                                key={supply.id} 
-                                onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
-                                className={cn(
-                                  "flex items-center justify-between p-1.5 rounded-lg border transition-all cursor-pointer select-none",
-                                  quantity > 0 
-                                    ? "bg-indigo-50/60 border-indigo-200 shadow-sm" 
-                                    : "bg-white border-indigo-50/30 opacity-70 hover:opacity-100"
-                                )}
-                              >
-                                <span className={cn("text-[10px] font-bold", quantity > 0 ? "text-indigo-900" : "text-slate-500")}>
-                                  {supply.name}
-                                </span>
-                                <div 
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-2 bg-surface-container-low rounded p-0.5"
-                                >
-                                  <button
-                                    onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
-                                    disabled={quantity <= 0}
-                                    className="p-0.5 rounded-sm hover:bg-white disabled:opacity-30 transition-colors"
-                                  >
-                                    <Minus className="w-3 h-3 text-indigo-600" />
-                                  </button>
-                                  <span className="text-[10px] font-black text-indigo-900 w-3 text-center">{quantity}</span>
-                                  <button
+                      {!isPackagingExpanded ? (
+                        <div className="flex items-center justify-between text-[11px] py-1.5 bg-white rounded-xl border border-indigo-100/50 px-2.5 shadow-sm">
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="font-black text-indigo-900 leading-none text-[9px] uppercase tracking-wide">Empaques seleccionados</p>
+                            <p className="text-[10px] text-indigo-700/80 truncate mt-1 font-bold">
+                              {cart.packagingSupplies?.filter(p => p.quantity > 0).map(p => `${p.name} (x${p.quantity})`).join(', ') || 'Ninguno'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setIsPackagingExpanded(true)}
+                            className="px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold rounded-lg text-[10px] transition-all active:scale-95 flex-shrink-0"
+                          >
+                            Modificar
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-[9px] uppercase font-black tracking-widest text-indigo-400">Empaques</p>
+                            <input
+                              type="text"
+                              placeholder="Buscar..."
+                              value={packagingSearch}
+                              onChange={(e) => setPackagingSearch(e.target.value)}
+                              className="flex-1 bg-white border border-indigo-100 rounded text-[10px] px-2 py-1 outline-none focus:border-indigo-300"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5 overflow-y-auto max-h-[22vh] pr-1 styled-scrollbar">
+                            {packagingSuppliesData
+                              .filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase()))
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map(supply => {
+                                const quantity = cart.packagingSupplies?.find(s => s.supplyId === supply.id)?.quantity || 0;
+                                return (
+                                  <div 
+                                    key={supply.id} 
                                     onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
-                                    className="p-0.5 rounded-sm hover:bg-white transition-colors"
+                                    className={cn(
+                                      "flex items-center justify-between p-1.5 rounded-lg border transition-all cursor-pointer select-none",
+                                      quantity > 0 
+                                        ? "bg-indigo-50/60 border-indigo-200 shadow-sm" 
+                                        : "bg-white border-indigo-50/30 opacity-70 hover:opacity-100"
+                                    )}
                                   >
-                                    <Plus className="w-3 h-3 text-indigo-600" />
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                        })}
-                        {packagingSuppliesData.filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase())).length === 0 && (
-                          <p className="text-[10px] text-center text-indigo-300 py-2">No se encontraron empaques.</p>
-                        )}
-                      </div>
+                                    <span className={cn("text-[10px] font-bold", quantity > 0 ? "text-indigo-900" : "text-slate-500")}>
+                                      {supply.name}
+                                    </span>
+                                    <div 
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center gap-2 bg-surface-container-low rounded p-0.5"
+                                    >
+                                      <button
+                                        onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
+                                        disabled={quantity <= 0}
+                                        className="p-0.5 rounded-sm hover:bg-white disabled:opacity-30 transition-colors"
+                                      >
+                                        <Minus className="w-3 h-3 text-indigo-600" />
+                                      </button>
+                                      <span className="text-[10px] font-black text-indigo-900 w-3 text-center">{quantity}</span>
+                                      <button
+                                        onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                        className="p-0.5 rounded-sm hover:bg-white transition-colors"
+                                      >
+                                        <Plus className="w-3 h-3 text-indigo-600" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                            })}
+                            {packagingSuppliesData.filter(s => s.name.toLowerCase().includes(packagingSearch.toLowerCase())).length === 0 && (
+                              <p className="text-[10px] text-center text-indigo-300 py-2">No se encontraron empaques.</p>
+                            )}
+                          </div>
+                          
+                          <button
+                            onClick={() => setIsPackagingExpanded(false)}
+                            className="mt-2 w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1"
+                          >
+                            Ocultar Lista y Ver Productos
+                          </button>
+                        </>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
