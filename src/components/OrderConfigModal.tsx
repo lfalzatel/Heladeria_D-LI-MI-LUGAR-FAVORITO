@@ -1033,42 +1033,42 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               key={fruta}
                               onClick={() => setExtraFrutas([...extraFrutas, fruta])}
                               className={cn(
-                                "relative flex items-center justify-between p-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none gap-2",
+                                "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none",
                                 count > 0 ? "bg-success/10 border-success shadow-sm" : "bg-white border-outline/10 hover:bg-surface-container-low"
                               )}>
-                              <div className="flex flex-col min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-lg shrink-0">{fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}</span>
-                                  <span className={cn("text-[11px] font-black leading-none truncate", count > 0 ? "text-success" : "text-on-surface")}>{fruta}</span>
+                              <div className="flex items-center justify-between gap-1.5 mb-2.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-xl shrink-0">{fruta === 'Fresa' ? '🍓' : fruta === 'Mango' ? '🥭' : fruta === 'Durazno' ? '🍑' : fruta === 'Manzana' ? '🍎' : fruta === 'Banano' ? '🍌' : fruta === 'Uva' ? '🍇' : fruta === 'Papaya' ? '🍈' : '🍍'}</span>
+                                  <span className={cn("text-[11px] font-black leading-tight truncate", count > 0 ? "text-success" : "text-on-surface")}>{fruta}</span>
                                 </div>
                                 {isIncluded && (
-                                  <span className="text-[7px] font-black text-secondary uppercase tracking-widest mt-1">Incluida</span>
+                                  <span className="text-[7px] font-black bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 scale-90">Incluida</span>
                                 )}
                               </div>
                               
-                              <div className="relative shrink-0 w-[68px] h-7">
+                              <div className="relative w-full h-8">
                                 <div
                                   onClick={e => e.stopPropagation()}
                                   className={cn(
-                                    "absolute inset-0 flex items-center gap-1 bg-white rounded-lg border border-outline/20 p-0.5 w-full justify-between",
+                                    "absolute inset-0 flex items-center justify-between bg-white rounded-xl border border-outline/10 p-0.5 w-full",
                                     count === 0 ? "invisible" : ""
                                   )}
                                 >
                                   <button
                                     onClick={() => { const idx = extraFrutas.indexOf(fruta); if (idx > -1) { const nf = [...extraFrutas]; nf.splice(idx, 1); setExtraFrutas(nf); }}}
-                                    className="w-5 h-5 flex items-center justify-center rounded bg-surface-container text-secondary text-xs font-bold"
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface-container text-secondary text-base font-bold leading-none"
                                   >−</button>
-                                  <span className="font-black text-success text-xs w-3 text-center">{count}</span>
+                                  <span className="font-black text-success text-sm w-4 text-center">{count}</span>
                                   <button
                                     onClick={() => setExtraFrutas([...extraFrutas, fruta])}
-                                    className="w-5 h-5 flex items-center justify-center rounded bg-success text-white"
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-success text-white"
                                   >
-                                    <Plus className="w-2.5 h-2.5 stroke-[3]" />
+                                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
                                   </button>
                                 </div>
                                 
                                 {count === 0 && (
-                                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-black text-[9px] uppercase tracking-wider transition-colors">
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-black text-[10px] uppercase tracking-wider transition-colors">
                                     Agregar
                                   </div>
                                 )}
@@ -1096,7 +1096,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               key={flavor.id}
                               onClick={() => setExtraFlavors([...extraFlavors, flavor.name])}
                               className={cn(
-                                "relative flex items-center justify-between p-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none gap-2",
+                                "relative flex flex-col p-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none",
                                 count > 0
                                   ? "bg-primary/5 border-primary shadow-sm"
                                   : isIncluded
@@ -1104,35 +1104,35 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                     : "bg-white border-outline/10 hover:bg-surface-container-low"
                               )}
                             >
-                              <div className="flex flex-col min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <IceCream className={cn("w-3.5 h-3.5 shrink-0", count > 0 ? "text-primary" : isIncluded ? "text-success" : "text-secondary")} />
-                                  <span className={cn("text-[11px] font-black leading-none truncate", count > 0 ? "text-primary" : isIncluded ? "text-success" : "text-on-surface")}>{flavor.name}</span>
+                              <div className="flex items-center justify-between gap-1.5 mb-2.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <IceCream className={cn("w-4 h-4 shrink-0", count > 0 ? "text-primary" : isIncluded ? "text-success" : "text-secondary")} />
+                                  <span className={cn("text-[11px] font-black leading-tight truncate", count > 0 ? "text-primary" : isIncluded ? "text-success" : "text-on-surface")}>{flavor.name}</span>
                                 </div>
                                 {isIncluded && (
-                                  <span className="text-[7px] font-black text-success uppercase tracking-widest mt-1">Incluido</span>
+                                  <span className="text-[7px] font-black bg-success/15 text-success px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 scale-90">Incluido</span>
                                 )}
                               </div>
                               
-                              <div className="relative shrink-0 w-[68px] h-7">
+                              <div className="relative w-full h-8">
                                 <div
                                   onClick={e => e.stopPropagation()}
                                   className={cn(
-                                    "absolute inset-0 flex items-center gap-1 bg-white rounded-lg border border-outline/20 p-0.5 w-full justify-between",
+                                    "absolute inset-0 flex items-center justify-between bg-white rounded-xl border border-outline/10 p-0.5 w-full",
                                     count === 0 ? "invisible" : ""
                                   )}
                                 >
-                                  <button onClick={() => { const idx = extraFlavors.indexOf(flavor.name); if (idx > -1) { const nf = [...extraFlavors]; nf.splice(idx, 1); setExtraFlavors(nf); }}} className="w-5 h-5 flex items-center justify-center rounded bg-surface-container text-secondary text-xs font-bold">
+                                  <button onClick={() => { const idx = extraFlavors.indexOf(flavor.name); if (idx > -1) { const nf = [...extraFlavors]; nf.splice(idx, 1); setExtraFlavors(nf); }}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface-container text-secondary text-base font-bold leading-none">
                                     −
                                   </button>
-                                  <span className="font-black text-primary text-xs w-3 text-center">{count}</span>
-                                  <button onClick={() => setExtraFlavors([...extraFlavors, flavor.name])} className="w-5 h-5 flex items-center justify-center rounded bg-primary text-white">
-                                    <Plus className="w-2.5 h-2.5 stroke-[3]" />
+                                  <span className="font-black text-primary text-sm w-4 text-center">{count}</span>
+                                  <button onClick={() => setExtraFlavors([...extraFlavors, flavor.name])} className="w-7 h-7 flex items-center justify-center rounded-lg bg-primary text-white">
+                                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
                                   </button>
                                 </div>
                                 
                                 {count === 0 && (
-                                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-black text-[9px] uppercase tracking-wider transition-colors">
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-black text-[10px] uppercase tracking-wider transition-colors">
                                     Agregar
                                   </div>
                                 )}
