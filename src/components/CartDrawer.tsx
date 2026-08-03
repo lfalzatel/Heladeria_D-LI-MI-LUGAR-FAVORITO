@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star, AlertTriangle } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -57,6 +57,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [packagingSuppliesData, setPackagingSuppliesData] = useState<any[]>([]);
   const [packagingSearch, setPackagingSearch] = useState('');
   const [isPackagingExpanded, setIsPackagingExpanded] = useState(false);
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   // Fetch packaging supplies
   useEffect(() => {
@@ -289,11 +290,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               <div className="flex items-center gap-3">
                 {cart?.items && cart.items.length > 0 && cart.items.some(item => !item.locked) && (
                   <button 
-                    onClick={() => {
-                      if (window.confirm('¿Estás seguro de que deseas vaciar el carrito por completo?')) {
-                        clearCart(activeTable);
-                      }
-                    }}
+                    onClick={() => setShowConfirmClear(true)}
                     className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-full shadow-sm hover:bg-red-100 transition-colors"
                     title="Vaciar todo el carrito"
                   >
@@ -309,6 +306,55 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 </button>
               </div>
             </header>
+
+            {/* Custom confirm clear modal */}
+            <AnimatePresence>
+               {showConfirmClear && (
+                 <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                   <motion.div
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     exit={{ opacity: 0 }}
+                     onClick={() => setShowConfirmClear(false)}
+                     className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+                   />
+                   <motion.div
+                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                     animate={{ scale: 1, opacity: 1, y: 0 }}
+                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                     className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col items-center text-center gap-4 border border-outline/5 z-[260]"
+                   >
+                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-50 text-red-500">
+                       <AlertTriangle className="w-7 h-7" />
+                     </div>
+                     <div>
+                       <h3 className="font-headline font-black text-lg text-on-surface">¿Vaciar el Carrito?</h3>
+                       <p className="text-xs text-secondary font-medium mt-2 leading-relaxed">
+                         Esta acción eliminará todos los productos cargados actualmente en este carrito. No podrás recuperarlos.
+                       </p>
+                     </div>
+                     <div className="grid grid-cols-2 gap-3 w-full mt-2">
+                       <button
+                         onClick={() => setShowConfirmClear(false)}
+                         className="py-3 px-4 rounded-xl border border-outline/10 text-on-surface font-bold text-xs hover:bg-surface-container-low transition-all active:scale-[0.98]"
+                       >
+                         Cancelar
+                       </button>
+                       <button
+                         onClick={async () => {
+                           await clearCart(activeTable);
+                           setShowConfirmClear(false);
+                           toast.success('Carrito vaciado exitosamente');
+                         }}
+                         className="py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs transition-all active:scale-[0.98]"
+                       >
+                         Sí, Vaciar
+                       </button>
+                     </div>
+                   </motion.div>
+                 </div>
+               )}
+            </AnimatePresence>
 
             {/* Items List */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6 hide-scrollbar">
