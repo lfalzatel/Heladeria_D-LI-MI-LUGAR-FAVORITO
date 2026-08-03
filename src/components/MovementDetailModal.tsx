@@ -5,7 +5,7 @@ import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, Cre
 import { cn, formatCurrency } from '../lib/utils';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { compressImage } from '../utils/imageCompressor';
-import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
@@ -76,7 +76,7 @@ export default function MovementDetailModal({
     setIsEditingPackaging(true);
     setEditingPackagingData(data.packagingSupplies || []);
     try {
-      const q = query(collection(db, 'supplies'), where('category', '==', 'Empaques'));
+      const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
       const snap = await getDocs(q);
       const packs = snap.docs.map(d => ({id: d.id, ...d.data()})).filter((s: any) => s.status !== 'inactivo');
       setAllPackaging(packs.sort((a,b) => a.name.localeCompare(b.name)));
@@ -259,6 +259,23 @@ export default function MovementDetailModal({
   const executeEditSale = async () => {
     setIsDeleting(true);
     try {
+      let targetTable = data.tableId || 'directa';
+      const cartsState = useTableCartStore.getState().carts;
+      const currentCart = cartsState[targetTable];
+      
+      if (currentCart && currentCart.items && currentCart.items.length > 0) {
+        const directaCart = cartsState['directa'];
+        if (!directaCart || !directaCart.items || directaCart.items.length === 0) {
+          targetTable = 'directa';
+          toast.info(`La mesa original (${data.tableName || targetTable}) está ocupada, cargando en Venta Directa.`);
+        } else {
+          toast.error(`La mesa original y Venta Directa están ocupadas. Por favor despeja un carrito antes de editar.`);
+          setIsDeleting(false);
+          setConfirmAction(null);
+          return;
+        }
+      }
+
       if (data.items?.length > 0) {
          await restoreInventory(data.items, data.packagingSupplies || []);
          const updatePromises = data.items.map((item: any) => 
@@ -282,24 +299,19 @@ export default function MovementDetailModal({
       const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
       await deleteDoc(doc(db, collectionName, data.id));
 
-      const tableId = data.tableId || 'directa';
-      useTableCartStore.setState((state) => ({
-        ...state,
-        activeTable: tableId,
-        carts: {
-          ...state.carts,
-          [tableId]: {
-            ...state.carts[tableId],
-            items: data.items,
-            note: data.note || '',
-            isTakeout: data.tableName?.toLowerCase().includes('llevar') || false,
-            packagingSupplies: data.packagingSupplies || [],
-            openedAt: data.createdAt ? new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toISOString() : new Date().toISOString()
-          }
-        }
-      }));
+      const newCart = {
+        items: data.items || [],
+        note: data.note || '',
+        isLocked: false,
+        isTakeout: data.tableName?.toLowerCase().includes('llevar') || false,
+        packagingSupplies: data.packagingSupplies || [],
+        openedAt: data.createdAt ? new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toISOString() : new Date().toISOString()
+      };
 
-      toast.success('Venta cargada en el mostrador para edición');
+      await setDoc(doc(db, 'tables', targetTable), { currentCart: newCart }, { merge: true });
+      useTableCartStore.setState({ activeTable: targetTable });
+
+      toast.success('Venta cargada para edición');
       onClose();
       window.location.hash = '#/';
     } catch (e) {
