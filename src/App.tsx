@@ -142,7 +142,7 @@ export default function App() {
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
-      <Toaster position="top-center" richColors />
+      <Toaster position="bottom-center" richColors />
       
       <AnimatePresence>
         {splashVisible && (
