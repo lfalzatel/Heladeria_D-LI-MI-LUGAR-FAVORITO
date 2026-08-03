@@ -21,6 +21,9 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
   const [isSaving, setIsSaving] = useState(false);
   const loadedVariantRef = useRef<string | null>(null);
 
+  const lastSavedRecipeRef = useRef<RecipeIngredient[] | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
   // Cargar receta cuando cambia el producto o la variante activa
   useEffect(() => {
     if (product && isOpen && loadedVariantRef.current !== activeVariant) {
@@ -44,24 +47,91 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         });
       };
 
+      let loadedRecipe: RecipeIngredient[] = [];
       if (activeVariant === 'base') {
-        setCurrentRecipe(product.recipe || []);
+        loadedRecipe = product.recipe || [];
       } else {
         const variant = product.variants?.find(v => v.label === activeVariant);
         if ((!variant?.recipe || variant.recipe.length === 0) && product.recipe && product.recipe.length > 0) {
-          setCurrentRecipe(syncWithSupplyYield([...product.recipe], activeVariant));
+          loadedRecipe = syncWithSupplyYield([...product.recipe], activeVariant);
           toast.info(`Cargada receta base para ${activeVariant}`);
         } else {
-          setCurrentRecipe(variant?.recipe || []);
+          loadedRecipe = variant?.recipe || [];
         }
       }
+      setCurrentRecipe(loadedRecipe);
+      lastSavedRecipeRef.current = loadedRecipe;
+      setSaveStatus('idle');
     }
     
     // Si se cierra el modal, reseteamos la referencia para que al volver a abrir se cargue
     if (!isOpen) {
       loadedVariantRef.current = null;
+      lastSavedRecipeRef.current = null;
     }
   }, [product, activeVariant, isOpen, supplies]);
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!lastSavedRecipeRef.current) return;
+
+    const isSame = JSON.stringify(currentRecipe) === JSON.stringify(lastSavedRecipeRef.current);
+    if (isSame) return;
+
+    setSaveStatus('saving');
+    const timer = setTimeout(async () => {
+      try {
+        await onSave(
+          product.id,
+          currentRecipe,
+          activeVariant === 'base' ? undefined : activeVariant
+        );
+        lastSavedRecipeRef.current = currentRecipe;
+        setSaveStatus('saved');
+      } catch (err) {
+        console.error(err);
+        setSaveStatus('error');
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [currentRecipe, onSave, product.id, activeVariant]);
+
+  const handleClose = async () => {
+    const isSame = JSON.stringify(currentRecipe) === JSON.stringify(lastSavedRecipeRef.current);
+    if (!isSame) {
+      try {
+        await onSave(
+          product.id,
+          currentRecipe,
+          activeVariant === 'base' ? undefined : activeVariant
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    onClose();
+  };
+
+  const handleSelectVariant = async (variant: string | 'base') => {
+    const isSame = JSON.stringify(currentRecipe) === JSON.stringify(lastSavedRecipeRef.current);
+    if (!isSame) {
+      setSaveStatus('saving');
+      try {
+        await onSave(
+          product.id,
+          currentRecipe,
+          activeVariant === 'base' ? undefined : activeVariant
+        );
+        lastSavedRecipeRef.current = currentRecipe;
+        setSaveStatus('saved');
+      } catch (err) {
+        console.error(err);
+        setSaveStatus('error');
+      }
+    }
+    setActiveVariant(variant);
+  };
 
   if (!isOpen || !product) return null;
 
@@ -121,6 +191,8 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         currentRecipe, 
         activeVariant === 'base' ? undefined : activeVariant
       );
+      lastSavedRecipeRef.current = currentRecipe;
+      setSaveStatus('saved');
       toast.success('Receta guardada correctamente');
       confetti({
         particleCount: 100,
@@ -159,7 +231,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
+        onClick={handleClose}
         className="absolute inset-0 bg-on-surface/60 backdrop-blur-md"
       />
       
@@ -176,13 +248,24 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
               <Database className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-on-surface leading-tight">Configurar Receta</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold text-lg text-on-surface leading-tight">Configurar Receta</h2>
+                {saveStatus === 'saving' && (
+                  <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold animate-pulse">Guardando...</span>
+                )}
+                {saveStatus === 'saved' && (
+                  <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">Guardado</span>
+                )}
+                {saveStatus === 'error' && (
+                  <span className="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-full font-bold">Error</span>
+                )}
+              </div>
               <p className="text-[10px] text-secondary font-black uppercase tracking-widest">
                 {product.name}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
+          <button onClick={handleClose} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
             <X className="w-5 h-5 text-on-surface" />
           </button>
         </div>
@@ -196,7 +279,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
               <label className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">Selecciona para qué variante:</label>
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => setActiveVariant('base')}
+                  onClick={() => handleSelectVariant('base')}
                   className={cn(
                     "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
                     activeVariant === 'base' ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white text-secondary border-outline/20"
@@ -207,7 +290,7 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
                 {product.variants.map(v => (
                   <button
                     key={v.label}
-                    onClick={() => setActiveVariant(v.label)}
+                    onClick={() => handleSelectVariant(v.label)}
                     className={cn(
                       "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
                       activeVariant === v.label ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white text-secondary border-outline/20"
@@ -369,10 +452,10 @@ export default function RecipeConfigModal({ isOpen, onClose, product, supplies, 
         {/* Footer Actions */}
         <div className="p-4 bg-white border-t border-outline/10 flex gap-3 shrink-0">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="flex-1 h-12 rounded-2xl font-bold text-sm text-secondary hover:bg-surface-container transition-colors"
           >
-            Cancelar
+            Cerrar
           </button>
           <button
             onClick={handleSave}

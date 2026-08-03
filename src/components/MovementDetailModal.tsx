@@ -157,6 +157,8 @@ export default function MovementDetailModal({
   if (!data) return null;
 
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
+  const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
+  const isSale = !isPedido;
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
   const isOnlinePedido = !!data.clienteId;
   const isToday = data?.createdAt && new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toDateString() === new Date().toDateString();
@@ -371,7 +373,7 @@ export default function MovementDetailModal({
                  </div>
               </div>
               <div className="flex items-center gap-2">
-                {(profile?.role === 'admin' || profile?.role === 'propietario') && data.type === 'sale' && (
+                {(profile?.role === 'admin' || profile?.role === 'propietario') && isSale && (
                   <button 
                     onClick={handleEditSale} 
                     disabled={isDeleting}
