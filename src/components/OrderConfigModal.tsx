@@ -296,8 +296,11 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
     }
 
     if (effectiveCurrentStepType === 'flavors' && currentScoops < maxScoops) {
-      toast.info(`Debes seleccionar ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
-      return;
+      const hasSinHelado = selectedFlavors.some(f => (f || '').toLowerCase() === 'sin helado');
+      if (!hasSinHelado) {
+        toast.info(`Debes seleccionar ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
+        return;
+      }
     }
 
     if (effectiveCurrentStepType === 'bases' && !selectedBaseChoice) {
@@ -829,13 +832,13 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                                 ? "bg-primary/5 border-primary shadow-sm"
                                 : "bg-white border-outline/10 hover:bg-surface-container-low cursor-pointer"
                             )}
-                            onClick={count === 0 ? () => {
+                            onClick={() => {
                               if (currentScoops < maxScoops) {
                                 setSelectedFlavors([...selectedFlavors, flavor.name]);
                               } else {
                                 toast.info(`Solo puedes elegir ${maxScoops} ${maxScoops === 1 ? 'sabor' : 'sabores'}`);
                               }
-                            } : undefined}
+                            }}
                           >
                             <div className="flex items-center gap-1.5 mb-2">
                               {flavor.name.toLowerCase() === 'sin helado' ? (
@@ -849,7 +852,10 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                               )}>{flavor.name}</span>
                             </div>
                             {count > 0 ? (
-                              <div className="flex items-center justify-between bg-white rounded-xl border border-outline/20 p-0.5 shadow-sm">
+                              <div 
+                                onClick={e => e.stopPropagation()}
+                                className="flex items-center justify-between bg-white rounded-xl border border-outline/20 p-0.5 shadow-sm"
+                              >
                                 <button 
                                   onClick={() => {
                                     const index = selectedFlavors.indexOf(flavor.name);
