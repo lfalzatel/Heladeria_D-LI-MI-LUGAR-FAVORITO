@@ -62,6 +62,8 @@ export default function OrderCard({
   pedido, isStaff, userId, onOpen, onUpdateStatus, isUpdating, onDeletePedido
 }: OrderCardProps & { onDeletePedido?: (id: string, e?: React.MouseEvent) => void }) {
   const cfg = getStatusConfig(pedido.status);
+  const isCredit = (pedido.paymentMethod || '').toLowerCase() === 'credito' || (pedido.paymentMethod || '').toLowerCase() === 'debe';
+  const pending = (pedido.total || 0) - (pedido.totalAbonado || 0);
   const { date, time } = formatOrderDate(pedido.createdAt);
   const singleItem = pedido.items?.length === 1 ? pedido.items[0] : null;
   const multiCount = pedido.items?.length || 0;
@@ -111,7 +113,7 @@ export default function OrderCard({
               <p className="font-brand font-black text-primary text-lg leading-none">{formatCurrency(pedido.total)}</p>
               <div className="flex items-center justify-end gap-1 mt-1 text-secondary/50">
                 <PaymentIcon method={pedido.paymentMethod} />
-                <span className="text-[9px] font-bold capitalize">{pedido.paymentMethod || 'Efectivo'}</span>
+                <span className="text-[9px] font-bold capitalize">{pedido.paymentMethod === 'credito' ? 'Debe' : (pedido.paymentMethod || 'Efectivo')}</span>
               </div>
             </div>
           </div>
@@ -128,7 +130,7 @@ export default function OrderCard({
               <p className="font-brand font-black text-primary text-lg leading-none">{formatCurrency(pedido.total)}</p>
               <div className="flex items-center justify-end gap-1 mt-1 text-secondary/50">
                 <PaymentIcon method={pedido.paymentMethod} />
-                <span className="text-[9px] font-bold capitalize">{pedido.paymentMethod || 'Efectivo'}</span>
+                <span className="text-[9px] font-bold capitalize">{pedido.paymentMethod === 'credito' ? 'Debe' : (pedido.paymentMethod || 'Efectivo')}</span>
               </div>
             </div>
           </div>
@@ -140,6 +142,16 @@ export default function OrderCard({
               <div className={cn("w-1.5 h-1.5 rounded-full", isActive && "animate-pulse", cfg.dot)} />
               <span className={cn("text-[9px] font-black uppercase tracking-widest", cfg.color)}>{cfg.label}</span>
             </div>
+
+            {isCredit && (
+              <div className={cn(
+                "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ring-1",
+                pending > 0 ? "bg-orange-50 border-orange-200 text-orange-600 ring-orange-500/10" : "bg-emerald-50 border-emerald-200 text-emerald-600 ring-emerald-500/10"
+              )}>
+                {pending > 0 ? `Pendiente: ${formatCurrency(pending)}` : 'Pagado'}
+              </div>
+            )}
+
             <span className="text-[9px] text-secondary/50 font-bold">{date} · {time}</span>
             {isStaff && pedido.clienteName && (
               <span className="text-[9px] text-secondary/50 font-bold">· {pedido.clienteName}</span>

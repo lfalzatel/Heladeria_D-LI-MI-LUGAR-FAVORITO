@@ -91,7 +91,7 @@ import { shareFileNative } from '../utils/nativeShareHelper';
 
 type MainTab = 'inventario' | 'personas' | 'operacion';
 type InventarioSubTab = 'insumos' | 'productos' | 'sabores' | 'categorias';
-type PersonasSubTab = 'equipo' | 'clientes';
+type PersonasSubTab = 'equipo' | 'clientes' | 'deudores';
 type OperacionSubTab = 'compras' | 'gastos' | 'mesas';
 
 interface UserProfile {
@@ -200,7 +200,34 @@ export default function Management() {
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<any | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
   const [userSales, setUserSales] = useState<any[]>([]);
+  const [allCreditSales, setAllCreditSales] = useState<any[]>([]);
+  const [allCreditPedidos, setAllCreditPedidos] = useState<any[]>([]);
+
+  const clientDebtMap = useMemo(() => {
+    const map: Record<string, { totalDebt: number; totalPaid: number; pending: number }> = {};
+    
+    const processDoc = (doc: any) => {
+      const cid = doc.clienteId;
+      if (!cid) return;
+      const total = doc.total || 0;
+      const paid = doc.totalAbonado || 0;
+      const pending = total - paid;
+      
+      if (!map[cid]) {
+        map[cid] = { totalDebt: 0, totalPaid: 0, pending: 0 };
+      }
+      map[cid].totalDebt += total;
+      map[cid].totalPaid += paid;
+      map[cid].pending += pending;
+    };
+
+    allCreditSales.forEach(processDoc);
+    allCreditPedidos.forEach(processDoc);
+    
+    return map;
+  }, [allCreditSales, allCreditPedidos]);
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<any | null>(null);
+  const [triggerAbonoOpen, setTriggerAbonoOpen] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -345,6 +372,18 @@ export default function Management() {
       (err) => console.error('Products listener error:', err)
     );
 
+    const unsubCreditSales = onSnapshot(
+      query(collection(db, 'sales'), where('paymentMethod', '==', 'credito')),
+      (snap) => setAllCreditSales(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.error('Credit sales listener error:', err)
+    );
+
+    const unsubCreditPedidos = onSnapshot(
+      query(collection(db, 'pedidos'), where('paymentMethod', '==', 'credito')),
+      (snap) => setAllCreditPedidos(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.error('Credit pedidos listener error:', err)
+    );
+
     return () => {
       unsubUsers();
       unsubSupplies();
@@ -352,6 +391,8 @@ export default function Management() {
       unsubExpenses();
       unsubExpenseCats();
       unsubProducts();
+      unsubCreditSales();
+      unsubCreditPedidos();
     };
   }, [currentUser]);
 
@@ -361,14 +402,23 @@ export default function Management() {
 
     setIsLoadingHistory(true);
     const isClient = selectedUserForHistory.role === 'cliente';
-    const colName = isClient ? 'pedidos' : 'sales';
-    const idField = isClient ? 'clienteId' : 'soldBy';
-    const orderByField = isClient ? 'createdAt' : 'timestamp';
 
-    const unsub = onSnapshot(
-      query(collection(db, colName), where(idField, '==', selectedUserForHistory.uid), orderBy(orderByField, 'desc')),
-      (snap) => {
-        const data = snap.docs.map((d) => {
+    if (isClient) {
+      let pedidosRaw: any[] = [];
+      let salesRaw: any[] = [];
+
+      const updateMergedSales = () => {
+        const merged = [...pedidosRaw, ...salesRaw].sort((a, b) => {
+          const tA = (a.createdAt || a.timestamp)?.toDate ? (a.createdAt || a.timestamp).toDate().getTime() : new Date(a.createdAt || a.timestamp).getTime();
+          const tB = (b.createdAt || b.timestamp)?.toDate ? (b.createdAt || b.timestamp).toDate().getTime() : new Date(b.createdAt || b.timestamp).getTime();
+          return tB - tA;
+        });
+        setUserSales(merged);
+      };
+
+      const qP = query(collection(db, 'pedidos'), where('clienteId', '==', selectedUserForHistory.uid));
+      const unsubP = onSnapshot(qP, (snap) => {
+        pedidosRaw = snap.docs.map((d) => {
           const item = d.data();
           const ts = item.createdAt || item.timestamp;
           const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
@@ -376,16 +426,56 @@ export default function Management() {
             id: d.id,
             ...item,
             hour: `${dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} - ${dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}`,
-            title: item.tableName || (isClient ? 'Pedido Online' : 'Venta POS'),
+            title: item.tableName || 'Pedido Online',
           };
         });
-        setUserSales(data);
+        updateMergedSales();
         setIsLoadingHistory(false);
-      },
-      (err) => { console.error('History error:', err); setIsLoadingHistory(false); }
-    );
-    
-    return () => unsub();
+      }, (err) => { console.error('History pedidos error:', err); setIsLoadingHistory(false); });
+
+      const qS = query(collection(db, 'sales'), where('clienteId', '==', selectedUserForHistory.uid));
+      const unsubS = onSnapshot(qS, (snap) => {
+        salesRaw = snap.docs.map((d) => {
+          const item = d.data();
+          const ts = item.createdAt || item.timestamp;
+          const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
+          return {
+            id: d.id,
+            ...item,
+            hour: `${dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} - ${dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}`,
+            title: item.tableName || 'Venta POS',
+          };
+        });
+        updateMergedSales();
+        setIsLoadingHistory(false);
+      }, (err) => { console.error('History sales error:', err); setIsLoadingHistory(false); });
+
+      return () => {
+        unsubP();
+        unsubS();
+      };
+    } else {
+      const unsub = onSnapshot(
+        query(collection(db, 'sales'), where('soldBy', '==', selectedUserForHistory.uid), orderBy('timestamp', 'desc')),
+        (snap) => {
+          const data = snap.docs.map((d) => {
+            const item = d.data();
+            const ts = item.timestamp;
+            const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
+            return {
+              id: d.id,
+              ...item,
+              hour: `${dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} - ${dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}`,
+              title: item.tableName || 'Venta POS',
+            };
+          });
+          setUserSales(data);
+          setIsLoadingHistory(false);
+        },
+        (err) => { console.error('History error:', err); setIsLoadingHistory(false); }
+      );
+      return () => unsub();
+    }
   }, [selectedUserForHistory]);
 
   // Ã¢â€â‚¬Ã¢â€â‚¬ Handlers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -1608,12 +1698,13 @@ export default function Management() {
                 exit={{ opacity: 0, x: 10 }}
                 className="flex flex-col gap-5"
               >
-                {/* Sub-tab bar: Equipo | Clientes */}
+                {/* Sub-tab bar: Equipo | Clientes | Deudores */}
                 <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
                   {(
                     [
                       { id: 'equipo', label: 'Equipo' },
                       { id: 'clientes', label: 'Clientes' },
+                      { id: 'deudores', label: 'Deudores' },
                     ] as { id: PersonasSubTab; label: string }[]
                   ).map((sub) => (
                     <button
@@ -1636,7 +1727,7 @@ export default function Management() {
                     <Search className="w-4 h-4 text-secondary/50 mr-2" />
                     <input
                       type="text"
-                      placeholder={`Buscar ${personasSubTab === 'equipo' ? 'miembro' : 'cliente'}...`}
+                      placeholder={`Buscar ${personasSubTab === 'equipo' ? 'miembro' : personasSubTab === 'clientes' ? 'cliente' : 'deudor'}...`}
                       value={userSearch}
                       onChange={(e) => setUserSearch(e.target.value)}
                       className="bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-secondary/40"
@@ -1650,8 +1741,21 @@ export default function Management() {
                       if (currentUser?.role === 'propietario' && u.role === 'admin') return false;
                       const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
                       const isStaff = ['admin', 'propietario', 'vendedor'].includes(u.role);
-                      const matchesTab = personasSubTab === 'equipo' ? isStaff : u.role === 'cliente';
+                      const matchesTab = 
+                        personasSubTab === 'equipo' 
+                          ? isStaff 
+                          : personasSubTab === 'clientes' 
+                            ? u.role === 'cliente'
+                            : u.role === 'cliente' && (clientDebtMap[u.uid]?.pending || 0) > 0;
                       return matchesSearch && matchesTab;
+                    })
+                    .sort((a, b) => {
+                      if (personasSubTab === 'deudores') {
+                        const debtA = clientDebtMap[a.uid]?.pending || 0;
+                        const debtB = clientDebtMap[b.uid]?.pending || 0;
+                        return debtB - debtA;
+                      }
+                      return 0; // Maintain alphabetical order otherwise
                     })
                     .map((user, i) => (
                       <motion.div
@@ -1694,6 +1798,16 @@ export default function Management() {
                               )}
                             </div>
                             <p className="text-[9px] text-secondary/40 font-medium truncate">{user.email}</p>
+                            {personasSubTab === 'deudores' && clientDebtMap[user.uid] && (
+                              <div className="mt-1 flex items-center gap-1.5">
+                                <span className="text-[9px] font-black uppercase text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-md">
+                                  Debe: {formatCurrency(clientDebtMap[user.uid].pending)}
+                                </span>
+                                <span className="text-[8px] font-bold text-secondary/60">
+                                  (Abonado: {formatCurrency(clientDebtMap[user.uid].totalPaid)})
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -2164,6 +2278,15 @@ export default function Management() {
             setIsPurchaseOpen(true);
           }}
         />
+        <MovementDetailModal
+          isOpen={!!selectedSaleDetail}
+          onClose={() => {
+            setSelectedSaleDetail(null);
+            setTriggerAbonoOpen(false);
+          }}
+          triggerAbonoOpen={triggerAbonoOpen}
+          data={selectedSaleDetail}
+        />
 
         {isProductModalOpen && (
           <ProductFormModal
@@ -2389,6 +2512,11 @@ export default function Management() {
                             itemCount={sale.items?.length || 0}
                             items={sale.items}
                             customerName={origin}
+                            totalAbonado={sale.totalAbonado || 0}
+                            onRegisterAbono={() => {
+                              setSelectedSaleDetail(sale);
+                              setTriggerAbonoOpen(true);
+                            }}
                             onClick={() => setSelectedSaleDetail(sale)}
                           />
                         );
@@ -2399,7 +2527,11 @@ export default function Management() {
 
                 <MovementDetailModal
                   isOpen={!!selectedSaleDetail}
-                  onClose={() => setSelectedSaleDetail(null)}
+                  onClose={() => {
+                    setSelectedSaleDetail(null);
+                    setTriggerAbonoOpen(false);
+                  }}
+                  triggerAbonoOpen={triggerAbonoOpen}
                   data={selectedSaleDetail}
                   profile={currentUser}
                   chatMessage={chatMessage}

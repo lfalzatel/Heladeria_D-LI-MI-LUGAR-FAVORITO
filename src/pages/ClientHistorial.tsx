@@ -56,8 +56,25 @@ export default function ClientHistorial() {
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
   
   const [activeTab, setActiveTab] = useState<'gastos' | 'historial' | 'reportes'>('gastos');
-  const [userSales, setUserSales] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [userSales, setUserSales] = useState<any[]>([]);
+
+  const clientDebtSummary = React.useMemo(() => {
+    let totalDebt = 0;
+    let totalPaid = 0;
+    userSales.forEach(s => {
+      const pm = (s.paymentMethod || '').toLowerCase();
+      if (pm === 'credito' || pm === 'debe') {
+        totalDebt += s.total || 0;
+        totalPaid += s.totalAbonado || 0;
+      }
+    });
+    return {
+      totalDebt,
+      totalPaid,
+      pending: totalDebt - totalPaid
+    };
+  }, [userSales]);
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [chatMessage, setChatMessage] = useState('');
@@ -136,15 +153,24 @@ export default function ClientHistorial() {
     if (!profile) return;
 
     setIsLoading(true);
-    // Para el cliente, el historial son sus propios 'pedidos'
-    const salesQ = query(
-      collection(db, 'pedidos'),
-      where('clienteId', '==', profile.uid),
-      orderBy('createdAt', 'desc')
-    );
+    let pedidosRaw: any[] = [];
+    let salesRaw: any[] = [];
 
-    const unsubscribe = onSnapshot(salesQ, (snapshot) => {
-      const data = snapshot.docs.map(doc => {
+    const updateMergedSales = () => {
+      const merged = [...pedidosRaw, ...salesRaw].sort((a, b) => {
+        const tA = (a.createdAt || a.timestamp)?.toDate ? (a.createdAt || a.timestamp).toDate().getTime() : new Date(a.createdAt || a.timestamp).getTime();
+        const tB = (b.createdAt || b.timestamp)?.toDate ? (b.createdAt || b.timestamp).toDate().getTime() : new Date(b.createdAt || b.timestamp).getTime();
+        return tB - tA;
+      });
+      setUserSales(merged);
+    };
+
+    const qP = query(
+      collection(db, 'pedidos'),
+      where('clienteId', '==', profile.uid)
+    );
+    const unsubP = onSnapshot(qP, (snap) => {
+      pedidosRaw = snap.docs.map(doc => {
         const item = doc.data();
         const ts = item.createdAt;
         const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
@@ -158,14 +184,43 @@ export default function ClientHistorial() {
           title: item.tableName || 'Pedido Online'
         };
       });
-      setUserSales(data);
+      updateMergedSales();
       setIsLoading(false);
     }, (error) => {
-      console.error("Error fetching user history:", error);
+      console.error("Error fetching user history pedidos:", error);
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    const qS = query(
+      collection(db, 'sales'),
+      where('clienteId', '==', profile.uid)
+    );
+    const unsubS = onSnapshot(qS, (snap) => {
+      salesRaw = snap.docs.map(doc => {
+        const item = doc.data();
+        const ts = item.timestamp;
+        const dateObj = ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date();
+        const hourStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dayStr = dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+
+        return { 
+          id: doc.id, 
+          ...item, 
+          hour: `${dayStr} - ${hourStr}`,
+          title: item.tableName || 'Venta POS'
+        };
+      });
+      updateMergedSales();
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching user history sales:", error);
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubP();
+      unsubS();
+    };
   }, [profile]);
 
   const handleSendMessage = async () => {
@@ -367,6 +422,24 @@ export default function ClientHistorial() {
                     )}
                   </div>
                 </div>
+
+                {/* Deuda / Abonos Summary Card */}
+                {clientDebtSummary.totalDebt > 0 && (
+                  <div className="grid grid-cols-2 gap-4 mb-5">
+                    <div className="bg-orange-50 border border-orange-200 rounded-[1.5rem] p-4 shadow-sm">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-orange-600 mb-1">Saldo Pendiente (Debe)</p>
+                      <p className="text-xl font-headline font-black text-orange-950">
+                        {formatCurrency(clientDebtSummary.pending)}
+                      </p>
+                    </div>
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-[1.5rem] p-4 shadow-sm">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-1">Total Abonado</p>
+                      <p className="text-xl font-headline font-black text-emerald-950">
+                        {formatCurrency(clientDebtSummary.totalPaid)}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Filters */}
                 <div className="space-y-3 mb-6">

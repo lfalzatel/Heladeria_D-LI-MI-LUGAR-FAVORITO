@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { cn, formatCurrency } from '../lib/utils';
 import { 
@@ -32,6 +32,8 @@ interface HistoryMovementCardProps {
   items?: any[];
   title?: string;
   customerName?: string;
+  totalAbonado?: number;
+  onRegisterAbono?: () => void;
   onClick: () => void;
 }
 
@@ -45,10 +47,14 @@ export default function HistoryMovementCard({
   items,
   title,
   customerName,
+  totalAbonado = 0,
+  onRegisterAbono,
   onClick 
 }: HistoryMovementCardProps) {
   const cfg = STATUS_CONFIG[status.toLowerCase()] || STATUS_CONFIG.pendiente;
   const paymentKey = paymentMethod?.toLowerCase() || 'efectivo';
+  const isCredit = paymentKey === 'credito' || paymentKey === 'debe';
+  const pending = total - totalAbonado;
   
   const firstItem = items && items.length > 0 ? items[0] : null;
 
@@ -96,7 +102,7 @@ export default function HistoryMovementCard({
               <p className="font-brand font-black text-primary text-xl leading-none">{formatCurrency(total)}</p>
               <div className="flex items-center justify-end gap-1.5 mt-1.5 text-secondary/40">
                 {PAYMENT_ICONS[paymentKey] || <Hash className="w-3.5 h-3.5" />}
-                <span className="text-[9px] font-black uppercase tracking-tighter">{paymentMethod}</span>
+                <span className="text-[9px] font-black uppercase tracking-tighter">{paymentMethod === 'credito' ? 'Debe' : paymentMethod}</span>
               </div>
             </div>
           </div>
@@ -104,11 +110,33 @@ export default function HistoryMovementCard({
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-outline/5 mt-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-1 shadow-sm", cfg.ring, cfg.bg)}>
             <div className={cn("w-1.5 h-1.5 rounded-full", (status === 'pendiente' || status === 'aceptado') && "animate-pulse", cfg.dot)} />
             <span className={cn("text-[9px] font-black uppercase tracking-widest", cfg.color)}>{cfg.label}</span>
           </div>
+
+          {isCredit && (
+            <div className={cn(
+              "flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border shadow-sm",
+              pending > 0 ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-emerald-50 border-emerald-200 text-emerald-600"
+            )}>
+              {pending > 0 ? `Pendiente: ${formatCurrency(pending)}` : 'Pagado'}
+            </div>
+          )}
+
+          {onRegisterAbono && pending > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRegisterAbono();
+              }}
+              className="px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white font-black text-[9px] uppercase tracking-wider rounded-full shadow-md shadow-orange-500/10 cursor-pointer active:scale-95 transition-all"
+            >
+              Abonar
+            </button>
+          )}
+
           <span className="text-[10px] font-black text-secondary/60 uppercase tracking-tight">
             {date}
           </span>

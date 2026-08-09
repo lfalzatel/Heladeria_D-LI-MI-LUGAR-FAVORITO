@@ -5,7 +5,7 @@ import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, Cre
 import { cn, formatCurrency } from '../lib/utils';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { compressImage } from '../utils/imageCompressor';
-import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
@@ -61,8 +61,9 @@ export default function MovementDetailModal({
   onSendMessage,
   isSending = false,
   onUpdateStatus,
-  onToggleItemPrepared
-}: MovementDetailModalProps) {
+  onToggleItemPrepared,
+  triggerAbonoOpen = false
+}: MovementDetailModalProps & { triggerAbonoOpen?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -73,6 +74,73 @@ export default function MovementDetailModal({
   const [allPackaging, setAllPackaging] = useState<any[]>([]);
   const [editingPackagingData, setEditingPackagingData] = useState<any[]>([]);
   const [isSavingPackaging, setIsSavingPackaging] = useState(false);
+
+  // Abonos state
+  const [showAbonoForm, setShowAbonoForm] = useState(false);
+  const [abonoMonto, setAbonoMonto] = useState('');
+  const [abonoMetodo, setAbonoMetodo] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
+  const [isSavingAbono, setIsSavingAbono] = useState(false);
+
+  React.useEffect(() => {
+    if (triggerAbonoOpen && data) {
+      const pending = data.total - (data.totalAbonado || 0);
+      setAbonoMonto(pending.toString());
+      setAbonoMetodo('Efectivo');
+      setShowAbonoForm(true);
+    } else {
+      setShowAbonoForm(false);
+    }
+  }, [triggerAbonoOpen, data]);
+
+  const handleSaveAbono = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data) return;
+    const amount = Number(abonoMonto) || 0;
+    const pending = data.total - (data.totalAbonado || 0);
+    
+    if (amount <= 0) {
+      toast.error('El monto del abono debe ser mayor a cero');
+      return;
+    }
+    if (amount > pending) {
+      toast.error(`El abono no puede superar el saldo pendiente ($${pending.toLocaleString('es-CO')})`);
+      return;
+    }
+
+    setIsSavingAbono(true);
+    try {
+      const newAbonado = (data.totalAbonado || 0) + amount;
+      
+      // Save abono document
+      await addDoc(collection(db, 'abonos'), {
+        clienteId: data.clienteId,
+        clienteName: data.clienteName || data.userName || data.customerName || 'Cliente',
+        pedidoId: data.id,
+        monto: amount,
+        paymentMethod: abonoMetodo,
+        createdAt: serverTimestamp(),
+        date: new Date().toISOString().split('T')[0],
+        hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
+      });
+
+      // Update original sale or pedido
+      const colName = data.isDirectPedido ? 'pedidos' : 'sales';
+      await updateDoc(doc(db, colName, data.id), {
+        totalAbonado: newAbonado
+      });
+
+      // Update local state directly so the UI responds immediately
+      data.totalAbonado = newAbonado;
+
+      toast.success('¡Abono registrado con éxito! ✓');
+      setShowAbonoForm(false);
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Error al registrar abono: ' + err.message);
+    } finally {
+      setIsSavingAbono(false);
+    }
+  };
 
   const handleStartEditingPackaging = async () => {
     setIsEditingPackaging(true);
@@ -497,70 +565,102 @@ export default function MovementDetailModal({
                        </div>
                        
                        {!isEditingPayment ? (
-                         <div className="flex items-center gap-1.5 mt-0.5">
-                           <PaymentIcon method={data.paymentMethod} />
-                           <p className="font-headline font-bold text-on-surface text-xs capitalize">{data.paymentMethod || 'Efectivo'}</p>
-                           {data.isMixto && data.splitDetails && (
-                             <span className="text-[9px] text-secondary font-bold ml-1">
-                               (Efe: {formatCurrency(data.splitDetails.efectivo)} / Trans: {formatCurrency(data.splitDetails.transferencia)})
-                             </span>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="flex flex-col gap-2 mt-1">
-                           <select
-                             value={editPaymentMethod}
-                             onChange={(e) => setEditPaymentMethod(e.target.value)}
-                             className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full cursor-pointer"
-                           >
-                             <option value="Efectivo">Efectivo</option>
-                             <option value="Nequi">Nequi</option>
-                             <option value="Daviplata">Daviplata</option>
-                             <option value="Tarjeta">Tarjeta</option>
-                             <option value="Transferencia">Transferencia</option>
-                             <option value="Mixto">Mixto</option>
-                             <option value="credito">Crédito</option>
-                           </select>
-                           
-                           {editPaymentMethod === 'Mixto' && (
-                             <div className="flex flex-col gap-1.5">
-                               <div className="flex flex-col gap-0.5">
-                                 <label className="text-[8px] font-black uppercase text-secondary/60">Monto Efectivo</label>
-                                 <input
-                                   type="number"
-                                   value={editEfectivo}
-                                   onChange={(e) => setEditEfectivo(Number(e.target.value) || 0)}
-                                   className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full"
-                                 />
-                               </div>
-                               <div className="flex flex-col gap-0.5">
-                                 <label className="text-[8px] font-black uppercase text-secondary/60">Monto Transferencia (Calculado)</label>
-                                 <input
-                                   type="number"
-                                   disabled
-                                   value={data.total - editEfectivo}
-                                   className="bg-surface-container border border-outline/10 rounded-lg text-xs p-1.5 w-full text-secondary"
-                                 />
-                               </div>
-                             </div>
-                           )}
-                           
-                           <div className="flex gap-2 mt-1">
-                             <button
-                               onClick={() => setIsEditingPayment(false)}
-                               className="flex-1 py-1.5 text-[9px] font-bold text-secondary bg-surface-container rounded-md hover:bg-surface-container-high cursor-pointer"
-                             >
-                               Cancelar
-                             </button>
-                             <button
-                               onClick={handleSavePayment}
-                               className="flex-1 py-1.5 text-[9px] font-bold text-white bg-primary rounded-md hover:bg-primary/90 cursor-pointer"
-                             >
-                               Guardar
-                             </button>
-                           </div>
-                         </div>
-                       )}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <PaymentIcon method={data.paymentMethod} />
+                            <p className="font-headline font-bold text-on-surface text-xs capitalize">{data.paymentMethod === 'credito' ? 'Debe' : (data.paymentMethod || 'Efectivo')}</p>
+                            {data.isMixto && data.splitDetails && (
+                              <span className="text-[9px] text-secondary font-bold ml-1">
+                                (Efe: {formatCurrency(data.splitDetails.efectivo)} / Trans: {formatCurrency(data.splitDetails.transferencia)})
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2 mt-1">
+                            <select
+                              value={editPaymentMethod}
+                              onChange={(e) => setEditPaymentMethod(e.target.value)}
+                              className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full cursor-pointer"
+                            >
+                              <option value="Efectivo">Efectivo</option>
+                              <option value="Nequi">Nequi</option>
+                              <option value="Daviplata">Daviplata</option>
+                              <option value="Tarjeta">Tarjeta</option>
+                              <option value="Transferencia">Transferencia</option>
+                              <option value="Mixto">Mixto</option>
+                              <option value="credito">Debe (Crédito)</option>
+                            </select>
+                            
+                            {editPaymentMethod === 'Mixto' && (
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex flex-col gap-0.5">
+                                  <label className="text-[8px] font-black uppercase text-secondary/60">Monto Efectivo</label>
+                                  <input
+                                    type="number"
+                                    value={editEfectivo}
+                                    onChange={(e) => setEditEfectivo(Number(e.target.value) || 0)}
+                                    className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-0.5">
+                                  <label className="text-[8px] font-black uppercase text-secondary/60">Monto Transferencia (Calculado)</label>
+                                  <input
+                                    type="number"
+                                    disabled
+                                    value={data.total - editEfectivo}
+                                    className="bg-surface-container border border-outline/10 rounded-lg text-xs p-1.5 w-full text-secondary"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="flex gap-2 mt-1">
+                              <button
+                                onClick={() => setIsEditingPayment(false)}
+                                className="flex-1 py-1.5 text-[9px] font-bold text-secondary bg-surface-container rounded-md hover:bg-surface-container-high cursor-pointer"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleSavePayment}
+                                className="flex-1 py-1.5 text-[9px] font-bold text-white bg-primary rounded-md hover:bg-primary/90 cursor-pointer"
+                              >
+                                Guardar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {data.paymentMethod === 'credito' && (
+                          <div className="mt-2.5 pt-2.5 border-t border-outline/10 flex flex-col gap-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-secondary font-bold">Total Deuda:</span>
+                              <span className="font-black text-on-surface">{formatCurrency(data.total)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-secondary font-bold">Total Abonado:</span>
+                              <span className="font-black text-emerald-600">{formatCurrency(data.totalAbonado || 0)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-secondary font-bold">Saldo Pendiente:</span>
+                              <span className="font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md">
+                                {formatCurrency(data.total - (data.totalAbonado || 0))}
+                              </span>
+                            </div>
+                            {data.total - (data.totalAbonado || 0) > 0 && !showAbonoForm && (
+                              <button
+                                onClick={() => {
+                                  setAbonoMonto((data.total - (data.totalAbonado || 0)).toString());
+                                  setAbonoMetodo('Efectivo');
+                                  setShowAbonoForm(true);
+                                }}
+                                className="w-full mt-1.5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-500/10 active:scale-[0.98] flex items-center justify-center gap-1.5"
+                              >
+                                <Clock className="w-4 h-4" />
+                                Registrar Abono
+                              </button>
+                            )}
+                          </div>
+                        )}
                      </div>
                    </div>
                  );
@@ -1049,6 +1149,113 @@ export default function MovementDetailModal({
                           )}
                         </button>
                       </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+
+              {/* Modal para Registrar Abono */}
+              <AnimatePresence>
+                {showAbonoForm && (
+                  <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setShowAbonoForm(false)}
+                      className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+                    />
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                      className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 border border-outline/5 z-[260]"
+                    >
+                      <div className="flex justify-between items-center pb-2 border-b border-outline/5">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-5 h-5 text-orange-500" />
+                          <h3 className="font-headline font-black text-lg text-on-surface">Registrar Abono</h3>
+                        </div>
+                        <button 
+                          onClick={() => setShowAbonoForm(false)} 
+                          className="p-1 rounded-full hover:bg-surface-container text-secondary transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSaveAbono} className="flex flex-col gap-4">
+                        <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100 flex flex-col gap-1">
+                          <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest">Saldo Pendiente Actual</p>
+                          <p className="text-xl font-headline font-black text-orange-950">
+                            {formatCurrency(data.total - (data.totalAbonado || 0))}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Monto a Abonar ($) *</label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            max={data.total - (data.totalAbonado || 0)}
+                            value={abonoMonto}
+                            onChange={e => setAbonoMonto(e.target.value)}
+                            placeholder="Ej. 5000"
+                            className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-3 px-4 font-bold text-on-surface outline-none transition-all"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Método de Pago *</label>
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                            <button
+                              type="button"
+                              onClick={() => setAbonoMetodo('Efectivo')}
+                              className={cn(
+                                "py-3 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1 transition-all",
+                                abonoMetodo === 'Efectivo' 
+                                  ? "border-primary bg-primary/5 text-primary" 
+                                  : "border-outline/10 text-secondary hover:bg-surface-container"
+                              )}
+                            >
+                              <Banknote className="w-4 h-4" />
+                              Efectivo
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAbonoMetodo('Transferencia')}
+                              className={cn(
+                                "py-3 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1 transition-all",
+                                abonoMetodo === 'Transferencia' 
+                                  ? "border-primary bg-primary/5 text-primary" 
+                                  : "border-outline/10 text-secondary hover:bg-surface-container"
+                              )}
+                            >
+                              <Smartphone className="w-4 h-4" />
+                              Transferencia
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          <button
+                            type="button"
+                            disabled={isSavingAbono}
+                            onClick={() => setShowAbonoForm(false)}
+                            className="py-3.5 px-4 rounded-xl border border-outline/10 text-on-surface font-bold text-xs hover:bg-surface-container-low transition-all disabled:opacity-50"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSavingAbono}
+                            className="py-3.5 px-4 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs transition-all flex items-center justify-center disabled:opacity-50"
+                          >
+                            {isSavingAbono ? 'Registrando...' : 'Registrar'}
+                          </button>
+                        </div>
+                      </form>
                     </motion.div>
                   </div>
                 )}

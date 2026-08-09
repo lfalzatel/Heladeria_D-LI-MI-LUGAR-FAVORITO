@@ -71,6 +71,7 @@ export default function Dashboard() {
   const [supplies, setSupplies] = useState<any[]>([]);
   const [creditPedidosRaw, setCreditPedidosRaw] = useState<any[]>([]);
   const [creditSalesRaw, setCreditSalesRaw] = useState<any[]>([]);
+  const [abonos, setAbonos] = useState<any[]>([]);
 
   const creditPedidos = React.useMemo(() => {
     return [...creditPedidosRaw, ...creditSalesRaw].sort((a, b) => {
@@ -159,6 +160,16 @@ export default function Dashboard() {
       setCreditSalesRaw(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
+    // Listen to ABONOS
+    const qAbonos = query(
+      collection(db, 'abonos'),
+      orderBy('createdAt', 'desc'),
+      limit(1000)
+    );
+    const unsubAbonos = onSnapshot(qAbonos, snap => {
+      setAbonos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
     const unsubCart = initialize();
 
     return () => {
@@ -169,6 +180,7 @@ export default function Dashboard() {
       unsubGastos();
       unsubCredit();
       unsubCreditSales();
+      unsubAbonos();
       unsubCart();
     };
   }, [profile, initialize]);
@@ -203,7 +215,17 @@ export default function Dashboard() {
 
   // â”€â”€ COMPUTED METRICS â”€â”€
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
-  const totalIngresos = ingresosSales.reduce((s, x) => s + (x.total || 0), 0);
+
+  // Abonos for current period
+  const abonosPeriod = React.useMemo(() => {
+    return abonos.filter(a => {
+      const timestamp = a.timestamp || a.createdAt;
+      return isInPeriod(timestamp, dashboardFilter, selectedDate, selectedMonth, selectedWeek);
+    });
+  }, [abonos, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
+
+  const totalAbonosPeriod = abonosPeriod.reduce((s, a) => s + (a.monto || 0), 0);
+  const totalIngresos = ingresosSales.reduce((s, x) => s + (x.total || 0), 0) + totalAbonosPeriod;
   
   let efectivo = 0;
   let tarjeta = 0;
@@ -224,6 +246,15 @@ export default function Dashboard() {
       } else {
         efectivo += (s.total || 0);
       }
+    }
+  });
+
+  abonosPeriod.forEach(a => {
+    const pm = (a.paymentMethod || '').toLowerCase();
+    if (['transfer', 'transferencia', 'digital', 'nequi', 'daviplata'].includes(pm)) {
+      transferencia += (a.monto || 0);
+    } else {
+      efectivo += (a.monto || 0);
     }
   });
 
@@ -271,11 +302,13 @@ export default function Dashboard() {
   creditPedidos.forEach(p => {
     const k = p.clienteId || p.clienteName || 'desconocido';
     if (!deudaMap[k]) deudaMap[k] = { clienteId: k, name: p.clienteName || 'Cliente', total: 0, pedidos: [] };
-    deudaMap[k].total += p.total || 0;
+    deudaMap[k].total += (p.total || 0) - (p.totalAbonado || 0);
     deudaMap[k].pedidos.push(p);
   });
-  const deudaByClient = Object.values(deudaMap).sort((a, b) => b.total - a.total);
-  const totalDeuda = creditPedidos.reduce((s, p) => s + (p.total || 0), 0);
+  const deudaByClient = Object.values(deudaMap)
+    .filter(c => c.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const totalDeuda = creditPedidos.reduce((s, p) => s + ((p.total || 0) - (p.totalAbonado || 0)), 0);
 
   const filterLabel = (() => {
     if (selectedDate) {
