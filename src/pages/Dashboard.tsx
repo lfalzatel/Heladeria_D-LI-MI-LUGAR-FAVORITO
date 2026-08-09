@@ -69,7 +69,16 @@ export default function Dashboard() {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [gastosOperativos, setGastosOperativos] = useState<any[]>([]);
   const [supplies, setSupplies] = useState<any[]>([]);
-  const [creditPedidos, setCreditPedidos] = useState<any[]>([]);
+  const [creditPedidosRaw, setCreditPedidosRaw] = useState<any[]>([]);
+  const [creditSalesRaw, setCreditSalesRaw] = useState<any[]>([]);
+
+  const creditPedidos = React.useMemo(() => {
+    return [...creditPedidosRaw, ...creditSalesRaw].sort((a, b) => {
+      const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
+      const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
+      return tB - tA;
+    });
+  }, [creditPedidosRaw, creditSalesRaw]);
   
   // Modals state
   const [openModal, setOpenModal] = useState<string | null>(null);
@@ -136,7 +145,18 @@ export default function Dashboard() {
       limit(1000)
     );
     const unsubCredit = onSnapshot(qCredit, snap => {
-      setCreditPedidos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setCreditPedidosRaw(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    // Listen to CREDIT SALES
+    const qCreditSales = query(
+      collection(db, 'sales'),
+      where('paymentMethod', '==', 'credito'),
+      orderBy('timestamp', 'desc'),
+      limit(1000)
+    );
+    const unsubCreditSales = onSnapshot(qCreditSales, snap => {
+      setCreditSalesRaw(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
     const unsubCart = initialize();
@@ -148,6 +168,7 @@ export default function Dashboard() {
       unsubPurchases();
       unsubGastos();
       unsubCredit();
+      unsubCreditSales();
       unsubCart();
     };
   }, [profile, initialize]);
@@ -633,17 +654,6 @@ export default function Dashboard() {
             onOpen={() => open('ingresos')}
             index={0}
           />
-          <MetricCard
-            icon={<CreditCard className="w-5 h-5" />}
-            label="Vtas. a Crédito"
-            value={formatCurrency(totalCredito)}
-            numericValue={totalCredito}
-            isCurrency={true}
-            sub={filterLabel}
-            accent="orange"
-            onOpen={() => open('credito')}
-            index={1}
-          />
           {profile?.role !== 'vendedor' && (
             <MetricCard
               icon={<TrendingDown className="w-5 h-5" />}
@@ -654,7 +664,7 @@ export default function Dashboard() {
               sub={filterLabel}
               accent="amber"
               onOpen={() => open('egresos')}
-              index={2}
+              index={1}
             />
           )}
           {profile?.role !== 'vendedor' && (
@@ -668,7 +678,7 @@ export default function Dashboard() {
               badge={{ text: gananciaNeta >= 0 ? '+ RENTABLE' : '- PÉRDIDA', color: gananciaNeta >= 0 ? 'bg-[#d1fae5] text-[#047857]' : 'bg-[#fee2e2] text-[#b91c1c]' }}
               accent="blue"
               onOpen={() => open('ganancia')}
-              index={3}
+              index={2}
             />
           )}
           <MetricCard
@@ -678,7 +688,41 @@ export default function Dashboard() {
             sub={`${starProduct?.units || 0} uds`}
             accent="amber"
             onOpen={() => open('ranking')}
+            index={3}
+          />
+          <MetricCard
+            icon={<AlertCircle className="w-5 h-5" />}
+            label="Stock"
+            value={criticalSupplies.length.toString()}
+            numericValue={criticalSupplies.length}
+            isCurrency={false}
+            sub="Items críticos"
+            badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-[#fee2e2] text-[#b91c1c]' } : null}
+            accent="orange"
+            onOpen={() => setIsStockModalOpen(true)}
             index={4}
+          />
+          <MetricCard
+            icon={<Trophy className="w-5 h-5" />}
+            label="Fidelidad"
+            value={totalPremiosFidelidad.toString()}
+            numericValue={totalPremiosFidelidad}
+            isCurrency={false}
+            sub="Premios"
+            accent="fuchsia"
+            onOpen={() => open('premios')}
+            index={5}
+          />
+          <MetricCard
+            icon={<CreditCard className="w-5 h-5" />}
+            label="Vtas. a Crédito"
+            value={formatCurrency(totalCredito)}
+            numericValue={totalCredito}
+            isCurrency={true}
+            sub={filterLabel}
+            accent="orange"
+            onOpen={() => open('credito')}
+            index={6}
           />
           {profile?.role !== 'vendedor' && (
             <MetricCard
@@ -690,32 +734,9 @@ export default function Dashboard() {
               sub="Total Histórico"
               accent="orange"
               onOpen={() => open('deuda')}
-              index={5}
+              index={7}
             />
           )}
-          <MetricCard
-            icon={<AlertCircle className="w-5 h-5" />}
-            label="Stock"
-            value={criticalSupplies.length.toString()}
-            numericValue={criticalSupplies.length}
-            isCurrency={false}
-            sub="Items críticos"
-            badge={criticalSupplies.length > 0 ? { text: 'REVISAR', color: 'bg-[#fee2e2] text-[#b91c1c]' } : null}
-            accent="orange"
-            onOpen={() => setIsStockModalOpen(true)}
-            index={6}
-          />
-          <MetricCard
-            icon={<Trophy className="w-5 h-5" />}
-            label="Fidelidad"
-            value={totalPremiosFidelidad.toString()}
-            numericValue={totalPremiosFidelidad}
-            isCurrency={false}
-            sub="Premios"
-            accent="fuchsia"
-            onOpen={() => open('premios')}
-            index={7}
-          />
         </div>
 
         {/* CHARTS (Admin Only) */}

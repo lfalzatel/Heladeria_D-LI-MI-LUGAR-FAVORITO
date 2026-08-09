@@ -58,7 +58,7 @@ service cloud.firestore {
     function isValidSale(data) {
       return data.items is list && data.items.size() > 0 &&
              data.total is number && data.total >= 0 &&
-             data.paymentMethod in ['Efectivo', 'Transferencia', 'Tarjeta', 'Mixto'] &&
+             data.paymentMethod in ['Efectivo', 'Transferencia', 'Tarjeta', 'Mixto', 'credito'] &&
              data.status in ['completed', 'cancelled'] &&
              (data.soldBy == request.auth.uid || data.sellerId == request.auth.uid);
     }

@@ -37,7 +37,8 @@ import {
   Droplet,
   Zap,
   Flame,
-  Home
+  Home,
+  Clock
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -91,6 +92,7 @@ export default function ClientHistorial() {
     const m = (method || '').toLowerCase();
     if (m.includes('efectivo') || m.includes('cash')) return <Banknote className="w-3 h-3" />;
     if (m.includes('nequi') || m.includes('daviplata') || m.includes('pse')) return <Smartphone className="w-3 h-3" />;
+    if (m.includes('credito') || m.includes('debe')) return <Clock className="w-3 h-3 text-orange-500" />;
     return <CreditCard className="w-3.5 h-3.5 text-secondary" />;
   };
 

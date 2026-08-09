@@ -1,5 +1,4 @@
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star, AlertTriangle } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star, AlertTriangle, UserPlus, Clock } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -25,7 +24,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const { activeTable, carts, removeItem, updateQuantity, clearCart, getTotal, updateNote, toggleLock, setTakeout, updatePackagingSupply } = useTableCartStore();
   const { profile } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Mixto'>('Efectivo');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'credito' | 'Mixto'>('Efectivo');
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: '', transferencia: '' });
 
   interface ClienteOption {
@@ -58,6 +57,11 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [packagingSearch, setPackagingSearch] = useState('');
   const [isPackagingExpanded, setIsPackagingExpanded] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [showCreateClientModal, setShowCreateClientModal] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [isSavingClient, setIsSavingClient] = useState(false);
 
   // Fetch packaging supplies
   useEffect(() => {
@@ -130,6 +134,12 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
     
     setIsProcessing(true);
     try {
+      if (paymentMethod === 'credito' && !selectedCliente) {
+         toast.error('Debes asociar un cliente para registrar una venta a crédito (Debe)');
+         setIsProcessing(false);
+         return;
+      }
+
       let totalStr = total.toString();
       if (paymentMethod === 'Mixto') {
         const ef = Number(splitAmounts.efectivo) || 0;
@@ -218,7 +228,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       toast.success('¡Venta realizada con éxito!');
       notifyAdmins(
         "🍦 Nueva venta realizada",
-        `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : paymentMethod}`
+        `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : (paymentMethod === 'credito' ? 'Debe' : paymentMethod)}`
       );
 
       const completedSale = {
@@ -531,57 +541,73 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                       <User className="w-4 h-4 text-primary" />
                       Asociar Cliente (Recibo Digital)
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Buscar cliente por nombre o correo..."
-                        value={selectedCliente ? selectedCliente.name : searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                          if (selectedCliente) setSelectedCliente(null);
-                          setShowDropdown(true);
-                        }}
-                        onFocus={() => setShowDropdown(true)}
-                        className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 font-bold"
-                      />
-                      {selectedCliente && (
-                        <button
-                          onClick={() => {
-                            setSelectedCliente(null);
-                            setSearchTerm('');
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          placeholder="Buscar cliente por nombre o correo..."
+                          value={selectedCliente ? selectedCliente.name : searchTerm}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            if (selectedCliente) setSelectedCliente(null);
+                            setShowDropdown(true);
                           }}
-                          className="absolute right-3 top-3.5 text-secondary hover:text-primary"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                      {showDropdown && !selectedCliente && (
-                        <div className="absolute left-0 right-0 mt-1 bg-white border border-outline/10 rounded-2xl shadow-xl max-h-40 overflow-y-auto z-[250] text-sm">
-                          {clientes
-                            .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase()))
-                            .map(c => (
-                              <button
-                                key={c.id}
-                                onClick={() => {
-                                  setSelectedCliente(c);
-                                  setShowDropdown(false);
-                                }}
-                                className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors border-b border-outline/5 cursor-pointer block"
-                              >
-                                <div className="font-bold text-on-surface flex justify-between">
-                                  {c.name}
-                                  <span className="text-[10px] bg-fuchsia-50 text-fuchsia-500 px-1.5 py-0.5 rounded-full flex items-center gap-1"><Star className="w-3 h-3 fill-fuchsia-500" /> {c.loyaltyPoints || 0}</span>
-                                </div>
-                                <div className="text-[10px] text-secondary">
-                                  {c.email || 'Sin correo'} {c.phone ? `• ${c.phone}` : ''}
-                                </div>
-                              </button>
-                            ))}
-                          {clientes.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
-                            <div className="p-3 text-center text-xs text-secondary opacity-60">No se encontraron clientes</div>
-                          )}
-                        </div>
-                      )}
+                          onFocus={() => setShowDropdown(true)}
+                          className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 font-bold"
+                        />
+                        {selectedCliente && (
+                          <button
+                            onClick={() => {
+                              setSelectedCliente(null);
+                              setSearchTerm('');
+                            }}
+                            className="absolute right-3 top-3.5 text-secondary hover:text-primary"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                        {showDropdown && !selectedCliente && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-outline/10 rounded-2xl shadow-xl max-h-40 overflow-y-auto z-[250] text-sm">
+                            {clientes
+                              .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase()))
+                              .map(c => (
+                                <button
+                                  key={c.id}
+                                  onClick={() => {
+                                    setSelectedCliente(c);
+                                    setShowDropdown(false);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors border-b border-outline/5 cursor-pointer block"
+                                >
+                                  <div className="font-bold text-on-surface flex justify-between">
+                                    {c.name}
+                                    <span className="text-[10px] bg-fuchsia-50 text-fuchsia-500 px-1.5 py-0.5 rounded-full flex items-center gap-1"><Star className="w-3 h-3 fill-fuchsia-500" /> {c.loyaltyPoints || 0}</span>
+                                  </div>
+                                  <div className="text-[10px] text-secondary">
+                                    {c.email || 'Sin correo'} {c.phone ? `• ${c.phone}` : ''}
+                                  </div>
+                                </button>
+                              ))}
+                            {clientes.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                              <div className="p-3 text-center text-xs text-secondary opacity-60">No se encontraron clientes</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewClientName('');
+                          setNewClientPhone('');
+                          setNewClientEmail('');
+                          setShowCreateClientModal(true);
+                        }}
+                        className="w-11 h-11 flex items-center justify-center bg-primary hover:bg-primary-container text-white rounded-xl active:scale-95 transition-all shadow-md shadow-primary/10 flex-shrink-0"
+                        title="Crear nuevo cliente"
+                      >
+                        <UserPlus className="w-5 h-5" />
+                      </button>
                     </div>
                     {selectedCliente && (
                       <div className="mt-3 flex items-center justify-between p-3 bg-fuchsia-50/50 rounded-xl border border-fuchsia-200">
@@ -687,14 +713,14 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                   <span className="text-[8px] font-bold uppercase tracking-wider truncate w-full text-center">Transf.</span>
                 </button>
                 <button 
-                  onClick={() => setPaymentMethod('Tarjeta')}
+                  onClick={() => setPaymentMethod('credito')}
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 p-2 rounded-xl border-2 transition-all group",
-                    paymentMethod === 'Tarjeta' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
+                    paymentMethod === 'credito' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
                   )}
                 >
-                  <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span className="text-[8px] font-bold uppercase tracking-wider">Tarjeta</span>
+                  <Clock className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span className="text-[8px] font-bold uppercase tracking-wider">Debe</span>
                 </button>
                 <button 
                   onClick={() => setPaymentMethod('Mixto')}
@@ -934,7 +960,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               <div className="flex justify-between items-center text-sm font-bold">
                 <span className="text-secondary">Método de pago:</span>
                 <span className="text-primary uppercase">
-                  {successSale.isMixto || successSale.splitDetails ? 'Mixto' : successSale.paymentMethod}
+                  {successSale.isMixto || successSale.splitDetails ? 'Mixto' : successSale.paymentMethod === 'credito' ? 'Debe' : successSale.paymentMethod}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm font-black border-t border-outline/10 pt-2 text-left">
@@ -1148,7 +1174,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                     </div>
                     <div className="flex justify-between">
                        <span className="text-stone-500 font-bold">Método de Pago:</span>
-                       <span className="font-black text-rose-500 uppercase">{successSale.isMixto || successSale.splitDetails ? 'Mixto' : successSale.paymentMethod}</span>
+                       <span className="font-black text-rose-500 uppercase">{successSale.isMixto || successSale.splitDetails ? 'Mixto' : successSale.paymentMethod === 'credito' ? 'Debe' : successSale.paymentMethod}</span>
                     </div>
                     {successSale.splitDetails && (
                       <div className="text-[10px] text-stone-500 text-right pl-4">
@@ -1207,7 +1233,129 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         </div>
       )}
     </AnimatePresence>
+
+    {/* Modal para Crear Cliente Nuevo Express */}
+    <AnimatePresence>
+      {showCreateClientModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCreateClientModal(false)}
+            className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 border border-outline/5 z-[310]"
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-outline/5">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
+                <h3 className="font-headline font-black text-lg text-on-surface">Nuevo Cliente</h3>
+              </div>
+              <button 
+                onClick={() => setShowCreateClientModal(false)} 
+                className="p-1 rounded-full hover:bg-surface-container text-secondary transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newClientName.trim()) {
+                  toast.error('El nombre es requerido');
+                  return;
+                }
+                setIsSavingClient(true);
+                try {
+                  const clientData = {
+                    name: newClientName.trim(),
+                    phone: newClientPhone.trim() || null,
+                    email: newClientEmail.trim() || null,
+                    role: 'cliente',
+                    loyaltyPoints: 0,
+                    createdAt: serverTimestamp()
+                  };
+                  
+                  const docRef = await addDoc(collection(db, 'users'), clientData);
+                  const createdClient = { id: docRef.id, ...clientData };
+                  
+                  // Add to local state list so it's searchable
+                  setClientes(prev => [createdClient, ...prev]);
+                  
+                  // Auto select client
+                  setSelectedCliente(createdClient);
+                  
+                  toast.success('Cliente creado y asociado exitosamente ✓');
+                  setShowCreateClientModal(false);
+                } catch (err: any) {
+                  console.error(err);
+                  toast.error('Error al guardar cliente: ' + err.message);
+                } finally {
+                  setIsSavingClient(false);
+                }
+              }}
+              className="flex flex-col gap-3.5"
+            >
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Nombre Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={newClientName}
+                  onChange={e => setNewClientName(e.target.value)}
+                  placeholder="Ej. Juan Pérez"
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Teléfono</label>
+                <input
+                  type="tel"
+                  value={newClientPhone}
+                  onChange={e => setNewClientPhone(e.target.value)}
+                  placeholder="Ej. +57 300 123 4567"
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Correo Electrónico</label>
+                <input
+                  type="email"
+                  value={newClientEmail}
+                  onChange={e => setNewClientEmail(e.target.value)}
+                  placeholder="Ej. cliente@correo.com"
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <button
+                  type="button"
+                  disabled={isSavingClient}
+                  onClick={() => setShowCreateClientModal(false)}
+                  className="py-3 px-4 rounded-xl border border-outline/10 text-on-surface font-bold text-xs hover:bg-surface-container-low transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingClient}
+                  className="py-3 px-4 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
+                >
+                  {isSavingClient ? 'Guardando...' : 'Crear y Asociar'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
     </>
   );
 }
-

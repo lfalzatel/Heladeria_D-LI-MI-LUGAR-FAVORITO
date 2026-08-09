@@ -25,6 +25,7 @@ function PaymentIcon({ method }: { method: string }) {
   const m = (method || '').toLowerCase();
   if (m.includes('efectivo') || m.includes('cash')) return <Banknote className="w-4 h-4" />;
   if (m.includes('nequi') || m.includes('daviplata') || m.includes('pse')) return <Smartphone className="w-4 h-4" />;
+  if (m.includes('credito') || m.includes('debe')) return <Clock className="w-4 h-4 text-orange-500" />;
   return <CreditCard className="w-4 h-4" />;
 }
 

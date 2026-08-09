@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   IceCream, ShoppingBag, Banknote, CreditCard, Smartphone, 
-  ChevronRight, Check, X, Truck, Trash2
+  ChevronRight, Check, X, Truck, Trash2, Clock
 } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -42,6 +42,7 @@ function PaymentIcon({ method }: { method: string }) {
   const m = (method || '').toLowerCase();
   if (m.includes('efectivo') || m.includes('cash')) return <Banknote className="w-3 h-3" />;
   if (m.includes('nequi') || m.includes('daviplata') || m.includes('pse')) return <Smartphone className="w-3 h-3" />;
+  if (m.includes('credito') || m.includes('debe')) return <Clock className="w-3 h-3 text-orange-500" />;
   return <CreditCard className="w-3 h-3" />;
 }
 
