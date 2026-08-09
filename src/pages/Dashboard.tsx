@@ -142,7 +142,6 @@ export default function Dashboard() {
     const qCredit = query(
       collection(db, 'pedidos'),
       where('paymentMethod', '==', 'credito'),
-      orderBy('createdAt', 'desc'),
       limit(1000)
     );
     const unsubCredit = onSnapshot(qCredit, snap => {
@@ -153,7 +152,6 @@ export default function Dashboard() {
     const qCreditSales = query(
       collection(db, 'sales'),
       where('paymentMethod', '==', 'credito'),
-      orderBy('timestamp', 'desc'),
       limit(1000)
     );
     const unsubCreditSales = onSnapshot(qCreditSales, snap => {
@@ -757,19 +755,17 @@ export default function Dashboard() {
             onOpen={() => open('credito')}
             index={6}
           />
-          {profile?.role !== 'vendedor' && (
-            <MetricCard
-              icon={<Users className="w-5 h-5" />}
-              label="Deuda Clientes"
-              value={formatCurrency(totalDeuda)}
-              numericValue={totalDeuda}
-              isCurrency={true}
-              sub="Total Histórico"
-              accent="orange"
-              onOpen={() => open('deuda')}
-              index={7}
-            />
-          )}
+          <MetricCard
+            icon={<Users className="w-5 h-5" />}
+            label="Deuda Clientes"
+            value={formatCurrency(totalDeuda)}
+            numericValue={totalDeuda}
+            isCurrency={true}
+            sub="Total Histórico"
+            accent="orange"
+            onOpen={() => open('deuda')}
+            index={7}
+          />
         </div>
 
         {/* CHARTS (Admin Only) */}

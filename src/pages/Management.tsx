@@ -145,7 +145,7 @@ export default function Management() {
     if (sub) {
       if (['compras', 'gastos', 'mesas'].includes(sub)) setOperacionSubTab(sub as OperacionSubTab);
       if (['insumos', 'productos', 'sabores', 'categorias'].includes(sub)) setInventarioSubTab(sub as InventarioSubTab);
-      if (['equipo', 'clientes', 'fidelidad'].includes(sub)) setPersonasSubTab(sub as PersonasSubTab);
+      if (['equipo', 'clientes', 'deudores'].includes(sub)) setPersonasSubTab(sub as PersonasSubTab);
     }
   }, [location.search]);
 
