@@ -545,12 +545,12 @@ export default function MovementDetailModal({
                            </div>
                          );
                       })()}
-                     <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm">
+                     <div className={cn("bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm", data.paymentMethod === 'credito' && "col-span-2")}>
                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
                        <p className="font-headline font-bold text-on-surface text-xs">{date}</p>
                        <p className="text-[9px] text-secondary flex items-center gap-1"><Clock className="w-3 h-3" />{time}</p>
                      </div>
-                     <div className="bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-1 border border-outline/5 shadow-sm relative">
+                     <div className={cn("bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-1 border border-outline/5 shadow-sm relative", data.paymentMethod === 'credito' && "col-span-2")}>
                        <div className="flex items-center justify-between">
                          <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Pago</p>
                          {canEditPayment && !isEditingPayment && (
@@ -867,7 +867,7 @@ export default function MovementDetailModal({
                  </div>
                )}
 
-               {(data.status === 'entregado' || data.status === 'completed' || data.type === 'sale') && (
+               {(data.status === 'entregado' || data.status === 'completed' || data.type === 'sale') && (data.isTakeout || data.tableName === 'Para Llevar') && (
                  <div className="px-4 sm:px-8 mt-2 pb-4">
                    <button 
                      onClick={() => { setPackagingSearch(''); handleStartEditingPackaging(); }}
