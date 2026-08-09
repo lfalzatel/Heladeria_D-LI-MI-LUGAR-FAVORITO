@@ -852,7 +852,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                                 return (
                                   <div 
                                     key={supply.id} 
-                                    onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                    onClick={() => updatePackagingSupply(activeTable, supply.id, supply.name, quantity + 1)}
                                     className={cn(
                                       "flex items-center justify-between p-1.5 rounded-lg border transition-all cursor-pointer select-none",
                                       quantity > 0 
@@ -868,7 +868,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                                       className="flex items-center gap-2 bg-surface-container-low rounded p-0.5"
                                     >
                                       <button
-                                        onClick={() => updatePackagingSupply(activeTable, supply.id, quantity - 1)}
+                                        onClick={() => updatePackagingSupply(activeTable, supply.id, supply.name, quantity - 1)}
                                         disabled={quantity <= 0}
                                         className="p-0.5 rounded-sm hover:bg-white disabled:opacity-30 transition-colors"
                                       >
@@ -876,7 +876,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                                       </button>
                                       <span className="text-[10px] font-black text-indigo-900 w-3 text-center">{quantity}</span>
                                       <button
-                                        onClick={() => updatePackagingSupply(activeTable, supply.id, quantity + 1)}
+                                        onClick={() => updatePackagingSupply(activeTable, supply.id, supply.name, quantity + 1)}
                                         className="p-0.5 rounded-sm hover:bg-white transition-colors"
                                       >
                                         <Plus className="w-3 h-3 text-indigo-600" />

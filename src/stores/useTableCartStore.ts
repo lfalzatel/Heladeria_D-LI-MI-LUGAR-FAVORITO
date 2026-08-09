@@ -46,7 +46,7 @@ interface TableCartState {
   updateNote: (table: string, note: string) => Promise<void>;
   toggleLock: (table: string, locked: boolean) => Promise<void>;
   setTakeout: (table: string, isTakeout: boolean) => Promise<void>;
-  updatePackagingSupply: (table: string, supplyId: string, quantity: number) => Promise<void>;
+  updatePackagingSupply: (table: string, supplyId: string, name: string, quantity: number) => Promise<void>;
   getTotal: (table: string) => number;
   getItemCount: (table: string) => number;
 }
@@ -216,7 +216,7 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     await setDoc(docRef, { currentCart: newCart }, { merge: true });
   },
 
-  updatePackagingSupply: async (table, supplyId, quantity) => {
+  updatePackagingSupply: async (table, supplyId, name, quantity) => {
     const tableCart = get().carts[table];
     if (!tableCart) return;
 
@@ -229,9 +229,10 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
         newSupplies.splice(existingIndex, 1);
       } else {
         newSupplies[existingIndex].quantity = quantity;
+        newSupplies[existingIndex].name = name;
       }
     } else if (quantity > 0) {
-      newSupplies.push({ supplyId, quantity });
+      newSupplies.push({ supplyId, name, quantity });
     }
 
     const newCart = { ...tableCart, packagingSupplies: newSupplies };

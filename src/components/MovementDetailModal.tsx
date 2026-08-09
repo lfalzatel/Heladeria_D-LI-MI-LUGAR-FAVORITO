@@ -92,6 +92,25 @@ export default function MovementDetailModal({
     }
   }, [triggerAbonoOpen, data]);
 
+  // Load packaging supply names when modal opens (for name resolution in the list)
+  React.useEffect(() => {
+    if (!data || !data.packagingSupplies?.length) return;
+    // Only fetch if any supply is missing its name
+    const needsLookup = data.packagingSupplies.some((p: any) => !p.name);
+    if (!needsLookup && allPackaging.length > 0) return;
+    const fetchPackaging = async () => {
+      try {
+        const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
+        const snap = await getDocs(q);
+        const packs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter((s: any) => s.status !== 'inactivo');
+        setAllPackaging(packs.sort((a, b) => a.name.localeCompare(b.name)));
+      } catch (e) {
+        console.error('Error loading packaging names:', e);
+      }
+    };
+    fetchPackaging();
+  }, [data?.id]);
+
   const handleSaveAbono = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data) return;
@@ -771,8 +790,10 @@ export default function MovementDetailModal({
                               <ShoppingBag className="w-5 h-5 text-indigo-500" />
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-xs text-indigo-950 truncate">{supply.name}</span>
-                              <span className="text-[9px] text-indigo-400 font-medium">Insumo de empaque</span>
+                              <span className="font-bold text-xs text-indigo-950 truncate">
+                                {supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque'}
+                              </span>
+                              <span className="text-[9px] text-indigo-400 font-medium">Empaque / Desechable</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100 flex-shrink-0">
