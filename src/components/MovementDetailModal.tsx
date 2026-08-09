@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle, ShoppingBag, Plus, Minus, Save } from 'lucide-react';
+import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, CreditCard, Smartphone, Check, Truck, IceCream, Paperclip, ImageIcon, Edit3, Trash2, AlertTriangle, ShoppingBag, Plus, Minus, Save, ArrowLeftRight } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { compressImage } from '../utils/imageCompressor';
@@ -78,7 +78,8 @@ export default function MovementDetailModal({
   // Abonos state
   const [showAbonoForm, setShowAbonoForm] = useState(false);
   const [abonoMonto, setAbonoMonto] = useState('');
-  const [abonoMetodo, setAbonoMetodo] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
+  const [abonoMetodo, setAbonoMetodo] = useState<'Efectivo' | 'Transferencia' | 'Mixto'>('Efectivo');
+  const [splitAbono, setSplitAbono] = useState({ efectivo: '', transferencia: '' });
   const [isSavingAbono, setIsSavingAbono] = useState(false);
 
   React.useEffect(() => {
@@ -129,6 +130,21 @@ export default function MovementDetailModal({
     setIsSavingAbono(true);
     try {
       const newAbonado = (data.totalAbonado || 0) + amount;
+
+      // Build payment info
+      let paymentMethodSaved: string = abonoMetodo;
+      let splitDetails: { efectivo: number; transferencia: number } | null = null;
+      if (abonoMetodo === 'Mixto') {
+        const ef = Number(splitAbono.efectivo) || 0;
+        const tr = Number(splitAbono.transferencia) || 0;
+        if (ef + tr !== amount) {
+          toast.error(`La suma de Efectivo y Transferencia debe ser igual al monto ($${amount.toLocaleString('es-CO')})`);
+          setIsSavingAbono(false);
+          return;
+        }
+        paymentMethodSaved = 'Mixto';
+        splitDetails = { efectivo: ef, transferencia: tr };
+      }
       
       // Save abono document
       await addDoc(collection(db, 'abonos'), {
@@ -136,7 +152,9 @@ export default function MovementDetailModal({
         clienteName: data.clienteName || data.userName || data.customerName || 'Cliente',
         pedidoId: data.id,
         monto: amount,
-        paymentMethod: abonoMetodo,
+        paymentMethod: paymentMethodSaved,
+        isMixto: abonoMetodo === 'Mixto',
+        splitDetails,
         createdAt: serverTimestamp(),
         date: new Date().toISOString().split('T')[0],
         hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -1229,7 +1247,7 @@ export default function MovementDetailModal({
 
                         <div className="flex flex-col gap-1">
                           <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Método de Pago *</label>
-                          <div className="grid grid-cols-2 gap-2 mt-1">
+                          <div className="grid grid-cols-3 gap-2 mt-1">
                             <button
                               type="button"
                               onClick={() => setAbonoMetodo('Efectivo')}
@@ -1254,9 +1272,63 @@ export default function MovementDetailModal({
                               )}
                             >
                               <Smartphone className="w-4 h-4" />
-                              Transferencia
+                              Transfer.
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAbonoMetodo('Mixto')}
+                              className={cn(
+                                "py-3 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1 transition-all",
+                                abonoMetodo === 'Mixto' 
+                                  ? "border-primary bg-primary/5 text-primary" 
+                                  : "border-outline/10 text-secondary hover:bg-surface-container"
+                              )}
+                            >
+                              <ArrowLeftRight className="w-4 h-4" />
+                              Mixto
                             </button>
                           </div>
+
+                          {abonoMetodo === 'Mixto' && (
+                            <div className="mt-2 flex flex-col gap-2">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[9px] font-black uppercase text-secondary/60">Monto Efectivo</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={splitAbono.efectivo}
+                                  onChange={e => setSplitAbono(prev => ({ ...prev, efectivo: e.target.value, transferencia: String(Math.max(0, (Number(abonoMonto) || 0) - (Number(e.target.value) || 0))) }))}
+                                  placeholder="0"
+                                  className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2.5 px-4 font-bold text-on-surface outline-none transition-all text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[9px] font-black uppercase text-secondary/60">Monto Transferencia</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={splitAbono.transferencia}
+                                  onChange={e => setSplitAbono(prev => ({ ...prev, transferencia: e.target.value, efectivo: String(Math.max(0, (Number(abonoMonto) || 0) - (Number(e.target.value) || 0))) }))}
+                                  placeholder="0"
+                                  className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2.5 px-4 font-bold text-on-surface outline-none transition-all text-sm"
+                                />
+                              </div>
+                              {(() => {
+                                const ef = Number(splitAbono.efectivo) || 0;
+                                const tr = Number(splitAbono.transferencia) || 0;
+                                const total = Number(abonoMonto) || 0;
+                                const diff = ef + tr - total;
+                                if (total > 0 && diff !== 0) {
+                                  return (
+                                    <p className={cn("text-[10px] font-bold", diff > 0 ? "text-red-500" : "text-amber-500")}>
+                                      {diff > 0 ? `Excede por ${formatCurrency(diff)}` : `Faltan ${formatCurrency(-diff)}`}
+                                    </p>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 mt-2">
