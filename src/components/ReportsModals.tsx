@@ -79,9 +79,9 @@ function ModalFooter({ label = 'CERRAR DETALLE', onClick }: { label?: string; on
 }
 
 // ── 1. INGRESOS MODAL ──
-export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, transferencia }: {
+export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, transferencia, totalAbonos }: {
   isOpen: boolean; onClose: () => void; filter: string;
-  efectivo: number; tarjeta: number; transferencia: number;
+  efectivo: number; tarjeta: number; transferencia: number; totalAbonos?: number;
 }) {
   const rows = [
     { icon: <Banknote className="w-5 h-5 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Efectivo', value: efectivo },
@@ -98,6 +98,12 @@ export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, tran
         onClose={onClose}
       />
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
+        {totalAbonos !== undefined && totalAbonos > 0 && (
+          <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
+            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Abonos a Crédito Incluidos</p>
+            <p className="font-black text-emerald-700 text-xs">+ {formatCurrency(totalAbonos)}</p>
+          </div>
+        )}
         {rows.map(row => (
           <div key={row.label} className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-2xl border border-outline/10">
             <div className="flex items-center gap-3">
@@ -120,7 +126,7 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
   const [selectedPedido, setSelectedPedido] = useState<any | null>(null);
   const { profile } = useAuthStore();
   const [chatMsg, setChatMsg] = useState('');
-  const total = creditPedidos.reduce((s, p) => s + (p.total || 0), 0);
+  const totalPendiente = creditPedidos.reduce((s, p) => s + Math.max(0, (p.total || 0) - (p.totalAbonado || 0)), 0);
 
   const fmtTime = (p: any) => {
     const ts = p.createdAt || p.timestamp;
@@ -141,7 +147,7 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
         />
         <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
           <div className="flex gap-3">
-            {[{ label: 'Total Créditos', val: formatCurrency(total), icon: <Clock className="w-4 h-4 text-orange-500" /> },
+            {[{ label: 'Saldo Pendiente', val: formatCurrency(totalPendiente), icon: <Clock className="w-4 h-4 text-orange-500" /> },
               { label: 'Número de Ventas', val: String(creditPedidos.length), icon: <ShoppingCart className="w-4 h-4 text-orange-500" /> }
             ].map(item => (
               <div key={item.label} className="flex-1 p-3 bg-surface-container-lowest rounded-2xl border border-outline/10 flex items-center gap-2">
@@ -163,28 +169,36 @@ export function VentasCreditoModal({ isOpen, onClose, filter, creditPedidos }: {
                 <ShoppingCart className="w-10 h-10 mb-2" />
                 <p className="text-xs font-bold uppercase tracking-widest">Sin ventas a crédito</p>
               </div>
-            ) : creditPedidos.map(p => (
-              <div key={p.id} className="p-4 bg-white rounded-2xl border border-outline/10 shadow-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm text-on-surface truncate">{p.clienteName || 'Cliente'}</p>
-                      <p className="text-[10px] text-secondary font-bold">{fmtTime(p)}</p>
+            ) : creditPedidos.map(p => {
+              const pendiente = Math.max(0, (p.total || 0) - (p.totalAbonado || 0));
+              return (
+                <div key={p.id} className="p-4 bg-white rounded-2xl border border-outline/10 shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-on-surface truncate">{p.clienteName || 'Cliente'}</p>
+                        <p className="text-[10px] text-secondary font-bold">{fmtTime(p)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-right">
+                        <p className="font-black text-orange-600">{formatCurrency(pendiente)}</p>
+                        {p.totalAbonado > 0 && (
+                          <p className="text-[9px] text-secondary font-medium">Orig: {formatCurrency(p.total)} | Abono: {formatCurrency(p.totalAbonado)}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setSelectedPedido(p)}
+                        className="flex items-center gap-1 px-2 py-1.5 bg-surface-container rounded-xl text-[9px] font-black uppercase tracking-widest text-secondary hover:text-primary transition-all"
+                      >
+                        Ver <ArrowRight className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <p className="font-black text-orange-600">{formatCurrency(p.total)}</p>
-                    <button
-                      onClick={() => setSelectedPedido(p)}
-                      className="flex items-center gap-1 px-2 py-1.5 bg-surface-container rounded-xl text-[9px] font-black uppercase tracking-widest text-secondary hover:text-primary transition-all"
-                    >
-                      Ver <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         <ModalFooter onClick={onClose} />

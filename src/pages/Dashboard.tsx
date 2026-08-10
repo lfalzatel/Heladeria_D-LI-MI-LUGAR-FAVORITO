@@ -258,7 +258,7 @@ export default function Dashboard() {
 
   // Credit pedidos for current period
   const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
-  const totalCredito = creditPedidosPeriod.reduce((s, p) => s + (p.total || 0), 0);
+  const totalCredito = creditPedidosPeriod.reduce((s, p) => s + Math.max(0, (p.total || 0) - (p.totalAbonado || 0)), 0);
 
   // Supply purchases for current period
   const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
@@ -852,6 +852,7 @@ export default function Dashboard() {
         efectivo={efectivo}
         tarjeta={tarjeta}
         transferencia={transferencia}
+        totalAbonos={totalAbonosPeriod}
       />
       <VentasCreditoModal
         isOpen={openModal === 'credito'}
