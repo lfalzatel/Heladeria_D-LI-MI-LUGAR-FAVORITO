@@ -1757,6 +1757,7 @@ export default function Management() {
                       }
                       return 0; // Maintain alphabetical order otherwise
                     })
+                    .map((user, i) => (
                       <motion.div
                         layout
                         key={user.uid}
