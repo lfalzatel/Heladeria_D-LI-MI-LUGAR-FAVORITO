@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   GoogleAuthProvider, 
-  signInWithPopup 
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
@@ -23,10 +25,53 @@ export default function Login() {
   useEffect(() => {
     if (user && profile) {
       navigate(profile.role === 'vendedor' ? '/pos' : '/admin/dashboard');
+      return;
     }
-  }, [user, profile, navigate]);
 
-  const handleGoogleLogin = async (savedAccount?: SavedAccount) => {
+    // Process redirect authentication result if arriving from signInWithRedirect
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          setGoogleLoading(true);
+          const u = result.user;
+          const userRef = doc(db, 'users', u.uid);
+          const userSnap = await getDoc(userRef);
+          
+          let assignedRole = 'cliente';
+          if (!userSnap.exists()) {
+            const isAdminEmail = u.email === 'lfalzatel@gmail.com' || u.email === 'lfalzatel@gmai.com';
+            assignedRole = isAdminEmail ? 'admin' : 'cliente';
+            
+            await setDoc(userRef, {
+              email: u.email,
+              role: assignedRole,
+              name: u.displayName || 'Usuario Google',
+              imageUrl: u.photoURL || '',
+              createdAt: serverTimestamp()
+            });
+            toast.success(isAdminEmail ? 'Cuenta vinculada como Administrador' : 'Cuenta vinculada como Cliente');
+          } else {
+            assignedRole = userSnap.data().role || 'cliente';
+          }
+
+          addAccount({
+            uid: u.uid,
+            email: u.email || '',
+            name: u.displayName || u.email?.split('@')[0] || 'Usuario',
+            imageUrl: u.photoURL || '',
+            role: assignedRole
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect login error:", error);
+      })
+      .finally(() => {
+        setGoogleLoading(false);
+      });
+  }, [user, profile, navigate, addAccount]);
+
+  const handleGoogleLogin = async (savedAccount?: SavedAccount, forceRedirect = false) => {
     if (savedAccount) setLoadingAccountId(savedAccount.uid);
     else setGoogleLoading(true);
 
@@ -35,6 +80,19 @@ export default function Login() {
       provider.setCustomParameters({ login_hint: savedAccount.email });
     } else {
       provider.setCustomParameters({ prompt: 'select_account' });
+    }
+
+    if (forceRedirect) {
+      try {
+        toast.info('Redirigiendo a Google...');
+        await signInWithRedirect(auth, provider);
+      } catch (err: any) {
+        console.error(err);
+        toast.error('Error al redirigir.');
+        setGoogleLoading(false);
+        setLoadingAccountId(null);
+      }
+      return;
     }
 
     try {
@@ -72,8 +130,15 @@ export default function Login() {
 
     } catch (error: any) {
       console.error(error);
-      if (error.code === 'auth/popup-blocked') {
-        toast.error('El navegador bloqueó la ventana emergente.');
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+        toast.info('Ventana emergente no disponible. Redirigiendo a Google...');
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr) {
+          console.error(redirectErr);
+          toast.error('Error al redirigir.');
+        }
       } else if (error.code === 'auth/invalid-credential') {
         toast.error('Token de sesión inválido. Por favor intenta de nuevo.');
       } else if (error.code === 'auth/cancelled-popup-request') {
@@ -185,6 +250,14 @@ export default function Login() {
                 <UserPlus className="w-5 h-5 text-secondary" />
               )}
               <span className="text-sm">{accounts.length > 0 ? 'Iniciar sesión en otra cuenta' : 'Entrar con Google'}</span>
+            </button>
+
+            <button 
+              onClick={() => handleGoogleLogin(undefined, true)}
+              disabled={googleLoading || loadingAccountId !== null}
+              className="text-[11px] font-bold text-primary/80 hover:text-primary hover:underline text-center transition-all mt-1 cursor-pointer"
+            >
+              ¿Problemas para iniciar sesión? Entrar con Redirección
             </button>
           </div>
         </div>
