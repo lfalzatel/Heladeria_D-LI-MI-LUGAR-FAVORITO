@@ -46,7 +46,9 @@ export const useCategoriesStore = create<CategoriesState>((set) => ({
         });
       },
       (error) => {
-        console.error('Categories listener error:', error);
+        if (error.code !== 'permission-denied') {
+          console.error('Categories listener error:', error);
+        }
         unsubscribeCategories = null;
         set({ isLoading: false });
       }

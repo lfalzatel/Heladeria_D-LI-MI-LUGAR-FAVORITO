@@ -249,6 +249,7 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
  */
 export async function processWeeklyBagsDeduction() {
   try {
+    if (!auth.currentUser) return;
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Domingo, 1 = Lunes, 6 = Sábado
     if (dayOfWeek !== 1 && dayOfWeek !== 6) return;

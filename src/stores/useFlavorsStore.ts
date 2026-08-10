@@ -33,7 +33,9 @@ export const useFlavorsStore = create<FlavorsState>((set) => ({
         set({ availableFlavors: flavors, isLoading: false });
       },
       (error) => {
-        console.error('Flavors listener error:', error);
+        if (error.code !== 'permission-denied') {
+          console.error('Flavors listener error:', error);
+        }
         // On permission denied: clear listener so it can be retried after login
         unsubscribeFlavors = null;
         set({ isLoading: false });
