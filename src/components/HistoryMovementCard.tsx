@@ -53,7 +53,7 @@ export default function HistoryMovementCard({
 }: HistoryMovementCardProps) {
   const cfg = STATUS_CONFIG[status.toLowerCase()] || STATUS_CONFIG.pendiente;
   const paymentKey = paymentMethod?.toLowerCase() || 'efectivo';
-  const isCredit = paymentKey === 'credito' || paymentKey === 'debe';
+  const isCredit = ['credito', 'crédito', 'debe'].includes(paymentKey);
   const pending = total - totalAbonado;
   
   const firstItem = items && items.length > 0 ? items[0] : null;
@@ -125,7 +125,7 @@ export default function HistoryMovementCard({
             </div>
           )}
 
-          {onRegisterAbono && pending > 0 && (
+          {isCredit && onRegisterAbono && pending > 0 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();

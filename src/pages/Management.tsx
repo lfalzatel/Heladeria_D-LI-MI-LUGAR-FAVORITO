@@ -1757,13 +1757,13 @@ export default function Management() {
                       }
                       return 0; // Maintain alphabetical order otherwise
                     })
-                    .map((user, i) => (
                       <motion.div
                         layout
                         key={user.uid}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-3xl p-4 border border-outline/10 shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all hover:shadow-md"
+                        onClick={() => setSelectedUserForHistory(user)}
+                        className="bg-white rounded-3xl p-4 border border-outline/10 shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all hover:shadow-md cursor-pointer"
                       >
                         <div className="relative shrink-0">
                           <div className="w-14 h-14 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-primary font-black text-xl relative">
@@ -1812,10 +1812,24 @@ export default function Management() {
                         </div>
 
                         <div className="flex flex-col gap-2 shrink-0">
-                          <button onClick={() => handleEditUser(user)} className="w-8 h-8 rounded-xl bg-surface-container text-secondary flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-outline/10">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditUser(user);
+                            }} 
+                            className="w-8 h-8 rounded-xl bg-surface-container text-secondary flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-outline/10"
+                            title="Editar usuario"
+                          >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => setSelectedUserForHistory(user)} className="w-8 h-8 rounded-xl bg-on-surface text-white flex items-center justify-center hover:bg-primary transition-all shadow-sm">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedUserForHistory(user);
+                            }} 
+                            className="w-8 h-8 rounded-xl bg-on-surface text-white flex items-center justify-center hover:bg-primary transition-all shadow-sm"
+                            title="Ver historial de actividad"
+                          >
                             <History className="w-3.5 h-3.5" />
                           </button>
                         </div>
