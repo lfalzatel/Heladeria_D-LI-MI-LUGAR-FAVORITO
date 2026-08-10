@@ -71,7 +71,7 @@ export default function Login() {
       });
   }, [user, profile, navigate, addAccount]);
 
-  const handleGoogleLogin = async (savedAccount?: SavedAccount, forceRedirect = false) => {
+  const handleGoogleLogin = (savedAccount?: SavedAccount) => {
     if (savedAccount) setLoadingAccountId(savedAccount.uid);
     else setGoogleLoading(true);
 
@@ -82,74 +82,59 @@ export default function Login() {
       provider.setCustomParameters({ prompt: 'select_account' });
     }
 
-    if (forceRedirect) {
-      try {
-        toast.info('Redirigiendo a Google...');
-        await signInWithRedirect(auth, provider);
-      } catch (err: any) {
-        console.error(err);
-        toast.error('Error al redirigir.');
+    // Call signInWithPopup synchronously to retain user gesture context in Chrome
+    signInWithPopup(auth, provider)
+      .then(async (result) => {
+        const user = result.user;
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        let assignedRole = 'cliente';
+        if (!userSnap.exists()) {
+          const isAdminEmail = user.email === 'lfalzatel@gmail.com' || user.email === 'lfalzatel@gmai.com';
+          assignedRole = isAdminEmail ? 'admin' : 'cliente';
+          
+          await setDoc(userRef, {
+            email: user.email,
+            role: assignedRole,
+            name: user.displayName || 'Usuario Google',
+            imageUrl: user.photoURL || '',
+            createdAt: serverTimestamp()
+          });
+          toast.success(isAdminEmail ? 'Cuenta vinculada como Administrador' : 'Cuenta vinculada como Cliente');
+        } else {
+          assignedRole = userSnap.data().role || 'cliente';
+        }
+
+        // Add to saved accounts
+        addAccount({
+          uid: user.uid,
+          email: user.email || '',
+          name: user.displayName || user.email?.split('@')[0] || 'Usuario',
+          imageUrl: user.photoURL || '',
+          role: assignedRole
+        });
+      })
+      .catch(async (error: any) => {
+        console.error(error);
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+          try {
+            await signInWithRedirect(auth, provider);
+          } catch (err) {
+            toast.error('Error al iniciar sesión con Google.');
+          }
+        } else if (error.code === 'auth/invalid-credential') {
+          toast.error('Token de sesión inválido. Por favor intenta de nuevo.');
+        } else if (error.code === 'auth/cancelled-popup-request') {
+          toast.info('Solicitud cancelada.');
+        } else {
+          toast.error('Error al iniciar sesión con Google.');
+        }
+      })
+      .finally(() => {
         setGoogleLoading(false);
         setLoadingAccountId(null);
-      }
-      return;
-    }
-
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      let assignedRole = 'cliente';
-      if (!userSnap.exists()) {
-        const isAdminEmail = user.email === 'lfalzatel@gmail.com' || user.email === 'lfalzatel@gmai.com';
-        assignedRole = isAdminEmail ? 'admin' : 'cliente';
-        
-        await setDoc(userRef, {
-          email: user.email,
-          role: assignedRole,
-          name: user.displayName || 'Usuario Google',
-          imageUrl: user.photoURL || '',
-          createdAt: serverTimestamp()
-        });
-        toast.success(isAdminEmail ? 'Cuenta vinculada como Administrador' : 'Cuenta vinculada como Cliente');
-      } else {
-        assignedRole = userSnap.data().role || 'cliente';
-      }
-
-      // Add to saved accounts
-      addAccount({
-        uid: user.uid,
-        email: user.email || '',
-        name: user.displayName || user.email?.split('@')[0] || 'Usuario',
-        imageUrl: user.photoURL || '',
-        role: assignedRole
       });
-
-    } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        toast.info('Ventana emergente no disponible. Redirigiendo a Google...');
-        try {
-          await signInWithRedirect(auth, provider);
-          return;
-        } catch (redirectErr) {
-          console.error(redirectErr);
-          toast.error('Error al redirigir.');
-        }
-      } else if (error.code === 'auth/invalid-credential') {
-        toast.error('Token de sesión inválido. Por favor intenta de nuevo.');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        toast.info('Solicitud cancelada.');
-      } else {
-        toast.error('Error al iniciar sesión con Google.');
-      }
-    } finally {
-      setGoogleLoading(false);
-      setLoadingAccountId(null);
-    }
   };
 
   return (
@@ -250,14 +235,6 @@ export default function Login() {
                 <UserPlus className="w-5 h-5 text-secondary" />
               )}
               <span className="text-sm">{accounts.length > 0 ? 'Iniciar sesión en otra cuenta' : 'Entrar con Google'}</span>
-            </button>
-
-            <button 
-              onClick={() => handleGoogleLogin(undefined, true)}
-              disabled={googleLoading || loadingAccountId !== null}
-              className="text-[11px] font-bold text-primary/80 hover:text-primary hover:underline text-center transition-all mt-1 cursor-pointer"
-            >
-              ¿Problemas para iniciar sesión? Entrar con Redirección
             </button>
           </div>
         </div>
