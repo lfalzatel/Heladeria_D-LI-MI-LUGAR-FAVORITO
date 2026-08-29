@@ -612,54 +612,53 @@ export default function ClientCompras() {
 
 
         {/* Floating Cart Button for Client */}
-        <AnimatePresence>
-          {cart.length > 0 && !showCheckout && (
+        <AnimatePresence mode="wait">
+          {cartCount > 0 && !showCheckout && (
             <motion.button
-              initial={{ scale: 0, y: 20 }}
-              animate={{ 
-                scale: [1, 1.06, 1],
-                y: [0, -8, 0],
-              }}
-              transition={{
-                y: {
-                  duration: 1.6,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut"
-                },
-                scale: {
-                  duration: 1.6,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut"
-                }
+              initial={{ scale: 0, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ 
+                scale: 0, 
+                opacity: 0, 
+                y: 20,
+                transition: { duration: 0.2 }
               }}
               whileTap={{ scale: 0.9 }}
-              whileHover={{ y: -8 }}
-              exit={{ scale: 0, y: 20 }}
+              whileHover={{ y: -5 }}
               onClick={() => setShowCheckout(true)}
               className="fixed bottom-28 right-6 w-16 h-16 bg-primary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center text-white z-[45] border-4 border-white"
             >
-              <motion.div 
-                key={cartCount}
+              {/* Continuous subtle bounce container inside */}
+              <motion.div
                 animate={{
-                  scale: [1, 1.3, 1],
-                  rotate: [0, -10, 10, 0],
+                  y: [0, -6, 0],
+                  scale: [1, 1.05, 1],
                 }}
                 transition={{
-                  duration: 0.5,
-                  ease: "backOut"
+                  duration: 1.6,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut"
                 }}
-                className="relative"
+                className="w-full h-full flex items-center justify-center relative"
               >
-                <ShoppingCart className="w-7 h-7" />
-                <motion.span
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-full border-2 border-primary shadow-sm"
+                <motion.div 
+                  key={cartCount}
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    rotate: [0, -10, 10, 0],
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    ease: "backOut"
+                  }}
+                  className="relative"
                 >
-                  {cartCount}
-                </motion.span>
+                  <ShoppingCart className="w-7 h-7" />
+                  <span className="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-full border-2 border-primary shadow-sm">
+                    {cartCount}
+                  </span>
+                </motion.div>
               </motion.div>
             </motion.button>
           )}
