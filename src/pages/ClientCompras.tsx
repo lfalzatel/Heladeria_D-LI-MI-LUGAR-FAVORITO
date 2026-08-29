@@ -616,9 +616,26 @@ export default function ClientCompras() {
           {cart.length > 0 && !showCheckout && (
             <motion.button
               initial={{ scale: 0, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
+              animate={{ 
+                scale: [1, 1.06, 1],
+                y: [0, -8, 0],
+              }}
+              transition={{
+                y: {
+                  duration: 1.6,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut"
+                },
+                scale: {
+                  duration: 1.6,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut"
+                }
+              }}
               whileTap={{ scale: 0.9 }}
-              whileHover={{ y: -5 }}
+              whileHover={{ y: -8 }}
               exit={{ scale: 0, y: 20 }}
               onClick={() => setShowCheckout(true)}
               className="fixed bottom-28 right-6 w-16 h-16 bg-primary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center text-white z-[45] border-4 border-white"

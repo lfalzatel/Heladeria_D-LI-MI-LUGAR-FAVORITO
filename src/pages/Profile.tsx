@@ -253,120 +253,72 @@ export default function Profile() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[2.5rem] p-8 border border-outline/50 shadow-sm flex flex-col items-center text-center relative overflow-hidden"
+          className="bg-white rounded-[2rem] p-4 sm:p-6 border border-outline/50 shadow-sm flex flex-col relative overflow-hidden"
         >
-          <div className="absolute top-0 left-0 w-full h-24 bg-primary/5" />
-          
-          <div className="relative mt-4">
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <div className="w-24 h-24 rounded-3xl bg-surface-container-high border-4 border-white shadow-xl flex items-center justify-center text-primary text-4xl font-black overflow-hidden relative group">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={profile?.name} className="w-full h-full object-cover rounded-3xl" referrerPolicy="no-referrer" />
-              ) : (
-                <span className="uppercase">{(profile?.name || user?.displayName || 'U')[0]}</span>
-              )}
-              
-              {/* Overlay de carga o cambio de foto */}
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className={cn(
-                  "absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
-                  isUploading && "opacity-100"
-                )}
-              >
-                {isUploading ? (
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <div className="relative flex-shrink-0">
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-surface-container-high border-2 border-white shadow-md flex items-center justify-center text-primary text-2xl font-black overflow-hidden relative group">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={profile?.name} className="w-full h-full object-cover rounded-2xl" referrerPolicy="no-referrer" />
                 ) : (
-                  <Camera className="w-6 h-6 text-white" />
+                  <span className="uppercase">{(profile?.name || user?.displayName || 'U')[0]}</span>
                 )}
-              </button>
+                
+                {/* Overlay de carga o cambio de foto */}
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={cn(
+                    "absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                    isUploading && "opacity-100"
+                  )}
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-white" />
+                  )}
+                </button>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-lg border border-white flex items-center justify-center shadow-sm pointer-events-none">
+                <Shield className="w-3 h-3 text-white" />
+              </div>
             </div>
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success rounded-xl border-2 border-white flex items-center justify-center shadow-lg pointer-events-none">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
-          </div>
 
-          <div className="mt-6">
-            <h2 className="text-2xl font-black text-on-surface tracking-tight uppercase leading-tight">{profile?.name || user?.displayName || 'Usuario'}</h2>
-            <div className="flex items-center justify-center flex-wrap gap-2 mt-2">
-              <span className={cn(
-                "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
-                profile?.role === 'admin' ? "bg-red-100 text-red-600" : 
-                profile?.role === 'propietario' ? "bg-purple-100 text-purple-600" :
-                "bg-primary/10 text-primary"
-              )}>
-                {profile?.role || 'Cliente'}
-              </span>
-              <button 
-                onClick={() => {
-                  toast.success(
-                    `Tienes ${profile?.loyaltyPoints || 0} Puntos Premium`,
-                    {
-                      description: `¡Acumula 9 para ganar un Cucurucho Doble gratis!`,
-                      position: 'top-center',
-                      duration: 6000,
-                      className: 'text-center border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700',
-                    }
-                  );
-                  
-                  // Animación de confeti mejorada (Fucsia/Morado)
-                  const duration = 2500;
-                  const end = Date.now() + duration;
-                  const colors = ['#d946ef', '#c026d3', '#a21caf', '#e879f9', '#fdf4ff'];
-                  
-                  const frame = () => {
-                    confetti({
-                      particleCount: 5,
-                      angle: 60,
-                      spread: 55,
-                      origin: { x: 0, y: 0.8 },
-                      colors: colors
-                    });
-                    confetti({
-                      particleCount: 5,
-                      angle: 120,
-                      spread: 55,
-                      origin: { x: 1, y: 0.8 },
-                      colors: colors
-                    });
-
-                    if (Date.now() < end) {
-                      requestAnimationFrame(frame);
-                    }
-                  };
-                  frame();
-                }}
-                className="text-[10px] font-black text-fuchsia-600 bg-fuchsia-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm border border-fuchsia-200 hover:scale-105 active:scale-95 transition-transform"
-              >
-                <Star className="w-3 h-3 fill-fuchsia-500" /> {profile?.loyaltyPoints || 0} / 9 Pts
-              </button>
-
-              {heladoCoins !== null && (
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl font-black text-on-surface tracking-tight uppercase leading-tight truncate">{profile?.name || user?.displayName || 'Usuario'}</h2>
+              <div className="flex items-center justify-center sm:justify-start flex-wrap gap-1.5 mt-1.5">
+                <span className={cn(
+                  "text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full",
+                  profile?.role === 'admin' ? "bg-red-100 text-red-600" : 
+                  profile?.role === 'propietario' ? "bg-purple-100 text-purple-600" :
+                  "bg-primary/10 text-primary"
+                )}>
+                  {profile?.role || 'Cliente'}
+                </span>
                 <button 
                   onClick={() => {
-                    const valuePoints = Math.floor(coinsData.totalSpent / 1000);
-                    const bonusPoints = coinsData.orderCount * 10;
                     toast.success(
-                      `Tienes ${heladoCoins} Helado-Coins`,
+                      `Tienes ${profile?.loyaltyPoints || 0} Puntos Premium`,
                       {
-                        description: `⭐ ${valuePoints} pts por compras ($${coinsData.totalSpent.toLocaleString('es-CO')})\n🎁 ${bonusPoints} pts por constancia (${coinsData.orderCount} pedidos)`,
+                        description: `¡Acumula 9 para ganar un Cucurucho Doble gratis!`,
                         position: 'top-center',
                         duration: 6000,
-                        className: 'text-center border-amber-200 bg-amber-50',
+                        className: 'text-center border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700',
                       }
                     );
-
-                    // Animación de confeti mejorada (Dorado/Amarillo)
+                    
+                    // Animación de confeti mejorada (Fucsia/Morado)
                     const duration = 2500;
                     const end = Date.now() + duration;
-                    const colors = ['#f59e0b', '#fbbf24', '#fcd34d', '#b45309', '#fffbeb'];
+                    const colors = ['#d946ef', '#c026d3', '#a21caf', '#e879f9', '#fdf4ff'];
                     
                     const frame = () => {
                       confetti({
@@ -390,15 +342,63 @@ export default function Profile() {
                     };
                     frame();
                   }}
-                  className="text-[10px] font-black text-amber-600 bg-amber-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm border border-amber-200 hover:scale-105 active:scale-95 transition-transform"
+                  className="text-[9px] font-black text-fuchsia-600 bg-fuchsia-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs border border-fuchsia-200 hover:scale-105 active:scale-95 transition-transform"
                 >
-                  ⭐ {heladoCoins} Pts
+                  <Star className="w-3 h-3 fill-fuchsia-500" /> {profile?.loyaltyPoints || 0} / 9 Pts
                 </button>
-              )}
+
+                {heladoCoins !== null && (
+                  <button 
+                    onClick={() => {
+                      const valuePoints = Math.floor(coinsData.totalSpent / 1000);
+                      const bonusPoints = coinsData.orderCount * 10;
+                      toast.success(
+                        `Tienes ${heladoCoins} Helado-Coins`,
+                        {
+                          description: `⭐ ${valuePoints} pts por compras ($${coinsData.totalSpent.toLocaleString('es-CO')})\n🎁 ${bonusPoints} pts por constancia (${coinsData.orderCount} pedidos)`,
+                          position: 'top-center',
+                          duration: 6000,
+                          className: 'text-center border-amber-200 bg-amber-50',
+                        }
+                      );
+
+                      // Animación de confeti mejorada (Dorado/Amarillo)
+                      const duration = 2500;
+                      const end = Date.now() + duration;
+                      const colors = ['#f59e0b', '#fbbf24', '#fcd34d', '#b45309', '#fffbeb'];
+                      
+                      const frame = () => {
+                        confetti({
+                          particleCount: 5,
+                          angle: 60,
+                          spread: 55,
+                          origin: { x: 0, y: 0.8 },
+                          colors: colors
+                        });
+                        confetti({
+                          particleCount: 5,
+                          angle: 120,
+                          spread: 55,
+                          origin: { x: 1, y: 0.8 },
+                          colors: colors
+                        });
+
+                        if (Date.now() < end) {
+                          requestAnimationFrame(frame);
+                        }
+                      };
+                      frame();
+                    }}
+                    className="text-[9px] font-black text-amber-600 bg-amber-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs border border-amber-200 hover:scale-105 active:scale-95 transition-transform"
+                  >
+                    ⭐ {heladoCoins} Pts
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="w-full h-px bg-outline/20 my-8" />
+          <div className="w-full h-px bg-outline/20 my-4" />
 
           <div className="w-full space-y-4 text-left">
             <div className="space-y-2">

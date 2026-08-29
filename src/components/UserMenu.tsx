@@ -510,23 +510,21 @@ export default function UserMenu() {
                 </div>
               </button>
               {(profile?.role === 'admin' || profile?.role === 'propietario') && (
-                <>
-                  <MenuItem
-                    icon={<Package className="w-4 h-4" />}
-                    label="Catálogo e Inventario"
-                    sublabel="Gestionar menú y productos"
-                    onClick={() => navigate('/admin/management?tab=inventario')}
-                    closeMenu={() => setIsOpen(false)}
-                  />
-                  <MenuItem
-                    icon={<Settings className="w-4 h-4" />}
-                    label="Configuración"
-                    sublabel="Ajustes del sistema"
-                    onClick={() => navigate('/settings')}
-                    closeMenu={() => setIsOpen(false)}
-                  />
-                </>
+                <MenuItem
+                  icon={<Package className="w-4 h-4" />}
+                  label="Catálogo e Inventario"
+                  sublabel="Gestionar menú y productos"
+                  onClick={() => navigate('/admin/management?tab=inventario')}
+                  closeMenu={() => setIsOpen(false)}
+                />
               )}
+              <MenuItem
+                icon={<Settings className="w-4 h-4" />}
+                label="Configuración"
+                sublabel="Ajustes y preferencias"
+                onClick={() => navigate('/settings')}
+                closeMenu={() => setIsOpen(false)}
+              />
             </div>
 
             {/* App options */}
