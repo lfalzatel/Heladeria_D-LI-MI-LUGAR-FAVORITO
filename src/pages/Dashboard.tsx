@@ -568,7 +568,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <div id="dashboard-pdf-container" className="p-4 sm:p-8 max-w-7xl mx-auto flex flex-col gap-6 w-full pb-32">
+      <div id="dashboard-pdf-container" className="p-3 sm:p-6 max-w-7xl mx-auto flex flex-col gap-4 w-full pb-32">
         {/* FILTERS */}
         {selectedDate ? (
           <div className="flex items-center justify-between bg-primary/10 rounded-2xl p-3 w-full sm:max-w-sm border border-primary/20">
