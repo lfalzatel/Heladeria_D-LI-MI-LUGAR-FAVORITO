@@ -133,11 +133,17 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [user?.uid]);
 
-  // Handle splash completion
+  // Handle splash completion with a 4s max safety fallback timer
   useEffect(() => {
     if (!authLoading && minTimeElapsed) {
       hideSplash();
     }
+
+    const maxSafetyTimer = setTimeout(() => {
+      hideSplash();
+    }, 4000);
+
+    return () => clearTimeout(maxSafetyTimer);
   }, [authLoading, minTimeElapsed, hideSplash]);
 
   return (

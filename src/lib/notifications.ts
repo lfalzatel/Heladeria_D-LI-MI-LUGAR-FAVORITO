@@ -72,11 +72,15 @@ export async function requestNotificationPermission(userId: string) {
 
     if (currentToken) {
       console.log("Token FCM obtenido con éxito");
-      // Guardar el token en Firestore
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        fcmTokens: arrayUnion(currentToken)
-      });
+      // Guardar el token en Firestore con setDoc (merge) y try/catch de seguridad
+      try {
+        const userRef = doc(db, 'users', userId);
+        await setDoc(userRef, {
+          fcmTokens: arrayUnion(currentToken)
+        }, { merge: true });
+      } catch (tokenErr) {
+        console.warn('Advertencia al guardar token en Firestore:', tokenErr);
+      }
       return currentToken;
     }
     throw new Error('No se pudo obtener el token de FCM');

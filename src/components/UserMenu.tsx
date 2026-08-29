@@ -574,13 +574,16 @@ export default function UserMenu() {
                       try {
                         const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
                         const provider = new GoogleAuthProvider();
-                        provider.setCustomParameters({ login_hint: acc.email });
+                        if (acc.email) {
+                          provider.setCustomParameters({ login_hint: acc.email });
+                        }
                         await signOut(auth);
                         await signInWithPopup(auth, provider);
                         toast.success(`Sesión iniciada como ${acc.name}`);
                       } catch (err: any) {
                         console.error("Error al cambiar cuenta", err);
-                        toast.error('Error al cambiar de cuenta. ' + (err.message || ''));
+                        toast.error('Sesión cerrada. Selecciona tu cuenta para ingresar.');
+                        navigate('/login');
                       } finally {
                         toast.dismiss();
                       }
