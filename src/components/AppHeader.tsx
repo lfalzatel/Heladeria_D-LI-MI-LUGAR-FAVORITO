@@ -22,7 +22,7 @@ export default function AppHeader({ backTo }: AppHeaderProps) {
   const [showLargeLogo, setShowLargeLogo] = useState(false);
 
   return (
-    <header className={`flex justify-between items-center px-4 sm:px-8 h-14 sm:h-16 bg-white/80 border-b border-white/40 sticky top-0 shadow-xs transition-all ${showLargeLogo ? 'z-[200]' : 'z-[60] backdrop-blur-2xl'}`}>
+    <header className={`flex justify-between items-center px-4 sm:px-10 h-16 sm:h-24 bg-white/60 border-b border-white/40 sticky top-0 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all ${showLargeLogo ? 'z-[200]' : 'z-[60] backdrop-blur-2xl'}`}>
       {/* ── Lado izquierdo ── */}
       <div className="flex items-center gap-3">
         {/* Logo D'LI Real */}
@@ -156,7 +156,7 @@ export function HeaderSearch({
 /** Sub-componente: bloque título + subtítulo debajo del header */
 export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
-    <div className="px-4 sm:px-8 pt-3 sm:pt-4 pb-2.5 sm:pb-3 border-b border-outline/10 bg-gradient-to-b from-white to-surface-container-lowest/30 flex items-center justify-between gap-3 sticky top-14 sm:top-16 z-[30] backdrop-blur-md">
+    <div className="px-4 sm:px-8 pt-3 sm:pt-4 pb-2.5 sm:pb-3 border-b border-outline/10 bg-gradient-to-b from-white to-surface-container-lowest/30 flex items-center justify-between gap-3 sticky top-16 sm:top-24 z-[30] backdrop-blur-md">
       <div className="min-w-0 flex-1">
         <h1 className="font-headline font-black text-lg sm:text-2xl text-on-surface tracking-tight leading-snug mb-0.5 truncate">
           {title}
