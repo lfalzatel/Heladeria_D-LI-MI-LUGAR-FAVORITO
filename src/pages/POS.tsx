@@ -256,10 +256,10 @@ export default function POS() {
         }}
       />
 
-      <main className="flex-1 p-2.5 sm:p-6 flex flex-col gap-3 sm:gap-5 pb-32">
+      <main className="flex-1 p-2.5 sm:p-6 flex flex-col gap-2 sm:gap-4 pb-32">
         {/* Mesas / Ubicación del Pedido */}
         <section id="mesas-section">
-          <header className="flex items-center justify-between mb-1 px-1">
+          <header className="flex items-center justify-between mb-0.5 px-1">
             <h3 className="text-[9px] font-black text-secondary uppercase tracking-[0.2em]">Ubicación del Pedido</h3>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 mr-2">
@@ -272,7 +272,7 @@ export default function POS() {
               </div>
             </div>
           </header>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 hide-scrollbar snap-x px-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-1.5 hide-scrollbar snap-x px-1">
             {tables.map((table) => {
               const isActive = activeTable === table.id;
               const cartEmpty = !carts[table.id]?.items.length;
@@ -284,8 +284,8 @@ export default function POS() {
                     "snap-start flex-shrink-0 min-w-[54px] h-9 sm:h-10 rounded-xl flex items-center justify-center px-3 gap-1.5 transition-all duration-200 relative border-b-2 text-xs font-bold",
                     isActive 
                       ? (cartEmpty 
-                          ? "bg-success text-white border-success shadow-md -translate-y-0.5" 
-                          : "bg-primary text-white border-primary shadow-md -translate-y-0.5")
+                          ? "bg-success text-white border-success shadow-md -translate-y-1" 
+                          : "bg-primary text-white border-primary shadow-md -translate-y-1")
                       : (cartEmpty 
                           ? "bg-white border-success/20 text-success hover:border-success/50" 
                           : "bg-white border-primary/20 text-primary hover:border-primary/50"
