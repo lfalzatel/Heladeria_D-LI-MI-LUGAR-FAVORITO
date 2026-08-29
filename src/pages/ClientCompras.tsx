@@ -166,7 +166,8 @@ export default function ClientCompras() {
 
       // Sync to Firestore
       if (profile?.uid) {
-        setDoc(doc(db, 'carts', profile.uid), { currentCart: updatedCart }, { merge: true })
+        const cleanCart = JSON.parse(JSON.stringify(updatedCart));
+        setDoc(doc(db, 'carts', profile.uid), { currentCart: cleanCart }, { merge: true })
           .catch(err => console.error("Error saving cart:", err));
       }
 
@@ -181,7 +182,8 @@ export default function ClientCompras() {
     setCart(prev => {
       const updatedCart = prev.filter(c => c.id !== id);
       if (profile?.uid) {
-        setDoc(doc(db, 'carts', profile.uid), { currentCart: updatedCart }, { merge: true })
+        const cleanCart = JSON.parse(JSON.stringify(updatedCart));
+        setDoc(doc(db, 'carts', profile.uid), { currentCart: cleanCart }, { merge: true })
           .catch(err => console.error("Error removing from cart:", err));
       }
       return updatedCart;
@@ -196,7 +198,8 @@ export default function ClientCompras() {
     setCart(prev => {
       const updatedCart = prev.map(c => c.id === id ? { ...c, quantity: qty, subtotal: c.unitPrice * qty } : c);
       if (profile?.uid) {
-        setDoc(doc(db, 'carts', profile.uid), { currentCart: updatedCart }, { merge: true })
+        const cleanCart = JSON.parse(JSON.stringify(updatedCart));
+        setDoc(doc(db, 'carts', profile.uid), { currentCart: cleanCart }, { merge: true })
           .catch(err => console.error("Error updating quantity:", err));
       }
       return updatedCart;
@@ -414,168 +417,198 @@ export default function ClientCompras() {
 
   return (
     <main className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-5 pt-2">
-          {/* Category filter */}
-          <div className="flex gap-1.5 p-1 overflow-x-auto hide-scrollbar bg-surface-container rounded-xl text-[10px] font-black uppercase">
-            {[{ id: 'all', label: 'Todos', icon: <Package className="w-4 h-4" /> }, ...activeCategories.map(c => ({ id: c.id, label: c.label, icon: <Package className="w-4 h-4" /> }))].map(cat => (
+        {/* Toolbar: Buscador (38%) + Categorías desplazables en 1 misma fila */}
+        <section className="flex items-center gap-2 mb-1">
+          {/* Buscador ~38% */}
+          <div className="w-[38%] min-w-[110px] max-w-[220px] relative flex-shrink-0">
+            <Search className="w-3.5 h-3.5 text-secondary/50 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text" 
+              placeholder="Buscar..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border border-outline/30 focus:border-primary focus:ring-2 focus:ring-primary/10 rounded-xl py-2 pl-8 pr-7 text-xs font-bold text-on-surface placeholder:text-secondary/40 transition-all outline-none"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-2 flex items-center"
+              >
+                <div className="w-4 h-4 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
+                  <X className="w-3 h-3 text-secondary/60" />
+                </div>
+              </button>
+            )}
+          </div>
+
+          {/* Categorías en scroll horizontal */}
+          <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
+            {[{ id: 'all', label: 'Todos', icon: <Package className="w-3.5 h-3.5" /> }, ...activeCategories.map(c => ({ id: c.id, label: c.label, icon: <Package className="w-3.5 h-3.5" /> }))].map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={cn(
-                  "px-4 py-2 sm:py-1.5 rounded-lg transition-all flex items-center gap-2 flex-shrink-0",
-                  activeCategory === cat.id
-                    ? "bg-on-surface text-white shadow-sm"
-                    : "text-secondary hover:bg-surface"
+                  "whitespace-nowrap px-3 py-1.5 rounded-xl font-bold text-xs transition-all border flex-shrink-0 flex items-center gap-1.5",
+                  activeCategory === cat.id 
+                    ? "bg-primary border-primary text-white shadow-xs"
+                    : "bg-white border-outline/30 text-secondary hover:border-primary/30"
                 )}
               >
-                {cat.icon}
                 {cat.label}
               </button>
             ))}
           </div>
+        </section>
 
-          {/* Products grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProducts.map(product => {
-              const productInCart = cart.filter(item => item.productId === product.id);
-              const totalQuantity = productInCart.reduce((sum, i) => sum + i.quantity, 0);
-              const isComplex = (product.variants && product.variants.length > 1) || 
-                                product.requiresFlavors || 
-                                product.requiresFruitChoice || 
-                                product.requiresSauces || 
-                                product.requiresToppings || 
-                                product.requiresSalpiconBase ||
-                                (product.customOptions && product.customOptions.length > 0);
-              
-              const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
-              const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);
+        {/* Products grid: 2 por fila en móvil (grid-cols-2) */}
+        <section className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
+          {filteredProducts.map(product => {
+            const productInCart = cart.filter(item => item.productId === product.id);
+            const totalQuantity = productInCart.reduce((sum, i) => sum + i.quantity, 0);
+            const isComplex = (product.variants && product.variants.length > 1) || 
+                              product.requiresFlavors || 
+                              product.requiresFruitChoice || 
+                              product.requiresSauces || 
+                              product.requiresToppings || 
+                              product.requiresSalpiconBase ||
+                              (product.customOptions && product.customOptions.length > 0);
+            
+            const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.price)) : (product.basePrice || 0);
+            const priceDisplay = product.variants && product.variants.length > 1 ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice);
 
-              const handleCardClick = () => {
-                if (isComplex) {
-                  setSelectedProduct(product);
-                } else {
-                  if (totalQuantity === 0) {
-                    const item = {
-                      id: Math.random().toString(36).substr(2, 9),
-                      productId: product.id,
-                      productName: product.name,
-                      variantLabel: product.variants?.[0]?.label || '',
-                      quantity: 1,
-                      unitPrice: minPrice,
-                      subtotal: minPrice,
-                    };
-                    addToCart(item);
-                  }
+            const handleCardClick = () => {
+              if (isComplex) {
+                setSelectedProduct(product);
+              } else {
+                if (totalQuantity === 0) {
+                  const item: CartItem = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    productId: product.id,
+                    productName: product.name,
+                    variantLabel: product.variants?.[0]?.label || '',
+                    quantity: 1,
+                    unitPrice: minPrice,
+                    subtotal: minPrice,
+                  };
+                  addToCart(item);
                 }
-              };
+              }
+            };
 
-              const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
-                e.stopPropagation();
-                if (productInCart.length > 0 && !isComplex) {
-                  updateQty(productInCart[0].id, productInCart[0].quantity + delta);
-                }
-              };
+            const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
+              e.stopPropagation();
+              if (productInCart.length > 0 && !isComplex) {
+                updateQty(productInCart[0].id, productInCart[0].quantity + delta);
+              }
+            };
 
-              return (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  onClick={handleCardClick}
-                  className={cn(
-                    "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-                    (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
-                    totalQuantity > 0 ? "ring-4 ring-primary/10 shadow-md border-primary/20" : 
-                    product.cardColor ? "border-outline/20 shadow-sm" : "border-outline/10 shadow-sm"
-                  )}
-                  style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
+            const isAnimEnabled = typeof localStorage !== 'undefined' ? localStorage.getItem('ui_animations_enabled') !== 'false' : true;
+
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={handleCardClick}
+                className={cn(
+                  (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
+                  "rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group h-full min-h-[175px] sm:min-h-[195px]",
+                  totalQuantity > 0 
+                    ? "ring-2 ring-primary shadow-md border-primary/40 bg-primary/[0.03] z-10" 
+                    : product.cardColor ? "border-outline/20 shadow-xs" : "border-outline/10 shadow-xs"
+                )}
+                style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
+              >
+                {/* Top Image + Detail Inspector Button + Badges */}
+                <motion.div 
+                  animate={isAnimEnabled ? {
+                    rotate: [0, -8, 8, -8, 0, 0, 0, 0, 0, 0],
+                    scale: [1, 1.06, 0.94, 1.06, 1, 1, 1, 1, 1, 1],
+                  } : {}}
+                  whileHover={{ scale: 1.03 }}
+                  transition={isAnimEnabled ? {
+                    duration: 3.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: (product.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 20) / 10
+                  } : { duration: 0.2 }}
+                  className="relative w-full h-24 sm:h-28 rounded-xl overflow-hidden bg-surface-container-low border border-outline/5 mb-2 flex-shrink-0"
                 >
-                  <motion.div 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setDetailsProduct(product); 
+                  {product.imageUrl ? (
+                    <img src={getAssetUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
+                      <IceCream className="w-8 h-8 text-primary/30 group-hover:text-primary transition-colors" />
+                    </div>
+                  )}
+
+                  {/* Detail Inspector Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDetailsProduct(product);
                     }}
-                    className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5"
-                    animate={{
-                      rotate: [0, -12, 12, -12, 0, 0, 0, 0, 0, 0],
-                      scale: [1, 1.12, 0.88, 1.12, 1, 1, 1, 1, 1, 1],
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{
-                      duration: 3.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: (product.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 20) / 10
-                    }}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white hover:bg-black/60 transition-colors shadow-xs z-10"
+                    title="Ver detalle del producto"
                   >
-                    {product.imageUrl ? (
-                      <img src={getAssetUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
+                    <Search className="w-3 h-3" />
+                  </button>
+
+                  {/* Category Badge */}
+                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-[8px] font-black text-white uppercase tracking-wider truncate max-w-[80%]">
+                    {product.category}
+                  </span>
+
+                  {totalQuantity > 0 && (
+                    <div className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
+                      {totalQuantity}
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* Title & Price & Quick Buttons */}
+                <div className="flex flex-col justify-between flex-1 min-w-0">
+                  <h3 className="font-bold text-on-surface text-xs sm:text-sm leading-snug line-clamp-2 mb-1.5">{product.name}</h3>
+                  
+                  <div className="flex items-center justify-between mt-auto pt-1">
+                    <p className="text-primary font-black text-xs sm:text-sm">
+                      {priceDisplay}
+                    </p>
+
+                    {!isComplex && totalQuantity > 0 ? (
+                      <div className="flex items-center gap-1.5 bg-surface-container rounded-lg p-0.5" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          onClick={(e) => handleUpdateQty(e, -1)}
+                          className="w-5 h-5 flex items-center justify-center bg-white shadow-xs text-secondary rounded transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="font-black text-xs w-3 text-center">{totalQuantity}</span>
+                        <button 
+                          onClick={(e) => handleUpdateQty(e, 1)}
+                          className="w-5 h-5 flex items-center justify-center bg-white shadow-xs text-secondary rounded transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
                     ) : (
-                      <IceCream className="w-8 h-8 text-secondary/30 absolute inset-0 m-auto group-hover:text-primary transition-colors" />
-                    )}
-                    
-                    {totalQuantity > 0 && !isComplex && (
-                      <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center">
-                        <span className="text-xl font-black text-primary drop-shadow-md">{totalQuantity}</span>
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                        <Plus className="w-3.5 h-3.5" />
                       </div>
                     )}
-                  </motion.div>
-
-                  <div className="flex-1 flex flex-col min-w-0">
-                    <div className="flex w-full justify-between items-center mb-0.5">
-                      <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-[7px] font-black text-secondary uppercase tracking-widest truncate max-w-[60px]">
-                        {product.category}
-                      </span>
-                      {totalQuantity > 0 && (
-                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                      )}
-                    </div>
-
-                    <h3 className="font-bold text-on-surface text-sm sm:text-base leading-tight w-full line-clamp-2 mb-1">{product.name}</h3>
-                    
-                    <div className="flex justify-between items-end mt-1">
-                      <p className="text-primary font-black text-base sm:text-lg leading-none">
-                        {priceDisplay}
-                      </p>
-
-                      {!isComplex && totalQuantity > 0 ? (
-                        <div className="flex items-center gap-3 bg-surface-container rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            onClick={(e) => handleUpdateQty(e, -1)}
-                            className="w-7 h-7 flex items-center justify-center bg-white shadow-sm hover:text-primary text-secondary rounded-md transition-colors"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          <span className="font-black text-sm w-4 text-center">{totalQuantity}</span>
-                          <button 
-                            onClick={(e) => handleUpdateQty(e, 1)}
-                            className="w-7 h-7 flex items-center justify-center bg-white shadow-sm hover:text-primary text-secondary rounded-md transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          {isComplex && totalQuantity > 0 && (
-                            <span className="font-bold text-[10px] uppercase text-primary tracking-wider">{totalQuantity} en carrito</span>
-                          )}
-                          <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                            <Plus className="w-4 h-4" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </section>
 
-          {filteredProducts.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 opacity-30">
-              <IceCream className="w-12 h-12 mb-3" />
-              <p className="text-sm font-bold">Sin productos en esta categoría</p>
-            </div>
-          )}
+        {filteredProducts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 opacity-30">
+            <IceCream className="w-12 h-12 mb-3" />
+            <p className="text-sm font-bold">Sin productos en esta categoría</p>
+          </div>
+        )}
 
 
         {/* Floating Cart Button for Client */}
