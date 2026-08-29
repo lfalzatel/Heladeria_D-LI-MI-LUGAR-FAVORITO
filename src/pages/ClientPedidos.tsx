@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   collection, onSnapshot, query, orderBy, where, doc, updateDoc,
   getDoc, addDoc, serverTimestamp, increment, limit
@@ -295,17 +295,19 @@ export default function ClientPedidos() {
           <AnimatePresence mode="popLayout">
             {activePedidos.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-[2.5rem] p-10 text-center border-2 border-dashed border-outline/20"
+                className="bg-white rounded-2xl p-4 sm:p-5 text-center border border-dashed border-outline/30 flex items-center justify-center gap-3"
               >
-                <div className="w-14 h-14 bg-surface-container rounded-3xl flex items-center justify-center mx-auto mb-3 text-secondary/30">
-                  <Package className="w-7 h-7" />
+                <div className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-secondary/40 flex-shrink-0">
+                  <Package className="w-4 h-4" />
                 </div>
-                <p className="text-secondary font-bold text-sm">Sin pedidos activos</p>
-                <p className="text-[10px] uppercase font-black tracking-widest text-secondary/40 mt-1">
-                  {isStaff ? 'Esperando nuevos pedidos' : '¡Haz uno en la sección de compras!'}
-                </p>
+                <div className="text-left">
+                  <p className="text-secondary font-bold text-xs leading-none">Sin pedidos activos</p>
+                  <p className="text-[9px] uppercase font-black tracking-wider text-secondary/40 mt-0.5">
+                    {isStaff ? 'Esperando nuevos pedidos' : '¡Haz uno en la sección de compras!'}
+                  </p>
+                </div>
               </motion.div>
             ) : (
               activePedidos.map(pedido => (
