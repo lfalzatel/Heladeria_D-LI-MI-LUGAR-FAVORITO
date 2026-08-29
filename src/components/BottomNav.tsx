@@ -16,6 +16,7 @@ import {
 import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/useAuthStore';
 import { motion } from 'motion/react';
+import { playUiSound } from '../lib/soundEffects';
 
 interface NavItemProps {
   to: string;
@@ -71,7 +72,7 @@ const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
     </div>
   );
 
-  return <Link to={to} className="flex-1 flex justify-center">{content}</Link>;
+  return <Link to={to} onClick={() => playUiSound()} className="flex-1 flex justify-center">{content}</Link>;
 };
 
 export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {

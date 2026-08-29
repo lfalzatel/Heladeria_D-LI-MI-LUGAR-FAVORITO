@@ -5,7 +5,7 @@ import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, Cre
 import { cn, formatCurrency } from '../lib/utils';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { compressImage } from '../utils/imageCompressor';
-import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
@@ -262,6 +262,63 @@ export default function MovementDetailModal({
   const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [editPaymentMethod, setEditPaymentMethod] = useState('');
   const [editEfectivo, setEditEfectivo] = useState(0);
+
+  const [isEditingDate, setIsEditingDate] = useState(false);
+  const [editDateTimeStr, setEditDateTimeStr] = useState('');
+  const [isSavingDate, setIsSavingDate] = useState(false);
+
+  const handleStartEditingDate = () => {
+    setIsEditingDate(true);
+    if (data?.createdAt) {
+      const d = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      setEditDateTimeStr(`${year}-${month}-${day}T${hours}:${minutes}`);
+    } else {
+      setEditDateTimeStr(new Date().toISOString().slice(0, 16));
+    }
+  };
+
+  const handleSaveDate = async () => {
+    if (!editDateTimeStr || !data?.id) return;
+    setIsSavingDate(true);
+    try {
+      const newDateObj = new Date(editDateTimeStr);
+      if (isNaN(newDateObj.getTime())) {
+        toast.error('Fecha u hora inválida');
+        setIsSavingDate(false);
+        return;
+      }
+      const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
+      const collectionName = isPedido ? 'pedidos' : 'sales';
+
+      const dateIsoStr = editDateTimeStr.split('T')[0];
+      const hourStr = newDateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+      const timestampVal = Timestamp.fromDate(newDateObj);
+
+      await updateDoc(doc(db, collectionName, data.id), {
+        createdAt: timestampVal,
+        timestamp: timestampVal,
+        date: dateIsoStr,
+        hour: hourStr,
+      });
+
+      data.createdAt = timestampVal;
+      data.date = dateIsoStr;
+      data.hour = hourStr;
+
+      toast.success('¡Fecha y hora de la venta actualizadas!');
+      setIsEditingDate(false);
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Error al guardar fecha: ' + err.message);
+    } finally {
+      setIsSavingDate(false);
+    }
+  };
 
   if (!data) return null;
 
@@ -582,11 +639,52 @@ export default function MovementDetailModal({
                            </div>
                          );
                       })()}
-                     <div className={cn("bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-0.5 border border-outline/5 shadow-sm", data.paymentMethod === 'credito' && "col-span-2")}>
-                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
-                       <p className="font-headline font-bold text-on-surface text-xs">{date}</p>
-                       <p className="text-[9px] text-secondary flex items-center gap-1"><Clock className="w-3 h-3" />{time}</p>
-                     </div>
+                     <div className={cn("bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-1 border border-outline/5 shadow-sm relative", data.paymentMethod === 'credito' && "col-span-2")}>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[9px] text-secondary font-black uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
+                          {canEditPayment && !isEditingDate && (
+                            <button 
+                              onClick={handleStartEditingDate}
+                              className="text-secondary/50 hover:text-primary transition-colors cursor-pointer"
+                              title="Editar fecha y hora"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        
+                        {!isEditingDate ? (
+                          <>
+                            <p className="font-headline font-bold text-on-surface text-xs mt-0.5">{date}</p>
+                            <p className="text-[9px] text-secondary flex items-center gap-1"><Clock className="w-3 h-3" />{time}</p>
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-2 mt-1">
+                            <input
+                              type="datetime-local"
+                              value={editDateTimeStr}
+                              onChange={(e) => setEditDateTimeStr(e.target.value)}
+                              className="bg-white border border-outline/10 rounded-lg text-xs p-1.5 outline-none focus:ring-1 focus:ring-primary w-full cursor-pointer"
+                            />
+                            <div className="flex gap-1.5 justify-end">
+                              <button
+                                onClick={() => setIsEditingDate(false)}
+                                className="px-2 py-1 rounded-lg bg-surface-container text-secondary text-[10px] font-bold"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleSaveDate}
+                                disabled={isSavingDate}
+                                className="px-2 py-1 rounded-lg bg-primary text-white text-[10px] font-bold flex items-center gap-1 shadow-sm"
+                              >
+                                {isSavingDate ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3 h-3" />}
+                                Guardar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                      <div className={cn("bg-surface-container/30 rounded-2xl p-3 flex flex-col gap-1 border border-outline/5 shadow-sm relative", data.paymentMethod === 'credito' && "col-span-2")}>
                        <div className="flex items-center justify-between">
                          <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Pago</p>
@@ -1157,7 +1255,7 @@ export default function MovementDetailModal({
                         </h4>
                         <p className="text-xs text-secondary font-semibold mt-2 leading-relaxed px-2">
                           {confirmAction === 'edit' 
-                            ? 'Los productos volverán al punto de venta y este registro se eliminará para que puedas cobrarlo nuevamente con los cambios correspondientes.'
+                            ? 'Los productos volverán a la caja para agregar o modificar ítems. Al cobrar, se conservará la fecha y hora original de la venta.'
                             : 'Esta acción no se puede deshacer. Se restaurarán los insumos al inventario y se eliminará el registro monetario definitivamente.'
                           }
                         </p>

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/useAuthStore';
+import { playUiSound } from '../lib/soundEffects';
 
 interface SidebarLinkProps {
   to: string;
@@ -26,6 +27,7 @@ function SidebarLink({ to, icon, label, active }: SidebarLinkProps) {
   return (
     <Link
       to={to}
+      onClick={() => playUiSound()}
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group',
         active

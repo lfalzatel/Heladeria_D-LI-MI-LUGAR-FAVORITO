@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
 import { CartItem } from '../types';
 import { toast } from 'sonner';
-import { collection, addDoc, serverTimestamp, updateDoc, doc, increment, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, updateDoc, doc, increment, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useState, useEffect } from 'react';
 import { notifyAdmins } from '../lib/notifications';
@@ -169,11 +169,45 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         status: 'completed', // Required by Firestore rules
         tableId: activeTable,
         tableName: cart.isTakeout ? 'Para Llevar' : (activeTable === 'directa' ? 'Venta Directa' : `Mesa ${activeTable.replace('mesa', '')}`),
-        note: cart.note || '', // Global order note
-        timestamp: serverTimestamp(),
-        createdAt: serverTimestamp(), // Required by Firestore rules
-        date: new Date().toISOString().split('T')[0],
-        hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+        timestamp: (() => {
+          if (cart.openedAt) {
+            const d = new Date(cart.openedAt);
+            if (!isNaN(d.getTime()) && (Date.now() - d.getTime() > 5 * 60 * 1000)) {
+              return Timestamp.fromDate(d);
+            }
+          }
+          return serverTimestamp();
+        })(),
+        createdAt: (() => {
+          if (cart.openedAt) {
+            const d = new Date(cart.openedAt);
+            if (!isNaN(d.getTime()) && (Date.now() - d.getTime() > 5 * 60 * 1000)) {
+              return Timestamp.fromDate(d);
+            }
+          }
+          return serverTimestamp();
+        })(),
+        date: (() => {
+          if (cart.openedAt) {
+            const d = new Date(cart.openedAt);
+            if (!isNaN(d.getTime()) && (Date.now() - d.getTime() > 5 * 60 * 1000)) {
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            }
+          }
+          return new Date().toISOString().split('T')[0];
+        })(),
+        hour: (() => {
+          if (cart.openedAt) {
+            const d = new Date(cart.openedAt);
+            if (!isNaN(d.getTime()) && (Date.now() - d.getTime() > 5 * 60 * 1000)) {
+              return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+          }
+          return new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+        })(),
         packagingSupplies: cart.packagingSupplies || [],
       };
 
@@ -317,6 +351,19 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 </button>
               </div>
             </header>
+
+            {/* Historical sale edit badge indicator */}
+            {cart?.openedAt && (Date.now() - new Date(cart.openedAt).getTime() > 5 * 60 * 1000) && (
+              <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 flex items-center justify-between text-amber-700 dark:text-amber-300 text-xs font-bold">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                  Editando venta del {new Date(cart.openedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className="text-[9px] uppercase tracking-wider font-black bg-amber-500/20 px-2 py-0.5 rounded-full">
+                  Mantiene fecha
+                </span>
+              </div>
+            )}
 
             {/* Custom confirm clear modal */}
             <AnimatePresence>

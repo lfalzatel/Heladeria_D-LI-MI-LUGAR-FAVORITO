@@ -14,6 +14,7 @@ import { cn } from '../lib/utils';
 import { requestNotificationPermission, unregisterNotifications } from '../lib/notifications';
 import { AnimatePresence, motion } from 'motion/react';
 import { playNotificationSound } from '../lib/notifications';
+import { SOUND_PROFILES, getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId } from '../lib/soundEffects';
 
 interface ThemeConfig {
   id: string;
@@ -43,6 +44,7 @@ export default function Settings() {
   // Accordion active sections
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     cuenta: true,
+    sonidos: false,
     notificaciones: false,
     gestion: false,
     apariencia: false,
@@ -54,6 +56,7 @@ export default function Settings() {
       const isCurrentlyOpen = prev[section];
       return {
         cuenta: false,
+        sonidos: false,
         notificaciones: false,
         gestion: false,
         apariencia: false,
@@ -61,6 +64,15 @@ export default function Settings() {
         [section]: !isCurrentlyOpen
       };
     });
+  };
+
+  // ── SOUNDS & AUDIO STATE ──────────────────────────────────────────────
+  const [selectedUiSound, setSelectedUiSound] = useState<SoundProfileId>(() => getUiSoundProfile());
+
+  const handleSelectUiSound = (id: SoundProfileId) => {
+    setSelectedUiSound(id);
+    setUiSoundProfile(id);
+    playUiSound(id);
   };
 
   // ── NOTIFICATIONS STATE ────────────────────────────────────────────────
@@ -353,7 +365,180 @@ export default function Settings() {
           </AnimatePresence>
         </div>
 
-        {/* ── SECCIÓN 2: NOTIFICACIONES ── */}
+        {/* ── SECCIÓN 2: SONIDOS Y AUDIO ── */}
+        <div className="bg-white dark:bg-surface-container rounded-3xl overflow-hidden shadow-sm border border-outline/10">
+          <button 
+            onClick={() => toggleSection('sonidos')}
+            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-surface-container/30 transition-colors"
+          >
+            <span className="font-bold text-sm text-secondary uppercase tracking-wider flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-primary" /> Sonidos y Audio
+            </span>
+            <span className="text-xs text-secondary">{openSections.sonidos ? '▲' : '▼'}</span>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {openSections.sonidos && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
+                className="overflow-hidden border-t border-outline/10"
+              >
+                <div className="p-5 space-y-6">
+                  {/* SUBSECCIÓN 1: SONIDOS DE INTERFAZ */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Sonidos de Interfaz (Menú Inferior)
+                      </h3>
+                      <p className="text-[11px] text-secondary leading-relaxed">
+                        Selecciona el efecto sintetizado por código (0 descargas de red) que sonará al cambiar entre las pestañas del menú inferior y botones:
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {SOUND_PROFILES.map((profile) => {
+                        const isSelected = selectedUiSound === profile.id;
+                        return (
+                          <div
+                            key={profile.id}
+                            onClick={() => handleSelectUiSound(profile.id)}
+                            className={cn(
+                              "sound-card p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98]",
+                              isSelected
+                                ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-xs ring-1 ring-primary/30"
+                                : "border-outline/15 hover:bg-surface-container-low"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
+                                {profile.emoji}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-xs text-on-surface">
+                                    {profile.name}
+                                  </span>
+                                  {profile.isDefault && (
+                                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">
+                                      Por defecto
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-secondary mt-0.5">
+                                  {profile.desc}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {isSelected ? (
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
+                                  <Check className="w-4 h-4 stroke-[3]" />
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border border-outline/25" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Botón Probar Sonido Seleccionado */}
+                    <button
+                      onClick={() => playUiSound(selectedUiSound)}
+                      className="w-full py-3.5 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98]"
+                    >
+                      <Volume2 className="w-4 h-4 stroke-[2.5]" />
+                      PROBAR SONIDO SELECCIONADO
+                    </button>
+                  </div>
+
+                  {/* SUBSECCIÓN 2: TONOS DE ALERTAS Y NOTIFICACIONES */}
+                  <div className="border-t border-outline/10 pt-5 space-y-4">
+                    <div>
+                      <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
+                        <Music className="w-3.5 h-3.5 text-pink-500" /> Tonos de Alerta y Notificaciones
+                      </h3>
+                      <p className="text-[11px] text-secondary leading-relaxed">
+                        Configura el comportamiento sonoro de las alertas cuando entren nuevos pedidos a la heladería:
+                      </p>
+                    </div>
+
+                    {/* Switch: Efecto de Sonido Notificaciones */}
+                    <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                          <Volume2 className="w-4 h-4 text-indigo-500" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold">Sonido de Alerta de Pedidos</p>
+                          <p className="text-[10px] text-secondary">Reproducir tonos de alerta al recibir nuevos pedidos</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setNotifSoundEnabled(!notifSoundEnabled)}
+                        className={cn(
+                          "w-11 h-6 rounded-full transition-all relative flex-shrink-0",
+                          notifSoundEnabled ? "bg-primary" : "bg-outline/30"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
+                          notifSoundEnabled ? "left-6" : "left-1"
+                        )} />
+                      </button>
+                    </div>
+
+                    {/* Select: Tono de Alerta */}
+                    {notifSoundEnabled && (
+                      <div className="p-3 rounded-2xl bg-surface-container-low space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+                            <Music className="w-4 h-4 text-pink-500" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-bold">Tono de Pedido Entrante</p>
+                            <p className="text-[10px] text-secondary">Selecciona el tono de tu preferencia</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 pt-1.5">
+                          {ALERT_TONES.map(tone => (
+                            <div 
+                              key={tone.id}
+                              onClick={() => setSelectedTone(tone.id)}
+                              className={cn(
+                                "flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all active:scale-[0.99]",
+                                selectedTone === tone.id 
+                                  ? "border-primary bg-primary/5 text-primary font-bold" 
+                                  : "border-outline/10 hover:bg-surface-container"
+                              )}
+                            >
+                              <span className="text-xs font-medium">{tone.name}</span>
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleTestTone(tone.id); }}
+                                  className="text-[9px] font-bold uppercase tracking-wider bg-surface-container text-secondary hover:text-on-surface px-2.5 py-1 rounded-lg"
+                                >
+                                  Probar
+                                </button>
+                                {selectedTone === tone.id && <Check className="w-4 h-4 text-primary" />}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── SECCIÓN 3: NOTIFICACIONES (CANALES Y PERMISOS) ── */}
         <div className="bg-white dark:bg-surface-container rounded-3xl overflow-hidden shadow-sm border border-outline/10">
           <button 
             onClick={() => toggleSection('notificaciones')}
@@ -448,71 +633,6 @@ export default function Settings() {
                       )} />
                     </button>
                   </div>
-
-                  {/* Switch 4: Efectos de Sonido */}
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
-                        <Volume2 className="w-4 h-4 text-indigo-500" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold">Efecto de Sonido</p>
-                        <p className="text-[10px] text-secondary">Reproducir tonos de alerta de pedidos</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setNotifSoundEnabled(!notifSoundEnabled)}
-                      className={cn(
-                        "w-11 h-6 rounded-full transition-all relative flex-shrink-0",
-                        notifSoundEnabled ? "bg-primary" : "bg-outline/30"
-                      )}
-                    >
-                      <div className={cn(
-                        "absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
-                        notifSoundEnabled ? "left-6" : "left-1"
-                      )} />
-                    </button>
-                  </div>
-
-                  {/* Select: Tono de Alerta */}
-                  {notifSoundEnabled && (
-                    <div className="p-3 rounded-2xl bg-surface-container-low space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-pink-500/10 flex items-center justify-center flex-shrink-0">
-                          <Music className="w-4 h-4 text-pink-500" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold">Tono de Alerta</p>
-                          <p className="text-[10px] text-secondary">Selecciona el tono de tu preferencia</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2 pt-1.5">
-                        {ALERT_TONES.map(tone => (
-                          <div 
-                            key={tone.id}
-                            onClick={() => setSelectedTone(tone.id)}
-                            className={cn(
-                              "flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all active:scale-[0.99]",
-                              selectedTone === tone.id 
-                                ? "border-primary bg-primary/5 text-primary" 
-                                : "border-outline/10 hover:bg-surface-container"
-                            )}
-                          >
-                            <span className="text-xs font-medium">{tone.name}</span>
-                            <div className="flex items-center gap-2">
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleTestTone(tone.id); }}
-                                className="text-[9px] font-bold uppercase tracking-wider bg-surface-container text-secondary hover:text-on-surface px-2.5 py-1 rounded-lg"
-                              >
-                                Probar
-                              </button>
-                              {selectedTone === tone.id && <Check className="w-4 h-4 text-primary" />}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             )}
