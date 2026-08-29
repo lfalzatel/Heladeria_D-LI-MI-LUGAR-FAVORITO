@@ -1221,7 +1221,7 @@ export default function Management() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                className="w-full flex flex-col gap-5 pb-10"
+                className="w-full flex flex-col gap-2 pb-10"
               >
                 {/* Sub-tab bar: Insumos | Productos | Sabores */}
                 <div className="flex bg-surface-container rounded-2xl p-1 shadow-inner w-full">
@@ -1252,7 +1252,7 @@ export default function Management() {
 
                   {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo Catálogo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'insumos' && (
-                    <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
+                    <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
                         {/* Buscador ~35% */}
                         <div className="w-[38%] min-w-[110px] max-w-[220px] flex items-center bg-white rounded-xl px-2.5 py-2 border border-outline/30 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs flex-shrink-0">
@@ -1468,7 +1468,7 @@ export default function Management() {
                       initial={{ opacity: 0 }} 
                       animate={{ opacity: 1 }} 
                       exit={{ opacity: 0 }} 
-                      className="flex flex-col gap-5 w-full max-w-full overflow-hidden pb-10"
+                      className="flex flex-col gap-2 w-full max-w-full overflow-hidden pb-10"
                     >
                       {/* Toolbar: Buscador (35%) + Botón Añadir (65%) en la misma fila */}
                       <div className="flex items-center gap-2">
