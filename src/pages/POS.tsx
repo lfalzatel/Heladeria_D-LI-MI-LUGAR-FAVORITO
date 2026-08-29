@@ -596,6 +596,8 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
     }
   };
 
+  const isAnimEnabled = typeof localStorage !== 'undefined' ? localStorage.getItem('ui_animations_enabled') !== 'false' : true;
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -611,7 +613,20 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
       style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
     >
       {/* Top Image + Quick Detail Button + Badges */}
-      <div className="relative w-full h-24 sm:h-28 rounded-xl overflow-hidden bg-surface-container-low border border-outline/5 mb-2 flex-shrink-0">
+      <motion.div 
+        animate={isAnimEnabled ? {
+          rotate: [0, -8, 8, -8, 0, 0, 0, 0, 0, 0],
+          scale: [1, 1.06, 0.94, 1.06, 1, 1, 1, 1, 1, 1],
+        } : {}}
+        whileHover={{ scale: 1.03 }}
+        transition={isAnimEnabled ? {
+          duration: 3.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: (product.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 20) / 10
+        } : { duration: 0.2 }}
+        className="relative w-full h-24 sm:h-28 rounded-xl overflow-hidden bg-surface-container-low border border-outline/5 mb-2 flex-shrink-0"
+      >
         {product.imageUrl && !imgError ? (
            <img 
              src={getAssetUrl(product.imageUrl)} 
@@ -631,24 +646,24 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
             e.stopPropagation();
             onDetailClick ? onDetailClick() : onClick();
           }}
-          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white hover:bg-black/60 transition-colors shadow-xs"
+          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white hover:bg-black/60 transition-colors shadow-xs z-10"
           title="Ver detalle del producto"
         >
           <Search className="w-3 h-3" />
         </button>
 
         {/* Category Tag */}
-        <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-[7.5px] font-black text-white uppercase tracking-widest truncate max-w-[80%]">
+        <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-[7.5px] font-black text-white uppercase tracking-widest truncate max-w-[80%] z-10">
           {product.category}
         </span>
 
         {/* Quantity Badge */}
         {totalQuantity > 0 && (
-          <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-black w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shadow-md border border-white">
+          <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-black w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shadow-md border border-white z-10">
             {totalQuantity}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Content: Title & Price + Add Button */}
       <div className="flex-1 flex flex-col justify-between min-w-0">

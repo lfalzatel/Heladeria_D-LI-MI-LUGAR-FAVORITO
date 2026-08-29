@@ -152,6 +152,14 @@ export default function Settings() {
   };
 
   // ── THEME & APARIENCIA STATE ──────────────────────────────────────────
+  const [animationsEnabled, setAnimationsEnabled] = useState(() => {
+    return localStorage.getItem('ui_animations_enabled') !== 'false';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ui_animations_enabled', String(animationsEnabled));
+  }, [animationsEnabled]);
+
   const [selectedThemesOrder, setSelectedThemesOrder] = useState<string[]>(() => {
     const saved = localStorage.getItem('active_themes_order');
     try {
@@ -722,6 +730,31 @@ export default function Settings() {
                 className="overflow-hidden border-t border-outline/10"
               >
                 <div className="p-6 space-y-6">
+                  {/* Switch: Animaciones Dinámicas */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-low border border-outline/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-on-surface">Animaciones Dinámicas de Productos</p>
+                        <p className="text-[10px] text-secondary">Efectos de flotación y movimiento en imágenes de productos</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                      className={cn(
+                        "w-11 h-6 rounded-full transition-all relative flex-shrink-0",
+                        animationsEnabled ? "bg-primary" : "bg-outline/30"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
+                        animationsEnabled ? "left-6" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+
                   {/* Tema Activo */}
                   <div>
                     <h3 className="text-xs font-black uppercase text-secondary tracking-widest mb-3">Tema Visual Activo</h3>
