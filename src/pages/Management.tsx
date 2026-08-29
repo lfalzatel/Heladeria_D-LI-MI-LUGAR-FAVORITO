@@ -979,9 +979,9 @@ export default function Management() {
     return matchesSearch && matchesCategory;
   });
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   // REPORT EXPORT HANDLERS (COMPRAS)
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   const handlePurchasePreview = async (type: 'pdf' | 'excel' | 'image') => {
     setShowPurchaseExportOptions(false);
     setPurchasePreviewType(type);
@@ -1253,21 +1253,29 @@ export default function Management() {
                   {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-tab: INSUMOS (Solo Catálogo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-                          className="flex-1 py-4 bg-on-surface text-white rounded-3xl font-black text-xs uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                          <Plus className="w-5 h-5 stroke-[3]" /> Añadir Insumo
-                        </button>
-                        <div className="flex-1 flex items-center bg-white rounded-3xl px-4 py-2 border border-outline/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
-                          <Search className="w-5 h-5 text-secondary/50 mr-3 flex-shrink-0" />
+                      <div className="flex items-center gap-2">
+                        {/* Buscador ~35% */}
+                        <div className="w-[38%] min-w-[110px] max-w-[220px] flex items-center bg-white rounded-xl px-2.5 py-2 border border-outline/30 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs flex-shrink-0">
+                          <Search className="w-3.5 h-3.5 text-secondary/50 mr-1.5 flex-shrink-0" />
                           <input 
                             type="text" 
-                            placeholder="Buscar insumo o categoría..." 
+                            placeholder="Buscar..." 
                             value={supplySearch}
                             onChange={(e) => setSupplySearch(e.target.value)}
-                            className="bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-secondary/40 text-on-surface"
+                            className="bg-transparent border-none outline-none text-xs w-full font-bold placeholder:text-secondary/40 text-on-surface"
                           />
+                          {supplySearch && (
+                            <button onClick={() => setSupplySearch('')} className="p-0.5">
+                              <X className="w-3 h-3 text-secondary/60" />
+                            </button>
+                          )}
                         </div>
+
+                        {/* Botón Acción + Añadir Insumo ~62% */}
+                        <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                          className="flex-1 py-2 px-3 bg-on-surface text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 hover:opacity-95 active:scale-[0.98] transition-all">
+                          <Plus className="w-4 h-4 stroke-[2.5] flex-shrink-0" /> <span className="truncate">Añadir Insumo</span>
+                        </button>
                       </div>
 
                       <div className="flex flex-col gap-4">
@@ -1462,39 +1470,44 @@ export default function Management() {
                       exit={{ opacity: 0 }} 
                       className="flex flex-col gap-5 w-full max-w-full overflow-hidden pb-10"
                     >
-                      {/* Add product button */}
-                      <button
-                        onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
-                        className="w-full py-4 bg-on-surface text-white rounded-2xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-widestáshadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
-                      >
-                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                        </div>
-                        <span className="truncate">Añadir Nuevo Producto</span>
-                      </button>
-
-                      {/* Toolbar: categories + search */}
-                      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-3 sm:p-4 rounded-3xl sm:rounded-[2rem] border border-outline/50 shadow-sm w-full min-w-0 overflow-hidden">
-                        <div className="flex gap-2 overflow-x-auto w-full md:w-auto hide-scrollbar pb-2 sm:pb-0 px-1 min-w-0">
-                          {categories.map((cat) => (
-                            <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                              className={cn('flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs transition-all whitespace-nowrap shrink-0',
-                                activeCategory === cat.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-container text-secondary hover:bg-surface-container-high')}>
-                              {cat.icon}
-                              {cat.label}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex items-center bg-surface-container rounded-2xl px-4 py-3 border border-outline w-full md:w-64 focus-within:border-primary transition-all">
-                          <Search className="w-4 h-4 text-secondary/40 mr-3 flex-shrink-0" />
+                      {/* Toolbar: Buscador (35%) + Botón Añadir (65%) en la misma fila */}
+                      <div className="flex items-center gap-2">
+                        {/* Buscador ~35% */}
+                        <div className="w-[38%] min-w-[110px] max-w-[220px] flex items-center bg-white rounded-xl px-2.5 py-2 border border-outline/30 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs flex-shrink-0">
+                          <Search className="w-3.5 h-3.5 text-secondary/50 mr-1.5 flex-shrink-0" />
                           <input
                             type="text"
-                            placeholder="Buscar producto..."
+                            placeholder="Buscar..."
                             value={productSearch}
                             onChange={(e) => setProductSearch(e.target.value)}
-                            className="bg-transparent border-none outline-none text-xs w-full text-on-surface placeholder:text-secondary/30 font-bold"
+                            className="bg-transparent border-none outline-none text-xs w-full text-on-surface placeholder:text-secondary/40 font-bold"
                           />
+                          {productSearch && (
+                            <button onClick={() => setProductSearch('')} className="p-0.5">
+                              <X className="w-3 h-3 text-secondary/60" />
+                            </button>
+                          )}
                         </div>
+
+                        {/* Botón Añadir Producto */}
+                        <button
+                          onClick={() => { setProductToEdit(null); setIsProductModalOpen(true); }}
+                          className="flex-1 py-2 px-3 bg-on-surface text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 hover:opacity-95 active:scale-[0.98] transition-all"
+                        >
+                          <Plus className="w-4 h-4 stroke-[2.5] flex-shrink-0" /> <span className="truncate">Añadir Producto</span>
+                        </button>
+                      </div>
+
+                      {/* Categorías desplazables horizontalmente */}
+                      <div className="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
+                        {categories.map((cat) => (
+                          <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                            className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap shrink-0 border',
+                              activeCategory === cat.id ? 'bg-primary border-primary text-white shadow-xs' : 'bg-white border-outline/30 text-secondary hover:border-primary/30')}>
+                            {cat.icon}
+                            {cat.label}
+                          </button>
+                        ))}
                       </div>
 
                       {/* Product grid */}
