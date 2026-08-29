@@ -256,23 +256,24 @@ export default function POS() {
         }}
       />
 
-      <main className="flex-1 p-4 sm:p-8 flex flex-col gap-6 sm:gap-10 pb-32">
+      <main className="flex-1 p-2.5 sm:p-6 flex flex-col gap-3 sm:gap-5 pb-32">
+        {/* Mesas / Ubicación del Pedido */}
         <section id="mesas-section">
-          <header className="flex items-center justify-between mb-3 px-1">
-            <h3 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Ubicación del Pedido</h3>
+          <header className="flex items-center justify-between mb-1 px-1">
+            <h3 className="text-[9px] font-black text-secondary uppercase tracking-[0.2em]">Ubicación del Pedido</h3>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 mr-3">
-                 <div className="w-2 h-2 rounded-full bg-success/20 ring-1 ring-success animate-pulse" />
-                 <span className="text-[8px] font-bold text-secondary uppercase">Libre</span>
+              <div className="flex items-center gap-1.5 mr-2">
+                 <div className="w-1.5 h-1.5 rounded-full bg-success/20 ring-1 ring-success animate-pulse" />
+                 <span className="text-[7.5px] font-bold text-secondary uppercase">Libre</span>
               </div>
               <div className="flex items-center gap-1.5">
-                 <div className="w-2 h-2 rounded-full bg-primary/20 ring-1 ring-primary animate-pulse" />
-                 <span className="text-[8px] font-bold text-secondary uppercase">Ocupada</span>
+                 <div className="w-1.5 h-1.5 rounded-full bg-primary/20 ring-1 ring-primary animate-pulse" />
+                 <span className="text-[7.5px] font-bold text-secondary uppercase">Ocupada</span>
               </div>
             </div>
           </header>
-          <div className="flex items-center gap-2 overflow-x-auto pb-4 hide-scrollbar snap-x px-1">
-            {tables.map((table, index) => {
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 hide-scrollbar snap-x px-1">
+            {tables.map((table) => {
               const isActive = activeTable === table.id;
               const cartEmpty = !carts[table.id]?.items.length;
               return (
@@ -280,20 +281,20 @@ export default function POS() {
                   key={table.id}
                   onClick={() => setActiveTable(table.id)}
                   className={cn(
-                    "snap-start flex-shrink-0 min-w-[60px] h-12 rounded-xl flex items-center justify-center px-4 gap-2 transition-all duration-300 relative border-b-4",
+                    "snap-start flex-shrink-0 min-w-[54px] h-9 sm:h-10 rounded-xl flex items-center justify-center px-3 gap-1.5 transition-all duration-200 relative border-b-2 text-xs font-bold",
                     isActive 
                       ? (cartEmpty 
-                          ? "bg-success text-white border-success shadow-xl -translate-y-1" 
-                          : "bg-primary text-white border-primary shadow-xl -translate-y-1")
+                          ? "bg-success text-white border-success shadow-md -translate-y-0.5" 
+                          : "bg-primary text-white border-primary shadow-md -translate-y-0.5")
                       : (cartEmpty 
                           ? "bg-white border-success/20 text-success hover:border-success/50" 
                           : "bg-white border-primary/20 text-primary hover:border-primary/50"
                         )
                   )}
                 >
-                  <div className="flex items-center gap-1.5">
-                     <ShoppingBag className={cn("w-4 h-4", isActive ? "text-white" : "text-inherit opacity-40")} />
-                     <span className={cn("font-black text-sm", isActive ? "text-white" : "")}>
+                  <div className="flex items-center gap-1">
+                     <ShoppingBag className={cn("w-3.5 h-3.5", isActive ? "text-white" : "text-inherit opacity-50")} />
+                     <span className={cn("font-black text-xs", isActive ? "text-white" : "")}>
                         {table.type === 'delivery' ? '' : table.label.replace('Mesa ', '')}
                      </span>
                   </div>
@@ -302,44 +303,46 @@ export default function POS() {
             })}
             
             <button 
-              className="flex-shrink-0 w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/20 hover:bg-primary/5 hover:text-primary transition-all border-2 border-dashed border-outline/40"
+              className="flex-shrink-0 w-9 h-9 sm:h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/40 hover:bg-primary/5 hover:text-primary transition-all border border-dashed border-outline/40"
               onClick={() => {
                 setExtraTables(prev => prev + 1);
                 toast.success(`Mesa ${extraTables + 4} agregada temporalmente`);
               }}
+              title="Agregar Mesa"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
             </button>
           </div>
         </section>
 
-        <section id="search-section" className="px-1">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-secondary/40 group-focus-within:text-primary transition-colors" />
+        {/* Toolbar Unificado: Buscador (~35%) + Categorías */}
+        <section id="toolbar-section" className="flex items-center gap-2 px-1">
+          {/* Buscador ~35% */}
+          <div className="relative w-[38%] min-w-[120px] max-w-[240px] flex-shrink-0 group">
+            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+              <Search className="w-3.5 h-3.5 text-secondary/40 group-focus-within:text-primary transition-colors" />
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Busca por nombre de producto..."
-              className="w-full bg-white border-2 border-outline/30 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-on-surface placeholder:text-secondary/30 transition-all outline-none"
+              placeholder="Buscar..."
+              className="w-full bg-white border border-outline/30 focus:border-primary focus:ring-2 focus:ring-primary/10 rounded-xl py-2 pl-8 pr-7 text-xs font-bold text-on-surface placeholder:text-secondary/40 transition-all outline-none"
             />
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                className="absolute inset-y-0 right-0 pr-2 flex items-center"
               >
-                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center hover:bg-surface-container transition-colors">
-                  <X className="w-4 h-4 text-secondary/60" />
+                <div className="w-4 h-4 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
+                  <X className="w-3 h-3 text-secondary/60" />
                 </div>
               </button>
             )}
           </div>
-        </section>
 
-        <section id="catalogo-section">
-          <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+          {/* Categorías en scroll horizontal */}
+          <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
             {categories.map(cat => (
               <button
                 key={cat.id}
@@ -351,12 +354,12 @@ export default function POS() {
                   }
                 }}
                 className={cn(
-                  "whitespace-nowrap px-6 py-2.5 rounded-xl font-bold text-xs transition-all border-2",
+                  "whitespace-nowrap px-3 py-1.5 rounded-xl font-bold text-xs transition-all border flex-shrink-0",
                   activeCategory === cat.id 
-                    ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
+                    ? "bg-primary border-primary text-white shadow-xs"
                     : cat.id === 'premio-fidelidad'
-                      ? "bg-gradient-to-r from-amber-400 to-orange-500 border-orange-500 text-white shadow-md"
-                      : "bg-white border-outline/50 text-secondary hover:border-primary/30"
+                      ? "bg-gradient-to-r from-amber-400 to-orange-500 border-orange-500 text-white shadow-xs"
+                      : "bg-white border-outline/30 text-secondary hover:border-primary/30"
                 )}
               >
                 {cat.label}
@@ -365,22 +368,24 @@ export default function POS() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-8">
+        {/* Cuadrícula de Productos: 2 por fila en móvil (grid-cols-2) */}
+        <section className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[4/5] bg-surface-container animate-pulse rounded-3xl" />
+              <div key={i} className="aspect-[3/4] bg-surface-container animate-pulse rounded-2xl" />
             ))
           ) : filteredProducts.length > 0 ? (
             filteredProducts.map((product, i) => (
               <motion.div 
                 key={product.id}
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(15px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ 
-                  duration: 0.6, 
+                  duration: 0.35, 
                   ease: [0.34, 1.56, 0.64, 1],
-                  delay: i * 0.05 
+                  delay: i * 0.03 
                 }}
+                className="h-full"
               >
                 <ProductCard 
                   product={product} 
@@ -391,9 +396,9 @@ export default function POS() {
               </motion.div>
             ))
           ) : (
-            <div className="col-span-full py-20 flex flex-col items-center opacity-20">
-              <MenuSquare className="w-12 h-12 mb-4" />
-              <p className="font-bold">No hay productos en esta categoría</p>
+            <div className="col-span-full py-16 flex flex-col items-center opacity-30">
+              <MenuSquare className="w-10 h-10 mb-2" />
+              <p className="font-bold text-sm">No hay productos en esta categoría</p>
             </div>
           )}
         </section>
@@ -598,37 +603,20 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
       onClick={handleMainClick}
       className={cn(
         (!product.cardColor || !product.cardColor.startsWith('#')) && (product.cardColor || "bg-white"),
-        "rounded-[1.5rem] p-3 flex items-center gap-3 relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
+        "rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between relative border hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group h-full min-h-[175px] sm:min-h-[195px]",
         totalQuantity > 0 
-          ? "ring-4 ring-primary/30 shadow-lg border-primary/40 scale-[1.02] bg-primary/[0.03] z-10" 
-          : product.cardColor ? "border-outline/20 shadow-sm" : "border-outline/10 shadow-sm"
+          ? "ring-2 ring-primary shadow-md border-primary/40 bg-primary/[0.03] z-10" 
+          : product.cardColor ? "border-outline/20 shadow-xs" : "border-outline/10 shadow-xs"
       )}
       style={product.cardColor?.startsWith('#') ? { backgroundColor: product.cardColor } : {}}
     >
-      {/* Zone 1: Image defaults to open details if passed */}
-      <motion.div 
-        onClick={(e) => {
-          e.stopPropagation();
-          onDetailClick ? onDetailClick() : onClick();
-        }}
-        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container-low border border-outline/5"
-        animate={{
-          rotate: [0, -12, 12, -12, 0, 0, 0, 0, 0, 0],
-          scale: [1, 1.12, 0.88, 1.12, 1, 1, 1, 1, 1, 1],
-        }}
-        whileHover={{ scale: 1.05 }}
-        transition={{
-          duration: 3.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: (product.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 20) / 10
-        }}
-      >
+      {/* Top Image + Quick Detail Button + Badges */}
+      <div className="relative w-full h-24 sm:h-28 rounded-xl overflow-hidden bg-surface-container-low border border-outline/5 mb-2 flex-shrink-0">
         {product.imageUrl && !imgError ? (
            <img 
              src={getAssetUrl(product.imageUrl)} 
              alt={product.name} 
-             className="w-full h-full object-cover"
+             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
              onError={() => setImgError(true)} 
            />
         ) : (
@@ -637,58 +625,63 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
           </div>
         )}
         
-        {totalQuantity > 0 && !isComplex && (
-          <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="text-xl font-black text-primary drop-shadow-md">{totalQuantity}</span>
+        {/* Detail Inspector Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDetailClick ? onDetailClick() : onClick();
+          }}
+          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white hover:bg-black/60 transition-colors shadow-xs"
+          title="Ver detalle del producto"
+        >
+          <Search className="w-3 h-3" />
+        </button>
+
+        {/* Category Tag */}
+        <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-[7.5px] font-black text-white uppercase tracking-widest truncate max-w-[80%]">
+          {product.category}
+        </span>
+
+        {/* Quantity Badge */}
+        {totalQuantity > 0 && (
+          <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-black w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shadow-md border border-white">
+            {totalQuantity}
           </div>
         )}
-      </motion.div>
+      </div>
 
-      {/* Zone 2: Content & Quick Add Controls */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex w-full justify-between items-center mb-0.5">
-          <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-[7px] font-black text-secondary uppercase tracking-widest truncate max-w-[60px]">
-            {product.category}
-          </span>
-          {totalQuantity > 0 && (
-             <div className="relative flex items-center justify-center w-3 h-3">
-               <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-60" />
-               <div className="relative w-2 h-2 rounded-full bg-primary shadow-sm" />
-             </div>
-          )}
-        </div>
-
-        <h3 className="font-bold text-on-surface text-sm sm:text-base leading-tight w-full line-clamp-2 mb-1">{product.name}</h3>
+      {/* Content: Title & Price + Add Button */}
+      <div className="flex-1 flex flex-col justify-between min-w-0">
+        <h3 className="font-bold text-on-surface text-xs sm:text-sm leading-snug line-clamp-2 mb-1.5">
+          {product.name}
+        </h3>
         
-        <div className="flex justify-between items-end mt-1">
-          <p className="text-primary font-black text-base sm:text-lg leading-none">
+        <div className="flex items-center justify-between mt-auto pt-1">
+          <p className="text-primary font-black text-xs sm:text-sm leading-none">
             {isOwnerConsumptionMode ? "$0" : priceDisplay}
           </p>
 
           {/* Quick UI Add controls right inside the item details */}
           {!isComplex && totalQuantity > 0 ? (
-            <div className="flex items-center gap-3 bg-surface-container rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1 bg-surface-container rounded-lg p-0.5" onClick={(e) => e.stopPropagation()}>
               <button 
                 onClick={(e) => handleUpdateQty(e, -1)}
-                className="w-7 h-7 flex items-center justify-center bg-white shadow-sm hover:text-primary text-secondary rounded-md transition-colors"
+                className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-white shadow-xs hover:text-primary text-secondary rounded-md transition-colors"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-3 h-3" />
               </button>
-              <span className="font-black text-sm w-4 text-center">{totalQuantity}</span>
+              <span className="font-black text-xs w-3.5 text-center">{totalQuantity}</span>
               <button 
                 onClick={(e) => handleUpdateQty(e, 1)}
-                className="w-7 h-7 flex items-center justify-center bg-white shadow-sm hover:text-primary text-secondary rounded-md transition-colors"
+                className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-white shadow-xs hover:text-primary text-secondary rounded-md transition-colors"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3 h-3" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              {isComplex && totalQuantity > 0 && (
-                <span className="font-bold text-[10px] uppercase text-primary tracking-wider">{totalQuantity} en carrito</span>
-              )}
-              <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                <Plus className="w-4 h-4" />
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center transition-colors shadow-xs">
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
             </div>
           )}
