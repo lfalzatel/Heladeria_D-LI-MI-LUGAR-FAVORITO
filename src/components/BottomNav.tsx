@@ -202,6 +202,7 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
         {isAdmin && (
           <>
             <NavItem 
+              id="bottom-nav-home-target"
               to="/admin/dashboard" 
               icon={<Home />} 
               label="Inicio" 

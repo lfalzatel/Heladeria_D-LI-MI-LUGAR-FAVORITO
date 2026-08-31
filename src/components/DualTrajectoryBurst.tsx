@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { playEventSound } from '../lib/soundEffects';
+import { ActionEventType, playEventSound } from '../lib/soundEffects';
 
 interface DualTrajectoryBurstProps {
   trigger: boolean;
   onComplete?: () => void;
   startPosition?: { x: number; y: number };
+  targetAId?: string;
+  targetBId?: string;
+  eventType?: ActionEventType;
 }
 
 interface Particle {
@@ -19,18 +22,25 @@ interface Particle {
   delay: number;
 }
 
-export default function DualTrajectoryBurst({ trigger, onComplete, startPosition }: DualTrajectoryBurstProps) {
+export default function DualTrajectoryBurst({ 
+  trigger, 
+  onComplete, 
+  startPosition,
+  targetAId = 'notification-bell-target',
+  targetBId = 'bottom-nav-orders-target',
+  eventType = 'burst'
+}: DualTrajectoryBurstProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     if (!trigger) return;
 
     // Reproducir sonido de confirmación configurado
-    playEventSound('burst');
+    playEventSound(eventType);
 
     // Obtener elementos destino en el DOM
-    const bellEl = document.getElementById('notification-bell-target');
-    const navEl = document.getElementById('bottom-nav-orders-target');
+    const bellEl = document.getElementById(targetAId) || document.getElementById('user-profile-capsule-target') || document.getElementById('notification-bell-target');
+    const navEl = document.getElementById(targetBId) || document.getElementById('bottom-nav-home-target') || document.getElementById('bottom-nav-orders-target');
 
     const bellRect = bellEl ? bellEl.getBoundingClientRect() : { left: window.innerWidth - 60, top: 20, width: 40, height: 40 };
     const navRect = navEl ? navEl.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight - 50, width: 40, height: 40 };
@@ -47,7 +57,7 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
     const icons = ['🍦', '🍨', '🍧', '🪙', '✨', '⭐', '🍓'];
     const generated: Particle[] = [];
 
-    // 6 partículas hacia la campana y 6 hacia el menú inferior
+    // 6 partículas hacia destino A y 6 hacia destino B
     for (let i = 0; i < 12; i++) {
       const isBell = i % 2 === 0;
       generated.push({
@@ -58,7 +68,7 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
         startY,
         targetX: isBell ? bellTargetX : navTargetX,
         targetY: isBell ? bellTargetY : navTargetY,
-        delay: (i * 0.08), // Despegue progresivo entre 0 y 400ms
+        delay: (i * 0.08),
       });
     }
 

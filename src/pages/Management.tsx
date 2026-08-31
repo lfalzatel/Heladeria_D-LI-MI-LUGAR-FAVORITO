@@ -16,6 +16,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { playEventSound } from '../lib/soundEffects';
 import { Product } from '../types';
 import { 
   Users as UsersIcon, 
@@ -2267,6 +2268,7 @@ export default function Management() {
                 splitDetails: splitDetails || null,
                 createdAt: purchaseDate 
               });
+              playEventSound('expense');
               for (const item of items) {
                 const unitCost = item.quantity > 0 ? item.cost / item.quantity : 0;
                 const supplyUpdate: any = { 

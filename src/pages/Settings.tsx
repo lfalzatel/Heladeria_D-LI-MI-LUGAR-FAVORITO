@@ -498,7 +498,7 @@ export default function Settings() {
                               "sound-card p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98]",
                               isSelected
                                 ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-xs ring-1 ring-primary/30"
-                                : "border-outline/15 hover:bg-surface-container-low"
+                                : "border-outline/15 bg-white dark:bg-surface-container hover:bg-surface-container-high shadow-xs"
                             )}
                           >
                             <div className="flex items-center gap-3">
@@ -604,7 +604,7 @@ export default function Settings() {
                                   "sound-card p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98]",
                                   isSelected 
                                     ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-xs ring-1 ring-primary/30" 
-                                    : "border-outline/15 hover:bg-surface-container-low"
+                                    : "border-outline/15 bg-white dark:bg-surface-container hover:bg-surface-container-high shadow-xs"
                                 )}
                               >
                                 <div className="flex items-center gap-3">

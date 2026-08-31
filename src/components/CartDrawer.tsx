@@ -12,7 +12,8 @@ import { notifyAdmins } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
 import html2canvas from 'html2canvas';
-import { toBlob as htmlToBlob } from 'html-to-image';
+import { playEventSound } from '../lib/soundEffects';
+import DualTrajectoryBurst from './DualTrajectoryBurst';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [successSale, setSuccessSale] = useState<any | null>(null);
+  const [showBurst, setShowBurst] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [imageGenerating, setImageGenerating] = useState(false);
   const [manualPhone, setManualPhone] = useState('');
@@ -261,6 +263,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       await deductInventory(cart.items, cart.packagingSupplies);
       
       toast.success('¡Venta realizada con éxito!');
+      playEventSound('income');
+      setShowBurst(true);
       notifyAdmins(
         "🍦 Nueva venta realizada",
         `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : (paymentMethod === 'credito' ? 'Debe' : paymentMethod)}`
@@ -1408,7 +1412,14 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+      <DualTrajectoryBurst 
+        trigger={showBurst} 
+        targetAId="user-profile-capsule-target" 
+        targetBId="bottom-nav-home-target" 
+        eventType="income" 
+        onComplete={() => setShowBurst(false)} 
+      />
+      </AnimatePresence>
     </>
   );
 }

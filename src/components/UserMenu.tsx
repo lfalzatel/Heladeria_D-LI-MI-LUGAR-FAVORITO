@@ -307,6 +307,7 @@ export default function UserMenu() {
       {/* Compact trigger — avatar + first name + role dot + chevron */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        id="user-profile-capsule-target"
         className="flex items-center gap-2 pl-1 pr-2 sm:pr-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-primary/40 transition-all shadow-lg active:scale-95 group max-w-[120px] sm:max-w-none"
       >
         {/* Avatar with Google photo */}
