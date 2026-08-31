@@ -18,7 +18,8 @@ import {
   Star,
   TrendingUp,
   ShoppingBag,
-  Wallet
+  Wallet,
+  Fingerprint
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +31,7 @@ import { db } from '../lib/firebase';
 import { compressImage } from '../utils/imageCompressor';
 import { Camera, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { isBiometricsSupported, hasBiometricsRegisteredForUser, registerBiometricCredential, removeBiometricCredential } from '../lib/biometrics';
 
 export default function Profile() {
   const { profile, user, signOut, updateProfile } = useAuthStore();
@@ -37,6 +39,17 @@ export default function Profile() {
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [hasBio, setHasBio] = useState(false);
+  const [bioSupported, setBioSupported] = useState(false);
+
+  useEffect(() => {
+    isBiometricsSupported().then(supported => {
+      setBioSupported(supported);
+      if (profile?.uid) {
+        setHasBio(hasBiometricsRegisteredForUser(profile.uid));
+      }
+    });
+  }, [profile?.uid]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -452,6 +465,43 @@ export default function Profile() {
                 placeholder="Tu dirección de residencia"
               />
             </div>
+
+            {bioSupported && (
+              <div className="p-4 rounded-2xl bg-fuchsia-50 border border-fuchsia-100 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 flex items-center justify-center flex-shrink-0">
+                    <Fingerprint className="w-5 h-5 text-fuchsia-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-fuchsia-950">Acceso por Huella / Face ID</p>
+                    <p className="text-[10px] text-fuchsia-700">Ingresa rápidamente en este celular</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!profile) return;
+                    if (hasBio) {
+                      removeBiometricCredential(profile.uid);
+                      setHasBio(false);
+                    } else {
+                      const ok = await registerBiometricCredential({
+                        uid: profile.uid,
+                        email: profile.email || '',
+                        name: profile.name || 'Usuario'
+                      });
+                      if (ok) setHasBio(true);
+                    }
+                  }}
+                  className={cn(
+                    "text-[10px] font-black uppercase px-3 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer flex-shrink-0",
+                    hasBio ? "bg-emerald-100 text-emerald-700 border border-emerald-300" : "bg-fuchsia-600 text-white shadow-md shadow-fuchsia-600/20 hover:scale-105 active:scale-95"
+                  )}
+                >
+                  {hasBio ? '✓ Activada' : '+ Activar Huella'}
+                </button>
+              </div>
+            )}
 
             <button 
               onClick={handleSave}

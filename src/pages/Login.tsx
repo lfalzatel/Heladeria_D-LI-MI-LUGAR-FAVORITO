@@ -7,20 +7,48 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { ArrowRight, Loader2, User, UserPlus, X } from 'lucide-react';
+import { ArrowRight, Loader2, User, UserPlus, X, Fingerprint } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSavedAccountsStore, SavedAccount } from '../stores/useSavedAccountsStore';
 import { useNavigate } from 'react-router-dom';
+import { isBiometricsSupported, getRegisteredBiometricCredentials, authenticateWithBiometrics } from '../lib/biometrics';
 
 export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loadingAccountId, setLoadingAccountId] = useState<string | null>(null);
+  const [hasBiometricCreds, setHasBiometricCreds] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
 
   const { user, profile } = useAuthStore();
   const { accounts, addAccount, removeAccount } = useSavedAccountsStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    isBiometricsSupported().then(supported => {
+      if (supported && getRegisteredBiometricCredentials().length > 0) {
+        setHasBiometricCreds(true);
+      }
+    });
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    setBiometricLoading(true);
+    try {
+      const cred = await authenticateWithBiometrics();
+      if (cred) {
+        const saved = accounts.find(a => a.uid === cred.userUid || a.email === cred.userEmail);
+        if (saved) {
+          handleGoogleLogin(saved);
+        } else {
+          handleGoogleLogin({ uid: cred.userUid, email: cred.userEmail, name: cred.userName, role: 'cliente' });
+        }
+      }
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user && profile) {
@@ -173,6 +201,21 @@ export default function Login() {
 
           <div className="flex flex-col gap-4">
             
+            {hasBiometricCreds && (
+              <button
+                onClick={handleBiometricLogin}
+                disabled={biometricLoading || googleLoading}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 active:scale-98 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/25 flex items-center justify-center gap-3 transition-all mb-1"
+              >
+                {biometricLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Fingerprint className="w-5 h-5 text-white" />
+                )}
+                <span>Ingresar con Huella / Face ID</span>
+              </button>
+            )}
+
             {accounts.length > 0 && (
               <div className="flex flex-col gap-2 mb-2">
                 {accounts.map(acc => (

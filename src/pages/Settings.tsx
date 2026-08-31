@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, User, Key, Shield, Bell, Smartphone, Monitor, 
   Volume2, Music, Check, Palette, Sparkles, LogOut, Trash2, 
-  Layers, Users, RefreshCw, Settings as SettingsIcon
+  Layers, Users, RefreshCw, Settings as SettingsIcon, Fingerprint
 } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { signOut, sendPasswordResetEmail, deleteUser } from 'firebase/auth';
@@ -15,6 +15,7 @@ import { requestNotificationPermission, unregisterNotifications } from '../lib/n
 import { AnimatePresence, motion } from 'motion/react';
 import { playNotificationSound } from '../lib/notifications';
 import { SOUND_PROFILES, getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId } from '../lib/soundEffects';
+import { isBiometricsSupported, hasBiometricsRegisteredForUser, registerBiometricCredential, removeBiometricCredential } from '../lib/biometrics';
 
 interface ThemeConfig {
   id: string;
@@ -40,6 +41,17 @@ const ALERT_TONES = [
 export default function Settings() {
   const navigate = useNavigate();
   const { user, profile } = useAuthStore();
+  const [hasBio, setHasBio] = useState(false);
+  const [bioSupported, setBioSupported] = useState(false);
+
+  useEffect(() => {
+    isBiometricsSupported().then(supported => {
+      setBioSupported(supported);
+      if (profile?.uid) {
+        setHasBio(hasBiometricsRegisteredForUser(profile.uid));
+      }
+    });
+  }, [profile?.uid]);
   
   // Accordion active sections
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -349,6 +361,45 @@ export default function Settings() {
                       <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <span className="text-[10px] text-blue-500 font-bold uppercase bg-blue-500/10 px-2.5 py-1 rounded-full">Enviar</span>
+                    )}
+                  </div>
+
+                  {/* Biometrics (Huella Dactilar / Face ID) item */}
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 flex items-center justify-center">
+                        <Fingerprint className="w-5 h-5 text-fuchsia-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold">Ingreso por Huella / Face ID</p>
+                        <p className="text-[10px] text-secondary">
+                          {bioSupported ? 'Acceso biométrico rápido en este celular' : 'No compatible con este navegador'}
+                        </p>
+                      </div>
+                    </div>
+                    {bioSupported && (
+                      <button
+                        onClick={async () => {
+                          if (!profile) return;
+                          if (hasBio) {
+                            removeBiometricCredential(profile.uid);
+                            setHasBio(false);
+                          } else {
+                            const ok = await registerBiometricCredential({
+                              uid: profile.uid,
+                              email: profile.email || '',
+                              name: profile.name || 'Usuario'
+                            });
+                            if (ok) setHasBio(true);
+                          }
+                        }}
+                        className={cn(
+                          "text-[10px] font-black uppercase px-3 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer",
+                          hasBio ? "bg-emerald-100 text-emerald-700 border border-emerald-300" : "bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-300 hover:scale-105 active:scale-95"
+                        )}
+                      >
+                        {hasBio ? '✓ Activada' : '+ Activar'}
+                      </button>
                     )}
                   </div>
 

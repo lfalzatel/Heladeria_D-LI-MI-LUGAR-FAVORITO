@@ -300,6 +300,25 @@ export default function ClientCompras() {
         messages: initialMessages,
       });
 
+      // Construir mensaje estructurado para WhatsApp +57 301 1198206
+      const itemsListText = cart.map(i => 
+        `• ${i.quantity}x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} - $${(i.price * i.quantity).toLocaleString('es-CO')}`
+      ).join('\n');
+
+      const waText = `¡Hola D'LI Heladería! 🍦 Acabo de realizar un pedido desde la app:\n\n` +
+        `🆔 *Pedido:* #${docRef.id.slice(-6).toUpperCase()}\n` +
+        `👤 *Cliente:* ${profile.name}\n` +
+        `📱 *Teléfono:* ${phone.trim()}\n` +
+        `📍 *Dirección:* ${address.trim()}\n` +
+        `💳 *Método de Pago:* ${paymentMethod === 'transferencia' ? 'Transferencia Nequi' : 'Efectivo contraentrega'}\n` +
+        (note.trim() ? `📝 *Nota:* ${note.trim()}\n` : '') +
+        `\n🛒 *Productos:*\n${itemsListText}\n\n` +
+        `💰 *Total:* $${cartTotal.toLocaleString('es-CO')}\n\n` +
+        `¡Quedo atento a la confirmación! 🙌`;
+
+      const cleanWaPhone = '573011198206';
+      const waUrl = `https://api.whatsapp.com/send?phone=${cleanWaPhone}&text=${encodeURIComponent(waText)}`;
+
       // Construir objeto local para abrir el modal inmediatamente
       const pedidoLocal = {
         id: docRef.id,
@@ -314,9 +333,19 @@ export default function ClientCompras() {
         status: 'pendiente',
         createdAt: new Date(),
         messages: initialMessages,
+        waUrl: waUrl
       };
       setNewOrderData(pedidoLocal);
       setNewOrderOpen(true);
+
+      // Abrir WhatsApp automáticamente hacia el +57 301 1198206
+      setTimeout(() => {
+        try {
+          window.open(waUrl, '_blank');
+        } catch (e) {
+          console.warn('Auto-open WhatsApp bloqueado por el navegador:', e);
+        }
+      }, 500);
 
       // Actualizar el perfil del usuario con la última dirección y teléfono
       if (profile) {
