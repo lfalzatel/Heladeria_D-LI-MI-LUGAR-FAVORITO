@@ -675,7 +675,7 @@ export default function Settings() {
                             >
                               {ALL_SOUND_OPTIONS.map(opt => (
                                 <option key={opt.id} value={opt.id}>
-                                  {opt.emoji} {opt.name}
+                                  {opt.name}
                                 </option>
                               ))}
                             </select>
