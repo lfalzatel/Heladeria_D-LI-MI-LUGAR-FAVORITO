@@ -166,11 +166,15 @@ export default function MovementDetailModal({
       return m;
     });
 
-    const docRef = doc(db, 'pedidos', data.id);
+    const colName = (data.isDirectPedido || data.type === 'online' || data.pedidoId) ? 'pedidos' : 'sales';
+    const docRef = doc(db, colName, data.id);
     updateDoc(docRef, {
       messages: updated,
       chatMessages: updated
-    }).catch(err => console.error('Error marcando mensajes como leídos en Firestore:', err));
+    }).catch(() => {
+      const altCol = colName === 'pedidos' ? 'sales' : 'pedidos';
+      updateDoc(doc(db, altCol, data.id), { messages: updated, chatMessages: updated }).catch(() => {});
+    });
 
     // Actualizar objeto local data para feedback inmediato
     data.messages = updated;
@@ -653,9 +657,18 @@ export default function MovementDetailModal({
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
-              {activeTab === 'chat' ? (
-                <div className="flex-1 flex flex-col gap-3 py-2">
+            <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4 relative">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: activeTab === 'chat' ? 50 : -50, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: activeTab === 'chat' ? -50 : 50, scale: 0.98 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex-1 flex flex-col gap-4"
+                >
+                  {activeTab === 'chat' ? (
+                    <div className="flex-1 flex flex-col gap-3 py-2">
                   {(() => {
                     const chatMsgs = data.messages || data.chatMessages || data.chat || [];
                     if (!Array.isArray(chatMsgs) || chatMsgs.length === 0) {
@@ -1124,14 +1137,16 @@ export default function MovementDetailModal({
                      onClick={() => { setPackagingSearch(''); handleStartEditingPackaging(); }}
                      className="w-full py-4 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-[11px] uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
                    >
-                     <ShoppingBag className="w-4 h-4" />
-                     Modificar Empaques (Para Llevar)
-                   </button>
-                 </div>
-               )}
-               </>
-             )}
-             </div>
+                      <ShoppingBag className="w-4 h-4" />
+                      Modificar Empaques (Para Llevar)
+                    </button>
+                  </div>
+                )}
+                </>
+              )}
+                </motion.div>
+              </AnimatePresence>
+              </div>
 
             {data && (
               (data.status !== 'entregado' && data.status !== 'rechazado' && data.status !== 'completed') ||

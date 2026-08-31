@@ -114,8 +114,10 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
 
       const unread = snap.docs.some(d => {
         const data = d.data();
+        const isActiveStatus = ['pendiente', 'aceptado', 'celebrado'].includes(data.status);
+        if (!isActiveStatus) return false;
         const msgs = data.chatMessages || data.messages || [];
-        return Array.isArray(msgs) && msgs.some((m: any) => !m.read && m.senderId !== profile.uid);
+        return Array.isArray(msgs) && msgs.some((m: any) => !m.read && m.senderId !== profile.uid && m.from !== profile.uid && m.userId !== profile.uid);
       });
       setHasUnreadChat(unread);
     });
