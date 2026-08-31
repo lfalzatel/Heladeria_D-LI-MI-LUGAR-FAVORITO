@@ -494,15 +494,16 @@ export default function Settings() {
                           <div
                             key={profile.id}
                             onClick={() => handleSelectUiSound(profile.id)}
+                            style={{ backgroundColor: isSelected ? 'rgba(233, 30, 140, 0.12)' : '#ffffff' }}
                             className={cn(
-                              "sound-card p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98]",
+                              "p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-sm",
                               isSelected
-                                ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-xs ring-1 ring-primary/30"
-                                : "border-outline/15 bg-white dark:bg-surface-container hover:bg-surface-container-high shadow-xs"
+                                ? "border-primary ring-1 ring-primary/30"
+                                : "border-pink-200/70 hover:border-primary/40"
                             )}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
+                              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-surface-container border border-slate-200/60 flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
                                 {profile.emoji}
                               </div>
                               <div>
@@ -600,15 +601,16 @@ export default function Settings() {
                                   setSelectedTone(tone.id);
                                   handleTestTone(tone.id);
                                 }}
+                                style={{ backgroundColor: isSelected ? 'rgba(233, 30, 140, 0.12)' : '#ffffff' }}
                                 className={cn(
-                                  "sound-card p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98]",
+                                  "p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-sm",
                                   isSelected 
-                                    ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-xs ring-1 ring-primary/30" 
-                                    : "border-outline/15 bg-white dark:bg-surface-container hover:bg-surface-container-high shadow-xs"
+                                    ? "border-primary ring-1 ring-primary/30" 
+                                    : "border-pink-200/70 hover:border-primary/40"
                                 )}
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
+                                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-surface-container border border-slate-200/60 flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
                                     {emoji}
                                   </div>
                                   <div>
