@@ -40,6 +40,7 @@ interface MovementDetailModalProps {
   isSending?: boolean;
   onUpdateStatus?: (id: string, status: string, e?: React.MouseEvent) => void;
   onToggleItemPrepared?: (itemId: string, currentPrepared: boolean) => void;
+  autoFocusChat?: boolean;
 }
 
 const STATUS_CONFIG: Record<string, any> = {
@@ -62,9 +63,29 @@ export default function MovementDetailModal({
   isSending = false,
   onUpdateStatus,
   onToggleItemPrepared,
-  triggerAbonoOpen = false
+  triggerAbonoOpen = false,
+  autoFocusChat = false
 }: MovementDetailModalProps & { triggerAbonoOpen?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatSectionRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+
+  const handleScrollToChat = () => {
+    if (chatSectionRef.current) {
+      chatSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    setTimeout(() => {
+      chatInputRef.current?.focus();
+    }, 350);
+  };
+
+  React.useEffect(() => {
+    if (isOpen && autoFocusChat) {
+      setTimeout(() => {
+        handleScrollToChat();
+      }, 300);
+    }
+  }, [isOpen, autoFocusChat]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'edit' | 'delete' | null>(null);
@@ -103,8 +124,8 @@ export default function MovementDetailModal({
       try {
         const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
         const snap = await getDocs(q);
-        const packs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter((s: any) => s.status !== 'inactivo');
-        setAllPackaging(packs.sort((a, b) => a.name.localeCompare(b.name)));
+        const packs: any[] = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter((s: any) => s.status !== 'inactivo');
+        setAllPackaging(packs.sort((a: any, b: any) => a.name.localeCompare(b.name)));
       } catch (e) {
         console.error('Error loading packaging names:', e);
       }
@@ -186,8 +207,8 @@ export default function MovementDetailModal({
     try {
       const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
       const snap = await getDocs(q);
-      const packs = snap.docs.map(d => ({id: d.id, ...d.data()})).filter((s: any) => s.status !== 'inactivo');
-      setAllPackaging(packs.sort((a,b) => a.name.localeCompare(b.name)));
+      const packs: any[] = snap.docs.map(d => ({id: d.id, ...d.data()})).filter((s: any) => s.status !== 'inactivo');
+      setAllPackaging(packs.sort((a: any, b: any) => a.name.localeCompare(b.name)));
     } catch (e) {
       console.error(e);
       toast.error('Error cargando empaques');
@@ -538,6 +559,16 @@ export default function MovementDetailModal({
                  </div>
               </div>
               <div className="flex items-center gap-2">
+                {isOnlinePedido && (
+                  <button 
+                    onClick={handleScrollToChat}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-fuchsia-500/10 text-fuchsia-600 hover:bg-fuchsia-500 hover:text-white transition-all font-black text-xs uppercase tracking-wider relative cursor-pointer active:scale-95 border border-fuchsia-500/20 shadow-xs"
+                    title="Ir al chat del pedido"
+                  >
+                    <MessageCircle className="w-4 h-4 text-fuchsia-600" />
+                    <span className="hidden sm:inline">Chat</span>
+                  </button>
+                )}
                 {(profile?.role === 'admin' || profile?.role === 'propietario') && isSale && (
                   <button 
                     onClick={() => setConfirmAction('edit')} 
@@ -1094,7 +1125,7 @@ export default function MovementDetailModal({
             )}
 
             {isOnlinePedido && setChatMessage && onSendMessage && (
-              <div className="p-4 bg-white border-t border-outline/10 flex items-center gap-2 rounded-b-[2.5rem]">
+              <div ref={chatSectionRef} className="p-4 bg-white border-t border-outline/10 flex items-center gap-2 rounded-b-[2.5rem]">
                  <input
                    ref={fileInputRef}
                    type="file"
@@ -1117,6 +1148,7 @@ export default function MovementDetailModal({
 
                  <div className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl flex items-center px-4 py-2 group focus-within:ring-2 ring-primary/20 transition-all">
                     <input
+                      ref={chatInputRef}
                       type="text"
                       value={chatMessage}
                       onChange={e => setChatMessage(e.target.value)}

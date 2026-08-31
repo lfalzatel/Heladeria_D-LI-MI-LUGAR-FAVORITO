@@ -50,6 +50,7 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [autoFocusChat, setAutoFocusChat] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
@@ -61,6 +62,30 @@ export default function NotificationBell() {
   const selectedPedido = pedidos.find(p => p.id === selectedId) || null;
   // El modal se abre cuando hay un pedido seleccionado (independiente del panel)
   const isDetailOpen = !!selectedPedido;
+
+  // Extraer últimos 3 mensajes de chat recibidos en todos los pedidos
+  const recentChatMessages = React.useMemo(() => {
+    const allMsgs: { pedidoId: string; msg: PedidoMessage; pedidoRef: string; total: number }[] = [];
+    pedidos.forEach(p => {
+      if (p.messages && Array.isArray(p.messages)) {
+        p.messages.forEach(m => {
+          allMsgs.push({
+            pedidoId: p.id,
+            msg: m,
+            pedidoRef: p.id.slice(-6).toUpperCase(),
+            total: p.total
+          });
+        });
+      }
+    });
+    return allMsgs
+      .sort((a, b) => {
+        const tA = a.msg.timestamp?.toDate ? a.msg.timestamp.toDate() : new Date(a.msg.timestamp || 0);
+        const tB = b.msg.timestamp?.toDate ? b.msg.timestamp.toDate() : new Date(b.msg.timestamp || 0);
+        return tB.getTime() - tA.getTime();
+      })
+      .slice(0, 3);
+  }, [pedidos]);
 
   const [seenMap, setSeenMap] = useState<Record<string, { status: string, messagesCount: number }>>({});
 
@@ -486,8 +511,55 @@ export default function NotificationBell() {
               )}
             </div>
 
-            {/* Lista de pedidos */}
-            <div className="max-h-[70vh] overflow-y-auto">
+            {/* Lista de pedidos y mensajes */}
+            <div className="max-h-[70vh] overflow-y-auto divide-y divide-outline/10">
+              
+              {/* SUBSECCIÓN: ÚLTIMOS 3 MENSAJES DE CHAT RECIBIDOS */}
+              {recentChatMessages.length > 0 && (
+                <div className="p-4 bg-gradient-to-r from-fuchsia-500/5 via-pink-500/5 to-amber-500/5 border-b border-fuchsia-500/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-fuchsia-600 dark:text-fuchsia-400 flex items-center gap-1.5">
+                      <MessageCircle className="w-3.5 h-3.5 text-fuchsia-500 animate-pulse" /> Últimos Mensajes de Chat
+                    </span>
+                    <span className="text-[9px] font-bold text-fuchsia-600 bg-fuchsia-500/10 px-2 py-0.5 rounded-full">
+                      {recentChatMessages.length} reciente(s)
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    {recentChatMessages.map(({ pedidoId, msg, pedidoRef, total }) => {
+                      const isMe = msg.from === profile?.uid;
+                      return (
+                        <div
+                          key={`${pedidoId}-${msg.id || Math.random()}`}
+                          onClick={() => {
+                            setSelectedId(pedidoId);
+                            setAutoFocusChat(true);
+                            setIsOpen(false);
+                          }}
+                          className="p-2.5 rounded-xl bg-white dark:bg-surface-container border border-fuchsia-500/20 hover:border-fuchsia-500 shadow-xs cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between gap-2 group"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="font-black text-[10px] text-fuchsia-600">#{pedidoRef}</span>
+                              <span className="text-[9px] text-secondary font-bold truncate">· {msg.fromName || 'Usuario'}</span>
+                            </div>
+                            <p className="text-[11px] font-bold text-on-surface truncate">
+                              {msg.text?.startsWith('[IMG]') ? '📷 Comprobante de pago' : msg.text}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] font-black text-fuchsia-600 bg-fuchsia-50 px-2 py-0.5 rounded-lg border border-fuchsia-100">
+                              Ir al Chat ➔
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {pedidos.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 opacity-30">
                   <Bell className="w-10 h-10 mb-3" />
@@ -505,6 +577,7 @@ export default function NotificationBell() {
                         key={pedido.id}
                         onClick={() => {
                           setSelectedId(pedido.id);
+                          setAutoFocusChat(false);
                           setIsOpen(false); // cierra el panel, el modal lo muestra
                         }}
                         className={cn(
@@ -557,7 +630,7 @@ export default function NotificationBell() {
       {/* Modal de detalle unificado — fuera del panel de la campana */}
       <MovementDetailModal
         isOpen={isDetailOpen}
-        onClose={() => setSelectedId(null)}
+        onClose={() => { setSelectedId(null); setAutoFocusChat(false); }}
         data={selectedPedido}
         profile={profile}
         chatMessage={chatMessage}
@@ -566,6 +639,7 @@ export default function NotificationBell() {
         isSending={sending}
         onUpdateStatus={isStaff ? handleUpdateStatus : undefined}
         onToggleItemPrepared={isStaff ? handleToggleItemPrepared : undefined}
+        autoFocusChat={autoFocusChat}
       />
     </div>
   );

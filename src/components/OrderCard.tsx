@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   IceCream, ShoppingBag, Banknote, CreditCard, Smartphone, 
-  ChevronRight, Check, X, Truck, Trash2, Clock
+  ChevronRight, Check, X, Truck, Trash2, Clock, MessageCircle
 } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -72,6 +72,10 @@ export default function OrderCard({
   const isOwner = pedido.clienteId === userId;
   const canMarkDelivered = isStaff || isOwner;
 
+  const chatMsgs = (pedido as any).chatMessages || (pedido as any).messages || [];
+  const hasUnread = Array.isArray(chatMsgs) && chatMsgs.some((m: any) => !m.read && m.senderId !== userId);
+  const hasChat = Array.isArray(chatMsgs) && chatMsgs.length > 0;
+
   const handleConfirmDelivered = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setShowConfirmDelivered(false);
@@ -86,7 +90,9 @@ export default function OrderCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className={cn(
-          "bg-white rounded-[2rem] overflow-hidden border border-outline/10 shadow-sm hover:shadow-md transition-all w-full",
+          "bg-white rounded-[2rem] overflow-hidden border border-outline/10 shadow-sm hover:shadow-md transition-all w-full relative",
+          hasUnread && "border-fuchsia-400 ring-2 ring-fuchsia-500/60 shadow-[0_0_25px_rgba(217,70,239,0.35)] animate-pulse",
+          hasChat && !hasUnread && "border-fuchsia-300/40 ring-1 ring-fuchsia-400/20",
           isUpdating && "opacity-60 pointer-events-none",
           !isActive && "opacity-75"
         )}
@@ -158,6 +164,18 @@ export default function OrderCard({
                 )}>
                   {pending > 0 ? `Pendiente: ${formatCurrency(pending)}` : 'Pagado'}
                 </div>
+              )}
+
+              {hasUnread && (
+                <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white font-black text-[9px] uppercase tracking-wider flex items-center gap-1 shadow-md shadow-fuchsia-500/20 animate-bounce">
+                  <MessageCircle className="w-3 h-3" /> Chat Mensaje Nuevo
+                </span>
+              )}
+
+              {!hasUnread && hasChat && (
+                <span className="px-2 py-0.5 rounded-full bg-fuchsia-500/10 text-fuchsia-600 font-bold text-[9px] uppercase tracking-wider flex items-center gap-1 border border-fuchsia-500/20">
+                  <MessageCircle className="w-3 h-3" /> Chat
+                </span>
               )}
 
               <span className="text-[9px] text-secondary/50 font-bold">{date} · {time}</span>

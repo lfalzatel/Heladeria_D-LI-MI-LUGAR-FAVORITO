@@ -149,7 +149,13 @@ export async function listenToForegroundMessages() {
       if (showInApp) {
         toast.info(payload.notification?.title || "Nuevo Pedido", {
           description: payload.notification?.body,
-          duration: 5000,
+          duration: 6000,
+          action: payload.data?.pedidoId ? {
+            label: 'Ver Chat 💬',
+            onClick: () => {
+              window.location.href = '#/cliente/pedidos';
+            }
+          } : undefined
         });
       }
 
