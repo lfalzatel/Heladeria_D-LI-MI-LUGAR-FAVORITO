@@ -28,9 +28,10 @@ interface NavItemProps {
   highlight?: boolean;
   id?: string;
   badgeCount?: number;
+  hasUnreadChat?: boolean;
 }
 
-const NavItem = ({ to, icon, label, active, highlight, id, badgeCount }: NavItemProps) => {
+const NavItem = ({ to, icon, label, active, highlight, id, badgeCount, hasUnreadChat }: NavItemProps) => {
   const content = (
     <div id={id} className={cn(
       "flex flex-col items-center justify-center transition-colors duration-300 w-full h-full text-center relative",
@@ -46,7 +47,8 @@ const NavItem = ({ to, icon, label, active, highlight, id, badgeCount }: NavItem
           ? "w-14 h-14 -mt-5 rounded-full bg-primary shadow-xl shadow-primary/40 ring-4 ring-white transition-all duration-300"
           : cn(
               "px-3 py-1.5 rounded-2xl",
-              active ? "bg-primary text-white shadow-lg shadow-primary/40 animate-push-settle" : "bg-transparent transition-all duration-300"
+              active ? "bg-primary text-white shadow-lg shadow-primary/40 animate-push-settle" : "bg-transparent transition-all duration-300",
+              hasUnreadChat && !active && "ring-2 ring-fuchsia-500 bg-fuchsia-500/10 shadow-[0_0_15px_rgba(217,70,239,0.5)] animate-pulse"
             )
       )}>
         
@@ -58,11 +60,19 @@ const NavItem = ({ to, icon, label, active, highlight, id, badgeCount }: NavItem
           style: active && !highlight ? { animationDelay: '0.45s' } : {}
         })}
         
+        {/* Badge de conteo de pedidos */}
         {badgeCount && badgeCount > 0 ? (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white animate-badge-bounce shadow-md">
             {badgeCount > 9 ? '9+' : badgeCount}
           </span>
         ) : null}
+
+        {/* Punto / Indicador exclusivo de Chat Nuevo en Pedidos */}
+        {hasUnreadChat && (
+          <span className="absolute -top-1 -left-1 bg-fuchsia-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white animate-ping shadow-md">
+            💬
+          </span>
+        )}
 
         {!highlight && (
           <span className={cn(
@@ -120,10 +130,7 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
 
   return (
     <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-lg z-50">
-      <div className={cn(
-        "glass-panel rounded-full p-2 flex items-center justify-around shadow-2xl shadow-black/20 border-white/40 backdrop-blur-xl transition-all",
-        hasUnreadChat && "ring-2 ring-fuchsia-500/80 shadow-[0_0_30px_rgba(217,70,239,0.4)]"
-      )}>
+      <div className="glass-panel rounded-full p-2 flex items-center justify-around shadow-2xl shadow-black/20 border-white/40 backdrop-blur-xl">
         
         {/* CLIENTE */}
         {isCliente && (
@@ -141,6 +148,7 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               label="Pedidos"
               active={location.pathname === '/cliente/pedidos'}
               badgeCount={activeOrdersCount}
+              hasUnreadChat={hasUnreadChat}
             />
             <NavItem 
               to="/cliente/historial"
@@ -173,6 +181,7 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               label="Pedidos"
               active={location.pathname === '/cliente/pedidos'}
               badgeCount={activeOrdersCount}
+              hasUnreadChat={hasUnreadChat}
             />
             <NavItem 
               to="/admin/dashboard"
@@ -217,6 +226,7 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               label="Pedidos"
               active={location.pathname === '/cliente/pedidos'}
               badgeCount={activeOrdersCount}
+              hasUnreadChat={hasUnreadChat}
             />
           </>
         )}
