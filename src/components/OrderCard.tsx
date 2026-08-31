@@ -73,7 +73,7 @@ export default function OrderCard({
   const canMarkDelivered = isStaff || isOwner;
 
   const chatMsgs = (pedido as any).chatMessages || (pedido as any).messages || [];
-  const hasUnread = Array.isArray(chatMsgs) && chatMsgs.some((m: any) => !m.read && m.senderId !== userId);
+  const hasUnread = Array.isArray(chatMsgs) && chatMsgs.some((m: any) => !m.read && m.senderId !== userId && m.from !== userId);
   const hasChat = Array.isArray(chatMsgs) && chatMsgs.length > 0;
 
   const handleConfirmDelivered = (e?: React.MouseEvent) => {

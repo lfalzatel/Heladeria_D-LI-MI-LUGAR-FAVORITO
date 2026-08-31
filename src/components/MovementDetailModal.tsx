@@ -133,6 +133,34 @@ export default function MovementDetailModal({
     fetchPackaging();
   }, [data?.id]);
 
+  // Marcar automáticamente mensajes como leídos al abrir el modal
+  React.useEffect(() => {
+    if (!isOpen || !data || !data.id || !profile) return;
+
+    const msgs = data.messages || data.chatMessages || [];
+    if (!Array.isArray(msgs) || msgs.length === 0) return;
+
+    const hasUnread = msgs.some((m: any) => !m.read && m.senderId !== profile.uid && m.from !== profile.uid);
+    if (!hasUnread) return;
+
+    const updated = msgs.map((m: any) => {
+      if (m.senderId !== profile.uid && m.from !== profile.uid) {
+        return { ...m, read: true };
+      }
+      return m;
+    });
+
+    const docRef = doc(db, 'pedidos', data.id);
+    updateDoc(docRef, {
+      messages: updated,
+      chatMessages: updated
+    }).catch(err => console.error('Error marcando mensajes como leídos en Firestore:', err));
+
+    // Actualizar objeto local data para feedback inmediato
+    data.messages = updated;
+    data.chatMessages = updated;
+  }, [isOpen, data?.id, profile?.uid]);
+
   const handleSaveAbono = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data) return;
