@@ -75,8 +75,8 @@ export default function Dashboard() {
 
   const creditPedidos = React.useMemo(() => {
     return [...creditPedidosRaw, ...creditSalesRaw].sort((a, b) => {
-      const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
-      const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
+      const tA = toDateS(a.createdAt || a.timestamp || a.date)?.getTime() || 0;
+      const tB = toDateS(b.createdAt || b.timestamp || b.date)?.getTime() || 0;
       return tB - tA;
     });
   }, [creditPedidosRaw, creditSalesRaw]);
@@ -201,12 +201,12 @@ export default function Dashboard() {
   const combinedActivity = React.useMemo(() => {
     return allUnfilteredActivity
       .filter(item => {
-        const timestamp = item.timestamp || item.updatedAt || item.createdAt;
+        const timestamp = item.createdAt || item.timestamp || item.date;
         return isInPeriod(timestamp, dashboardFilter, selectedDate, selectedMonth, selectedWeek);
       })
       .sort((a, b) => {
-        const tA = toDateS(a.timestamp || a.updatedAt || a.createdAt)?.getTime() || 0;
-        const tB = toDateS(b.timestamp || b.updatedAt || b.createdAt)?.getTime() || 0;
+        const tA = toDateS(a.createdAt || a.timestamp || a.date)?.getTime() || 0;
+        const tB = toDateS(b.createdAt || b.timestamp || b.date)?.getTime() || 0;
         return tB - tA;
       });
   }, [allUnfilteredActivity, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
@@ -740,7 +740,7 @@ export default function Dashboard() {
             numericValue={totalPremiosFidelidad}
             isCurrency={false}
             sub="Premios"
-            accent="fuchsia"
+            accent="amber"
             onOpen={() => open('premios')}
             index={5}
           />

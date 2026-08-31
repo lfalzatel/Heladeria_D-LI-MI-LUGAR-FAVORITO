@@ -249,8 +249,8 @@ export function TrendChart({ data, color = 'currentColor', label = 'Ventas' }: {
   );
 }
 
-export function SaleCard({ sale, onClick, index = 0 }: { sale: any, onClick: () => void, index?: number }) {
-  const d = toDateS(sale.timestamp || sale.createdAt);
+export function SaleCard({ sale, onClick, index = 0 }: { key?: any, sale: any, onClick: () => void, index?: number }) {
+  const d = toDateS(sale.createdAt || sale.timestamp || sale.date);
   
   // Format: "Lun 25 · 05:40 a. m."
   const dateStr = d ? d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }) : '';
@@ -362,7 +362,7 @@ export function CalendarModal({
   // Pre-calculate sales per day
   const salesByDay: Record<number, number> = {};
   allActivity.forEach(sale => {
-    const d = toDateS(sale.timestamp || sale.updatedAt || sale.createdAt);
+    const d = toDateS(sale.createdAt || sale.timestamp || sale.date);
     if (d && d.getMonth() === month && d.getFullYear() === year) {
       const day = d.getDate();
       salesByDay[day] = (salesByDay[day] || 0) + 1;
