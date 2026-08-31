@@ -765,7 +765,7 @@ export default function Settings() {
                     </p>
                     <button
                       onClick={() => {
-                        playMario1Up();
+                        playEventSound('burst');
                         setShowGamifiedDemo(true);
                       }}
                       className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-primary to-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-fuchsia-500/20 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
@@ -797,7 +797,7 @@ export default function Settings() {
                     </h4>
                     <button
                       onClick={() => {
-                        playIncomeCelestial();
+                        playEventSound('income');
                         confetti({
                           particleCount: 120,
                           spread: 90,

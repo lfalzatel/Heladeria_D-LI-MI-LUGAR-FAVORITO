@@ -391,7 +391,7 @@ export default function MovementDetailModal({
   const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
   const isSale = !isPedido;
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
-  const isOnlinePedido = !!data.clienteId;
+  const isOnlinePedido = !!data.clienteId || !!data.pedidoId || data.type === 'online' || data.isDirectPedido || (Array.isArray(data.messages) && data.messages.length > 0) || (Array.isArray(data.chatMessages) && data.chatMessages.length > 0) || !!data.clienteName;
   const isToday = data?.createdAt && new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toDateString() === new Date().toDateString();
   const canEditPayment = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador';
 
@@ -654,6 +654,69 @@ export default function MovementDetailModal({
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
+              {activeTab === 'chat' ? (
+                <div className="flex-1 flex flex-col gap-3 py-2">
+                  {(() => {
+                    const chatMsgs = data.messages || data.chatMessages || data.chat || [];
+                    if (!Array.isArray(chatMsgs) || chatMsgs.length === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12 text-center px-4 my-auto">
+                          <div className="w-16 h-16 rounded-3xl bg-fuchsia-500/10 text-fuchsia-600 flex items-center justify-center mb-3 shadow-inner">
+                            <MessageCircle className="w-8 h-8" />
+                          </div>
+                          <h4 className="font-headline font-black text-sm text-on-surface">Chat en Vivo Activo</h4>
+                          <p className="text-xs text-secondary mt-1 max-w-xs leading-relaxed">
+                            Inicia la conversación para coordinar el pedido o enviar comprobantes de pago.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return chatMsgs.map((m: any, idx: number) => {
+                      const isMe = m.senderId === profile?.uid || m.from === profile?.uid;
+                      const isImg = typeof m.text === 'string' && m.text.startsWith('[IMG]');
+                      const imgUrl = isImg ? m.text.replace('[IMG]', '') : '';
+
+                      return (
+                        <motion.div
+                          key={m.id || idx}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={cn("flex flex-col max-w-[85%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}
+                        >
+                          <div className="flex items-center gap-1.5 mb-1 px-1">
+                            <span className="text-[9px] font-bold text-secondary">{m.senderName || (isMe ? 'Tú' : 'Cliente')}</span>
+                            {m.timestamp && (
+                              <span className="text-[8px] text-secondary/60">
+                                {formatDateTime(m.timestamp).time}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className={cn(
+                            "p-3 rounded-2xl text-xs font-medium shadow-xs leading-relaxed break-words",
+                            isMe 
+                              ? "bg-primary text-white rounded-tr-xs shadow-primary/20" 
+                              : "bg-surface-container border border-outline/10 text-on-surface rounded-tl-xs"
+                          )}>
+                            {isImg ? (
+                              <div className="space-y-1">
+                                <a href={imgUrl} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-xl border border-white/20">
+                                  <img src={imgUrl} alt="Comprobante" className="max-w-[200px] max-h-[200px] object-cover hover:scale-105 transition-transform" />
+                                </a>
+                                <span className="text-[9px] opacity-80 flex items-center gap-1">📷 Foto / Comprobante</span>
+                              </div>
+                            ) : (
+                              <span>{m.text}</span>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    });
+                  })()}
+                </div>
+              ) : (
+                <>
                {(() => {
                  const { date, time } = formatDateTime(data.createdAt);
                  return (
@@ -1066,7 +1129,9 @@ export default function MovementDetailModal({
                    </button>
                  </div>
                )}
-            </div>
+               </>
+             )}
+             </div>
 
             {data && (
               (data.status !== 'entregado' && data.status !== 'rechazado' && data.status !== 'completed') ||
