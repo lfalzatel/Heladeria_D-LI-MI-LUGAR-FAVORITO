@@ -103,6 +103,22 @@ export default function MovementDetailModal({
   const [splitAbono, setSplitAbono] = useState({ efectivo: '', transferencia: '' });
   const [isSavingAbono, setIsSavingAbono] = useState(false);
 
+  // Tabs state ('detalle' | 'chat')
+  const [activeTab, setActiveTab] = useState<'detalle' | 'chat'>('detalle');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (autoFocusChat) {
+        setActiveTab('chat');
+        setTimeout(() => {
+          chatInputRef.current?.focus();
+        }, 300);
+      } else {
+        setActiveTab('detalle');
+      }
+    }
+  }, [isOpen, autoFocusChat]);
+
   React.useEffect(() => {
     if (triggerAbonoOpen && data) {
       const pending = data.total - (data.totalAbonado || 0);
@@ -576,41 +592,65 @@ export default function MovementDetailModal({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] overflow-hidden"
           >
-            <div className="px-6 pt-5 pb-4 border-b border-outline/10 flex items-center justify-between bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
-                    <Receipt className="w-6 h-6 text-primary" />
-                 </div>
-                 <div>
-                    <h3 className="font-headline font-black text-xl text-on-surface leading-none">Detalle del Movimiento</h3>
-                    <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-1">Ref: #{data.id.slice(-6).toUpperCase()}</p>
-                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isOnlinePedido && (
-                  <button 
-                    onClick={handleScrollToChat}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-fuchsia-500/10 text-fuchsia-600 hover:bg-fuchsia-500 hover:text-white transition-all font-black text-xs uppercase tracking-wider relative cursor-pointer active:scale-95 border border-fuchsia-500/20 shadow-xs"
-                    title="Ir al chat del pedido"
-                  >
-                    <MessageCircle className="w-4 h-4 text-fuchsia-600" />
-                    <span className="hidden sm:inline">Chat</span>
+            {/* Header con Pestañas */}
+            <div className="px-6 pt-5 pb-3 border-b border-outline/10 bg-white sticky top-0 z-20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center">
+                      <Receipt className="w-5 h-5 text-primary" />
+                   </div>
+                   <div>
+                      <h3 className="font-headline font-black text-lg text-on-surface leading-none">Detalle del Movimiento</h3>
+                      <p className="text-[10px] text-secondary font-black uppercase tracking-widest mt-0.5">Ref: #{data.id.slice(-6).toUpperCase()}</p>
+                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {(profile?.role === 'admin' || profile?.role === 'propietario') && isSale && (
+                    <button 
+                      onClick={() => setConfirmAction('edit')} 
+                      disabled={isDeleting}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Editar Venta</span>
+                    </button>
+                  )}
+                  <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
+                    <X className="w-5 h-5 text-secondary" />
                   </button>
-                )}
-                {(profile?.role === 'admin' || profile?.role === 'propietario') && isSale && (
-                  <button 
-                    onClick={() => setConfirmAction('edit')} 
-                    disabled={isDeleting}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-xs"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Editar Venta</span>
-                  </button>
-                )}
-                <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90">
-                  <X className="w-5 h-5 text-secondary" />
-                </button>
+                </div>
               </div>
+
+              {/* SEGMENTED CONTROL DE PESTAÑAS (DETALLE / CHAT) */}
+              {isOnlinePedido && (
+                <div className="grid grid-cols-2 gap-1 p-1 mt-3 rounded-2xl bg-surface-container/60 border border-outline/10">
+                  <button
+                    onClick={() => setActiveTab('detalle')}
+                    className={cn(
+                      "py-2 px-3 rounded-xl font-headline font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer",
+                      activeTab === 'detalle'
+                        ? "bg-white text-primary shadow-xs font-black"
+                        : "text-secondary hover:text-on-surface"
+                    )}
+                  >
+                    <Receipt className="w-4 h-4" /> Detalle
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('chat');
+                      setTimeout(() => chatInputRef.current?.focus(), 200);
+                    }}
+                    className={cn(
+                      "py-2 px-3 rounded-xl font-headline font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer relative",
+                      activeTab === 'chat'
+                        ? "bg-fuchsia-500 text-white shadow-xs font-black"
+                        : "text-fuchsia-600 hover:bg-fuchsia-500/10"
+                    )}
+                  >
+                    <MessageCircle className="w-4 h-4" /> Chat en Vivo
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
@@ -998,55 +1038,7 @@ export default function MovementDetailModal({
                </div>
 
                {isOnlinePedido && (
-                 <section className="bg-surface-container/40 rounded-[2rem] p-5 border border-outline/10 h-[280px] flex flex-col shadow-inner">
-                    <div className="flex items-center gap-2 text-secondary mb-4">
-                       <MessageCircle className="w-5 h-5 opacity-40" />
-                       <span className="text-[10px] font-black uppercase tracking-widest">Chat del Pedido</span>
-                    </div>
-                    <div className="flex-1 overflow-y-auto flex flex-col gap-3 custom-scrollbar pr-1">
-                       {(data.messages || []).length === 0 ? (
-                         <div className="h-full flex flex-col items-center justify-center text-center opacity-30 px-4">
-                            <MessageCircle className="w-8 h-8 mb-2" />
-                            <p className="text-[10px] font-bold">Sin mensajes aún.</p>
-                         </div>
-                       ) : (
-                         data.messages!.map((msg: any, i: number) => {
-                           const isMe = msg.from === profile?.uid;
-                           const isImage = msg.text?.startsWith('[IMG]');
-                           const imgUrl = isImage ? msg.text.replace('[IMG]', '') : null;
-                           return (
-                             <div key={i} className={cn("flex flex-col gap-1 max-w-[85%]", isMe ? "self-end items-end" : "self-start")}>
-                                {isImage ? (
-                                  <a href={imgUrl} target="_blank" rel="noopener noreferrer" className="block">
-                                    <img 
-                                      src={imgUrl} 
-                                      alt="Comprobante de pago" 
-                                      className={cn(
-                                        "max-w-[220px] rounded-2xl shadow-md border-2 object-cover cursor-zoom-in hover:opacity-90 transition-opacity",
-                                        isMe ? "rounded-br-none border-primary/30" : "rounded-bl-none border-outline/20"
-                                      )} 
-                                    />
-                                    <span className="text-[9px] text-secondary/60 font-bold mt-1 flex items-center gap-1">
-                                      <ImageIcon className="w-3 h-3" /> Toca para ver en grande
-                                    </span>
-                                  </a>
-                                ) : (
-                                  <div className={cn("px-4 py-2.5 rounded-2xl text-[11px] font-bold shadow-sm leading-relaxed", 
-                                    isMe ? "bg-primary text-white rounded-br-none" : "bg-white text-on-surface border border-outline/10 rounded-bl-none"
-                                  )}>
-                                     {msg.text}
-                                  </div>
-                                )}
-                                <div className="px-2 flex items-center gap-1 opacity-40">
-                                   <span className="text-[8px] font-black uppercase tracking-tighter">{msg.fromName || 'Usuario'}</span>
-                                   <span className="text-[8px]">•</span>
-                                   <span className="text-[8px] font-medium">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                </div>
-                             </div>
-                           );
-                         })
-                       )}
-                    </div>
+                 <section>
                  </section>
                )}
 
@@ -1180,13 +1172,22 @@ export default function MovementDetailModal({
                       type="text"
                       value={chatMessage}
                       onChange={e => setChatMessage(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && !chatMessage.startsWith('[IMG]') && onSendMessage()}
+                      onFocus={() => { if (activeTab !== 'chat') setActiveTab('chat'); }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !chatMessage.startsWith('[IMG]')) {
+                          if (activeTab !== 'chat') setActiveTab('chat');
+                          onSendMessage();
+                        }
+                      }}
                       placeholder="Escribe un mensaje..."
                       className="flex-1 bg-transparent text-xs font-bold py-2 outline-none placeholder:text-secondary/30"
                     />
                  </div>
                  <button 
-                   onClick={onSendMessage}
+                   onClick={() => {
+                     if (activeTab !== 'chat') setActiveTab('chat');
+                     onSendMessage();
+                   }}
                    disabled={!chatMessage.trim() || isSending || isUploadingImage}
                    className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-all disabled:opacity-30 flex-shrink-0"
                  >
