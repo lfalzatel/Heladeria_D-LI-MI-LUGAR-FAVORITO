@@ -122,7 +122,7 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
     <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-lg z-50">
       <div className={cn(
         "glass-panel rounded-full p-2 flex items-center justify-around shadow-2xl shadow-black/20 border-white/40 backdrop-blur-xl transition-all",
-        hasUnreadChat && "ring-2 ring-fuchsia-500/80 shadow-[0_0_30px_rgba(217,70,239,0.4)] animate-pulse"
+        hasUnreadChat && "ring-2 ring-fuchsia-500/80 shadow-[0_0_30px_rgba(217,70,239,0.4)]"
       )}>
         
         {/* CLIENTE */}

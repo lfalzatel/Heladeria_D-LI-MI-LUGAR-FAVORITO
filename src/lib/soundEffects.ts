@@ -581,6 +581,64 @@ export function playCoheteDulce() {
   }
 }
 
+// ✨ Ráfaga Estelar en 3 Etapas (Despegue, Vuelo y Fanfarria 2550ms)
+export function playStarburstSequence() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const playTone = (
+    freq: number, 
+    type: OscillatorType, 
+    durationMs: number, 
+    delayMs: number = 0, 
+    gainLevel: number = 0.15
+  ) => {
+    setTimeout(() => {
+      try {
+        if (!ctx || ctx.state === 'closed') return;
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(gainLevel, ctx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (durationMs / 1000));
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + (durationMs / 1000));
+      } catch (err) {
+        // Silencioso si hay bloqueo de audio
+      }
+    }, delayMs);
+  };
+
+  // A) Arpegio celestial ascendente al despegar (0ms - 500ms)
+  const arpeggioNotes = [523.25, 659.25, 783.99, 987.77, 1046.50]; // Do5, Mi5, Sol5, Si5, Do6
+  arpeggioNotes.forEach((freq, idx) => {
+    playTone(freq, 'sine', 280, 100 + idx * 90, 0.14);
+  });
+
+  // B) Campanada brillante de cristal en vuelo (600ms - 650ms)
+  playTone(1318.51, 'sine', 600, 600, 0.18); // Mi6
+  playTone(1567.98, 'sine', 700, 650, 0.15); // Sol6
+
+  // C) Fanfarria y explosión estelar al chocar en destino (2550ms)
+  const fireworksNotes = [1567.98, 1760.00, 1975.53, 2093.00, 2637.02]; // Sol6, La6, Si6, Do7, Mi7
+  fireworksNotes.forEach((freq, idx) => {
+    playTone(freq, 'triangle', 450, 2550 + idx * 60, 0.20);
+    playTone(freq * 1.5, 'sine', 350, 2580 + idx * 60, 0.10); // Armónico cristalino superior
+  });
+}
+
 export function getUiSoundProfile(): SoundProfileId {
   if (typeof localStorage === 'undefined') return 'pop';
   const saved = localStorage.getItem(STORAGE_KEY) as SoundProfileId;
@@ -637,6 +695,7 @@ export interface SoundOption {
 }
 
 export const ALL_SOUND_OPTIONS: SoundOption[] = [
+  { id: 'starburst_sequence', name: '✨ Ráfaga Estelar 3 Etapas', desc: 'Despegue celestial, vuelo cristalino y choque final (2550ms)', emoji: '✨', playFn: playStarburstSequence },
   { id: 'fresa_cremosa', name: '🍓 Fresa Cremosa', desc: 'Trino pentatónico alegre para eventos felices', emoji: '🍓', playFn: playFresaCremosa },
   { id: 'choco_berry', name: '🍦 Choco-Berry Pop', desc: 'Doble tono dulce y moderno', emoji: '🍦', playFn: playChocoBerryPop },
   { id: 'helado_magico', name: '🍧 Helado Mágico', desc: 'Arpegio cristalino mágico ascendente', emoji: '🍧', playFn: playHeladoMagico },
@@ -661,7 +720,7 @@ const DEFAULT_EVENT_MAP: Record<ActionEventType, string> = {
   expense: 'expense_resonant',
   edit: 'edit_crystal',
   delete: 'delete_derez',
-  burst: 'helado_magico'
+  burst: 'starburst_sequence'
 };
 
 export function getEventSoundMap(): Record<ActionEventType, string> {

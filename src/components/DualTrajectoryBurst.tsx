@@ -58,7 +58,7 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
         startY,
         targetX: isBell ? bellTargetX : navTargetX,
         targetY: isBell ? bellTargetY : navTargetY,
-        delay: (i * 0.06),
+        delay: (i * 0.08), // Despegue progresivo entre 0 y 400ms
       });
     }
 
@@ -67,7 +67,7 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
     const timer = setTimeout(() => {
       setParticles([]);
       onComplete?.();
-    }, 1800);
+    }, 3100);
 
     return () => clearTimeout(timer);
   }, [trigger]);
@@ -83,31 +83,31 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
             initial={{
               x: p.startX,
               y: p.startY,
-              scale: 0.2,
+              scale: 0.1,
               opacity: 0,
               rotate: 0,
             }}
             animate={{
               x: [
                 p.startX,
-                p.startX + (p.target === 'bell' ? 40 : -40),
+                p.startX + (p.target === 'bell' ? 60 : -60),
                 p.targetX
               ],
               y: [
                 p.startY,
-                p.startY - (p.target === 'bell' ? 60 : 30),
+                p.startY - (p.target === 'bell' ? 90 : 40),
                 p.targetY
               ],
-              scale: [0.4, 1.4, 0.5],
-              opacity: [0, 1, 0.9, 0],
-              rotate: [0, 180, 360],
+              scale: [0.2, 1.6, 1.8, 0.4],
+              opacity: [0, 1, 1, 0],
+              rotate: [0, 180, 540],
             }}
             transition={{
-              duration: 1.1,
+              duration: 2.7,
               delay: p.delay,
-              ease: [0.25, 0.8, 0.25, 1],
+              ease: [0.22, 1, 0.36, 1], // Desaceleración elástica al chocar en destino
             }}
-            className="absolute text-2xl select-none drop-shadow-lg"
+            className="absolute text-3xl select-none drop-shadow-xl pointer-events-none"
           >
             {p.icon}
           </motion.div>
