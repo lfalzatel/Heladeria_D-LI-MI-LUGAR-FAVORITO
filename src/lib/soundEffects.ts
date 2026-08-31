@@ -412,6 +412,175 @@ export function playDeleteDeRez() {
   }
 }
 
+// 🍦 Choco-Berry Pop (Melodía dulce doble tono)
+export function playChocoBerryPop() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+
+    osc1.frequency.setValueAtTime(523.25, now); // C5
+    osc1.frequency.exponentialRampToValueAtTime(1046.50, now + 0.12); // C6
+
+    osc2.frequency.setValueAtTime(659.25, now); // E5
+    osc2.frequency.exponentialRampToValueAtTime(1318.51, now + 0.12); // E6
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.14);
+    osc2.stop(now + 0.14);
+  } catch (e) {
+    console.warn('Error reproduciendo ChocoBerryPop:', e);
+  }
+}
+
+// 🍧 Helado Mágico (Cristalino mágico con filtro envolvente)
+export function playHeladoMagico() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const notes = [783.99, 987.77, 1174.66, 1567.98]; // G5, B5, D6, G6
+    let startTime = ctx.currentTime;
+    notes.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.1, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.18);
+      startTime += 0.04;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo HeladoMagico:', e);
+  }
+}
+
+// 🍓 Fresa Cremosa (Trino pentatónico alegre)
+export function playFresaCremosa() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // Pentatónica C Major
+    let startTime = ctx.currentTime;
+    notes.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.11, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.15);
+      startTime += 0.035;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo FresaCremosa:', e);
+  }
+}
+
+// 🔔 Campana Heladería D'LI (Timbre nostálgico metálico)
+export function playCampanaHeladeria() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+
+    osc1.frequency.setValueAtTime(1200, now);
+    osc2.frequency.setValueAtTime(2400, now);
+
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.5);
+    osc2.stop(now + 0.5);
+  } catch (e) {
+    console.warn('Error reproduciendo CampanaHeladeria:', e);
+  }
+}
+
+// 🪙 Moneda de Oro (Tono agudo brillante NES)
+export function playGoldenCoin() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1046.50, now); // C6
+    osc.frequency.setValueAtTime(1567.98, now + 0.05); // G6
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.16);
+  } catch (e) {
+    console.warn('Error reproduciendo GoldenCoin:', e);
+  }
+}
+
+// 🚀 Cohete Dulce (Arpegio espacial ascendente)
+export function playCoheteDulce() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(1800, now + 0.3);
+
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } catch (e) {
+    console.warn('Error reproduciendo CoheteDulce:', e);
+  }
+}
+
 export function getUiSoundProfile(): SoundProfileId {
   if (typeof localStorage === 'undefined') return 'pop';
   const saved = localStorage.getItem(STORAGE_KEY) as SoundProfileId;
@@ -450,6 +619,88 @@ export function playUiSound(overrideProfileId?: SoundProfileId): void {
     default:
       // No sound
       break;
+  }
+}
+
+// ==========================================
+// D. MAPEO Y PERSONALIZACIÓN DE SONIDOS POR EVENTO
+// ==========================================
+
+export type ActionEventType = 'new_order' | 'income' | 'expense' | 'edit' | 'delete' | 'burst';
+
+export interface SoundOption {
+  id: string;
+  name: string;
+  desc: string;
+  emoji: string;
+  playFn: () => void;
+}
+
+export const ALL_SOUND_OPTIONS: SoundOption[] = [
+  { id: 'fresa_cremosa', name: '🍓 Fresa Cremosa', desc: 'Trino pentatónico alegre para eventos felices', emoji: '🍓', playFn: playFresaCremosa },
+  { id: 'choco_berry', name: '🍦 Choco-Berry Pop', desc: 'Doble tono dulce y moderno', emoji: '🍦', playFn: playChocoBerryPop },
+  { id: 'helado_magico', name: '🍧 Helado Mágico', desc: 'Arpegio cristalino mágico ascendente', emoji: '🍧', playFn: playHeladoMagico },
+  { id: 'campana_dli', name: '🔔 Campana Heladería', desc: 'Timbre nostálgico de mostrador metálico', emoji: '🔔', playFn: playCampanaHeladeria },
+  { id: 'golden_coin', name: '🪙 Moneda de Oro', desc: 'Bip-bip brillante estilo NES 8-bit', emoji: '🪙', playFn: playGoldenCoin },
+  { id: 'cohete_dulce', name: '🚀 Cohete Dulce', desc: 'Barrido espacial ascendente de logro', emoji: '🚀', playFn: playCoheteDulce },
+  { id: 'mario_1up', name: '🍄 Mario 1-UP', desc: 'Tono retro retro NES de vida extra', emoji: '🍄', playFn: playMario1Up },
+  { id: 'mario_coin', name: '🪙 Mario Coin', desc: 'Sonido retro de moneda NES', emoji: '🪙', playFn: playMarioCoin },
+  { id: 'mario_jump', name: '🍄 Mario Jump', desc: 'Impulso ascendente retro 8-bit', emoji: '🍄', playFn: playMarioJump },
+  { id: 'mario_pipe', name: '🍄 Mario Pipe', desc: 'Gravedad baja retro de tubo NES', emoji: '🍄', playFn: playMarioPipe },
+  { id: 'income_celestial', name: '📈 Ingreso Celestial', desc: 'Acorde celestial ascendente para ventas', emoji: '📈', playFn: playIncomeCelestial },
+  { id: 'expense_resonant', name: '📉 Gasto Resonante', desc: 'Bajo descendente para egreso de caja', emoji: '📉', playFn: playExpenseResonant },
+  { id: 'edit_crystal', name: '✏️ Edición Cristalina', desc: 'Chime de vidrio fino para ajustes', emoji: '✏️', playFn: playEditCrystal },
+  { id: 'delete_derez', name: '🗑️ Eliminación De-Rez', desc: 'Filtro descendente arcade de borrado', emoji: '🗑️', playFn: playDeleteDeRez },
+];
+
+const EVENT_STORAGE_KEY = 'dli_custom_event_sounds';
+
+const DEFAULT_EVENT_MAP: Record<ActionEventType, string> = {
+  new_order: 'fresa_cremosa',
+  income: 'income_celestial',
+  expense: 'expense_resonant',
+  edit: 'edit_crystal',
+  delete: 'delete_derez',
+  burst: 'helado_magico'
+};
+
+export function getEventSoundMap(): Record<ActionEventType, string> {
+  if (typeof localStorage === 'undefined') return DEFAULT_EVENT_MAP;
+  try {
+    const data = localStorage.getItem(EVENT_STORAGE_KEY);
+    return data ? { ...DEFAULT_EVENT_MAP, ...JSON.parse(data) } : DEFAULT_EVENT_MAP;
+  } catch {
+    return DEFAULT_EVENT_MAP;
+  }
+}
+
+export function setEventSound(event: ActionEventType, soundId: string): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const current = getEventSoundMap();
+    current[event] = soundId;
+    localStorage.setItem(EVENT_STORAGE_KEY, JSON.stringify(current));
+  } catch (e) {
+    console.warn('Error guardando sonido de evento:', e);
+  }
+}
+
+export function playEventSound(event: ActionEventType): void {
+  const map = getEventSoundMap();
+  const soundId = map[event] || DEFAULT_EVENT_MAP[event];
+  const option = ALL_SOUND_OPTIONS.find(o => o.id === soundId);
+  if (option) {
+    option.playFn();
+  } else {
+    // Fallback
+    switch (event) {
+      case 'new_order': playFresaCremosa(); break;
+      case 'income': playIncomeCelestial(); break;
+      case 'expense': playExpenseResonant(); break;
+      case 'edit': playEditCrystal(); break;
+      case 'delete': playDeleteDeRez(); break;
+      case 'burst': playHeladoMagico(); break;
+    }
   }
 }
 

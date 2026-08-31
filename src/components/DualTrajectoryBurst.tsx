@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { playMarioCoin, playIncomeCelestial } from '../lib/soundEffects';
+import { playEventSound } from '../lib/soundEffects';
 
 interface DualTrajectoryBurstProps {
   trigger: boolean;
@@ -25,9 +25,8 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
   useEffect(() => {
     if (!trigger) return;
 
-    // Reproducir sonido de confirmación instantáneo (0ms latency)
-    playMarioCoin();
-    setTimeout(() => playIncomeCelestial(), 150);
+    // Reproducir sonido de confirmación configurado
+    playEventSound('burst');
 
     // Obtener elementos destino en el DOM
     const bellEl = document.getElementById('notification-bell-target');

@@ -17,7 +17,9 @@ import { playNotificationSound } from '../lib/notifications';
 import { 
   SOUND_PROFILES, getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId,
   playMario1Up, playMarioCoin, playMarioJump, playMarioPipe,
-  playIncomeCelestial, playExpenseResonant, playEditCrystal, playDeleteDeRez 
+  playIncomeCelestial, playExpenseResonant, playEditCrystal, playDeleteDeRez,
+  playChocoBerryPop, playHeladoMagico, playFresaCremosa, playCampanaHeladeria, playGoldenCoin, playCoheteDulce,
+  ALL_SOUND_OPTIONS, getEventSoundMap, setEventSound, playEventSound, ActionEventType
 } from '../lib/soundEffects';
 import DualTrajectoryBurst from '../components/DualTrajectoryBurst';
 import * as confettiModule from 'canvas-confetti';
@@ -74,6 +76,15 @@ export default function Settings() {
   const [demoBurstTrigger, setDemoBurstTrigger] = useState(false);
   const [showGamifiedDemo, setShowGamifiedDemo] = useState(false);
 
+  useEffect(() => {
+    if (showGamifiedDemo) {
+      const timer = setTimeout(() => {
+        setShowGamifiedDemo(false);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [showGamifiedDemo]);
+
   const toggleSection = (section: string) => {
     setOpenSections(prev => {
       const isCurrentlyOpen = prev[section];
@@ -92,6 +103,14 @@ export default function Settings() {
 
   // ── SOUNDS & AUDIO STATE ──────────────────────────────────────────────
   const [selectedUiSound, setSelectedUiSound] = useState<SoundProfileId>(() => getUiSoundProfile());
+  const [eventSounds, setEventSounds] = useState(() => getEventSoundMap());
+
+  const handleSelectEventSound = (event: ActionEventType, soundId: string) => {
+    setEventSound(event, soundId);
+    setEventSounds(prev => ({ ...prev, [event]: soundId }));
+    const opt = ALL_SOUND_OPTIONS.find(o => o.id === soundId);
+    if (opt) opt.playFn();
+  };
 
   const handleSelectUiSound = (id: SoundProfileId) => {
     setSelectedUiSound(id);
@@ -563,45 +582,121 @@ export default function Settings() {
                       </button>
                     </div>
 
-                    {/* Select: Tono de Alerta */}
+                    {/* SELECTOR DE TONOS CON EL ESTILO UNIFICADO DE LA IMAGEN 1 */}
                     {notifSoundEnabled && (
-                      <div className="p-3 rounded-2xl bg-surface-container-low space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-pink-500/10 flex items-center justify-center flex-shrink-0">
-                            <Music className="w-4 h-4 text-pink-500" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xs font-bold">Tono de Pedido Entrante</p>
-                            <p className="text-[10px] text-secondary">Selecciona el tono de tu preferencia</p>
-                          </div>
+                      <div className="space-y-3 pt-2">
+                        <div className="flex items-center gap-2">
+                          <Music className="w-4 h-4 text-pink-500" />
+                          <h4 className="text-xs font-bold text-on-surface">Tono de Pedido Entrante</h4>
                         </div>
-                        <div className="grid grid-cols-1 gap-2 pt-1.5">
-                          {ALERT_TONES.map(tone => (
-                            <div 
-                              key={tone.id}
-                              onClick={() => setSelectedTone(tone.id)}
-                              className={cn(
-                                "flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all active:scale-[0.99]",
-                                selectedTone === tone.id 
-                                  ? "border-primary bg-primary/5 text-primary font-bold" 
-                                  : "border-outline/10 hover:bg-surface-container"
-                              )}
-                            >
-                              <span className="text-xs font-medium">{tone.name}</span>
-                              <div className="flex items-center gap-2">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); handleTestTone(tone.id); }}
-                                  className="text-[9px] font-bold uppercase tracking-wider bg-surface-container text-secondary hover:text-on-surface px-2.5 py-1 rounded-lg"
-                                >
-                                  Probar
-                                </button>
-                                {selectedTone === tone.id && <Check className="w-4 h-4 text-primary" />}
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {ALERT_TONES.map(tone => {
+                            const isSelected = selectedTone === tone.id;
+                            const emoji = tone.id === 'dli' ? '🔔' : tone.id === 'smooth' ? '🍿' : tone.id === 'slick' ? '⚡' : '🎵';
+                            return (
+                              <div 
+                                key={tone.id}
+                                onClick={() => {
+                                  setSelectedTone(tone.id);
+                                  handleTestTone(tone.id);
+                                }}
+                                className={cn(
+                                  "sound-card p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98]",
+                                  isSelected 
+                                    ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-xs ring-1 ring-primary/30" 
+                                    : "border-outline/15 hover:bg-surface-container-low"
+                                )}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
+                                    {emoji}
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-xs text-on-surface">{tone.name}</span>
+                                    <p className="text-[10px] text-secondary mt-0.5">Toca para seleccionar y escuchar muestra</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {isSelected ? (
+                                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
+                                      <Check className="w-4 h-4 stroke-[3]" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-full border border-outline/25" />
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* SUBSECCIÓN 3: ASIGNACIÓN PERSONALIZADA DE SONIDOS POR ACCIÓN */}
+                  <div className="border-t border-outline/10 pt-5 space-y-4">
+                    <div>
+                      <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
+                        <SettingsIcon className="w-3.5 h-3.5 text-fuchsia-500" /> Asignación de Sonidos por Acción
+                      </h3>
+                      <p className="text-[11px] text-secondary leading-relaxed">
+                        Selecciona el tono sintetizado Web Audio API (0 KB de red) que sonará para cada tipo de transacción en la heladería:
+                      </p>
+                    </div>
+
+                    {/* EVENTOS */}
+                    {(
+                      [
+                        { key: 'new_order', label: '🛒 Nuevo Pedido Entrante', desc: 'Sonido al recibir un pedido de cliente' },
+                        { key: 'income', label: '📈 Cobro / Venta Guardada', desc: 'Sonido al registrar ingreso en POS' },
+                        { key: 'expense', label: '📉 Egreso / Registro de Gasto', desc: 'Sonido al guardar un egreso de caja' },
+                        { key: 'edit', label: '✏️ Edición de Registro / Precios', desc: 'Sonido al modificar datos existentes' },
+                        { key: 'delete', label: '🗑️ Eliminación / Borrado de Venta', desc: 'Sonido al anular o des-rez de factura' },
+                        { key: 'burst', label: '🚀 Celebración / Ráfaga 3D', desc: 'Sonido al disparar la ráfaga de partículas' },
+                      ] as { key: ActionEventType; label: string; desc: string }[]
+                    ).map(ev => {
+                      const currentSoundId = eventSounds[ev.key];
+                      const selectedOpt = ALL_SOUND_OPTIONS.find(o => o.id === currentSoundId) || ALL_SOUND_OPTIONS[0];
+
+                      return (
+                        <div key={ev.key} className="p-3.5 rounded-2xl bg-surface-container-low border border-outline/10 space-y-3">
+                          <div>
+                            <p className="text-xs font-black text-on-surface">{ev.label}</p>
+                            <p className="text-[10px] text-secondary">{ev.desc}</p>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {ALL_SOUND_OPTIONS.map(opt => {
+                              const isSel = currentSoundId === opt.id;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  onClick={() => handleSelectEventSound(ev.key, opt.id)}
+                                  className={cn(
+                                    "p-2.5 rounded-xl border cursor-pointer flex items-center justify-between transition-all active:scale-[0.98]",
+                                    isSel
+                                      ? "border-primary bg-primary/10 dark:bg-primary/20 ring-1 ring-primary/30"
+                                      : "border-outline/10 bg-white dark:bg-surface-container hover:bg-surface-container-high"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-base">{opt.emoji}</span>
+                                    <span className="text-[11px] font-bold text-on-surface truncate">{opt.name}</span>
+                                  </div>
+                                  {isSel ? (
+                                    <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-5 h-5 rounded-full border border-outline/25 flex-shrink-0" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </motion.div>
