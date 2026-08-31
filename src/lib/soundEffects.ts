@@ -189,6 +189,229 @@ export function playArcade() {
   }
 }
 
+// ==========================================
+// A. SONIDOS DE GAMIFICACIÓN RETRO (MARIO 8-BIT)
+// ==========================================
+
+// 🍄 Mario 1-UP (Vida Extra / Logro Máximo)
+export function playMario1Up() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const notes = [
+      { freq: 659.25, duration: 0.045 }, // E5
+      { freq: 784.00, duration: 0.045 }, // G5
+      { freq: 1318.51, duration: 0.045 },// E6
+      { freq: 1046.50, duration: 0.045 },// C6
+      { freq: 1174.66, duration: 0.045 },// D6
+      { freq: 1567.98, duration: 0.090 },// G6
+    ];
+    let startTime = ctx.currentTime;
+    notes.forEach((note) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(note.freq, startTime);
+      gain.gain.setValueAtTime(0.12, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + note.duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + note.duration);
+      startTime += note.duration;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Mario 1Up:', e);
+  }
+}
+
+// 🪙 Mario Coin (Moneda / Registro Rápido)
+export function playMarioCoin() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(987.77, now); // B5
+    osc.frequency.setValueAtTime(1318.51, now + 0.035); // E6
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.125);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.125);
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Mario Coin:', e);
+  }
+}
+
+// 🍄 Mario Jump (Salto / Cambio de Sección)
+export function playMarioJump() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(261.63, now); // C4
+    osc.frequency.exponentialRampToValueAtTime(784.00, now + 0.15); // G5
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Mario Jump:', e);
+  }
+}
+
+// 🍄 Mario Pipe (Tubo / Eliminación o Descarte)
+export function playMarioPipe() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const steps = [
+      { freq: 130.81, duration: 0.09 }, // C3
+      { freq: 98.00, duration: 0.09 },  // G2
+      { freq: 82.41, duration: 0.09 },  // E2
+    ];
+    let startTime = ctx.currentTime;
+    steps.forEach((step) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(step.freq, startTime);
+      gain.gain.setValueAtTime(0.15, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + step.duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + step.duration);
+      startTime += step.duration;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Mario Pipe:', e);
+  }
+}
+
+// ==========================================
+// C. SONIDOS DE TRANSACCIONES FINANCIERAS
+// ==========================================
+
+// 📈 Ingreso Celestial (Venta Cobrada / Cierre Positivo)
+export function playIncomeCelestial() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const freqs = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51, 1567.98]; // C5 -> G6
+    let startTime = ctx.currentTime;
+    const stepDuration = 0.06;
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.12, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.25);
+      startTime += stepDuration;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Ingreso Celestial:', e);
+  }
+}
+
+// 📉 Gasto Resonante (Egreso de Caja / Pago a Proveedor)
+export function playExpenseResonant() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const freqs = [587.33, 523.25, 440.00, 349.23]; // D5 -> F4
+    let startTime = ctx.currentTime;
+    const stepDuration = 0.10;
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.14, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.3);
+      startTime += stepDuration;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Gasto Resonante:', e);
+  }
+}
+
+// ✏️ Edición Cristalina (Modificación de Registro o Precios)
+export function playEditCrystal() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const freqs = [659.25, 880.00, 1046.50, 1318.51]; // E5 -> E6
+    let startTime = ctx.currentTime;
+    const stepDuration = 0.08;
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.1, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
+      startTime += stepDuration;
+    });
+  } catch (e) {
+    console.warn('Error reproduciendo sonido Edicion Cristalina:', e);
+  }
+}
+
+// 🗑️ Eliminación De-Rez (Anulación de Factura o Registro)
+export function playDeleteDeRez() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.exponentialRampToValueAtTime(110.00, now + 0.45);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1500, now);
+    filter.frequency.exponentialRampToValueAtTime(200, now + 0.45);
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.45);
+  } catch (e) {
+    console.warn('Error reproduciendo sonido De-Rez:', e);
+  }
+}
+
 export function getUiSoundProfile(): SoundProfileId {
   if (typeof localStorage === 'undefined') return 'pop';
   const saved = localStorage.getItem(STORAGE_KEY) as SoundProfileId;
@@ -229,3 +452,4 @@ export function playUiSound(overrideProfileId?: SoundProfileId): void {
       break;
   }
 }
+

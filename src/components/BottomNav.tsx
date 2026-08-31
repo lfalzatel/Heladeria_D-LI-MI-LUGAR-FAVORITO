@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
   MenuSquare, 
@@ -17,6 +17,8 @@ import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/useAuthStore';
 import { motion } from 'motion/react';
 import { playUiSound } from '../lib/soundEffects';
+import { collection, onSnapshot, query, where, limit } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface NavItemProps {
   to: string;
@@ -24,11 +26,13 @@ interface NavItemProps {
   label: string;
   active?: boolean;
   highlight?: boolean;
+  id?: string;
+  badgeCount?: number;
 }
 
-const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
+const NavItem = ({ to, icon, label, active, highlight, id, badgeCount }: NavItemProps) => {
   const content = (
-    <div className={cn(
+    <div id={id} className={cn(
       "flex flex-col items-center justify-center transition-colors duration-300 w-full h-full text-center relative",
       highlight
         ? "text-white"
@@ -54,6 +58,12 @@ const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
           style: active && !highlight ? { animationDelay: '0.45s' } : {}
         })}
         
+        {badgeCount && badgeCount > 0 ? (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white animate-badge-bounce shadow-md">
+            {badgeCount > 9 ? '9+' : badgeCount}
+          </span>
+        ) : null}
+
         {!highlight && (
           <span className={cn(
             "text-[9px] sm:text-[10px] uppercase font-black tracking-tight",
@@ -78,7 +88,22 @@ const NavItem = ({ to, icon, label, active, highlight }: NavItemProps) => {
 export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
   const location = useLocation();
   const { profile } = useAuthStore();
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   
+  useEffect(() => {
+    if (!profile) return;
+    const isStaff = profile.role === 'admin' || profile.role === 'propietario' || profile.role === 'vendedor';
+    const q = isStaff
+      ? query(collection(db, 'pedidos'), limit(50))
+      : query(collection(db, 'pedidos'), where('clienteId', '==', profile.uid));
+
+    const unsub = onSnapshot(q, (snap) => {
+      const active = snap.docs.filter(d => ['pendiente', 'aceptado', 'celebrado'].includes(d.data().status));
+      setActiveOrdersCount(active.length);
+    });
+    return unsub;
+  }, [profile]);
+
   if (!profile) return null;
 
   const isVendedor = profile.role === 'vendedor';
@@ -99,10 +124,12 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               active={location.pathname === '/cliente/compras'}
             />
             <NavItem 
+              id="bottom-nav-orders-target"
               to="/cliente/pedidos"
               icon={<ShoppingCart />}
               label="Pedidos"
               active={location.pathname === '/cliente/pedidos'}
+              badgeCount={activeOrdersCount}
             />
             <NavItem 
               to="/cliente/historial"
@@ -129,10 +156,12 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               active={location.pathname === '/pos'} 
             />
             <NavItem 
+              id="bottom-nav-orders-target"
               to="/cliente/pedidos"
               icon={<ShoppingCart />}
               label="Pedidos"
               active={location.pathname === '/cliente/pedidos'}
+              badgeCount={activeOrdersCount}
             />
             <NavItem 
               to="/admin/dashboard"
@@ -171,10 +200,12 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
               active={location.pathname === '/admin/management'} 
             />
             <NavItem 
+              id="bottom-nav-orders-target"
               to="/cliente/pedidos"
               icon={<ShoppingCart />}
               label="Pedidos"
               active={location.pathname === '/cliente/pedidos'}
+              badgeCount={activeOrdersCount}
             />
           </>
         )}
@@ -182,3 +213,4 @@ export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {
     </nav>
   );
 }
+

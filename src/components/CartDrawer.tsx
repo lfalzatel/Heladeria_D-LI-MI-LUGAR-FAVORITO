@@ -286,7 +286,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       };
 
       // Limpiar carrito local
-      clearCart(activeTable);
+      await clearCart(activeTable);
+      setSelectedCliente(null);
+      setSearchTerm('');
       
       // Activar modal de éxito con los datos finales
       setSuccessSale(completedSale);
@@ -295,6 +297,9 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       if (selectedCliente && selectedCliente.email) {
         sendEmailReceipt(selectedCliente.email, completedSale);
       }
+
+      // Cerrar drawer del carrito
+      onClose();
 
     } catch (error: any) {
       console.error("Error finalizing sale:", error);

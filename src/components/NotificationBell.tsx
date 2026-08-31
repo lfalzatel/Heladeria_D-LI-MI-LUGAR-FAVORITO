@@ -407,6 +407,7 @@ export default function NotificationBell() {
     <div className="relative" ref={panelRef}>
       {/* Bell button */}
       <button
+        id="notification-bell-target"
         onClick={() => {
           if (!isOpen) setShowBadge(false);
           setIsOpen(!isOpen);

@@ -17,6 +17,7 @@ import { HeaderSearch } from '../components/AppHeader';
 import OrderConfigModal from '../components/OrderConfigModal';
 import ProductDetailsCarousel from '../components/ProductDetailsCarousel';
 import MovementDetailModal from '../components/MovementDetailModal';
+import DualTrajectoryBurst from '../components/DualTrajectoryBurst';
 import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
 import confetti from 'canvas-confetti';
@@ -58,6 +59,7 @@ export default function ClientCompras() {
   const [newOrderOpen, setNewOrderOpen]   = useState(false);
   const [chatMessage,  setChatMessage]    = useState('');
   const [sendingChat,  setSendingChat]    = useState(false);
+  const [burstTrigger, setBurstTrigger]   = useState(false);
 
   useEffect(() => {
     localStorage.setItem('dli_heladeria_cart', JSON.stringify(cart));
@@ -410,6 +412,7 @@ export default function ClientCompras() {
       setAddress('');
       setNote('');
       setPaymentMethod('efectivo');
+      setBurstTrigger(true);
     } catch (err: any) {
       console.error('Order Submission Error:', err);
       toast.error(`Error al enviar: ${err.message || 'Error desconocido'}`);
@@ -984,6 +987,11 @@ export default function ClientCompras() {
         setChatMessage={setChatMessage}
         onSendMessage={handleSendChat}
         isSending={sendingChat}
+      />
+
+      <DualTrajectoryBurst
+        trigger={burstTrigger}
+        onComplete={() => setBurstTrigger(false)}
       />
 
       </main>

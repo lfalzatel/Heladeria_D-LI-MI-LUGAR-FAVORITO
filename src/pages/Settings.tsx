@@ -14,7 +14,14 @@ import { cn } from '../lib/utils';
 import { requestNotificationPermission, unregisterNotifications } from '../lib/notifications';
 import { AnimatePresence, motion } from 'motion/react';
 import { playNotificationSound } from '../lib/notifications';
-import { SOUND_PROFILES, getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId } from '../lib/soundEffects';
+import { 
+  SOUND_PROFILES, getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId,
+  playMario1Up, playMarioCoin, playMarioJump, playMarioPipe,
+  playIncomeCelestial, playExpenseResonant, playEditCrystal, playDeleteDeRez 
+} from '../lib/soundEffects';
+import DualTrajectoryBurst from '../components/DualTrajectoryBurst';
+import * as confettiModule from 'canvas-confetti';
+const confetti = (confettiModule as any).default || confettiModule;
 import { isBiometricsSupported, hasBiometricsRegisteredForUser, registerBiometricCredential, removeBiometricCredential } from '../lib/biometrics';
 
 interface ThemeConfig {
@@ -53,15 +60,19 @@ export default function Settings() {
     });
   }, [profile?.uid]);
   
-  // Accordion active sections
+  // Accordion active sections (Todos cerrados por defecto)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    cuenta: true,
+    cuenta: false,
     sonidos: false,
+    animaciones: false,
     notificaciones: false,
     gestion: false,
     apariencia: false,
     privacidad: false
   });
+
+  const [demoBurstTrigger, setDemoBurstTrigger] = useState(false);
+  const [showGamifiedDemo, setShowGamifiedDemo] = useState(false);
 
   const toggleSection = (section: string) => {
     setOpenSections(prev => {
@@ -69,6 +80,7 @@ export default function Settings() {
       return {
         cuenta: false,
         sonidos: false,
+        animaciones: false,
         notificaciones: false,
         gestion: false,
         apariencia: false,
@@ -597,6 +609,197 @@ export default function Settings() {
           </AnimatePresence>
         </div>
 
+        {/* ── SECCIÓN 3: GALERÍA Y PROBADOR DE ANIMACIONES 3D & SONIDOS ── */}
+        <div className="bg-white dark:bg-surface-container rounded-3xl overflow-hidden shadow-sm border border-outline/10">
+          <button 
+            onClick={() => toggleSection('animaciones')}
+            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-surface-container/30 transition-colors"
+          >
+            <span className="font-bold text-sm text-secondary uppercase tracking-wider flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-fuchsia-500" /> Galería & Probador de Animaciones
+            </span>
+            <span className="text-xs text-secondary">{openSections.animaciones ? '▲' : '▼'}</span>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {openSections.animaciones && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
+                className="overflow-hidden border-t border-outline/10"
+              >
+                <div className="p-5 space-y-6">
+                  {/* SWITCH PRINCIPAL: ANIMACIONES DINÁMICAS DE PRODUCTOS */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-low border border-outline/10 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-on-surface">Animaciones Dinámicas de Productos</p>
+                        <p className="text-[10px] text-secondary">Efectos de flotación y movimiento en imágenes de productos</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                      className={cn(
+                        "w-11 h-6 rounded-full transition-all relative flex-shrink-0 cursor-pointer",
+                        animationsEnabled ? "bg-primary" : "bg-outline/30"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
+                        animationsEnabled ? "left-6" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+
+                  {/* PRESENTACIÓN */}
+                  <div className="bg-gradient-to-r from-fuchsia-500/10 via-primary/10 to-amber-500/10 p-4 rounded-2xl border border-fuchsia-500/20">
+                    <h4 className="font-black text-xs uppercase tracking-wider text-fuchsia-600 dark:text-fuchsia-400 flex items-center gap-1.5 mb-1">
+                      <Sparkles className="w-4 h-4 animate-spin" /> Probador Interactivo de Animaciones D'LI
+                    </h4>
+                    <p className="text-[11px] text-secondary leading-relaxed">
+                      Explora y prueba en tiempo real todas las físicas 3D, efectos de partículas, micro-interacciones de la interfaz y sonidos sintetizados por Web Audio API implementados en la aplicación.
+                    </p>
+                  </div>
+
+                  {/* 1. ANIMACIÓN 3D GAMIFICADA */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-on-surface flex items-center gap-2">
+                      ⭐ 1. Celebración 3D Gamificada (Temu / Mario Style)
+                    </h4>
+                    <p className="text-[11px] text-secondary">
+                      Portal modal holográfico 3D con marco neón (`shimmer-sweep`), abanico de luz (`sunburst`), ráfaga de partículas (`star-burst-up`) y rebote elástico (`mario-temu-pop`).
+                    </p>
+                    <button
+                      onClick={() => {
+                        playMario1Up();
+                        setShowGamifiedDemo(true);
+                      }}
+                      className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-primary to-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-fuchsia-500/20 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" /> DISPARAR ANIMACIÓN 3D GAMIFICADA
+                    </button>
+                  </div>
+
+                  {/* 2. TRAYECTORIA DUAL */}
+                  <div className="space-y-3 border-t border-outline/10 pt-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-on-surface flex items-center gap-2">
+                      🚀 2. Ráfaga de Trayectoria Dual (Campana + Menú Pedidos)
+                    </h4>
+                    <p className="text-[11px] text-secondary">
+                      Dispara partículas voladoras (helados 🍦, copas 🍨, monedas 🪙, estrellas ✨) que viajan simultáneamente hacia la campana y el menú inferior.
+                    </p>
+                    <button
+                      onClick={() => setDemoBurstTrigger(true)}
+                      className="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    >
+                      🚀 PROBAR RÁFAGA DE TRAYECTORIA DUAL
+                    </button>
+                  </div>
+
+                  {/* 3. CONFETI ESTRELLA */}
+                  <div className="space-y-3 border-t border-outline/10 pt-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-on-surface flex items-center gap-2">
+                      🎉 3. Estallido de Confeti Celebración
+                    </h4>
+                    <button
+                      onClick={() => {
+                        playIncomeCelestial();
+                        confetti({
+                          particleCount: 120,
+                          spread: 90,
+                          origin: { y: 0.6 },
+                          colors: ['#d946ef', '#f59e0b', '#fbbf24', '#fcd34d', '#c026d3']
+                        });
+                      }}
+                      className="w-full py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    >
+                      🎉 LANZAR CONFETI FUCSIA & DORADO
+                    </button>
+                  </div>
+
+                  {/* 4. EFECTOS RETRO MARIO 8-BIT */}
+                  <div className="space-y-3 border-t border-outline/10 pt-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-on-surface flex items-center gap-2">
+                      🍄 4. Efectos Retro Mario NES (Onda `square`)
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={playMario1Up}
+                        className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-between border border-emerald-500/20 active:scale-95 transition-all"
+                      >
+                        <span>🍄 1-UP (Vida Extra)</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                      <button
+                        onClick={playMarioCoin}
+                        className="p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-between border border-amber-500/20 active:scale-95 transition-all"
+                      >
+                        <span>🪙 Coin (Moneda)</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                      <button
+                        onClick={playMarioJump}
+                        className="p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-between border border-blue-500/20 active:scale-95 transition-all"
+                      >
+                        <span>🍄 Jump (Salto)</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                      <button
+                        onClick={playMarioPipe}
+                        className="p-3 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-between border border-purple-500/20 active:scale-95 transition-all"
+                      >
+                        <span>🍄 Pipe (Tubo)</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 5. TRANSACCIONES FINANCIERAS */}
+                  <div className="space-y-3 border-t border-outline/10 pt-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-on-surface flex items-center gap-2">
+                      📈 5. Transacciones Financieras Sintetizadas
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={playIncomeCelestial}
+                        className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-between border border-emerald-500/20 active:scale-95 transition-all"
+                      >
+                        <span>📈 Ingreso Celestial</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                      <button
+                        onClick={playExpenseResonant}
+                        className="p-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-between border border-rose-500/20 active:scale-95 transition-all"
+                      >
+                        <span>📉 Gasto Resonante</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                      <button
+                        onClick={playEditCrystal}
+                        className="p-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-bold text-xs flex items-center justify-between border border-cyan-500/20 active:scale-95 transition-all"
+                      >
+                        <span>✏️ Edición Cristalina</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                      <button
+                        onClick={playDeleteDeRez}
+                        className="p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold text-xs flex items-center justify-between border border-red-500/20 active:scale-95 transition-all"
+                      >
+                        <span>🗑️ Eliminación De-Rez</span>
+                        <span className="text-[10px] opacity-60">▶</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* ── SECCIÓN 3: NOTIFICACIONES (CANALES Y PERMISOS) ── */}
         <div className="bg-white dark:bg-surface-container rounded-3xl overflow-hidden shadow-sm border border-outline/10">
           <button 
@@ -781,31 +984,6 @@ export default function Settings() {
                 className="overflow-hidden border-t border-outline/10"
               >
                 <div className="p-6 space-y-6">
-                  {/* Switch: Animaciones Dinámicas */}
-                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-low border border-outline/10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-4 h-4 text-amber-500" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold text-on-surface">Animaciones Dinámicas de Productos</p>
-                        <p className="text-[10px] text-secondary">Efectos de flotación y movimiento en imágenes de productos</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setAnimationsEnabled(!animationsEnabled)}
-                      className={cn(
-                        "w-11 h-6 rounded-full transition-all relative flex-shrink-0",
-                        animationsEnabled ? "bg-primary" : "bg-outline/30"
-                      )}
-                    >
-                      <div className={cn(
-                        "absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
-                        animationsEnabled ? "left-6" : "left-1"
-                      )} />
-                    </button>
-                  </div>
-
                   {/* Tema Activo */}
                   <div>
                     <h3 className="text-xs font-black uppercase text-secondary tracking-widest mb-3">Tema Visual Activo</h3>
@@ -967,6 +1145,77 @@ export default function Settings() {
         </div>
 
       </div>
+
+      {/* COMPONENTE DE DEMOSTRACIÓN DE RÁFAGA DE TRAYECTORIA DUAL */}
+      <DualTrajectoryBurst 
+        trigger={demoBurstTrigger} 
+        onComplete={() => setDemoBurstTrigger(false)} 
+      />
+
+      {/* MODAL HOLOGRÁFICO DE CELEBRACIÓN 3D (DEMO TEMU / MARIO STYLE) */}
+      <AnimatePresence>
+        {showGamifiedDemo && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+            {/* 1. Telón de fondo con blur */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGamifiedDemo(false)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-md animate-backdrop-fade pointer-events-auto"
+            />
+
+            {/* 2. Tarjeta 3D Holográfica */}
+            <div className="relative z-10 w-full max-w-sm bg-gradient-to-b from-slate-900 via-fuchsia-950 to-slate-900 border-2 border-fuchsia-400/50 rounded-[2.5rem] p-6 shadow-[0_0_50px_rgba(217,70,239,0.4)] text-center overflow-hidden animate-mario-temu-pop">
+              
+              {/* Marco Neón Shimmer Sweep */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-fuchsia-400/30 to-transparent animate-shimmer-sweep pointer-events-none" />
+
+              {/* Sunburst giratorio dual */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[radial-gradient(circle,rgba(245,158,11,0.15)_0%,transparent_70%)] animate-sunburst-cw pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[radial-gradient(circle,rgba(217,70,239,0.15)_0%,transparent_70%)] animate-sunburst-ccw pointer-events-none" />
+
+              {/* Emblem flotante 3D */}
+              <div className="relative z-20 flex justify-center -mt-3 mb-2 animate-badge-bounce">
+                <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-fuchsia-500 to-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-lg border border-white/50">
+                  ✨ DEMO 3D CELEBRACIÓN D'LI ✨
+                </div>
+              </div>
+
+              {/* Partículas voladoras 8-Bit */}
+              <div className="absolute inset-0 pointer-events-none">
+                <span className="absolute left-6 bottom-10 text-2xl animate-star-burst-up">🍦</span>
+                <span className="absolute right-6 bottom-12 text-2xl animate-star-burst-up" style={{ animationDelay: '0.4s' }}>🍧</span>
+                <span className="absolute left-1/2 bottom-8 text-2xl animate-star-burst-up" style={{ animationDelay: '0.8s' }}>🪙</span>
+                <span className="absolute right-12 bottom-6 text-2xl animate-star-burst-up" style={{ animationDelay: '1.2s' }}>⭐</span>
+              </div>
+
+              {/* Contenido principal */}
+              <div className="relative z-20 space-y-3 py-4">
+                <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-fuchsia-500 to-amber-400 p-0.5 shadow-xl animate-bounce">
+                  <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center text-4xl">
+                    🍨
+                  </div>
+                </div>
+
+                <h3 className="font-headline font-black text-2xl text-white tracking-wide">
+                  ¡LOGRO DESBLOQUEADO!
+                </h3>
+                <p className="text-xs font-bold text-fuchsia-200/90 leading-relaxed px-2">
+                  Demostración del motor de físicas 3D y Web Audio API sintetizado en tiempo real.
+                </p>
+
+                <button
+                  onClick={() => setShowGamifiedDemo(false)}
+                  className="mt-4 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  ¡ENTENDIDO! (CERRAR DEMO)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

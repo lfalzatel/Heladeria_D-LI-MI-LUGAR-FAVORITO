@@ -181,3 +181,84 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+/* ==========================================
+ * ARQUITECTURA DE ANIMACIÓN 3D GAMIFICADA
+ * ========================================== */
+
+/* 1. Telón de fondo con blur */
+@keyframes backdrop-fade {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 2. Pop de la tarjeta 3D con efecto de rebote elástico */
+@keyframes mario-temu-pop {
+  0% { transform: scale(0.15) translateY(60px) rotateX(25deg); opacity: 0; }
+  22% { transform: scale(1.18) translateY(-12px) rotateX(-5deg); opacity: 1; }
+  32% { transform: scale(1) translateY(0) rotateX(0deg); opacity: 1; }
+  80% { transform: scale(1) translateY(-6px); opacity: 1; }
+  100% { transform: scale(0.65) translateY(-80px) rotateX(-20deg); opacity: 0; }
+}
+
+/* 3. Doble Abanico de Luz Concéntrico (Sunburst) */
+@keyframes sunburst-cw {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes sunburst-ccw {
+  from { transform: translate(-50%, -50%) rotate(360deg); }
+  to { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+/* 4. Emblema Superior Flotante */
+@keyframes badge-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.1); }
+}
+
+/* 5. Haz de Luz Metálico (Shimmer Sweep) */
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* 6. Ráfaga de Partículas Voladoras */
+@keyframes star-burst-up {
+  0% { transform: translateY(10px) scale(0) rotate(0deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(-160px) scale(1.5) rotate(360deg); opacity: 0; }
+}
+
+/* Clases de animación */
+.animate-backdrop-fade {
+  animation: backdrop-fade 3.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-mario-temu-pop {
+  animation: mario-temu-pop 3.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-sunburst-cw {
+  animation: sunburst-cw 12s linear infinite;
+}
+
+.animate-sunburst-ccw {
+  animation: sunburst-ccw 16s linear infinite;
+}
+
+.animate-badge-bounce {
+  animation: badge-bounce 1.5s ease-in-out infinite;
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 2s ease-in-out infinite;
+}
+
+.animate-star-burst-up {
+  animation: star-burst-up 1.8s ease-out infinite;
+}
+

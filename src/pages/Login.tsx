@@ -27,13 +27,21 @@ export default function Login() {
 
   useEffect(() => {
     isBiometricsSupported().then(supported => {
-      if (supported && getRegisteredBiometricCredentials().length > 0) {
+      if (supported) {
         setHasBiometricCreds(true);
       }
     });
   }, []);
 
   const handleBiometricLogin = async () => {
+    const creds = getRegisteredBiometricCredentials();
+    if (creds.length === 0) {
+      toast.info('Ingreso por Huella no configurado aún', {
+        description: 'Inicia sesión con Google y activa tu Huella / Face ID desde Configuración > Cuenta.'
+      });
+      return;
+    }
+
     setBiometricLoading(true);
     try {
       const cred = await authenticateWithBiometrics();
@@ -42,7 +50,7 @@ export default function Login() {
         if (saved) {
           handleGoogleLogin(saved);
         } else {
-          handleGoogleLogin({ uid: cred.userUid, email: cred.userEmail, name: cred.userName, role: 'cliente' });
+          handleGoogleLogin({ uid: cred.userUid, email: cred.userEmail, name: cred.userName, role: 'cliente', imageUrl: '' });
         }
       }
     } finally {
