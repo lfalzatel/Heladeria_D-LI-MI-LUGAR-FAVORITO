@@ -67,7 +67,7 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
     const timer = setTimeout(() => {
       setParticles([]);
       onComplete?.();
-    }, 3100);
+    }, 2400);
 
     return () => clearTimeout(timer);
   }, [trigger]);
@@ -98,14 +98,15 @@ export default function DualTrajectoryBurst({ trigger, onComplete, startPosition
                 p.startY - (p.target === 'bell' ? 90 : 40),
                 p.targetY
               ],
-              scale: [0.2, 1.6, 1.8, 0.4],
-              opacity: [0, 1, 1, 0],
+              scale: [0.3, 1.5, 1.5, 1.2, 0.2],
+              opacity: [0, 1, 1, 1, 0],
               rotate: [0, 180, 540],
             }}
             transition={{
-              duration: 2.7,
+              duration: 1.8,
               delay: p.delay,
-              ease: [0.22, 1, 0.36, 1], // Desaceleración elástica al chocar en destino
+              times: [0, 0.1, 0.8, 0.95, 1],
+              ease: [0.22, 1, 0.36, 1],
             }}
             className="absolute text-3xl select-none drop-shadow-xl pointer-events-none"
           >

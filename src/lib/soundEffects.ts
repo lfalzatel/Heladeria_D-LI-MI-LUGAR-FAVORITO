@@ -621,22 +621,22 @@ export function playStarburstSequence() {
     }, delayMs);
   };
 
-  // A) Arpegio celestial ascendente al despegar (0ms - 500ms)
+  // A) Arpegio celestial ascendente al despegar (0ms - 400ms)
   const arpeggioNotes = [523.25, 659.25, 783.99, 987.77, 1046.50]; // Do5, Mi5, Sol5, Si5, Do6
   arpeggioNotes.forEach((freq, idx) => {
-    playTone(freq, 'sine', 280, 100 + idx * 90, 0.14);
+    playTone(freq, 'sine', 220, 50 + idx * 70, 0.12);
   });
 
-  // B) Campanada brillante de cristal en vuelo (600ms - 650ms)
-  playTone(1318.51, 'sine', 600, 600, 0.18); // Mi6
-  playTone(1567.98, 'sine', 700, 650, 0.15); // Sol6
-
-  // C) Fanfarria y explosión estelar al chocar en destino (2550ms)
+  // B) Notas cristalinas viajeras durante el desplazamiento de las partículas (350ms - 1100ms)
   const fireworksNotes = [1567.98, 1760.00, 1975.53, 2093.00, 2637.02]; // Sol6, La6, Si6, Do7, Mi7
   fireworksNotes.forEach((freq, idx) => {
-    playTone(freq, 'triangle', 450, 2550 + idx * 60, 0.20);
-    playTone(freq * 1.5, 'sine', 350, 2580 + idx * 60, 0.10); // Armónico cristalino superior
+    playTone(freq, 'triangle', 250, 400 + idx * 110, 0.15);
+    playTone(freq * 1.5, 'sine', 200, 430 + idx * 110, 0.08); // Armónico cristalino superior
   });
+
+  // C) Llegada suave y metálica a los destinos finales (1200ms - 1350ms)
+  playTone(2093.00, 'sine', 400, 1200, 0.12); // Do7 llegada
+  playTone(2637.02, 'sine', 450, 1300, 0.10); // Mi7 llegada
 }
 
 export function getUiSoundProfile(): SoundProfileId {

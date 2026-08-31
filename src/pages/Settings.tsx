@@ -644,55 +644,50 @@ export default function Settings() {
                       </p>
                     </div>
 
-                    {/* EVENTOS */}
+                    {/* EVENTOS DE SONIDO CONFIGURABLES */}
                     {(
                       [
                         { key: 'new_order', label: '🛒 Nuevo Pedido Entrante', desc: 'Sonido al recibir un pedido de cliente' },
                         { key: 'income', label: '📈 Cobro / Venta Guardada', desc: 'Sonido al registrar ingreso en POS' },
                         { key: 'expense', label: '📉 Egreso / Registro de Gasto', desc: 'Sonido al guardar un egreso de caja' },
                         { key: 'edit', label: '✏️ Edición de Registro / Precios', desc: 'Sonido al modificar datos existentes' },
-                        { key: 'delete', label: '🗑️ Eliminación / Borrado de Venta', desc: 'Sonido al anular o des-rez de factura' },
-                        { key: 'burst', label: '🚀 Celebración / Ráfaga 3D', desc: 'Sonido al disparar la ráfaga de partículas' },
+                        { key: 'delete', label: '🗑️ Eliminación / Borrado de Venta', desc: 'Sonido al anular o borrar factura' },
+                        { key: 'burst', label: '🚀 Celebración / Ráfaga 3D (Desplazamiento)', desc: 'Sonido al desplazar partículas hacia los extremos' },
                       ] as { key: ActionEventType; label: string; desc: string }[]
                     ).map(ev => {
                       const currentSoundId = eventSounds[ev.key];
                       const selectedOpt = ALL_SOUND_OPTIONS.find(o => o.id === currentSoundId) || ALL_SOUND_OPTIONS[0];
 
                       return (
-                        <div key={ev.key} className="p-3.5 rounded-2xl bg-surface-container-low border border-outline/10 space-y-3">
-                          <div>
-                            <p className="text-xs font-black text-on-surface">{ev.label}</p>
-                            <p className="text-[10px] text-secondary">{ev.desc}</p>
+                        <div key={ev.key} className="p-3.5 rounded-2xl bg-surface-container-low border border-outline/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-black text-on-surface flex items-center gap-1.5">
+                              <span>{ev.label}</span>
+                            </p>
+                            <p className="text-[10px] text-secondary mt-0.5">{ev.desc}</p>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {ALL_SOUND_OPTIONS.map(opt => {
-                              const isSel = currentSoundId === opt.id;
-                              return (
-                                <div
-                                  key={opt.id}
-                                  onClick={() => handleSelectEventSound(ev.key, opt.id)}
-                                  className={cn(
-                                    "p-2.5 rounded-xl border cursor-pointer flex items-center justify-between transition-all active:scale-[0.98]",
-                                    isSel
-                                      ? "border-primary bg-primary/10 dark:bg-primary/20 ring-1 ring-primary/30"
-                                      : "border-outline/10 bg-white dark:bg-surface-container hover:bg-surface-container-high"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-base">{opt.emoji}</span>
-                                    <span className="text-[11px] font-bold text-on-surface truncate">{opt.name}</span>
-                                  </div>
-                                  {isSel ? (
-                                    <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shadow-xs flex-shrink-0">
-                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                    </div>
-                                  ) : (
-                                    <div className="w-5 h-5 rounded-full border border-outline/25 flex-shrink-0" />
-                                  )}
-                                </div>
-                              );
-                            })}
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={currentSoundId}
+                              onChange={(e) => handleSelectEventSound(ev.key, e.target.value)}
+                              className="bg-white dark:bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs font-bold text-on-surface outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer max-w-[210px] truncate shadow-xs"
+                            >
+                              {ALL_SOUND_OPTIONS.map(opt => (
+                                <option key={opt.id} value={opt.id}>
+                                  {opt.emoji} {opt.name}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => selectedOpt.playFn()}
+                              className="p-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all active:scale-95 flex-shrink-0 shadow-xs"
+                              title="Escuchar sonido asignado"
+                            >
+                              <Volume2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       );
