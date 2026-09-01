@@ -671,7 +671,7 @@ export function playUiSound(overrideProfileId?: SoundProfileId): void {
 // D. MAPEO Y PERSONALIZACIÓN DE SONIDOS POR EVENTO
 // ==========================================
 
-export type ActionEventType = 'new_order' | 'income' | 'expense' | 'edit' | 'delete' | 'burst_start' | 'burst_flight';
+export type ActionEventType = 'new_order' | 'income' | 'expense' | 'edit' | 'delete' | 'burst_start';
 
 export interface SoundOption {
   id: string;
@@ -682,6 +682,7 @@ export interface SoundOption {
 }
 
 export const ALL_SOUND_OPTIONS: SoundOption[] = [
+  { id: 'silent', name: '🔇 Silencioso (Sin Sonido)', desc: 'Desactivar efecto de sonido para esta acción', emoji: '🔇', playFn: () => {} },
   { id: 'starburst_sequence', name: '✨ Despegue Estelar Pentatónico', desc: 'Arpegio celestial ascendente de impulso inicial', emoji: '✨', playFn: playStarburstSequence },
   { id: 'fresa_cremosa', name: '🍓 Fresa Cremosa', desc: 'Trino pentatónico alegre para eventos felices', emoji: '🍓', playFn: playFresaCremosa },
   { id: 'choco_berry', name: '🍦 Choco-Berry Pop', desc: 'Doble tono dulce y moderno', emoji: '🍦', playFn: playChocoBerryPop },
@@ -707,8 +708,7 @@ const DEFAULT_EVENT_MAP: Record<ActionEventType, string> = {
   expense: 'expense_resonant',
   edit: 'edit_crystal',
   delete: 'delete_derez',
-  burst_start: 'cohete_dulce',
-  burst_flight: 'helado_magico'
+  burst_start: 'cohete_dulce'
 };
 
 export function getEventSoundMap(): Record<ActionEventType, string> {
@@ -735,6 +735,7 @@ export function setEventSound(event: ActionEventType, soundId: string): void {
 export function playEventSound(event: ActionEventType): void {
   const map = getEventSoundMap();
   const soundId = map[event] || DEFAULT_EVENT_MAP[event];
+  if (soundId === 'silent') return; // Desactivado
   const option = ALL_SOUND_OPTIONS.find(o => o.id === soundId);
   if (option) {
     option.playFn();
@@ -747,7 +748,6 @@ export function playEventSound(event: ActionEventType): void {
       case 'edit': playEditCrystal(); break;
       case 'delete': playDeleteDeRez(); break;
       case 'burst_start': playCoheteDulce(); break;
-      case 'burst_flight': playHeladoMagico(); break;
     }
   }
 }
@@ -756,7 +756,7 @@ export function playEventSound(event: ActionEventType): void {
 // E. CATÁLOGO Y SECUENCIA DE SONIDOS DE VUELO E IMPACTO POR PARTÍCULA (HELADERÍA STYLE)
 // ==========================================
 
-export type FlightSoundId = 'cristal_estelar' | 'fresa_escalonada' | 'burbujas_cremosas' | 'monedas_nes' | 'cascada_neon';
+export type FlightSoundId = 'cristal_estelar' | 'fresa_escalonada' | 'burbujas_cremosas' | 'monedas_nes' | 'cascada_neon' | 'silent';
 
 export interface FlightSoundOption {
   id: FlightSoundId;
@@ -766,6 +766,12 @@ export interface FlightSoundOption {
 }
 
 export const FLIGHT_SOUND_OPTIONS: FlightSoundOption[] = [
+  { 
+    id: 'silent', 
+    name: '🔇 Silencioso (Sin Sonido por Partícula)', 
+    desc: 'No emitir notas cristalinas al viajar e impactar las partículas en la cápsula/menú', 
+    emoji: '🔇' 
+  },
   { 
     id: 'cristal_estelar', 
     name: '💎 Absorción Cristalina Estelar', 
@@ -817,6 +823,7 @@ export function setFlightSoundProfile(profileId: FlightSoundId): void {
 
 export function playFlightParticleNote(particleIndex: number, delayMs: number = 0): void {
   const profileId = getFlightSoundProfile();
+  if (profileId === 'silent') return; // Desactivado por el usuario
 
   let baseFreq = 1046.50; // Do6
   let stepHz = 70;

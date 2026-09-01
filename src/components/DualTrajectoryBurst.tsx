@@ -35,14 +35,8 @@ export default function DualTrajectoryBurst({
   useEffect(() => {
     if (!trigger) return;
 
-    // Reproducir los 2 momentos de audio en perfecta sincronicidad:
-    // 1. Despegue / Impulso inicial ultracorto al nacer las partículas (0ms - 150ms)
+    // Reproducir el sonido de despegue / impulso inicial a los 0ms (respetando si el usuario eligió Silencioso)
     playEventSound('burst_start');
-
-    // 2. Vuelo general al iniciar el desplazamiento hacia los extremos (480ms)
-    const flightAudioTimer = setTimeout(() => {
-      playEventSound('burst_flight');
-    }, 480);
 
     // Obtener elementos destino en el DOM
     const bellEl = document.getElementById(targetAId) || document.getElementById('user-profile-capsule-target') || document.getElementById('notification-bell-target');
@@ -88,10 +82,7 @@ export default function DualTrajectoryBurst({
       onComplete?.();
     }, 2400);
 
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(flightAudioTimer);
-    };
+    return () => clearTimeout(timer);
   }, [trigger]);
 
   if (!trigger || particles.length === 0) return null;
