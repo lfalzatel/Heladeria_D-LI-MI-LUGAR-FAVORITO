@@ -238,9 +238,7 @@ export default function OrderCard({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm('¿Eliminar permanentemente este pedido? Esta acción no se puede deshacer.')) {
-                        onDeletePedido(pedido.id, e);
-                      }
+                      onDeletePedido(pedido.id, e);
                     }}
                     className="w-10 flex items-center justify-center py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all active:scale-95 border border-red-100"
                     title="Eliminar permanentemente"
