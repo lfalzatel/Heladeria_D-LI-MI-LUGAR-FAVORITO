@@ -28,15 +28,18 @@ export default function DualTrajectoryBurst({
   startPosition,
   targetAId = 'notification-bell-target',
   targetBId = 'bottom-nav-orders-target',
-  eventType = 'burst'
+  eventType = 'burst_start'
 }: DualTrajectoryBurstProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     if (!trigger) return;
 
-    // Reproducir sonido de confirmación configurado
-    playEventSound(eventType);
+    // Reproducir los 2 momentos de audio: Despegue (0ms) y Vuelo (300ms)
+    playEventSound('burst_start');
+    const flightAudioTimer = setTimeout(() => {
+      playEventSound('burst_flight');
+    }, 300);
 
     // Obtener elementos destino en el DOM
     const bellEl = document.getElementById(targetAId) || document.getElementById('user-profile-capsule-target') || document.getElementById('notification-bell-target');
@@ -79,7 +82,10 @@ export default function DualTrajectoryBurst({
       onComplete?.();
     }, 2400);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(flightAudioTimer);
+    };
   }, [trigger]);
 
   if (!trigger || particles.length === 0) return null;

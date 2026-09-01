@@ -684,7 +684,7 @@ export function playUiSound(overrideProfileId?: SoundProfileId): void {
 // D. MAPEO Y PERSONALIZACIÓN DE SONIDOS POR EVENTO
 // ==========================================
 
-export type ActionEventType = 'new_order' | 'income' | 'expense' | 'edit' | 'delete' | 'burst';
+export type ActionEventType = 'new_order' | 'income' | 'expense' | 'edit' | 'delete' | 'burst_start' | 'burst_flight';
 
 export interface SoundOption {
   id: string;
@@ -701,7 +701,7 @@ export const ALL_SOUND_OPTIONS: SoundOption[] = [
   { id: 'helado_magico', name: '🍧 Helado Mágico', desc: 'Arpegio cristalino mágico ascendente', emoji: '🍧', playFn: playHeladoMagico },
   { id: 'campana_dli', name: '🔔 Campana Heladería', desc: 'Timbre nostálgico de mostrador metálico', emoji: '🔔', playFn: playCampanaHeladeria },
   { id: 'golden_coin', name: '🪙 Moneda de Oro', desc: 'Bip-bip brillante estilo NES 8-bit', emoji: '🪙', playFn: playGoldenCoin },
-  { id: 'cohete_dulce', name: '🚀 Cohete Dulce', desc: 'Barrido espacial ascendente de logro', emoji: '🚀', playFn: playCoheteDulce },
+  { id: 'cohete_dulce', name: '🚀 Cohete Dulce', desc: 'Barrido espacial ascendente de impulso inicial', emoji: '🚀', playFn: playCoheteDulce },
   { id: 'mario_1up', name: '🍄 Mario 1-UP', desc: 'Tono retro retro NES de vida extra', emoji: '🍄', playFn: playMario1Up },
   { id: 'mario_coin', name: '🪙 Mario Coin', desc: 'Sonido retro de moneda NES', emoji: '🪙', playFn: playMarioCoin },
   { id: 'mario_jump', name: '🍄 Mario Jump', desc: 'Impulso ascendente retro 8-bit', emoji: '🍄', playFn: playMarioJump },
@@ -720,7 +720,8 @@ const DEFAULT_EVENT_MAP: Record<ActionEventType, string> = {
   expense: 'expense_resonant',
   edit: 'edit_crystal',
   delete: 'delete_derez',
-  burst: 'starburst_sequence'
+  burst_start: 'cohete_dulce',
+  burst_flight: 'helado_magico'
 };
 
 export function getEventSoundMap(): Record<ActionEventType, string> {
@@ -758,7 +759,8 @@ export function playEventSound(event: ActionEventType): void {
       case 'expense': playExpenseResonant(); break;
       case 'edit': playEditCrystal(); break;
       case 'delete': playDeleteDeRez(); break;
-      case 'burst': playHeladoMagico(); break;
+      case 'burst_start': playCoheteDulce(); break;
+      case 'burst_flight': playHeladoMagico(); break;
     }
   }
 }

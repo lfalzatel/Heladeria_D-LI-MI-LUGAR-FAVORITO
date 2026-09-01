@@ -654,7 +654,8 @@ export default function Settings() {
                         { key: 'expense', label: '📉 Egreso / Registro de Gasto', desc: 'Sonido al guardar un egreso de caja' },
                         { key: 'edit', label: '✏️ Edición de Registro / Precios', desc: 'Sonido al modificar datos existentes' },
                         { key: 'delete', label: '🗑️ Eliminación / Borrado de Venta', desc: 'Sonido al anular o borrar factura' },
-                        { key: 'burst', label: '🚀 Celebración / Ráfaga 3D (Desplazamiento)', desc: 'Sonido al desplazar partículas hacia los extremos' },
+                        { key: 'burst_start', label: '🚀 1. Ráfaga: Despegue / Impulso Inicial', desc: 'Sonido de inicio al nacer las partículas (0ms)' },
+                        { key: 'burst_flight', label: '🌌 2. Ráfaga: Vuelo / Desplazamiento Cristalino', desc: 'Sonido mientras las partículas viajan a su destino (300ms)' },
                       ] as { key: ActionEventType; label: string; desc: string }[]
                     ).map(ev => {
                       const currentSoundId = eventSounds[ev.key];
@@ -767,7 +768,8 @@ export default function Settings() {
                     </p>
                     <button
                       onClick={() => {
-                        playEventSound('burst');
+                        playEventSound('burst_start');
+                        setTimeout(() => playEventSound('burst_flight'), 300);
                         setShowGamifiedDemo(true);
                       }}
                       className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-primary to-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-fuchsia-500/20 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
