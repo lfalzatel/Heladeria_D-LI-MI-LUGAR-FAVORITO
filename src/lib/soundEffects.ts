@@ -694,7 +694,7 @@ export interface SoundOption {
 }
 
 export const ALL_SOUND_OPTIONS: SoundOption[] = [
-  { id: 'starburst_sequence', name: '✨ Ráfaga Estelar 3 Etapas', desc: 'Despegue celestial, vuelo cristalino y choque final (2550ms)', emoji: '✨', playFn: playStarburstSequence },
+  { id: 'starburst_sequence', name: '✨ Despegue Estelar Pentatónico', desc: 'Arpegio celestial ascendente de impulso inicial', emoji: '✨', playFn: playStarburstSequence },
   { id: 'fresa_cremosa', name: '🍓 Fresa Cremosa', desc: 'Trino pentatónico alegre para eventos felices', emoji: '🍓', playFn: playFresaCremosa },
   { id: 'choco_berry', name: '🍦 Choco-Berry Pop', desc: 'Doble tono dulce y moderno', emoji: '🍦', playFn: playChocoBerryPop },
   { id: 'helado_magico', name: '🍧 Helado Mágico', desc: 'Arpegio cristalino mágico ascendente', emoji: '🍧', playFn: playHeladoMagico },
