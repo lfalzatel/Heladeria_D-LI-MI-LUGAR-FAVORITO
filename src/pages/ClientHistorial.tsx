@@ -12,6 +12,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { playEventSound } from '../lib/soundEffects';
 import { 
   X,
   Calendar,
@@ -1126,6 +1127,7 @@ export default function ClientHistorial() {
                       if (window.confirm('¿Estás seguro de eliminar este gasto? Esta acción no se puede deshacer.')) {
                         try {
                           await deleteDoc(doc(db, 'gastos', selectedExpenseDetail.id));
+                          playEventSound('delete');
                           setSelectedExpenseDetail(null);
                         } catch (error) {
                           console.error("Error al eliminar gasto:", error);

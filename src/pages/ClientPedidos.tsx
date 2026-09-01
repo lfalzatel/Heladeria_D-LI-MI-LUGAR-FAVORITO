@@ -17,6 +17,7 @@ import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
+import { playEventSound } from '../lib/soundEffects';
 
 interface Pedido {
   id: string;
@@ -205,6 +206,7 @@ export default function ClientPedidos() {
     try {
       const { deleteDoc, doc } = await import('firebase/firestore');
       await deleteDoc(doc(db, 'pedidos', pedidoId));
+      playEventSound('delete');
       toast.success('Pedido eliminado permanentemente');
       if (selectedId === pedidoId) setSelectedId(null);
     } catch (error) {

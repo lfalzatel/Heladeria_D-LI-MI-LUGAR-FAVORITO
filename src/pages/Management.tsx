@@ -602,6 +602,7 @@ export default function Management() {
   const handleUpdateExpensePaymentMethod = async (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => { try { await updateDoc(doc(db, 'gastos', id), { paymentMethod: newMethod, splitDetails: splitDetails || null }); setDetailPurchase(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); setSelectedGastoForDetail(prev => prev ? { ...prev, paymentMethod: newMethod, splitDetails: splitDetails || undefined } : null); toast.success('Método de pago actualizado'); } catch (error) { toast.error('Error al actualizar el pago'); } }; const handleDeleteExpense = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'gastos', id));
+      playEventSound('delete');
       toast.success('Gasto eliminado exitosamente');
       setSelectedGastoForDetail(null);
     } catch (error) {
