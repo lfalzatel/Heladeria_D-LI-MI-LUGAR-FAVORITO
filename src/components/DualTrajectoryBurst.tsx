@@ -35,11 +35,14 @@ export default function DualTrajectoryBurst({
   useEffect(() => {
     if (!trigger) return;
 
-    // Reproducir los 2 momentos de audio: Despegue (0ms) y Vuelo (300ms)
+    // Reproducir los 2 momentos de audio en perfecta sincronicidad:
+    // 1. Despegue / Impulso inicial ultracorto al nacer las partículas (0ms - 150ms)
     playEventSound('burst_start');
+
+    // 2. Vuelo general al iniciar el desplazamiento hacia los extremos (480ms)
     const flightAudioTimer = setTimeout(() => {
       playEventSound('burst_flight');
-    }, 300);
+    }, 480);
 
     // Obtener elementos destino en el DOM
     const bellEl = document.getElementById(targetAId) || document.getElementById('user-profile-capsule-target') || document.getElementById('notification-bell-target');
@@ -74,8 +77,8 @@ export default function DualTrajectoryBurst({
         delay: (i * 0.08),
       });
 
-      // 🎵 Sonido cristalino individual por cada partícula al converger/impactar en su destino
-      playFlightParticleNote(i, 400 + i * 90);
+      // 🎵 Sonido cristalino individual por cada partícula al iniciar su vuelo lateral e impactar en su destino (480ms+)
+      playFlightParticleNote(i, 480 + i * 90);
     }
 
     setParticles(generated);
