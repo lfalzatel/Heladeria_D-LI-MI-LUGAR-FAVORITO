@@ -6,7 +6,7 @@ import {
 import { db } from '../lib/firebase';
 import { 
   Package, Clock, ChevronRight, IceCream, ShoppingBag,
-  Banknote, CreditCard, Smartphone, Check, X, Truck, History
+  Banknote, CreditCard, Smartphone, Check, X, Truck, History, AlertTriangle
 } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -27,6 +27,10 @@ interface Pedido {
   total: number;
   status: 'pendiente' | 'aceptado' | 'celebrado' | 'entregado' | 'rechazado' | 'cancelado';
   createdAt: any;
+  updatedAt: any;
+  note?: string;
+  direccion?: string;
+  telefono?: string;
   paymentMethod: string;
   messages?: any[];
 }
@@ -42,6 +46,8 @@ export default function ClientPedidos() {
   const [chatMessage, setChatMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isDeletingPedido, setIsDeletingPedido] = useState(false);
 
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
 
@@ -201,20 +207,26 @@ export default function ClientPedidos() {
     }
   };
 
-  const handleDeletePedido = async (pedidoId: string, e?: React.MouseEvent) => {
+  const handleDeletePedido = (pedidoId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (!window.confirm('¿Estás seguro de eliminar este pedido permanentemente? Esta acción no se puede deshacer.')) {
-      return;
-    }
+    setDeleteConfirmId(pedidoId);
+  };
+
+  const executeDeletePedido = async () => {
+    if (!deleteConfirmId) return;
+    setIsDeletingPedido(true);
     try {
       const { deleteDoc, doc } = await import('firebase/firestore');
-      await deleteDoc(doc(db, 'pedidos', pedidoId));
+      await deleteDoc(doc(db, 'pedidos', deleteConfirmId));
       playEventSound('delete');
       toast.success('Pedido eliminado permanentemente');
-      if (selectedId === pedidoId) setSelectedId(null);
+      if (selectedId === deleteConfirmId) setSelectedId(null);
     } catch (error) {
       console.error("Error al eliminar pedido:", error);
       toast.error('Error al eliminar el pedido');
+    } finally {
+      setIsDeletingPedido(false);
+      setDeleteConfirmId(null);
     }
   };
 
@@ -394,6 +406,62 @@ export default function ClientPedidos() {
         } : undefined}
       />
 
+      {/* Modal de Confirmación de Eliminación Estilo Inicio */}
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteConfirmId(null)}
+              className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col items-center text-center gap-4 border border-outline/5 z-[310]"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center">
+                <AlertTriangle className="w-7 h-7" />
+              </div>
+              
+              <div>
+                <h4 className="font-headline font-black text-lg text-on-surface">
+                  ¿Eliminar este pedido?
+                </h4>
+                <p className="text-xs text-secondary font-semibold mt-2 leading-relaxed px-2">
+                  Esta acción no se puede deshacer. Se eliminará el registro del pedido definitivamente.
+                </p>
+              </div>
+
+              <div className="flex gap-3 w-full mt-2">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmId(null)}
+                  disabled={isDeletingPedido}
+                  className="flex-1 h-12 rounded-xl border border-outline/10 text-xs font-bold text-secondary hover:bg-surface-container transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={executeDeletePedido}
+                  disabled={isDeletingPedido}
+                  className="flex-1 h-12 rounded-xl bg-red-600 hover:scale-[1.02] shadow-lg shadow-red-600/15 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                >
+                  {isDeletingPedido ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    'Sí, Eliminar'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
