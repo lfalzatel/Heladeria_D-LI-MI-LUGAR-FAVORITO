@@ -1863,62 +1863,12 @@ export default function Management() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className="w-full flex flex-col gap-5 pb-10"
+                className="w-full flex flex-col gap-2 pb-10"
               >
-                {/* Title and Actions */}
-                <div className="flex flex-col gap-3 w-full">
-                  <div className="flex items-center justify-between w-full">
-                    <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
-                      {operacionSubTab === 'compras' ? 'Compras' : 'Gastos'}
-                    </h2>
-                    <div className="flex items-center gap-2 relative">
-                      <button 
-                        onClick={() => setShowPurchaseCalendar(true)}
-                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
-                        title="Calendario"
-                      >
-                        <Calendar className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={() => setShowPurchaseExportOptions(!showPurchaseExportOptions)}
-                        className="w-10 h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm relative overflow-hidden group"
-                        title="Descargar Reporte"
-                        disabled={isGeneratingPurchasePDF}
-                      >
-                        <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                      </button>
-
-                      <AnimatePresence>
-                        {showPurchaseExportOptions && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-12 right-0 bg-white rounded-3xl p-2 shadow-2xl border border-outline/10 w-64 z-[100] flex flex-col gap-1"
-                          >
-                            <div className="px-3 py-2">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-secondary/60">Formato de Salida</p>
-                            </div>
-                            <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('excel') : handlePurchasePreview('excel')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
-                              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">XLS</div>
-                              <span className="font-bold text-on-surface">Descargar Excel</span>
-                            </button>
-                            <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('pdf') : handlePurchasePreview('pdf')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
-                              <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-xs">PDF</div>
-                              <span className="font-bold text-on-surface">Descargar PDF</span>
-                            </button>
-                            <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('image') : handlePurchasePreview('image')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
-                              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">JPG</div>
-                              <span className="font-bold text-on-surface">Descargar Imagen</span>
-                            </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                  
+                {/* Unified Toolbar: Sub-tabs (COMPRAS / GASTOS) + Icons (Calendario & Descargar) */}
+                <div className="flex items-center justify-between gap-2 w-full">
                   {/* Operación Sub-tabs */}
-                  <div className="flex gap-2 bg-surface-container p-1.5 rounded-2xl">
+                  <div className="flex gap-1.5 bg-surface-container p-1 rounded-2xl flex-1 max-w-xs sm:max-w-sm">
                     {(['compras', 'gastos'] as OperacionSubTab[]).map(tab => (
                       <button
                         key={tab}
@@ -1927,7 +1877,7 @@ export default function Management() {
                           navigate(`/admin/management?tab=operacion&subtab=${tab}`, { replace: true });
                         }}
                         className={cn(
-                          "flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+                          "flex-1 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
                           operacionSubTab === tab 
                             ? 'bg-white text-on-surface shadow-sm' 
                             : 'text-secondary hover:text-on-surface hover:bg-white/50'
@@ -1937,6 +1887,53 @@ export default function Management() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Actions Icons (Calendar & Download) */}
+                  <div className="flex items-center gap-2 relative flex-shrink-0">
+                    <button 
+                      onClick={() => setShowPurchaseCalendar(true)}
+                      className="w-9 h-9 sm:w-10 sm:h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm active:scale-95"
+                      title="Calendario"
+                    >
+                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                    <button 
+                      onClick={() => setShowPurchaseExportOptions(!showPurchaseExportOptions)}
+                      className="w-9 h-9 sm:w-10 sm:h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm relative overflow-hidden group active:scale-95"
+                      title="Descargar Reporte"
+                      disabled={isGeneratingPurchasePDF}
+                    >
+                      <Download className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+                    </button>
+
+                    <AnimatePresence>
+                      {showPurchaseExportOptions && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute top-12 right-0 bg-white rounded-3xl p-2 shadow-2xl border border-outline/10 w-64 z-[100] flex flex-col gap-1"
+                        >
+                          <div className="px-3 py-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary/60">Formato de Salida</p>
+                          </div>
+                          <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('excel') : handlePurchasePreview('excel')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">XLS</div>
+                            <span className="font-bold text-on-surface">Descargar Excel</span>
+                          </button>
+                          <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('pdf') : handlePurchasePreview('pdf')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                            <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-xs">PDF</div>
+                            <span className="font-bold text-on-surface">Descargar PDF</span>
+                          </button>
+                          <button onClick={() => operacionSubTab === 'gastos' ? handleExpensePreview('image') : handlePurchasePreview('image')} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-container transition-colors text-left w-full">
+                            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">JPG</div>
+                            <span className="font-bold text-on-surface">Descargar Imagen</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
 
                   {/* Header Actions & Date Filter */}
                   {selectedDate ? (
@@ -2051,7 +2048,6 @@ export default function Management() {
                       </button>
                     </div>
                   )}
-                </div>
 
                 {operacionSubTab === 'compras' && (
                   <>
