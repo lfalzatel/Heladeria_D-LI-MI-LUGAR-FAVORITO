@@ -9,6 +9,7 @@ import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, w
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
+import { playEventSound } from '../lib/soundEffects';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -479,6 +480,7 @@ export default function MovementDetailModal({
       const collectionName = data.isDirectPedido ? 'pedidos' : 'sales';
       await deleteDoc(doc(db, collectionName, data.id));
 
+      playEventSound('delete');
       toast.success('Venta eliminada y el inventario ha sido restaurado');
       onClose();
     } catch (e: any) {

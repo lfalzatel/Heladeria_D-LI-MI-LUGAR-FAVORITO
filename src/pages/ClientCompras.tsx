@@ -20,6 +20,7 @@ import MovementDetailModal from '../components/MovementDetailModal';
 import DualTrajectoryBurst from '../components/DualTrajectoryBurst';
 import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
+import { playEventSound } from '../lib/soundEffects';
 import confetti from 'canvas-confetti';
 
 const CONSTANT_CATEGORIES = [
@@ -397,6 +398,9 @@ export default function ClientCompras() {
         colors: colors,
         disableForReducedMotion: true
       });
+
+      // Reproducir sonido de nuevo pedido configurado
+      playEventSound('new_order');
 
       toast.success('¡Ganaste 1 Punto Premium! ⭐ Revisa tu perfil.', {
         description: '¡Tu pedido fue enviado exitosamente!',
