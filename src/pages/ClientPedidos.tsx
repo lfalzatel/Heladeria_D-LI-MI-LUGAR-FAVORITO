@@ -179,9 +179,12 @@ export default function ClientPedidos() {
         rechazado: 'Lo sentimos, tu pedido ha sido rechazado.'
       };
 
-      if (statusMessages[newStatus]) {
+      const targetPedido = pedidos.find(p => p.id === pedidoId);
+      const targetClientId = targetPedido?.clienteId || selectedPedido?.clienteId || '';
+
+      if (statusMessages[newStatus] && targetClientId) {
         await notifyUser(
-          selectedPedido?.clienteId || '',
+          targetClientId,
           `Pedido ${newStatus.toUpperCase()}`,
           statusMessages[newStatus],
           { type: 'order_status', pedidoId, status: newStatus }

@@ -19,7 +19,8 @@ import {
   playMario1Up, playMarioCoin, playMarioJump, playMarioPipe,
   playIncomeCelestial, playExpenseResonant, playEditCrystal, playDeleteDeRez,
   playChocoBerryPop, playHeladoMagico, playFresaCremosa, playCampanaHeladeria, playGoldenCoin, playCoheteDulce,
-  ALL_SOUND_OPTIONS, getEventSoundMap, setEventSound, playEventSound, ActionEventType
+  ALL_SOUND_OPTIONS, getEventSoundMap, setEventSound, playEventSound, ActionEventType,
+  FLIGHT_SOUND_OPTIONS, FlightSoundId, getFlightSoundProfile, setFlightSoundProfile, testFlightSequence
 } from '../lib/soundEffects';
 import DualTrajectoryBurst from '../components/DualTrajectoryBurst';
 import * as confettiModule from 'canvas-confetti';
@@ -103,7 +104,14 @@ export default function Settings() {
 
   // ── SOUNDS & AUDIO STATE ──────────────────────────────────────────────
   const [selectedUiSound, setSelectedUiSound] = useState<SoundProfileId>(() => getUiSoundProfile());
+  const [selectedFlightSound, setSelectedFlightSound] = useState<FlightSoundId>(() => getFlightSoundProfile());
   const [eventSounds, setEventSounds] = useState(() => getEventSoundMap());
+
+  const handleSelectFlightSound = (id: FlightSoundId) => {
+    setSelectedFlightSound(id);
+    setFlightSoundProfile(id);
+    testFlightSequence(id);
+  };
 
   const handleSelectEventSound = (event: ActionEventType, soundId: string) => {
     setEventSound(event, soundId);
@@ -695,6 +703,69 @@ export default function Settings() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* SUBSECCIÓN 4: VUELO E IMPACTO CRISTALINO POR PARTÍCULA (HELADERÍA STYLE) */}
+                  <div className="border-t border-outline/10 pt-5 space-y-4">
+                    <div>
+                      <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-500" /> Sonidos de Vuelo e Impacto por Partícula (Ráfaga 3D)
+                      </h3>
+                      <p className="text-[11px] text-secondary leading-relaxed">
+                        Selecciona el efecto cristalino exclusivo que sonará individualmente cuando cada icono (helado 🍦, estrella ⭐, moneda 🪙) converja e impacte en la cápsula o menú:
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {FLIGHT_SOUND_OPTIONS.map((opt) => {
+                        const isSelected = selectedFlightSound === opt.id;
+                        return (
+                          <div
+                            key={opt.id}
+                            onClick={() => handleSelectFlightSound(opt.id)}
+                            style={{ backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.12)' : '#ffffff' }}
+                            className={cn(
+                              "p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-sm",
+                              isSelected
+                                ? "border-cyan-500 ring-1 ring-cyan-500/30"
+                                : "border-cyan-200/60 hover:border-cyan-400/40"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-surface-container border border-cyan-100 flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
+                                {opt.emoji}
+                              </div>
+                              <div>
+                                <span className="font-bold text-xs text-on-surface">
+                                  {opt.name}
+                                </span>
+                                <p className="text-[10px] text-secondary mt-0.5">
+                                  {opt.desc}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {isSelected ? (
+                                <div className="w-6 h-6 rounded-full bg-cyan-500 text-white flex items-center justify-center shadow-sm">
+                                  <Check className="w-4 h-4 stroke-[3]" />
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border border-outline/25" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => testFlightSequence(selectedFlightSound)}
+                      className="w-full py-3 px-4 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    >
+                      <Volume2 className="w-4 h-4" /> PROBAR SECUENCIA DE IMPACTO DE PARTÍCULAS
+                    </button>
                   </div>
                 </div>
               </motion.div>

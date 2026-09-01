@@ -581,46 +581,45 @@ export function playCoheteDulce() {
   }
 }
 
+// Helper global de emision de tonos Web Audio API
+export function playTone(
+  freq: number, 
+  type: OscillatorType = 'sine', 
+  durationMs: number = 180, 
+  delayMs: number = 0, 
+  gainLevel: number = 0.15
+) {
+  setTimeout(() => {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx || ctx.state === 'closed') return;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(gainLevel, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (durationMs / 1000));
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + (durationMs / 1000));
+    } catch (err) {
+      // Silencioso si hay bloqueo de audio
+    }
+  }, delayMs);
+}
+
 // ✨ Ráfaga Estelar en 3 Etapas (Despegue, Vuelo y Fanfarria 2550ms)
 export function playStarburstSequence() {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  const playTone = (
-    freq: number, 
-    type: OscillatorType, 
-    durationMs: number, 
-    delayMs: number = 0, 
-    gainLevel: number = 0.15
-  ) => {
-    setTimeout(() => {
-      try {
-        if (!ctx || ctx.state === 'closed') return;
-        if (ctx.state === 'suspended') {
-          ctx.resume().catch(() => {});
-        }
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
-        gain.gain.setValueAtTime(0.001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(gainLevel, ctx.currentTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (durationMs / 1000));
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + (durationMs / 1000));
-      } catch (err) {
-        // Silencioso si hay bloqueo de audio
-      }
-    }, delayMs);
-  };
-
   // A) Arpegio celestial ascendente al despegar (0ms - 400ms)
   const arpeggioNotes = [523.25, 659.25, 783.99, 987.77, 1046.50]; // Do5, Mi5, Sol5, Si5, Do6
   arpeggioNotes.forEach((freq, idx) => {
@@ -762,6 +761,144 @@ export function playEventSound(event: ActionEventType): void {
       case 'burst_start': playCoheteDulce(); break;
       case 'burst_flight': playHeladoMagico(); break;
     }
+  }
+}
+
+// ==========================================
+// E. CATÁLOGO Y SECUENCIA DE SONIDOS DE VUELO E IMPACTO POR PARTÍCULA (HELADERÍA STYLE)
+// ==========================================
+
+export type FlightSoundId = 'cristal_estelar' | 'fresa_escalonada' | 'burbujas_cremosas' | 'monedas_nes' | 'cascada_neon';
+
+export interface FlightSoundOption {
+  id: FlightSoundId;
+  name: string;
+  desc: string;
+  emoji: string;
+}
+
+export const FLIGHT_SOUND_OPTIONS: FlightSoundOption[] = [
+  { 
+    id: 'cristal_estelar', 
+    name: '💎 Absorción Cristalina Estelar', 
+    desc: 'Notas cristalinas individuales (+70 Hz) al converger e impactar cada estrella (Do6 a Mi7)', 
+    emoji: '💎' 
+  },
+  { 
+    id: 'fresa_escalonada', 
+    name: '🍓 Gotas de Fresa Escalonadas', 
+    desc: 'Pentatónica cálida dulce (+85 Hz) estilo heladería artesanal al llegar cada icono', 
+    emoji: '🍓' 
+  },
+  { 
+    id: 'burbujas_cremosas', 
+    name: '🍦 Burbujas Cremosas de Absorción', 
+    desc: 'Chimes de vidrio afinados con armónico superior por impacto en la cápsula', 
+    emoji: '🍦' 
+  },
+  { 
+    id: 'monedas_nes', 
+    name: '🪙 Monedas NES Progresivas', 
+    desc: 'Impactos retro 8-bit en escala ascendente estilo juego de arcade', 
+    emoji: '🪙' 
+  },
+  { 
+    id: 'cascada_neon', 
+    name: '🌌 Cascada Neón Espacial', 
+    desc: 'Barrido espacial hiper-agudo (+130 Hz) al ser absorbido por la píldora/menú', 
+    emoji: '🌌' 
+  },
+];
+
+const FLIGHT_STORAGE_KEY = 'dli_custom_flight_sound';
+
+export function getFlightSoundProfile(): FlightSoundId {
+  if (typeof localStorage === 'undefined') return 'cristal_estelar';
+  const saved = localStorage.getItem(FLIGHT_STORAGE_KEY) as FlightSoundId;
+  if (saved && FLIGHT_SOUND_OPTIONS.some(o => o.id === saved)) {
+    return saved;
+  }
+  return 'cristal_estelar';
+}
+
+export function setFlightSoundProfile(profileId: FlightSoundId): void {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(FLIGHT_STORAGE_KEY, profileId);
+  }
+}
+
+export function playFlightParticleNote(particleIndex: number, delayMs: number = 0): void {
+  const profileId = getFlightSoundProfile();
+
+  let baseFreq = 1046.50; // Do6
+  let stepHz = 70;
+  let waveType: OscillatorType = 'sine';
+  let duration = 180;
+  let volume = 0.16;
+  let hasHarmonic = false;
+
+  switch (profileId) {
+    case 'cristal_estelar':
+      baseFreq = 1046.50; // Do6
+      stepHz = 70;
+      waveType = 'sine';
+      duration = 180;
+      volume = 0.16;
+      break;
+    case 'fresa_escalonada':
+      baseFreq = 659.25; // Mi5
+      stepHz = 85;
+      waveType = 'triangle';
+      duration = 200;
+      volume = 0.18;
+      break;
+    case 'burbujas_cremosas':
+      baseFreq = 1318.51; // Mi6
+      stepHz = 95;
+      waveType = 'sine';
+      duration = 160;
+      volume = 0.14;
+      hasHarmonic = true;
+      break;
+    case 'monedas_nes':
+      baseFreq = 1567.98; // Sol6
+      stepHz = 110;
+      waveType = 'square';
+      duration = 120;
+      volume = 0.08;
+      break;
+    case 'cascada_neon':
+      baseFreq = 1760.00; // La6
+      stepHz = 130;
+      waveType = 'sine';
+      duration = 220;
+      volume = 0.15;
+      hasHarmonic = true;
+      break;
+  }
+
+  const freq = baseFreq + (particleIndex % 12) * stepHz;
+  playTone(freq, waveType, duration, delayMs, volume);
+  if (hasHarmonic) {
+    playTone(freq * 1.5, 'sine', duration * 0.8, delayMs + 20, volume * 0.5);
+  }
+}
+
+export function testFlightSequence(profileId?: FlightSoundId): void {
+  const original = getFlightSoundProfile();
+  if (profileId) {
+    setFlightSoundProfile(profileId);
+  }
+
+  // Reproducir ráfaga de 7 notas individuales
+  for (let i = 0; i < 7; i++) {
+    playFlightParticleNote(i, i * 110);
+  }
+
+  if (profileId) {
+    setTimeout(() => {
+      setFlightSoundProfile(original);
+    }, 1000);
   }
 }
 

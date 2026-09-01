@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ActionEventType, playEventSound } from '../lib/soundEffects';
+import { ActionEventType, playEventSound, playFlightParticleNote } from '../lib/soundEffects';
 
 interface DualTrajectoryBurstProps {
   trigger: boolean;
@@ -73,6 +73,9 @@ export default function DualTrajectoryBurst({
         targetY: isBell ? bellTargetY : navTargetY,
         delay: (i * 0.08),
       });
+
+      // 🎵 Sonido cristalino individual por cada partícula al converger/impactar en su destino
+      playFlightParticleNote(i, 400 + i * 90);
     }
 
     setParticles(generated);

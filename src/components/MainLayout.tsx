@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import AppHeader, { PageTitle } from './AppHeader';
 import AdminSidebar from './AdminSidebar';
 import BottomNav from './BottomNav';
+import ActiveOrderFloatingPill from './ActiveOrderFloatingPill';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHeaderStore } from '../stores/useHeaderStore';
 
@@ -24,6 +25,7 @@ export default function MainLayout() {
 
       <main className="flex-1 flex flex-col min-h-screen relative min-w-0">
         <AppHeader />
+        <ActiveOrderFloatingPill />
         
         {title && (
           <PageTitle 

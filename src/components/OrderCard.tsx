@@ -279,7 +279,7 @@ export default function OrderCard({
                     <X className="w-3.5 h-3.5 stroke-[3]" /> Cancelar
                   </button>
                 )}
-                {canMarkDelivered && (pedido.status === 'aceptado' || pedido.status === 'celebrado') && (
+                {canMarkDelivered && pedido.status === 'celebrado' && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -289,6 +289,11 @@ export default function OrderCard({
                   >
                     <Check className="w-3.5 h-3.5 stroke-[3]" /> Confirmar Recepción
                   </button>
+                )}
+                {pedido.status === 'aceptado' && (
+                  <span className="flex-1 text-[10px] text-blue-600 font-black uppercase tracking-wider py-2 px-3 rounded-xl bg-blue-50 flex items-center justify-center gap-1.5 border border-blue-100">
+                    <IceCream className="w-3.5 h-3.5 animate-bounce" /> En preparación por la heladería
+                  </span>
                 )}
                 {!canMarkDelivered && pedido.status !== 'pendiente' && (
                   <p className="text-[10px] text-secondary/40 font-bold italic px-1">Ya en preparación · No cancelable</p>

@@ -220,6 +220,11 @@ export async function notifyAdmins(title: string, body: string, data: any = {}) 
 
 export async function notifyUser(userId: string, title: string, body: string, data: any = {}) {
   try {
+    if (!userId || typeof userId !== 'string' || !userId.trim()) {
+      console.warn('notifyUser omitido: userId no es válido o está vacío', userId);
+      return { success: false, error: 'Invalid userId' };
+    }
+
     const userDoc = await getDoc(doc(db, 'users', userId));
     if (!userDoc.exists()) return { success: false, error: 'User not found' };
     
