@@ -203,6 +203,9 @@ export default function ClientPedidos() {
 
   const handleDeletePedido = async (pedidoId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (!window.confirm('¿Estás seguro de eliminar este pedido permanentemente? Esta acción no se puede deshacer.')) {
+      return;
+    }
     try {
       const { deleteDoc, doc } = await import('firebase/firestore');
       await deleteDoc(doc(db, 'pedidos', pedidoId));
