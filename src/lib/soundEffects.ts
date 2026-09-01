@@ -885,15 +885,15 @@ export function testFlightSequence(profileId?: FlightSoundId): void {
     setFlightSoundProfile(profileId);
   }
 
-  // Reproducir ráfaga de 7 notas individuales
-  for (let i = 0; i < 7; i++) {
-    playFlightParticleNote(i, i * 110);
+  // Reproducir ráfaga de 12 notas cristalinas acompañando toda la trayectoria (480ms - 1920ms)
+  for (let i = 0; i < 12; i++) {
+    playFlightParticleNote(i, 480 + i * 120);
   }
 
   if (profileId) {
     setTimeout(() => {
       setFlightSoundProfile(original);
-    }, 1000);
+    }, 2200);
   }
 }
 

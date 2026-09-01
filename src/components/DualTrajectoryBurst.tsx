@@ -71,8 +71,8 @@ export default function DualTrajectoryBurst({
         delay: (i * 0.08),
       });
 
-      // 🎵 Sonido cristalino individual por cada partícula al iniciar su vuelo lateral e impactar en su destino (480ms+)
-      playFlightParticleNote(i, 480 + i * 90);
+      // 🎵 Sonido cristalino individual por cada partícula acompañando toda la trayectoria (480ms - 1920ms)
+      playFlightParticleNote(i, 480 + i * 120);
     }
 
     setParticles(generated);
