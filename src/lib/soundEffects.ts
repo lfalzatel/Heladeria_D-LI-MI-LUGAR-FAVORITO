@@ -58,6 +58,40 @@ export const SOUND_PROFILES: SoundProfile[] = [
 const STORAGE_KEY = 'ui_sound_profile';
 
 let audioCtx: AudioContext | null = null;
+let activeOscillators: { stop?: () => void }[] = [];
+let activeHtmlAudio: HTMLAudioElement | null = null;
+
+export function stopCurrentAudio(): void {
+  // Stop active oscillators / Web Audio nodes
+  activeOscillators.forEach(osc => {
+    try {
+      if (osc.stop) osc.stop();
+    } catch (e) {
+      // ignore
+    }
+  });
+  activeOscillators = [];
+
+  // Stop active HTML Audio if any
+  if (activeHtmlAudio) {
+    try {
+      activeHtmlAudio.pause();
+      activeHtmlAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+    activeHtmlAudio = null;
+  }
+}
+
+export function registerActiveAudio(element: HTMLAudioElement) {
+  stopCurrentAudio();
+  activeHtmlAudio = element;
+}
+
+export function registerActiveOscillator(osc: { stop?: () => void }) {
+  activeOscillators.push(osc);
+}
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -732,22 +766,46 @@ export function setEventSound(event: ActionEventType, soundId: string): void {
   }
 }
 
-export function playEventSound(event: ActionEventType): void {
+import { speakConfirmation } from './voice';
+
+export function playEventSound(event: ActionEventType, customSpokenText?: string): void {
   const map = getEventSoundMap();
   const soundId = map[event] || DEFAULT_EVENT_MAP[event];
-  if (soundId === 'silent') return; // Desactivado
-  const option = ALL_SOUND_OPTIONS.find(o => o.id === soundId);
-  if (option) {
-    option.playFn();
+  
+  if (soundId !== 'silent') {
+    const option = ALL_SOUND_OPTIONS.find(o => o.id === soundId);
+    if (option) {
+      option.playFn();
+    } else {
+      // Fallback
+      switch (event) {
+        case 'new_order': playFresaCremosa(); break;
+        case 'income': playIncomeCelestial(); break;
+        case 'expense': playExpenseResonant(); break;
+        case 'edit': playEditCrystal(); break;
+        case 'delete': playDeleteDeRez(); break;
+        case 'burst_start': playCoheteDulce(); break;
+      }
+    }
+  }
+
+  // Reproducir voz hablada de confirmación si está activada
+  if (customSpokenText) {
+    speakConfirmation(customSpokenText);
   } else {
-    // Fallback
     switch (event) {
-      case 'new_order': playFresaCremosa(); break;
-      case 'income': playIncomeCelestial(); break;
-      case 'expense': playExpenseResonant(); break;
-      case 'edit': playEditCrystal(); break;
-      case 'delete': playDeleteDeRez(); break;
-      case 'burst_start': playCoheteDulce(); break;
+      case 'income':
+        speakConfirmation('Venta registrada con éxito');
+        break;
+      case 'expense':
+        speakConfirmation('Gasto registrado con éxito');
+        break;
+      case 'new_order':
+        speakConfirmation('Nuevo pedido recibido');
+        break;
+      case 'delete':
+        speakConfirmation('Registro eliminado');
+        break;
     }
   }
 }

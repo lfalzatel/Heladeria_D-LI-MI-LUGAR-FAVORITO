@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, User, Key, Shield, Bell, Smartphone, Monitor, 
   Volume2, Music, Check, Palette, Sparkles, LogOut, Trash2, 
-  Layers, Users, RefreshCw, Settings as SettingsIcon, Fingerprint
+  Layers, Users, RefreshCw, Settings as SettingsIcon, Fingerprint, Mic, ChevronDown
 } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { signOut, sendPasswordResetEmail, deleteUser } from 'firebase/auth';
@@ -26,6 +26,9 @@ import DualTrajectoryBurst from '../components/DualTrajectoryBurst';
 import * as confettiModule from 'canvas-confetti';
 const confetti = (confettiModule as any).default || confettiModule;
 import { isBiometricsSupported, hasBiometricsRegisteredForUser, registerBiometricCredential, removeBiometricCredential } from '../lib/biometrics';
+import OnboardingModal from '../components/modals/OnboardingModal';
+import ManageSoundModal from '../components/modals/ManageSoundModal';
+import { isVoiceConfirmationEnabled, setVoiceConfirmationEnabled as saveVoiceState, speakConfirmation } from '../lib/voice';
 
 interface ThemeConfig {
   id: string;
@@ -100,6 +103,26 @@ export default function Settings() {
         [section]: !isCurrentlyOpen
       };
     });
+  };
+
+  // State for Modals & Voice
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [voiceConfirmationEnabled, setVoiceConfirmationEnabledState] = useState(() => isVoiceConfirmationEnabled());
+  const [openActionSubAccordion, setOpenActionSubAccordion] = useState(false);
+
+  // ManageSoundModal State
+  const [soundModalType, setSoundModalType] = useState<'ui' | 'alert' | 'action' | 'flight' | null>(null);
+  const [activeActionEvent, setActiveActionEvent] = useState<ActionEventType | null>(null);
+
+  const handleToggleVoiceConfirmation = () => {
+    const next = !voiceConfirmationEnabled;
+    setVoiceConfirmationEnabledState(next);
+    saveVoiceState(next);
+    if (next) {
+      speakConfirmation('Voz hablada de confirmación activada');
+    } else {
+      toast.info('Voz de confirmación desactivada');
+    }
   };
 
   // ── SOUNDS & AUDIO STATE ──────────────────────────────────────────────
@@ -323,6 +346,82 @@ export default function Settings() {
 
   const isAdminOrOwner = profile?.role === 'admin' || profile?.role === 'propietario';
 
+  const getModalProps = () => {
+    if (soundModalType === 'ui') {
+      return {
+        title: 'Sonidos de Interfaz (Menú Inferior)',
+        subtitle: 'Efectos sintetizados al tocar pestañas y botones del menú',
+        options: SOUND_PROFILES.map(p => ({
+          id: p.id,
+          name: p.name,
+          desc: p.desc,
+          emoji: p.emoji,
+          isDefault: p.isDefault,
+          playFn: () => playUiSound(p.id)
+        })),
+        selectedId: selectedUiSound,
+        onSelect: (id: string) => handleSelectUiSound(id as SoundProfileId)
+      };
+    }
+    if (soundModalType === 'alert') {
+      return {
+        title: 'Tono de Pedido Entrante',
+        subtitle: 'Tono de alerta al recibir nuevos pedidos en la heladería',
+        options: ALERT_TONES.map(t => ({
+          id: t.id,
+          name: t.name,
+          desc: 'Tocar para seleccionar y probar tono de alerta',
+          emoji: t.id === 'default' ? '🔔' : t.id === 'notification' ? '🍿' : '⚡',
+          playFn: () => handleTestTone(t.id)
+        })),
+        selectedId: selectedTone,
+        onSelect: (id: string) => {
+          setSelectedTone(id);
+          handleTestTone(id);
+        }
+      };
+    }
+    if (soundModalType === 'action' && activeActionEvent) {
+      const actionLabels: Record<ActionEventType, string> = {
+        new_order: '🛒 Nuevo Pedido Entrante',
+        income: '📈 Cobro / Venta Guardada',
+        expense: '📉 Egreso / Registro de Gasto',
+        edit: '✏️ Edición de Registro / Precios',
+        delete: '🗑️ Eliminación / Borrado de Venta',
+        burst_start: '🚀 Ráfaga 3D: Despegue / Impulso Inicial'
+      };
+      return {
+        title: actionLabels[activeActionEvent] || 'Asignación de Sonido por Acción',
+        subtitle: 'Selecciona el tono sintetizado Web Audio API para este evento',
+        options: ALL_SOUND_OPTIONS.map(opt => ({
+          id: opt.id,
+          name: opt.name,
+          desc: opt.desc,
+          emoji: opt.emoji,
+          playFn: opt.playFn
+        })),
+        selectedId: eventSounds[activeActionEvent] || 'silent',
+        onSelect: (id: string) => handleSelectEventSound(activeActionEvent, id)
+      };
+    }
+    if (soundModalType === 'flight') {
+      return {
+        title: 'Sonidos de Vuelo e Impacto (Ráfaga 3D)',
+        subtitle: 'Notas cristalinas individuales al converger e impactar cada partícula',
+        options: FLIGHT_SOUND_OPTIONS.map(opt => ({
+          id: opt.id,
+          name: opt.name,
+          desc: opt.desc,
+          emoji: opt.emoji,
+          playFn: () => testFlightSequence(opt.id)
+        })),
+        selectedId: selectedFlightSound,
+        onSelect: (id: string) => handleSelectFlightSound(id as FlightSoundId)
+      };
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-surface-container-lowest pb-24 text-on-surface">
       {/* Header */}
@@ -374,6 +473,26 @@ export default function Settings() {
                       <div>
                         <p className="text-xs font-bold">Mi Perfil</p>
                         <p className="text-[10px] text-secondary">Editar nombre, foto y teléfono</p>
+                      </div>
+                    </div>
+                    <span className="text-secondary text-xs">➔</span>
+                  </div>
+
+                  {/* Tour de Bienvenida 🎙️ item */}
+                  <div 
+                    onClick={() => setIsOnboardingOpen(true)}
+                    className="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer border border-primary/10"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                        <Mic className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold flex items-center gap-1.5">
+                          Tour de Bienvenida 🎙️
+                          <span className="text-[9px] font-black uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">IA Voice</span>
+                        </p>
+                        <p className="text-[10px] text-secondary">Aprende a usar el asistente de voz y comandos inteligentes</p>
                       </div>
                     </div>
                     <span className="text-secondary text-xs">➔</span>
@@ -484,75 +603,38 @@ export default function Settings() {
                 className="overflow-hidden border-t border-outline/10"
               >
                 <div className="p-5 space-y-6">
+
                   {/* SUBSECCIÓN 1: SONIDOS DE INTERFAZ */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
                       <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Sonidos de Interfaz (Menú Inferior)
                       </h3>
                       <p className="text-[11px] text-secondary leading-relaxed">
-                        Selecciona el efecto sintetizado por código (0 descargas de red) que sonará al cambiar entre las pestañas del menú inferior y botones:
+                        Selecciona el efecto sintetizado por código que sonará al cambiar entre pestañas y tocar botones:
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {SOUND_PROFILES.map((profile) => {
-                        const isSelected = selectedUiSound === profile.id;
-                        return (
-                          <div
-                            key={profile.id}
-                            onClick={() => handleSelectUiSound(profile.id)}
-                            style={{ backgroundColor: isSelected ? 'rgba(233, 30, 140, 0.12)' : '#ffffff' }}
-                            className={cn(
-                              "p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-sm",
-                              isSelected
-                                ? "border-primary ring-1 ring-primary/30"
-                                : "border-pink-200/70 hover:border-primary/40"
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-surface-container border border-slate-200/60 flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
-                                {profile.emoji}
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-xs text-on-surface">
-                                    {profile.name}
-                                  </span>
-                                  {profile.isDefault && (
-                                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">
-                                      Por defecto
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-[10px] text-secondary mt-0.5">
-                                  {profile.desc}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {isSelected ? (
-                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
-                                  <Check className="w-4 h-4 stroke-[3]" />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full border border-outline/25" />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Botón Probar Sonido Seleccionado */}
-                    <button
-                      onClick={() => playUiSound(selectedUiSound)}
-                      className="w-full py-3.5 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98]"
+                    {/* Fila que abre ManageSoundModal */}
+                    <div 
+                      onClick={() => setSoundModalType('ui')}
+                      className="p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
                     >
-                      <Volume2 className="w-4 h-4 stroke-[2.5]" />
-                      PROBAR SONIDO SELECCIONADO
-                    </button>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-xl flex-shrink-0">
+                          {SOUND_PROFILES.find(p => p.id === selectedUiSound)?.emoji || '🍿'}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-on-surface">
+                            {SOUND_PROFILES.find(p => p.id === selectedUiSound)?.name || 'Pop / Burbuja'}
+                          </p>
+                          <p className="text-[10px] text-secondary">Toca para cambiar opciones de interfaz</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-primary/10 text-primary">
+                        Cambiar ➔
+                      </span>
+                    </div>
                   </div>
 
                   {/* SUBSECCIÓN 2: TONOS DE ALERTAS Y NOTIFICACIONES */}
@@ -591,181 +673,170 @@ export default function Settings() {
                       </button>
                     </div>
 
-                    {/* SELECTOR DE TONOS CON EL ESTILO UNIFICADO DE LA IMAGEN 1 */}
+                    {/* Fila Tono de Alerta abre Modal */}
                     {notifSoundEnabled && (
-                      <div className="space-y-3 pt-2">
-                        <div className="flex items-center gap-2">
-                          <Music className="w-4 h-4 text-pink-500" />
-                          <h4 className="text-xs font-bold text-on-surface">Tono de Pedido Entrante</h4>
+                      <div 
+                        onClick={() => setSoundModalType('alert')}
+                        className="p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-xl flex-shrink-0">
+                            {selectedTone === 'default' ? '🔔' : selectedTone === 'notification' ? '🍿' : '⚡'}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-on-surface">
+                              {ALERT_TONES.find(t => t.id === selectedTone)?.name || 'D\'LI Campana'}
+                            </p>
+                            <p className="text-[10px] text-secondary">Toca para cambiar el tono de alerta</p>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 gap-2.5">
-                          {ALERT_TONES.map(tone => {
-                            const isSelected = selectedTone === tone.id;
-                            const emoji = tone.id === 'dli' ? '🔔' : tone.id === 'smooth' ? '🍿' : tone.id === 'slick' ? '⚡' : '🎵';
-                            return (
-                              <div 
-                                key={tone.id}
-                                onClick={() => {
-                                  setSelectedTone(tone.id);
-                                  handleTestTone(tone.id);
-                                }}
-                                style={{ backgroundColor: isSelected ? 'rgba(233, 30, 140, 0.12)' : '#ffffff' }}
-                                className={cn(
-                                  "p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-sm",
-                                  isSelected 
-                                    ? "border-primary ring-1 ring-primary/30" 
-                                    : "border-pink-200/70 hover:border-primary/40"
-                                )}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-surface-container border border-slate-200/60 flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
-                                    {emoji}
-                                  </div>
-                                  <div>
-                                    <span className="font-bold text-xs text-on-surface">{tone.name}</span>
-                                    <p className="text-[10px] text-secondary mt-0.5">Toca para seleccionar y escuchar muestra</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {isSelected ? (
-                                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
-                                      <Check className="w-4 h-4 stroke-[3]" />
-                                    </div>
-                                  ) : (
-                                    <div className="w-6 h-6 rounded-full border border-outline/25" />
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-pink-500/10 text-pink-600 dark:text-pink-400">
+                          Cambiar ➔
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  {/* SUBSECCIÓN 3: ASIGNACIÓN PERSONALIZADA DE SONIDOS POR ACCIÓN */}
-                  <div className="border-t border-outline/10 pt-5 space-y-4">
-                    <div>
-                      <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
-                        <SettingsIcon className="w-3.5 h-3.5 text-fuchsia-500" /> Asignación de Sonidos por Acción
-                      </h3>
-                      <p className="text-[11px] text-secondary leading-relaxed">
-                        Selecciona el tono sintetizado Web Audio API (0 KB de red) que sonará para cada tipo de transacción en la heladería:
-                      </p>
-                    </div>
+                  {/* SUBSECCIÓN 3: ASIGNACIÓN DE SONIDOS POR ACCIÓN (SUB-ACORDEÓN) */}
+                  <div className="border-t border-outline/10 pt-5 space-y-3">
+                    <button 
+                      onClick={() => setOpenActionSubAccordion(!openActionSubAccordion)}
+                      className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity"
+                    >
+                      <div>
+                        <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-0.5">
+                          <SettingsIcon className="w-3.5 h-3.5 text-fuchsia-500" /> Asignación de Sonidos por Acción
+                        </h3>
+                        <p className="text-[11px] text-secondary leading-relaxed">
+                          Configura el tono Web Audio API de cada transacción:
+                        </p>
+                      </div>
+                      <ChevronDown className={cn(
+                        "w-5 h-5 text-secondary transition-transform duration-200 flex-shrink-0",
+                        openActionSubAccordion && "rotate-180"
+                      )} />
+                    </button>
 
-                    {/* EVENTOS DE SONIDO CONFIGURABLES */}
-                    {(
-                      [
-                        { key: 'new_order', label: '🛒 Nuevo Pedido Entrante', desc: 'Sonido al recibir un pedido de cliente' },
-                        { key: 'income', label: '📈 Cobro / Venta Guardada', desc: 'Sonido al registrar ingreso en POS' },
-                        { key: 'expense', label: '📉 Egreso / Registro de Gasto', desc: 'Sonido al guardar un egreso de caja' },
-                        { key: 'edit', label: '✏️ Edición de Registro / Precios', desc: 'Sonido al modificar datos existentes' },
-                        { key: 'delete', label: '🗑️ Eliminación / Borrado de Venta', desc: 'Sonido al anular o borrar factura' },
-                        { key: 'burst_start', label: '🚀 Ráfaga 3D: Despegue / Impulso Inicial', desc: 'Sonido de inicio al nacer las partículas (0ms)' },
-                      ] as { key: ActionEventType; label: string; desc: string }[]
-                    ).map(ev => {
-                      const currentSoundId = eventSounds[ev.key];
-                      const selectedOpt = ALL_SOUND_OPTIONS.find(o => o.id === currentSoundId) || ALL_SOUND_OPTIONS[0];
+                    <AnimatePresence>
+                      {openActionSubAccordion && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden space-y-2 pt-2"
+                        >
+                          {(
+                            [
+                              { key: 'new_order', label: '🛒 Nuevo Pedido Entrante', desc: 'Sonido al recibir un pedido de cliente' },
+                              { key: 'income', label: '📈 Cobro / Venta Guardada', desc: 'Sonido al registrar ingreso en POS' },
+                              { key: 'expense', label: '📉 Egreso / Registro de Gasto', desc: 'Sonido al guardar un egreso de caja' },
+                              { key: 'edit', label: '✏️ Edición de Registro / Precios', desc: 'Sonido al modificar datos existentes' },
+                              { key: 'delete', label: '🗑️ Eliminación / Borrado de Venta', desc: 'Sonido al anular o borrar factura' },
+                              { key: 'burst_start', label: '🚀 Ráfaga 3D: Despegue / Impulso Inicial', desc: 'Sonido de inicio al nacer las partículas' },
+                            ] as { key: ActionEventType; label: string; desc: string }[]
+                          ).map(ev => {
+                            const currentSoundId = eventSounds[ev.key];
+                            const selectedOpt = ALL_SOUND_OPTIONS.find(o => o.id === currentSoundId) || ALL_SOUND_OPTIONS[0];
 
-                      return (
-                        <div key={ev.key} className="p-3.5 rounded-2xl bg-surface-container-low border border-outline/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-black text-on-surface flex items-center gap-1.5">
-                              <span>{ev.label}</span>
-                            </p>
-                            <p className="text-[10px] text-secondary mt-0.5">{ev.desc}</p>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={currentSoundId}
-                              onChange={(e) => handleSelectEventSound(ev.key, e.target.value)}
-                              className="bg-white dark:bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs font-bold text-on-surface outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer max-w-[210px] truncate shadow-xs"
-                            >
-                              {ALL_SOUND_OPTIONS.map(opt => (
-                                <option key={opt.id} value={opt.id}>
-                                  {opt.name}
-                                </option>
-                              ))}
-                            </select>
-
-                            <button
-                              type="button"
-                              onClick={() => selectedOpt.playFn()}
-                              className="p-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all active:scale-95 flex-shrink-0 shadow-xs"
-                              title="Escuchar sonido asignado"
-                            >
-                              <Volume2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                            return (
+                              <div
+                                key={ev.key}
+                                onClick={() => {
+                                  setActiveActionEvent(ev.key);
+                                  setSoundModalType('action');
+                                }}
+                                className="p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <div className="w-9 h-9 rounded-xl bg-fuchsia-500/10 flex items-center justify-center text-lg flex-shrink-0">
+                                    {selectedOpt.emoji}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold text-on-surface truncate">{ev.label}</p>
+                                    <p className="text-[10px] text-secondary truncate">{selectedOpt.name}</p>
+                                  </div>
+                                </div>
+                                <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 flex-shrink-0">
+                                  Configurar
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  {/* SUBSECCIÓN 4: VUELO E IMPACTO CRISTALINO POR PARTÍCULA (HELADERÍA STYLE) */}
-                  <div className="border-t border-outline/10 pt-5 space-y-4">
+                  {/* SUBSECCIÓN 4: SONIDOS DE VUELO E IMPACTO POR PARTÍCULA */}
+                  <div className="border-t border-outline/10 pt-5 space-y-3">
                     <div>
                       <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-500" /> Sonidos de Vuelo e Impacto por Partícula (Ráfaga 3D)
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-500" /> Sonidos de Vuelo e Impacto (Ráfaga 3D)
                       </h3>
                       <p className="text-[11px] text-secondary leading-relaxed">
-                        Selecciona el efecto cristalino exclusivo que sonará individualmente cuando cada icono (helado 🍦, estrella ⭐, moneda 🪙) converja e impacte en la cápsula o menú:
+                        Selecciona el efecto cristalino al converger e impactar las partículas:
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {FLIGHT_SOUND_OPTIONS.map((opt) => {
-                        const isSelected = selectedFlightSound === opt.id;
-                        return (
-                          <div
-                            key={opt.id}
-                            onClick={() => handleSelectFlightSound(opt.id)}
-                            style={{ backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.12)' : '#ffffff' }}
-                            className={cn(
-                              "p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-sm",
-                              isSelected
-                                ? "border-cyan-500 ring-1 ring-cyan-500/30"
-                                : "border-cyan-200/60 hover:border-cyan-400/40"
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-surface-container border border-cyan-100 flex items-center justify-center text-xl flex-shrink-0 shadow-xs">
-                                {opt.emoji}
-                              </div>
-                              <div>
-                                <span className="font-bold text-xs text-on-surface">
-                                  {opt.name}
-                                </span>
-                                <p className="text-[10px] text-secondary mt-0.5">
-                                  {opt.desc}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {isSelected ? (
-                                <div className="w-6 h-6 rounded-full bg-cyan-500 text-white flex items-center justify-center shadow-sm">
-                                  <Check className="w-4 h-4 stroke-[3]" />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full border border-outline/25" />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div 
+                      onClick={() => setSoundModalType('flight')}
+                      className="p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-xl flex-shrink-0">
+                          {FLIGHT_SOUND_OPTIONS.find(f => f.id === selectedFlightSound)?.emoji || '💎'}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-on-surface">
+                            {FLIGHT_SOUND_OPTIONS.find(f => f.id === selectedFlightSound)?.name || 'Absorción Cristalina Estelar'}
+                          </p>
+                          <p className="text-[10px] text-secondary">Toca para seleccionar variante cristalina</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                        Cambiar ➔
+                      </span>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => testFlightSequence(selectedFlightSound)}
-                      className="w-full py-3 px-4 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      className="w-full py-3 px-4 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2"
                     >
                       <Volume2 className="w-4 h-4" /> PROBAR SECUENCIA DE IMPACTO DE PARTÍCULAS
                     </button>
                   </div>
+
+                  {/* SUBSECCIÓN 5: VOZ HABLADA DE CONFIRMACIÓN (WEB SPEECH API) */}
+                  <div className="border-t border-outline/10 pt-5 space-y-3">
+                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-low border border-outline/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600 flex-shrink-0">
+                          <Mic className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                            Voz Hablada de Confirmación 🔊
+                            <span className="text-[9px] font-black uppercase bg-purple-500/15 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full">Speech API</span>
+                          </p>
+                          <p className="text-[10px] text-secondary">Confirmar verbalmente transacciones (ej: "Gasto registrado")</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={handleToggleVoiceConfirmation}
+                        className={cn(
+                          "w-11 h-6 rounded-full transition-all relative flex-shrink-0 cursor-pointer",
+                          voiceConfirmationEnabled ? "bg-primary" : "bg-outline/30"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
+                          voiceConfirmationEnabled ? "left-6" : "left-1"
+                        )} />
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
               </motion.div>
             )}
@@ -1380,6 +1451,32 @@ export default function Settings() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* MODAL REUTILIZABLE DE GESTIÓN DE SONIDOS */}
+      {(() => {
+        const modalProps = getModalProps();
+        if (!modalProps || !soundModalType) return null;
+        return (
+          <ManageSoundModal
+            isOpen={!!soundModalType}
+            onClose={() => {
+              setSoundModalType(null);
+              setActiveActionEvent(null);
+            }}
+            title={modalProps.title}
+            subtitle={modalProps.subtitle}
+            options={modalProps.options}
+            selectedId={modalProps.selectedId}
+            onSelect={modalProps.onSelect}
+          />
+        );
+      })()}
+
+      {/* MODAL DE TOUR DE BIENVENIDA DE IA Y VOZ */}
+      <OnboardingModal 
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+      />
     </div>
   );
 }

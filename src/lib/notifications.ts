@@ -259,6 +259,8 @@ export async function notifyUser(userId: string, title: string, body: string, da
   }
 }
 
+import { registerActiveAudio } from './soundEffects';
+
 /**
  * Reproduce el tono de notificación configurado por el usuario en localStorage.
  */
@@ -278,6 +280,7 @@ export function playNotificationSound() {
   try {
     const audio = new Audio(path);
     audio.volume = 0.8;
+    registerActiveAudio(audio);
     audio.play().catch(e => console.warn('Audio playback blocked by browser policies:', e));
   } catch (err) {
     console.warn('Error al reproducir el audio de la alerta:', err);
