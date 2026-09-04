@@ -577,29 +577,34 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
               </div>
             )}
 
+            {/* Zona de Peligro: Eliminar Producto */}
+            {productToEdit && onDelete && (
+              <div className="pt-6 mt-4 border-t border-red-100 flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={loading || isDeleting}
+                  className="w-full py-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Eliminar este Producto</span>
+                </button>
+                <p className="text-[10px] text-red-400 font-bold text-center">
+                  Esta acción borrará permanentemente el producto del catálogo.
+                </p>
+              </div>
+            )}
+
             <div className="h-32" /> {/* Buffer para el scroll visible detrás del botón flotante */}
           </form>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem] flex gap-3">
-          {productToEdit && onDelete && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={loading || isDeleting}
-              className="py-4 px-5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 flex-shrink-0 cursor-pointer"
-              title="Eliminar producto definitivamente"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Eliminar</span>
-            </button>
-          )}
-
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem]">
           <button
             type="submit"
             form="product-form"
             disabled={loading || isDeleting}
-            className="flex-1 h-14 bg-on-surface text-white rounded-2xl font-black uppercase space-x-3 shadow-2xl hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center"
+            className="w-full h-14 bg-on-surface text-white rounded-2xl font-black uppercase space-x-3 shadow-2xl hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center cursor-pointer"
           >
             {loading ? (
               <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
