@@ -587,11 +587,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading || isDeleting}
-              className="py-4 px-5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 flex-shrink-0"
+              className="py-4 px-5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 flex-shrink-0 cursor-pointer"
               title="Eliminar producto definitivamente"
             >
               <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Eliminar</span>
+              <span>Eliminar</span>
             </button>
           )}
 

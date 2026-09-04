@@ -540,6 +540,18 @@ export default function Management() {
     }
   };
 
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+      playEventSound('delete');
+      toast.success('Producto eliminado del catálogo');
+    } catch (error) {
+      console.error('Error al eliminar el producto:', error);
+      toast.error('Error al eliminar el producto');
+      throw error;
+    }
+  };
+
   const handleSaveRecipe = async (productId: string, recipe: any[], variantLabel?: string) => {
     try {
       const productRef = doc(db, 'products', productId);
@@ -2324,6 +2336,7 @@ export default function Management() {
             }}
             productToEdit={productToEdit}
             onSave={handleSaveProduct}
+            onDelete={handleDeleteProduct}
           />
         )}
 
