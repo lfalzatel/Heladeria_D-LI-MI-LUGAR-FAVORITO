@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, updateDoc, doc, addDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, query, orderBy, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
 import { 
@@ -13,7 +13,8 @@ import {
   ChevronRight,
   IceCream,
   Utensils,
-  GlassWater
+  GlassWater,
+  Trash2
 } from 'lucide-react';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -25,6 +26,7 @@ import AdminSidebar from '../components/AdminSidebar';
 import ProductFormModal from '../components/ProductFormModal';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useFlavorsStore } from '../stores/useFlavorsStore';
+import { playEventSound } from '../lib/soundEffects';
 
 export default function Inventory() {
   const { profile } = useAuthStore();
@@ -116,11 +118,56 @@ export default function Inventory() {
     }
   };
 
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [flavorToDelete, setFlavorToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
+
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+      playEventSound('delete');
+      toast.success('Producto eliminado del catálogo');
+    } catch (error) {
+      console.error('Error al eliminar el producto:', error);
+      toast.error('Error al eliminar el producto');
+      throw error;
+    }
+  };
+
+  const handleConfirmProductDelete = async () => {
+    if (!productToDelete) return;
+    setIsDeletingItem(true);
+    try {
+      await handleDeleteProduct(productToDelete.id);
+      setProductToDelete(null);
+    } catch (err) {
+      // toast already handled
+    } finally {
+      setIsDeletingItem(false);
+    }
+  };
+
+  const handleConfirmFlavorDelete = async () => {
+    if (!flavorToDelete) return;
+    setIsDeletingItem(true);
+    try {
+      await deleteDoc(doc(db, 'icecreamFlavors', flavorToDelete.id));
+      playEventSound('delete');
+      toast.success(`Sabor "${flavorToDelete.name}" eliminado correctamente`);
+      setFlavorToDelete(null);
+    } catch (err) {
+      console.error('Error al eliminar sabor:', err);
+      toast.error('Error al eliminar sabor');
+    } finally {
+      setIsDeletingItem(false);
+    }
+  };
+
   const handleSaveProduct = async (productData: Partial<Product>) => {
     if (productToEdit) {
       await updateDoc(doc(db, 'products', productToEdit.id), {
         ...productData,
-        updatedAt: new Date() // using client date to avoid need for serverTimestamp import clash if not imported
+        updatedAt: new Date()
       });
       toast.success('Producto actualizado exitosamente');
     } else {
@@ -264,15 +311,23 @@ export default function Inventory() {
                          <IceCream className="w-6 h-6" />
                       )}
                    </div>
-                   <div className="flex gap-2">
+                   <div className="flex gap-1.5">
                       <button 
                         onClick={() => toggleProductStatus(product.id, !!product.isActive)}
                         className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                          "w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer",
                           product.isActive ? "bg-success/10 text-success" : "bg-slate-100 text-slate-400"
                         )}
+                        title={product.isActive ? 'Ocultar producto' : 'Mostrar producto'}
                       >
                          {product.isActive ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                      </button>
+                      <button 
+                        onClick={() => setProductToDelete(product)}
+                        className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center cursor-pointer"
+                        title="Eliminar producto"
+                      >
+                        <Trash2 className="w-5 h-5" />
                       </button>
                    </div>
                 </div>
@@ -340,17 +395,26 @@ export default function Inventory() {
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-surface-container-high shrink-0 text-primary">
                     <IceCream className="w-6 h-6" />
                   </div>
-                  <button 
-                    onClick={() => toggleFlavorStatus(flavor.id, flavor.isAvailable)}
-                    className={cn(
-                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95",
-                      flavor.isAvailable 
-                      ? "bg-surface-container text-secondary hover:bg-error/10 hover:text-error" 
-                      : "bg-surface-container text-secondary hover:bg-success/10 hover:text-success"
-                    )}
-                  >
-                    {flavor.isAvailable ? 'Desactivar' : 'Activar'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => toggleFlavorStatus(flavor.id, flavor.isAvailable)}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 cursor-pointer",
+                        flavor.isAvailable 
+                        ? "bg-surface-container text-secondary hover:bg-error/10 hover:text-error" 
+                        : "bg-surface-container text-secondary hover:bg-success/10 hover:text-success"
+                      )}
+                    >
+                      {flavor.isAvailable ? 'Desactivar' : 'Activar'}
+                    </button>
+                    <button 
+                      onClick={() => setFlavorToDelete({ id: flavor.id, name: flavor.name })}
+                      className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+                      title="Eliminar sabor"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <h2 className="font-brand font-black text-2xl text-on-surface mb-2 tracking-tight">
@@ -375,6 +439,7 @@ export default function Inventory() {
           onClose={() => setIsProductModalOpen(false)} 
           productToEdit={productToEdit}
           onSave={handleSaveProduct}
+          onDelete={handleDeleteProduct}
         />
       )}
 
@@ -410,6 +475,116 @@ export default function Inventory() {
           </div>
         </div>
       )}
+
+      {/* Modal de Confirmación para Eliminar Producto (desde la card) */}
+      <AnimatePresence>
+        {productToDelete && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setProductToDelete(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative z-10 bg-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl border border-red-500/20 text-center space-y-4"
+            >
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-red-100 flex items-center justify-center text-red-600">
+                <Trash2 className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-headline font-black text-xl text-on-surface">
+                  ¿Eliminar este producto?
+                </h3>
+                <p className="text-xs text-secondary leading-relaxed px-2">
+                  ¿Estás seguro de que deseas eliminar definitivamente <strong className="text-on-surface">"{productToDelete.name}"</strong> del catálogo? Esta acción no se puede deshacer.
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setProductToDelete(null)}
+                  disabled={isDeletingItem}
+                  className="flex-1 py-3.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-2xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmProductDelete}
+                  disabled={isDeletingItem}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {isDeletingItem ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Sí, Eliminar'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Confirmación para Eliminar Sabor */}
+      <AnimatePresence>
+        {flavorToDelete && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setFlavorToDelete(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative z-10 bg-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl border border-red-500/20 text-center space-y-4"
+            >
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-red-100 flex items-center justify-center text-red-600">
+                <Trash2 className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-headline font-black text-xl text-on-surface">
+                  ¿Eliminar este sabor?
+                </h3>
+                <p className="text-xs text-secondary leading-relaxed px-2">
+                  ¿Estás seguro de que deseas eliminar definitivamente el sabor <strong className="text-on-surface">"{flavorToDelete.name}"</strong>? Esta acción no se puede deshacer.
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setFlavorToDelete(null)}
+                  disabled={isDeletingItem}
+                  className="flex-1 py-3.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-2xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmFlavorDelete}
+                  disabled={isDeletingItem}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {isDeletingItem ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Sí, Eliminar'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <BottomNav />
       </div>

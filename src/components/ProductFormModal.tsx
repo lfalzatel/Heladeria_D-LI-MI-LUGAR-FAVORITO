@@ -7,16 +7,20 @@ import { getAssetUrl, cn } from '../lib/utils';
 import { ProductImageUploader } from './ProductImageUploader';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
 import confetti from 'canvas-confetti';
+import { playEventSound } from '../lib/soundEffects';
 
 interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   productToEdit?: Product | null;
   onSave: (productData: Partial<Product>) => Promise<void>;
+  onDelete?: (productId: string) => Promise<void>;
 }
 
-export default function ProductFormModal({ isOpen, onClose, productToEdit, onSave }: ProductFormModalProps) {
+export default function ProductFormModal({ isOpen, onClose, productToEdit, onSave, onDelete }: ProductFormModalProps) {
   const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { activeCategories } = useCategoriesStore();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Product['category']>('helados');
@@ -75,8 +79,26 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
         setReqFruit(false);
         setCardColor('');
       }
+      setShowDeleteConfirm(false);
     }
   }, [isOpen, productToEdit]);
+
+  const handleConfirmDelete = async () => {
+    if (!productToEdit || !onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(productToEdit.id);
+      playEventSound('delete');
+      toast.success(`Producto "${productToEdit.name}" eliminado correctamente`);
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (error) {
+      console.error('Error al eliminar el producto:', error);
+      toast.error('Error al eliminar el producto');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleAddVariant = () => {
     const newVariants = [...variants, { 
@@ -559,24 +581,95 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit, onSav
           </form>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem]">
-           <button
-             type="submit"
-             form="product-form"
-             disabled={loading}
-             className="w-full h-14 bg-on-surface text-white rounded-2xl font-black uppercase space-x-3 shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center"
-           >
-             {loading ? (
-               <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-             ) : (
-               <>
-                 <Save className="w-5 h-5" />
-                 <span>{productToEdit ? 'Guardar Cambios' : 'Registrar Producto'}</span>
-               </>
-             )}
-           </button>
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem] flex gap-3">
+          {productToEdit && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={loading || isDeleting}
+              className="py-4 px-5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 flex-shrink-0"
+              title="Eliminar producto definitivamente"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Eliminar</span>
+            </button>
+          )}
+
+          <button
+            type="submit"
+            form="product-form"
+            disabled={loading || isDeleting}
+            className="flex-1 h-14 bg-on-surface text-white rounded-2xl font-black uppercase space-x-3 shadow-2xl hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center"
+          >
+            {loading ? (
+              <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                <span>{productToEdit ? 'Guardar Cambios' : 'Registrar Producto'}</span>
+              </>
+            )}
+          </button>
         </div>
       </motion.div>
+
+      {/* Modal de Confirmación de Eliminación de Producto */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteConfirm(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative z-10 bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl border border-red-500/20 text-center space-y-4"
+            >
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600">
+                <Trash2 className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="font-headline font-black text-xl text-on-surface">
+                  ¿Eliminar este producto?
+                </h3>
+                <p className="text-xs text-secondary leading-relaxed px-2">
+                  ¿Estás seguro de que deseas eliminar definitivamente <strong className="text-on-surface">"{productToEdit?.name}"</strong>? Esta acción no se puede deshacer.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="flex-1 py-3.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Sí, Eliminar'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
