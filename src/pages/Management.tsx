@@ -988,7 +988,35 @@ export default function Management() {
     }))
   ];
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(productSearch.toLowerCase());
+    const term = productSearch.toLowerCase().trim();
+    let matchesSearch = true;
+    if (term) {
+      const matchesName = p.name.toLowerCase().includes(term);
+      const matchesDesc = (p.description || '').toLowerCase().includes(term) || (p.recipeDescription || '').toLowerCase().includes(term);
+      const matchesIngs = (p.ingredients || []).some(ing => ing.toLowerCase().includes(term));
+      
+      const matchesMainRecipe = (p.recipe || []).some(r => {
+        if (r.name && r.name.toLowerCase().includes(term)) return true;
+        if (r.supplyId) {
+          const sup = supplies.find(s => s.id === r.supplyId);
+          if (sup && sup.name.toLowerCase().includes(term)) return true;
+        }
+        return false;
+      });
+
+      const matchesVariantRecipe = (p.variants || []).some(v => 
+        (v.recipe || []).some(r => {
+          if (r.name && r.name.toLowerCase().includes(term)) return true;
+          if (r.supplyId) {
+            const sup = supplies.find(s => s.id === r.supplyId);
+            if (sup && sup.name.toLowerCase().includes(term)) return true;
+          }
+          return false;
+        })
+      );
+
+      matchesSearch = matchesName || matchesDesc || matchesIngs || matchesMainRecipe || matchesVariantRecipe;
+    }
     const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
     return matchesSearch && matchesCategory;
   });

@@ -95,15 +95,27 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
       addChoice(item.includedSauces, 'sauce');
       addChoice(item.extraSauces, 'sauce');
       addChoice(item.additions, 'addition');
+      if ((item as any).baseChoice) {
+        addChoice([(item as any).baseChoice], 'base');
+      }
 
       for (const choice of dynamicChoices) {
           const choiceName = choice.name;
           let supply = suppliesMap[choiceName];
           
+          // Si el usuario eligió un SABOR de helado llamado igual a una Base física (ej. "Brownie"),
+          // no debemos restar del insumo físico de galleta/base Brownie.
+          if (choice.type === 'flavor' && supply?.category === 'Bases') {
+             supply = null;
+          }
+
           if (!supply && choice.type === 'flavor') {
              const possibleNames = [`helado de ${choiceName}`, `helado ${choiceName}`, `${choiceName} helado`, `helado sabor ${choiceName}`];
              for (const p of possibleNames) {
-                 if (suppliesMap[p]) { supply = suppliesMap[p]; break; }
+                 if (suppliesMap[p] && suppliesMap[p].category !== 'Bases') { supply = suppliesMap[p]; break; }
+             }
+             if (!supply && suppliesMap['helado']) {
+                 supply = suppliesMap['helado'];
              }
           }
           if (!supply && choice.type === 'sauce') {
@@ -114,10 +126,14 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
           if (supply) {
               let deductionAmount = 0;
               const productName = (product?.name || '').toLowerCase();
-              
-              // REGLAS ESPECÍFICAS DE GRAMAJES (Custom Logic)
-              if (choice.type === 'flavor') {
-                  const isGrams = supply.unit?.toLowerCase() === 'g' || supply.unit?.toLowerCase() === 'gramos';
+              const supplyUnit = (supply.unit || '').toLowerCase();
+
+              // REGLAS ESPECÍFICAS DE DEDUCCIÓN
+              if (choice.type === 'base' || supply.category === 'Bases' || supplyUnit === 'unidad' || supplyUnit === 'ud') {
+                  deductionAmount = 1; // Las bases y productos por unidad siempre descuentan 1 unidad entera
+              }
+              else if (choice.type === 'flavor') {
+                  const isGrams = supplyUnit === 'g' || supplyUnit === 'gramos';
 
                   if (productName.includes('cuchareable') || productName.includes('ensalada') || productName.includes('salpicón') || productName.includes('salpicon') || productName.includes("copa d'li") || productName.includes("copa d´li")) {
                       const val = supply.yieldPerSize?.mini || (isGrams ? 80 : 62);
@@ -185,9 +201,9 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
                   deductionAmount = 1;
               }
 
-              // Si la base de datos dice que la unidad es Kg o Litros, convertimos el gramaje base a fracción
-              if (deductionAmount > 0) {
-                  const u = supply.unit?.toLowerCase() || '';
+              // Si la base de datos dice que la unidad es Kg o Litros, convertimos el gramaje base a fracción (solo si no es base o unidad)
+              if (deductionAmount > 0 && choice.type !== 'base' && supply.category !== 'Bases' && supplyUnit !== 'unidad' && supplyUnit !== 'ud') {
+                  const u = supplyUnit;
                   if (u === 'kg' || u === 'l' || u === 'litro' || u === 'litros') {
                       deductionAmount /= 1000;
                   }
@@ -195,7 +211,7 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
 
               // Fallback a las reglas estándar si no encajó en ninguna regla específica
               if (deductionAmount === 0) {
-                  const lowerUnit = (supply.unit || '').toLowerCase();
+                  const lowerUnit = supplyUnit;
                   const isGramsOrMl = (lowerUnit === 'g' || lowerUnit === 'ml' || lowerUnit === 'gramos' || lowerUnit === 'mililitros');
 
                   // 1. Usar rendimiento específico del tamaño de la porción (Ej. porción pequeña = 1/80, porción grande = 1/40)

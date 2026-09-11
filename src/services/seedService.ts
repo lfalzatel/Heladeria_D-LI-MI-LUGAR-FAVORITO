@@ -44,10 +44,10 @@ export const DEFAULT_SUPPLIES = [
     stockQuantity: 10,
     stockMinimum: 5,
     yieldDetails: "",
-    purchaseUnit: "kg",
+    purchaseUnit: "Unidad",
     yieldPerUnit: 1,
     portionsPerUnit: 1,
-    unit: "kg",
+    unit: "Unidad",
     minLimit: 5,
     category: "Bases"
   },
