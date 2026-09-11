@@ -660,24 +660,60 @@ export function playStarburstSequence() {
   });
 }
 
-export function getUiSoundProfile(): SoundProfileId {
+const STORAGE_KEY_MENU = 'ui_sound_profile_menu';
+const STORAGE_KEY_GENERAL = 'ui_sound_profile_general';
+
+export function getMenuUiSoundProfile(): SoundProfileId {
   if (typeof localStorage === 'undefined') return 'pop';
-  const saved = localStorage.getItem(STORAGE_KEY) as SoundProfileId;
+  const saved = localStorage.getItem(STORAGE_KEY_MENU) as SoundProfileId;
   if (saved && (['pop', 'click', 'chime', 'haptic', 'arcade', 'silent'] as string[]).includes(saved)) {
     return saved;
   }
-  return 'pop'; // Default to Option 1: Pop / Burbuja
+  // Fallback to legacy key or default pop
+  const legacy = localStorage.getItem(STORAGE_KEY) as SoundProfileId;
+  if (legacy && (['pop', 'click', 'chime', 'haptic', 'arcade', 'silent'] as string[]).includes(legacy)) {
+    return legacy;
+  }
+  return 'pop';
 }
 
-export function setUiSoundProfile(profileId: SoundProfileId): void {
+export function setMenuUiSoundProfile(profileId: SoundProfileId): void {
   if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, profileId);
+    localStorage.setItem(STORAGE_KEY_MENU, profileId);
   }
 }
 
-export function playUiSound(overrideProfileId?: SoundProfileId): void {
-  const profileId = overrideProfileId || getUiSoundProfile();
+export function getGeneralUiSoundProfile(): SoundProfileId {
+  if (typeof localStorage === 'undefined') return 'pop';
+  const saved = localStorage.getItem(STORAGE_KEY_GENERAL) as SoundProfileId;
+  if (saved && (['pop', 'click', 'chime', 'haptic', 'arcade', 'silent'] as string[]).includes(saved)) {
+    return saved;
+  }
+  // Fallback to legacy key or default pop
+  const legacy = localStorage.getItem(STORAGE_KEY) as SoundProfileId;
+  if (legacy && (['pop', 'click', 'chime', 'haptic', 'arcade', 'silent'] as string[]).includes(legacy)) {
+    return legacy;
+  }
+  return 'pop';
+}
 
+export function setGeneralUiSoundProfile(profileId: SoundProfileId): void {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY_GENERAL, profileId);
+  }
+}
+
+// Deprecated alias for backwards compatibility
+export function getUiSoundProfile(): SoundProfileId {
+  return getGeneralUiSoundProfile();
+}
+
+export function setUiSoundProfile(profileId: SoundProfileId): void {
+  setGeneralUiSoundProfile(profileId);
+  setMenuUiSoundProfile(profileId);
+}
+
+function playSoundByProfile(profileId: SoundProfileId): void {
   switch (profileId) {
     case 'pop':
       playPop();
@@ -699,6 +735,20 @@ export function playUiSound(overrideProfileId?: SoundProfileId): void {
       // No sound
       break;
   }
+}
+
+export function playMenuUiSound(overrideProfileId?: SoundProfileId): void {
+  const profileId = overrideProfileId || getMenuUiSoundProfile();
+  playSoundByProfile(profileId);
+}
+
+export function playGeneralUiSound(overrideProfileId?: SoundProfileId): void {
+  const profileId = overrideProfileId || getGeneralUiSoundProfile();
+  playSoundByProfile(profileId);
+}
+
+export function playUiSound(overrideProfileId?: SoundProfileId): void {
+  playGeneralUiSound(overrideProfileId);
 }
 
 // ==========================================

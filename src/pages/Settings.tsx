@@ -15,7 +15,9 @@ import { requestNotificationPermission, unregisterNotifications } from '../lib/n
 import { AnimatePresence, motion } from 'motion/react';
 import { playNotificationSound } from '../lib/notifications';
 import { 
-  SOUND_PROFILES, getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId,
+  SOUND_PROFILES, getMenuUiSoundProfile, setMenuUiSoundProfile, playMenuUiSound,
+  getGeneralUiSoundProfile, setGeneralUiSoundProfile, playGeneralUiSound,
+  getUiSoundProfile, setUiSoundProfile, playUiSound, SoundProfileId,
   playMario1Up, playMarioCoin, playMarioJump, playMarioPipe,
   playIncomeCelestial, playExpenseResonant, playEditCrystal, playDeleteDeRez,
   playChocoBerryPop, playHeladoMagico, playFresaCremosa, playCampanaHeladeria, playGoldenCoin, playCoheteDulce,
@@ -111,7 +113,7 @@ export default function Settings() {
   const [openActionSubAccordion, setOpenActionSubAccordion] = useState(false);
 
   // ManageSoundModal State
-  const [soundModalType, setSoundModalType] = useState<'ui' | 'alert' | 'action' | 'flight' | null>(null);
+  const [soundModalType, setSoundModalType] = useState<'ui' | 'ui_menu' | 'ui_general' | 'alert' | 'action' | 'flight' | null>(null);
   const [activeActionEvent, setActiveActionEvent] = useState<ActionEventType | null>(null);
 
   const handleToggleVoiceConfirmation = () => {
@@ -126,7 +128,8 @@ export default function Settings() {
   };
 
   // ── SOUNDS & AUDIO STATE ──────────────────────────────────────────────
-  const [selectedUiSound, setSelectedUiSound] = useState<SoundProfileId>(() => getUiSoundProfile());
+  const [selectedMenuUiSound, setSelectedMenuUiSound] = useState<SoundProfileId>(() => getMenuUiSoundProfile());
+  const [selectedGeneralUiSound, setSelectedGeneralUiSound] = useState<SoundProfileId>(() => getGeneralUiSoundProfile());
   const [selectedFlightSound, setSelectedFlightSound] = useState<FlightSoundId>(() => getFlightSoundProfile());
   const [eventSounds, setEventSounds] = useState(() => getEventSoundMap());
 
@@ -143,10 +146,16 @@ export default function Settings() {
     if (opt) opt.playFn();
   };
 
-  const handleSelectUiSound = (id: SoundProfileId) => {
-    setSelectedUiSound(id);
-    setUiSoundProfile(id);
-    playUiSound(id);
+  const handleSelectMenuUiSound = (id: SoundProfileId) => {
+    setSelectedMenuUiSound(id);
+    setMenuUiSoundProfile(id);
+    playMenuUiSound(id);
+  };
+
+  const handleSelectGeneralUiSound = (id: SoundProfileId) => {
+    setSelectedGeneralUiSound(id);
+    setGeneralUiSoundProfile(id);
+    playGeneralUiSound(id);
   };
 
   // ── NOTIFICATIONS STATE ────────────────────────────────────────────────
@@ -347,20 +356,36 @@ export default function Settings() {
   const isAdminOrOwner = profile?.role === 'admin' || profile?.role === 'propietario';
 
   const getModalProps = () => {
-    if (soundModalType === 'ui') {
+    if (soundModalType === 'ui_menu' || soundModalType === 'ui') {
       return {
-        title: 'Sonidos de Interfaz (Menú Inferior)',
-        subtitle: 'Efectos sintetizados al tocar pestañas y botones del menú',
+        title: 'Sonidos del Menú Inferior',
+        subtitle: 'Efectos sintetizados al tocar las pestañas flotantes de navegación',
         options: SOUND_PROFILES.map(p => ({
           id: p.id,
           name: p.name,
           desc: p.desc,
           emoji: p.emoji,
           isDefault: p.isDefault,
-          playFn: () => playUiSound(p.id)
+          playFn: () => playMenuUiSound(p.id)
         })),
-        selectedId: selectedUiSound,
-        onSelect: (id: string) => handleSelectUiSound(id as SoundProfileId)
+        selectedId: selectedMenuUiSound,
+        onSelect: (id: string) => handleSelectMenuUiSound(id as SoundProfileId)
+      };
+    }
+    if (soundModalType === 'ui_general') {
+      return {
+        title: 'Sonidos de Botones e Interfaz General',
+        subtitle: 'Efectos sintetizados al tocar botones, pestañas y acciones en toda la app',
+        options: SOUND_PROFILES.map(p => ({
+          id: p.id,
+          name: p.name,
+          desc: p.desc,
+          emoji: p.emoji,
+          isDefault: p.isDefault,
+          playFn: () => playGeneralUiSound(p.id)
+        })),
+        selectedId: selectedGeneralUiSound,
+        onSelect: (id: string) => handleSelectGeneralUiSound(id as SoundProfileId)
       };
     }
     if (soundModalType === 'alert') {
@@ -605,35 +630,62 @@ export default function Settings() {
                 <div className="p-5 space-y-6">
 
                   {/* SUBSECCIÓN 1: SONIDOS DE INTERFAZ */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
                       <h3 className="text-xs font-black uppercase text-secondary tracking-widest flex items-center gap-2 mb-1">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Sonidos de Interfaz (Menú Inferior)
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Sonidos de Interfaz y Clics
                       </h3>
                       <p className="text-[11px] text-secondary leading-relaxed">
-                        Selecciona el efecto sintetizado por código que sonará al cambiar entre pestañas y tocar botones:
+                        Personaliza o silencia los sonidos táctiles de forma independiente para el menú o para los botones de la app:
                       </p>
                     </div>
 
-                    {/* Fila que abre ManageSoundModal */}
-                    <div 
-                      onClick={() => setSoundModalType('ui')}
-                      className="p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-xl flex-shrink-0">
-                          {SOUND_PROFILES.find(p => p.id === selectedUiSound)?.emoji || '🍿'}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Card 1: Menú Inferior */}
+                      <div 
+                        onClick={() => setSoundModalType('ui_menu')}
+                        className="p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-xl flex-shrink-0">
+                            {SOUND_PROFILES.find(p => p.id === selectedMenuUiSound)?.emoji || '🍿'}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-on-surface">
+                              📱 Menú Inferior
+                            </p>
+                            <p className="text-[10px] text-secondary">
+                              {SOUND_PROFILES.find(p => p.id === selectedMenuUiSound)?.name || 'Pop / Burbuja'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-on-surface">
-                            {SOUND_PROFILES.find(p => p.id === selectedUiSound)?.name || 'Pop / Burbuja'}
-                          </p>
-                          <p className="text-[10px] text-secondary">Toca para cambiar opciones de interfaz</p>
-                        </div>
+                        <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-primary/10 text-primary">
+                          Cambiar ➔
+                        </span>
                       </div>
-                      <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-primary/10 text-primary">
-                        Cambiar ➔
-                      </span>
+
+                      {/* Card 2: Botones e Interfaz General */}
+                      <div 
+                        onClick={() => setSoundModalType('ui_general')}
+                        className="p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-outline/10 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl flex-shrink-0">
+                            {SOUND_PROFILES.find(p => p.id === selectedGeneralUiSound)?.emoji || '🍿'}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-on-surface">
+                              🔘 Botones y Acciones General
+                            </p>
+                            <p className="text-[10px] text-secondary">
+                              {SOUND_PROFILES.find(p => p.id === selectedGeneralUiSound)?.name || 'Pop / Burbuja'}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-primary/10 text-primary">
+                          Cambiar ➔
+                        </span>
+                      </div>
                     </div>
                   </div>
 

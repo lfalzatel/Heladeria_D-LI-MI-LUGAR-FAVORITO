@@ -16,7 +16,7 @@ import {
 import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/useAuthStore';
 import { motion } from 'motion/react';
-import { playUiSound } from '../lib/soundEffects';
+import { playMenuUiSound } from '../lib/soundEffects';
 import { collection, onSnapshot, query, where, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -92,7 +92,7 @@ const NavItem = ({ to, icon, label, active, highlight, id, badgeCount, hasUnread
     </div>
   );
 
-  return <Link to={to} onClick={() => playUiSound()} className="flex-1 flex justify-center">{content}</Link>;
+  return <Link to={to} onClick={() => playMenuUiSound()} className="flex-1 flex justify-center">{content}</Link>;
 };
 
 export default function BottomNav({ onCartOpen }: { onCartOpen?: () => void }) {

@@ -6,6 +6,7 @@ import { useAuthStore } from './stores/useAuthStore';
 import { useFlavorsStore, useSplashStore } from './stores/useFlavorsStore';
 import { useCategoriesStore } from './stores/useCategoriesStore';
 import { useProvidersStore } from './stores/useProvidersStore';
+import { playGeneralUiSound } from './lib/soundEffects';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
@@ -67,6 +68,24 @@ export default function App() {
   useEffect(() => {
     initialize();
     listenToForegroundMessages();
+
+    // Global listener for general UI button click sounds
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // Find closest interactive element
+      const interactiveEl = target.closest('button, a, [role="button"], input[type="button"], input[type="submit"]');
+      if (!interactiveEl) return;
+
+      // Ignore bottom navigation clicks (handled separately by playMenuUiSound)
+      if (interactiveEl.closest('nav, .bottom-nav, [data-bottom-nav]')) return;
+
+      playGeneralUiSound();
+    };
+
+    window.addEventListener('click', handleGlobalClick, { capture: true });
+    return () => window.removeEventListener('click', handleGlobalClick, { capture: true });
   }, [initialize]);
 
   const hasRequestedNotifs = useRef(false);
