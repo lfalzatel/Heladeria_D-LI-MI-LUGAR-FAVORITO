@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, Receipt, MapPin } from 'lucide-react';
+import { X, Search, ShoppingCart, Package, Plus, Minus, Trash2, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, Receipt, MapPin } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { useProvidersStore } from '../stores/useProvidersStore';
 import confetti from 'canvas-confetti';
 
-export interface Supply { id: string; name: string; currentStock: number; unit: string; minLimit: number; category: string; yieldDetails?: string; yieldPerSize?: { mini?: number; small?: number; medium?: number; large?: number; }; }
+export interface Supply { 
+  id: string; 
+  name: string; 
+  currentStock: number; 
+  unit: string; 
+  minLimit: number; 
+  category: string; 
+  yieldDetails?: string; 
+  yieldPerSize?: { mini?: number; small?: number; medium?: number; large?: number; };
+  lastPurchaseQuantity?: number;
+  lastPurchaseCost?: number;
+  lastPurchasePrice?: number;
+  lastPurchasePortions?: number;
+  portionsPerUnit?: number;
+}
 export interface PurchaseItem { supplyId: string; name: string; unit: string; quantity: number; cost: number; portions: number; category: string; }
 export interface PurchaseRecord { id: string; provider: string; items: PurchaseItem[]; total: number; createdAt: any; paymentMethod?: 'Efectivo' | 'Transferencia' | 'Mixto'; splitDetails?: { efectivo: number; transferencia: number; }; }
 
@@ -14,7 +28,7 @@ const PROVIDERS = ['Colacteos', 'Frubana', 'DPA', 'Distribuidora El Heladero', '
 function toDate(ts: any): Date | null { if (!ts) return null; if (ts.toDate) return ts.toDate(); return new Date(ts); }
 function fmtDate(ts: any) { const d = toDate(ts); if (!d) return ''; return d.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PURCHASE DETAIL MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── PURCHASE DETAIL MODAL ─── */
 export function PurchaseDetailModal({ purchase, onClose, onDelete, onEdit, onEditPaymentMethod }: { purchase: PurchaseRecord | null; onClose: () => void; onDelete?: (id: string) => void; onEdit?: (purchase: PurchaseRecord) => void; onEditPaymentMethod?: (id: string, newMethod: 'Efectivo' | 'Transferencia' | 'Mixto', splitDetails?: {efectivo: number; transferencia: number}) => void }) {
   const [editedMethod, setEditedMethod] = React.useState<'Efectivo' | 'Transferencia' | 'Mixto' | null>(null);
   const [editedSplit, setEditedSplit] = React.useState<{efectivo: number; transferencia: number} | null>(null);
@@ -50,7 +64,7 @@ export function PurchaseDetailModal({ purchase, onClose, onDelete, onEdit, onEdi
                 <div className="w-11 h-11 bg-primary/10 rounded-2xl flex items-center justify-center"><Receipt className="w-5 h-5 text-primary" /></div>
                 <div>
                   <h3 className="font-black text-base text-on-surface">Detalle de Compra</h3>
-                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">{purchase.provider} Ã‚· {fmtDate(purchase.createdAt)}</p>
+                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">{purchase.provider} · {fmtDate(purchase.createdAt)}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -85,7 +99,7 @@ export function PurchaseDetailModal({ purchase, onClose, onDelete, onEdit, onEdi
                     </div>
                     {(item.portions || 0) > 0 && (item.cost || 0) > 0 && (
                       <div className="mt-2 pt-2 border-t border-outline/5 flex items-center justify-between">
-                        <p className="text-[9px] text-secondary font-black uppercase">Costo por porciÃƒÂ³n</p>
+                        <p className="text-[9px] text-secondary font-black uppercase">Costo por porción</p>
                         <p className="font-black text-emerald-600 text-sm">{formatCurrency((item.cost || 0) / (item.portions || 1))}</p>
                       </div>
                     )}
@@ -150,7 +164,7 @@ export function PurchaseDetailModal({ purchase, onClose, onDelete, onEdit, onEdi
   );
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 2-STEP PURCHASE MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── 2-STEP PURCHASE MODAL ─── */
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -227,10 +241,33 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
   };
 
   const goToStep2 = () => {
-    const newItems = supplies
-      .filter(s => selected.has(s.id))
-      .map(s => ({ supplyId: s.id, name: s.name, unit: s.unit, quantity: 1, cost: 0, portions: 0, category: s.category }));
-    setItems(newItems);
+    setItems(prevItems => {
+      const existingMap = new Map(prevItems.map(i => [i.supplyId, i]));
+
+      return supplies
+        .filter(s => selected.has(s.id))
+        .map(s => {
+          // Si ya existía un ítem editado por el usuario en esta sesión, PRESERVARLO
+          if (existingMap.has(s.id)) {
+            return existingMap.get(s.id)!;
+          }
+
+          // Si es un ítem recién seleccionado, pre-cargar su historial o valores por defecto
+          const defaultQty = s.lastPurchaseQuantity ?? (s.unit === 'g' || s.unit === 'ml' ? 1000 : 1);
+          const defaultCost = s.lastPurchaseCost ?? (s.lastPurchasePrice ? (s.lastPurchasePrice * defaultQty) : 0);
+          const defaultPortions = s.lastPurchasePortions ?? (s.portionsPerUnit ?? 0);
+
+          return {
+            supplyId: s.id,
+            name: s.name,
+            unit: s.unit,
+            quantity: defaultQty,
+            cost: defaultCost,
+            portions: defaultPortions,
+            category: s.category
+          };
+        });
+    });
     setStep(2);
   };
 
@@ -302,17 +339,30 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
               </div>
             </div>
 
-            {/* STEP 1 Ã¢â‚¬â€ solo selecciÃƒÂ³n de productos */}
+            {/* STEP 1 — solo selección de productos */}
             {step === 1 && (
               <>
                 <div className="px-6 py-2">
-                  <input
-                    type="text"
-                    placeholder="Buscar insumo..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 px-4 font-bold text-sm focus:border-primary outline-none transition-all"
-                  />
+                  <div className="relative flex items-center">
+                    <Search className="w-4 h-4 text-secondary/40 absolute left-3.5 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Buscar insumo..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full h-11 bg-surface-container rounded-2xl border border-outline/20 pl-10 pr-10 font-bold text-sm focus:border-primary outline-none transition-all"
+                    />
+                    {searchTerm.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-3 w-6 h-6 rounded-full bg-outline/20 hover:bg-outline/30 flex items-center justify-center transition-all text-secondary"
+                        title="Limpiar búsqueda"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1 overflow-y-auto px-6 py-2 flex flex-col gap-2">
                   {sortedSupplies.map(s => {

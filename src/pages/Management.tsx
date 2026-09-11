@@ -2283,12 +2283,15 @@ export default function Management() {
                 const supplyUpdate: any = { 
                   currentStock: increment(item.quantity),
                   lastPurchasePrice: unitCost,
+                  lastPurchaseCost: item.cost,
+                  lastPurchaseQuantity: item.quantity,
                   lastRestockDate: purchaseDate,
                   updatedAt: serverTimestamp()
                 };
                 if (item.portions > 0) {
                   supplyUpdate.portionsPerUnit = item.portions;
                   supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+                  supplyUpdate.lastPurchasePortions = item.portions;
                 }
                 batch.update(doc(db, 'supplies', item.supplyId), supplyUpdate);
               }
@@ -2311,12 +2314,15 @@ export default function Management() {
                 const supplyUpdate: any = { 
                   currentStock: increment(item.quantity),
                   lastPurchasePrice: unitCost,
+                  lastPurchaseCost: item.cost,
+                  lastPurchaseQuantity: item.quantity,
                   lastRestockDate: purchaseDate,
                   updatedAt: serverTimestamp()
                 };
                 if (item.portions > 0) {
                   supplyUpdate.portionsPerUnit = item.portions;
                   supplyUpdate.yieldPerUnit = item.portions; // compatibilidad
+                  supplyUpdate.lastPurchasePortions = item.portions;
                 }
                 await updateDoc(doc(db, 'supplies', item.supplyId), supplyUpdate);
               }
