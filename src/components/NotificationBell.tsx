@@ -278,7 +278,9 @@ export default function NotificationBell() {
             date: now.toISOString().split('T')[0],
             hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
-            type: 'online'
+            type: 'online',
+            note: (pedido as any).note || (pedido as any).notes || null,
+            clienteName: pedido.clienteName || null
           };
           
           const saleDocRef = await addDoc(collection(db, 'sales'), saleData);

@@ -432,6 +432,36 @@ export default function MovementDetailModal({
     }
   };
 
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [editNoteText, setEditNoteText] = useState('');
+  const [isSavingNote, setIsSavingNote] = useState(false);
+
+  const handleStartEditingNote = () => {
+    setEditNoteText(data?.note || data?.notes || data?.orderNote || '');
+    setIsEditingNote(true);
+  };
+
+  const handleSaveNote = async () => {
+    if (!data?.id) return;
+    setIsSavingNote(true);
+    try {
+      const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
+      const collectionName = isPedido ? 'pedidos' : 'sales';
+      const cleanNote = editNoteText.trim() || null;
+      await updateDoc(doc(db, collectionName, data.id), {
+        note: cleanNote
+      });
+      data.note = cleanNote;
+      toast.success('Nota guardada correctamente');
+      setIsEditingNote(false);
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Error al guardar la nota: ' + e.message);
+    } finally {
+      setIsSavingNote(false);
+    }
+  };
+
   if (!data) return null;
 
   const isStaff = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'vendedor';
@@ -1020,12 +1050,63 @@ export default function MovementDetailModal({
                  );
                })()}
 
-               {data.note && (
+               {/* NOTA GENERAL DEL PEDIDO */}
+               {((data.note || data.notes || data.orderNote) || (canEditPayment && isEditingNote)) ? (
                  <div className="bg-orange-500/10 rounded-2xl p-4 border border-orange-500/20 shadow-sm mb-4">
-                   <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
-                     Nota General del Pedido
-                   </p>
-                   <p className="font-medium text-orange-900 text-sm leading-snug">{data.note}</p>
+                   <div className="flex items-center justify-between mb-1.5">
+                     <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest flex items-center gap-1.5">
+                       Nota General del Pedido
+                     </p>
+                     {canEditPayment && !isEditingNote && (
+                       <button
+                         onClick={handleStartEditingNote}
+                         className="text-orange-600/70 hover:text-orange-800 transition-colors cursor-pointer"
+                         title="Editar nota"
+                       >
+                         <Edit3 className="w-3.5 h-3.5" />
+                       </button>
+                     )}
+                   </div>
+                   {!isEditingNote ? (
+                     <p className="font-medium text-orange-900 text-sm leading-snug break-words">
+                       {data.note || data.notes || data.orderNote}
+                     </p>
+                   ) : (
+                     <div className="flex flex-col gap-2 mt-1">
+                       <textarea
+                         rows={2}
+                         value={editNoteText}
+                         onChange={(e) => setEditNoteText(e.target.value)}
+                         placeholder="Escribe la nota del pedido..."
+                         className="w-full bg-white border border-orange-200 rounded-xl p-2.5 text-xs text-on-surface focus:ring-2 focus:ring-orange-400 outline-none"
+                       />
+                       <div className="flex gap-2 justify-end">
+                         <button
+                           onClick={() => setIsEditingNote(false)}
+                           className="px-2.5 py-1 rounded-lg bg-surface-container text-secondary text-[10px] font-bold cursor-pointer"
+                         >
+                           Cancelar
+                         </button>
+                         <button
+                           onClick={handleSaveNote}
+                           disabled={isSavingNote}
+                           className="px-3 py-1 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm cursor-pointer"
+                         >
+                           {isSavingNote ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3 h-3" />}
+                           Guardar
+                         </button>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               ) : canEditPayment && (
+                 <div className="mb-4">
+                   <button
+                     onClick={handleStartEditingNote}
+                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-outline/20 text-secondary hover:text-primary hover:border-primary/30 text-xs font-bold transition-all w-full justify-center bg-surface-container-low/40 cursor-pointer"
+                   >
+                     <Plus className="w-3.5 h-3.5" /> Agregar nota al pedido
+                   </button>
                  </div>
                )}
 

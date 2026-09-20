@@ -7,7 +7,7 @@ import { CartItem } from '../types';
 import { toast } from 'sonner';
 import { collection, addDoc, serverTimestamp, updateDoc, doc, increment, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { notifyAdmins } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
@@ -41,6 +41,25 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [selectedCliente, setSelectedCliente] = useState<ClienteOption | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [deudorName, setDeudorName] = useState('');
+  const clientSearchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close client dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (clientSearchContainerRef.current && !clientSearchContainerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const [successSale, setSuccessSale] = useState<any | null>(null);
   const [showBurst, setShowBurst] = useState(false);
@@ -137,8 +156,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
     
     setIsProcessing(true);
     try {
-      if (paymentMethod === 'credito' && !selectedCliente) {
-         toast.error('Debes asociar un cliente para registrar una venta a crédito (Debe)');
+      const finalClienteName = selectedCliente?.name || deudorName.trim() || (paymentMethod === 'credito' ? searchTerm.trim() : '');
+
+      if (paymentMethod === 'credito' && !finalClienteName) {
+         toast.error('Por favor escribe el nombre de la persona a quien se le fía (Debe)');
          setIsProcessing(false);
          return;
       }
@@ -211,6 +232,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
           return new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
         })(),
         packagingSupplies: cart.packagingSupplies || [],
+        note: cart.note?.trim() || null,
       };
 
       if (selectedCliente) {
@@ -218,6 +240,11 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         saleData.clienteName = selectedCliente.name;
         saleData.clienteEmail = selectedCliente.email;
         saleData.clientePhone = selectedCliente.phone || '';
+      } else if (paymentMethod === 'credito' && finalClienteName) {
+        saleData.clienteId = null;
+        saleData.clienteName = finalClienteName;
+        saleData.clienteEmail = '';
+        saleData.clientePhone = '';
       }
 
       const docRef = await addDoc(collection(db, 'sales'), saleData);
@@ -267,7 +294,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       setShowBurst(true);
       notifyAdmins(
         "🍦 Nueva venta realizada",
-        `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : (paymentMethod === 'credito' ? 'Debe' : paymentMethod)}`
+        `Venta manual por ${formatCurrency(total)} - ${paymentMethod === 'Mixto' ? totalStr : (paymentMethod === 'credito' ? `Debe (${finalClienteName})` : paymentMethod)}`
       );
 
       const completedSale = {
@@ -282,9 +309,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
            transferencia: Number(splitAmounts.transferencia) || 0
         } : null,
         tableName: saleData.tableName,
-        clienteName: selectedCliente ? selectedCliente.name : undefined,
-        clienteEmail: selectedCliente ? selectedCliente.email : undefined,
-        clientePhone: selectedCliente ? selectedCliente.phone : undefined,
+        clienteName: saleData.clienteName || undefined,
+        clienteEmail: saleData.clienteEmail || undefined,
+        clientePhone: saleData.clientePhone || undefined,
+        note: saleData.note || undefined,
         date: saleData.date,
         hour: saleData.hour
       };
@@ -293,6 +321,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       await clearCart(activeTable);
       setSelectedCliente(null);
       setSearchTerm('');
+      setDeudorName('');
       
       // Activar modal de éxito con los datos finales
       setSuccessSale(completedSale);
@@ -599,7 +628,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                       Asociar Cliente (Recibo Digital)
                     </label>
                     <div className="flex gap-2">
-                      <div className="relative flex-1">
+                      <div className="relative flex-1" ref={clientSearchContainerRef}>
                         <input
                           type="text"
                           placeholder="Buscar cliente por nombre o correo..."
@@ -610,31 +639,45 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                             setShowDropdown(true);
                           }}
                           onFocus={() => setShowDropdown(true)}
-                          className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 font-bold"
+                          className="w-full bg-surface-container-low border-none rounded-xl p-3 pr-9 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 font-bold"
                         />
-                        {selectedCliente && (
+                        {(selectedCliente || searchTerm || showDropdown) && (
                           <button
+                            type="button"
                             onClick={() => {
                               setSelectedCliente(null);
                               setSearchTerm('');
+                              setShowDropdown(false);
                             }}
-                            className="absolute right-3 top-3.5 text-secondary hover:text-primary"
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-secondary hover:text-primary transition-all"
+                            title="Cerrar o limpiar búsqueda"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         )}
                         {showDropdown && !selectedCliente && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white border border-outline/10 rounded-2xl shadow-xl max-h-40 overflow-y-auto z-[250] text-sm">
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-outline/10 rounded-2xl shadow-xl max-h-48 overflow-y-auto z-[250] text-sm divide-y divide-outline/5">
+                            <div className="p-2 bg-surface-container-low/90 flex items-center justify-between sticky top-0 backdrop-blur-sm z-10">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-secondary">Clientes registrados</span>
+                              <button
+                                type="button"
+                                onClick={() => setShowDropdown(false)}
+                                className="text-[10px] font-bold text-primary hover:underline px-1.5 py-0.5"
+                              >
+                                Cerrar ✕
+                              </button>
+                            </div>
                             {clientes
                               .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase()))
                               .map(c => (
                                 <button
                                   key={c.id}
+                                  type="button"
                                   onClick={() => {
                                     setSelectedCliente(c);
                                     setShowDropdown(false);
                                   }}
-                                  className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors border-b border-outline/5 cursor-pointer block"
+                                  className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors cursor-pointer block"
                                 >
                                   <div className="font-bold text-on-surface flex justify-between">
                                     {c.name}
@@ -835,6 +878,63 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 )}
               </AnimatePresence>
 
+              {/* Crédito / Debe Direct Name Input */}
+              <AnimatePresence>
+                {paymentMethod === 'credito' && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="p-3.5 bg-orange-500/10 border-2 border-orange-500/30 rounded-2xl flex flex-col gap-2 mt-2 overflow-hidden shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-orange-700">
+                        <Clock className="w-4 h-4 text-orange-600" />
+                        <span className="font-headline font-black text-xs uppercase tracking-wide">¿A quién se le fía? (Debe)</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-orange-700/80 bg-orange-100 px-2 py-0.5 rounded-full">Solo se necesita el nombre</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Escribe el nombre de quien debe..."
+                        value={selectedCliente ? selectedCliente.name : deudorName}
+                        onChange={(e) => {
+                          if (selectedCliente) setSelectedCliente(null);
+                          setDeudorName(e.target.value);
+                        }}
+                        className="w-full bg-white border border-orange-300/80 rounded-xl py-2.5 px-3 pr-8 text-xs font-bold text-on-surface placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 shadow-inner"
+                      />
+                      {(selectedCliente || deudorName) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCliente(null);
+                            setDeudorName('');
+                          }}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-primary p-0.5"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    {selectedCliente ? (
+                      <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600 stroke-[3]" /> Asociado a: <span className="underline">{selectedCliente.name}</span>
+                      </p>
+                    ) : deudorName.trim() ? (
+                      <p className="text-[10px] text-orange-900 font-medium">
+                        ✓ Quedará registrado a nombre de: <span className="font-black">{deudorName.trim()}</span>
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-orange-700/70 italic">
+                        * Escribe el nombre (ej: Don Juan, Vecina María) sin necesidad de pedir correo o teléfono.
+                      </p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Pedido Para Llevar Toggle */}
               <div className="p-3 sm:p-4 rounded-xl bg-indigo-50 border-2 border-indigo-200 shadow-sm transition-all hover:border-indigo-300">
                 <div className="flex items-center justify-between">
@@ -991,6 +1091,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               setSuccessSale(null);
               setSelectedCliente(null);
               setSearchTerm('');
+              setDeudorName('');
               setManualPhone('');
               setManualEmail('');
               onClose();
@@ -1178,6 +1279,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 setSuccessSale(null);
                 setSelectedCliente(null);
                 setSearchTerm('');
+                setDeudorName('');
                 setManualPhone('');
                 setManualEmail('');
                 onClose();
@@ -1371,7 +1473,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Teléfono</label>
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Teléfono <span className="normal-case font-normal text-secondary/70">(Opcional)</span></label>
                 <input
                   type="tel"
                   value={newClientPhone}
@@ -1381,7 +1483,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Correo Electrónico</label>
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">Correo Electrónico <span className="normal-case font-normal text-secondary/70">(Opcional - para recibo)</span></label>
                 <input
                   type="email"
                   value={newClientEmail}

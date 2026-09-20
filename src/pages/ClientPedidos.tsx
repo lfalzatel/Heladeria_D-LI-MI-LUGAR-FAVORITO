@@ -112,6 +112,8 @@ export default function ClientPedidos() {
             hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
             type: 'online',
+            note: (pedido as any).note || (pedido as any).notes || null,
+            clienteName: pedido.clienteName || null,
             customerName: pedido.clienteName || profile.name // Para saber quién lo marcó como entregado
           };
           
