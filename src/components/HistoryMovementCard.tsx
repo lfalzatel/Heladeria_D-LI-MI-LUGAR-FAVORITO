@@ -22,6 +22,8 @@ const PAYMENT_ICONS: Record<string, any> = {
   datafono: <CreditCard className="w-3.5 h-3.5" />,
 };
 
+import { calculateSaleCostAndProfit } from '../utils/costCalculator';
+
 interface HistoryMovementCardProps {
   id: string;
   total: number;
@@ -35,6 +37,10 @@ interface HistoryMovementCardProps {
   totalAbonado?: number;
   onRegisterAbono?: () => void;
   onClick: () => void;
+  products?: any[];
+  supplies?: any[];
+  profile?: any;
+  packagingSupplies?: any[];
 }
 
 export default function HistoryMovementCard({ 
@@ -49,7 +55,11 @@ export default function HistoryMovementCard({
   customerName,
   totalAbonado = 0,
   onRegisterAbono,
-  onClick 
+  onClick,
+  products = [],
+  supplies = [],
+  profile,
+  packagingSupplies = []
 }: HistoryMovementCardProps) {
   const cfg = STATUS_CONFIG[status.toLowerCase()] || STATUS_CONFIG.pendiente;
   const paymentKey = paymentMethod?.toLowerCase() || 'efectivo';
@@ -57,6 +67,15 @@ export default function HistoryMovementCard({
   const pending = total - totalAbonado;
   
   const firstItem = items && items.length > 0 ? items[0] : null;
+
+  const isAdminOrOwner = ['admin', 'propietario', 'administrador'].includes(profile?.role || '');
+  let costVal = 0;
+  let profitVal = 0;
+  if (isAdminOrOwner && products.length > 0 && supplies.length > 0) {
+    const res = calculateSaleCostAndProfit({ total, items: items || [], packagingSupplies }, products, supplies);
+    costVal = res.totalCost;
+    profitVal = res.totalProfit;
+  }
 
   return (
     <motion.button
@@ -135,6 +154,17 @@ export default function HistoryMovementCard({
             >
               Abonar
             </button>
+          )}
+
+          {isAdminOrOwner && (
+            <div className="flex items-center gap-1.5 text-[9px]">
+              <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50">
+                Costo: <span className="font-black">{formatCurrency(costVal)}</span>
+              </span>
+              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/50">
+                Ganancia: <span className="font-black">{formatCurrency(profitVal)}</span>
+              </span>
+            </div>
           )}
 
           <span className="text-[10px] font-black text-secondary/60 uppercase tracking-tight">

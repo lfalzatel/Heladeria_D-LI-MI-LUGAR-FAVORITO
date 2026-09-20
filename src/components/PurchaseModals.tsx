@@ -272,7 +272,29 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
   };
 
   const updateItem = (id: string, field: keyof PurchaseItem, val: number) => {
-    setItems(prev => prev.map(i => i.supplyId === id ? { ...i, [field]: val } : i));
+    setItems(prev => prev.map(i => {
+      if (i.supplyId !== id) return i;
+      
+      const updated = { ...i, [field]: val };
+      
+      // Si cambia la cantidad, recalcular proporcionalmente el Costo Total
+      if (field === 'quantity') {
+        const newQty = val;
+        const oldQty = i.quantity;
+        const supply = supplies.find(s => s.id === id);
+        
+        // Obtener costo unitario de referencia
+        const unitPrice = (oldQty > 0 && i.cost > 0)
+          ? (i.cost / oldQty)
+          : (supply?.lastPurchasePrice || 0);
+
+        if (unitPrice > 0) {
+          updated.cost = Math.round(newQty * unitPrice);
+        }
+      }
+
+      return updated;
+    }));
   };
 
   const removeItem = (id: string) => {

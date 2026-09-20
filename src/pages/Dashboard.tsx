@@ -69,6 +69,7 @@ export default function Dashboard() {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [gastosOperativos, setGastosOperativos] = useState<any[]>([]);
   const [supplies, setSupplies] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [creditPedidosRaw, setCreditPedidosRaw] = useState<any[]>([]);
   const [creditSalesRaw, setCreditSalesRaw] = useState<any[]>([]);
   const [abonos, setAbonos] = useState<any[]>([]);
@@ -119,6 +120,12 @@ export default function Dashboard() {
     const qSupplies = query(collection(db, 'supplies'));
     const unsubSupplies = onSnapshot(qSupplies, snap => {
       setSupplies(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    // Listen to PRODUCTS
+    const qProducts = query(collection(db, 'products'));
+    const unsubProducts = onSnapshot(qProducts, snap => {
+      setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
     // Listen to PURCHASES (Egresos)
@@ -174,6 +181,7 @@ export default function Dashboard() {
       unsubSales();
       unsubPedidos();
       unsubSupplies();
+      unsubProducts();
       unsubPurchases();
       unsubGastos();
       unsubCredit();
@@ -797,6 +805,9 @@ export default function Dashboard() {
                     sale={sale}
                     onClick={() => setSelectedSale(sale)}
                     index={i}
+                    products={products}
+                    supplies={supplies}
+                    profile={profile}
                   />
                 ))
               ) : (
@@ -917,6 +928,8 @@ export default function Dashboard() {
         onClose={() => setSelectedSale(null)}
         data={selectedSale}
         profile={profile}
+        products={products}
+        supplies={supplies}
         onToggleItemPrepared={() => {}}
       />
 

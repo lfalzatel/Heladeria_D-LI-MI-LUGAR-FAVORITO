@@ -5,11 +5,12 @@ import { X, Receipt, MapPin, MessageCircle, Send, Calendar, Clock, Banknote, Cre
 import { cn, formatCurrency } from '../lib/utils';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { compressImage } from '../utils/imageCompressor';
-import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, increment, deleteField, collection, query, where, getDocs, setDoc, addDoc, serverTimestamp, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
 import { playEventSound } from '../lib/soundEffects';
+import { calculateSaleCostAndProfit, calculateItemCostAndProfit } from '../utils/costCalculator';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -35,6 +36,8 @@ interface MovementDetailModalProps {
   onClose: () => void;
   data: any;
   profile: any;
+  products?: any[];
+  supplies?: any[];
   chatMessage?: string;
   setChatMessage?: (msg: string) => void;
   onSendMessage?: () => void;
@@ -58,6 +61,8 @@ export default function MovementDetailModal({
   onClose,
   data,
   profile,
+  products: passedProducts,
+  supplies: passedSupplies,
   chatMessage = '',
   setChatMessage,
   onSendMessage,
@@ -70,6 +75,43 @@ export default function MovementDetailModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatSectionRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+
+  const [fetchedProducts, setFetchedProducts] = useState<any[]>([]);
+  const [fetchedSupplies, setFetchedSupplies] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    if (!passedProducts || passedProducts.length === 0) {
+      const q = query(collection(db, 'products'));
+      const unsub = onSnapshot(q, snap => {
+        setFetchedProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => unsub();
+    }
+  }, [isOpen, passedProducts]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    if (!passedSupplies || passedSupplies.length === 0) {
+      const q = query(collection(db, 'supplies'));
+      const unsub = onSnapshot(q, snap => {
+        setFetchedSupplies(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => unsub();
+    }
+  }, [isOpen, passedSupplies]);
+
+  const activeProducts = (passedProducts && passedProducts.length > 0) ? passedProducts : fetchedProducts;
+  const activeSupplies = (passedSupplies && passedSupplies.length > 0) ? passedSupplies : fetchedSupplies;
+
+  const isAdminOrOwner = ['admin', 'propietario', 'administrador'].includes(profile?.role || '');
+
+  const saleMetrics = React.useMemo(() => {
+    if (!isAdminOrOwner || !data || !activeProducts.length || !activeSupplies.length) {
+      return null;
+    }
+    return calculateSaleCostAndProfit(data, activeProducts, activeSupplies);
+  }, [isAdminOrOwner, data, activeProducts, activeSupplies]);
 
   const handleScrollToChat = () => {
     if (chatSectionRef.current) {
@@ -987,7 +1029,7 @@ export default function MovementDetailModal({
                  </div>
                )}
 
-               <section>
+                <section>
                   <div className="flex items-center justify-between mb-3 ml-1">
                     <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-secondary/50">Productos ({data.items?.length || 0})</h4>
                     {onToggleItemPrepared && data.items?.length > 0 && (
@@ -997,123 +1039,154 @@ export default function MovementDetailModal({
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    {data.items?.map((item: any, idx: number) => (
-                      <div key={item.id || idx} className={cn(
-                        "flex justify-between items-center p-2.5 rounded-2xl border transition-colors shadow-sm",
-                        item.prepared ? "bg-surface border-success/30 opacity-70" : "bg-white border-outline/10 hover:border-primary/20"
-                      )}>
-                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                            {onToggleItemPrepared && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onToggleItemPrepared(item.id, !!item.prepared);
-                                }}
-                                className={cn(
-                                  "w-6 h-6 rounded-lg border-2 flex flex-shrink-0 items-center justify-center transition-colors",
-                                  item.prepared ? "bg-success border-success text-white" : "border-outline/20 bg-surface-container"
-                                )}
-                              >
-                                {item.prepared && <Check className="w-4 h-4" />}
-                              </button>
-                            )}
-                            <div className="relative flex-shrink-0">
-                               <div className={cn(
-                                 "w-10 h-10 rounded-xl bg-surface-container overflow-hidden flex items-center justify-center border border-outline/5 transition-all",
-                                 item.prepared && "grayscale"
-                               )}>
-                                  {item.image ? (
-                                    <img src={item.image} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <IceCream className="w-5 h-5 text-secondary/30" />
+                    {data.items?.map((item: any, idx: number) => {
+                      const itemCalc = isAdminOrOwner && activeProducts.length > 0 && activeSupplies.length > 0 
+                        ? calculateItemCostAndProfit(item, activeProducts, activeSupplies)
+                        : null;
+
+                      return (
+                        <div key={item.id || idx} className={cn(
+                          "flex justify-between items-center p-2.5 rounded-2xl border transition-colors shadow-sm",
+                          item.prepared ? "bg-surface border-success/30 opacity-70" : "bg-white border-outline/10 hover:border-primary/20"
+                        )}>
+                           <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {onToggleItemPrepared && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleItemPrepared(item.id, !!item.prepared);
+                                  }}
+                                  className={cn(
+                                    "w-6 h-6 rounded-lg border-2 flex flex-shrink-0 items-center justify-center transition-colors",
+                                    item.prepared ? "bg-success border-success text-white" : "border-outline/20 bg-surface-container"
                                   )}
-                               </div>
-                               <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center font-black text-[9px] shadow-sm ring-2 ring-white">
-                                  {item.quantity}
-                               </div>
-                            </div>
-                            <div className="flex flex-col min-w-0 pr-2">
-                               <span className={cn(
-                                 "font-bold text-xs leading-tight transition-all",
-                                 item.prepared ? "text-secondary line-through" : "text-on-surface"
-                               )}>{item.productName}</span>
-                               <div className={cn("flex flex-wrap gap-1 mt-1", item.prepared && "opacity-60")}>
-                                  {item.variantLabel && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-surface-container text-secondary text-[8px] font-black uppercase tracking-wider">
-                                      {item.variantLabel}
-                                    </span>
-                                  )}
-                                  {item.flavors?.map((f: string, i: number) => (
-                                    <span key={i} className="px-1.5 py-0.5 rounded-md bg-primary/5 text-primary text-[8px] font-bold">{f}</span>
-                                  ))}
-                                  {item.fruitChoices?.map((f: string, i: number) => (
-                                    <span key={i} className="px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 text-[8px] font-bold">{f}</span>
-                                  ))}
-                                  {item.additions?.map((a: string, i: number) => (
-                                    <span key={i} className="px-1.5 py-0.5 rounded-md bg-success/5 text-success text-[8px] font-bold">+{a}</span>
-                                  ))}
-                               </div>
-                            </div>
-                         </div>
-                         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                           <span className="font-black text-primary">
-                              {formatCurrency(item.subtotal || 0)}
-                           </span>
-                           {item.quantity > 1 && (
-                             <span className="text-[9px] font-bold text-secondary italic opacity-60">
-                               {formatCurrency(item.unitPrice || 0)} c/u
+                                >
+                                  {item.prepared && <Check className="w-4 h-4" />}
+                                </button>
+                              )}
+                              <div className="relative flex-shrink-0">
+                                 <div className={cn(
+                                   "w-10 h-10 rounded-xl bg-surface-container overflow-hidden flex items-center justify-center border border-outline/5 transition-all",
+                                   item.prepared && "grayscale"
+                                 )}>
+                                    {item.image ? (
+                                      <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <IceCream className="w-5 h-5 text-secondary/30" />
+                                    )}
+                                 </div>
+                                 <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center font-black text-[9px] shadow-sm ring-2 ring-white">
+                                    {item.quantity}
+                                 </div>
+                              </div>
+                              <div className="flex flex-col min-w-0 pr-2">
+                                 <span className={cn(
+                                   "font-bold text-xs leading-tight transition-all",
+                                   item.prepared ? "text-secondary line-through" : "text-on-surface"
+                                 )}>{item.productName}</span>
+                                 <div className={cn("flex flex-wrap gap-1 mt-1", item.prepared && "opacity-60")}>
+                                    {item.variantLabel && (
+                                      <span className="px-1.5 py-0.5 rounded-md bg-surface-container text-secondary text-[8px] font-black uppercase tracking-wider">
+                                        {item.variantLabel}
+                                      </span>
+                                    )}
+                                    {item.flavors?.map((f: string, i: number) => (
+                                      <span key={i} className="px-1.5 py-0.5 rounded-md bg-primary/5 text-primary text-[8px] font-bold">{f}</span>
+                                    ))}
+                                    {item.fruitChoices?.map((f: string, i: number) => (
+                                      <span key={i} className="px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 text-[8px] font-bold">{f}</span>
+                                    ))}
+                                    {item.additions?.map((a: string, i: number) => (
+                                      <span key={i} className="px-1.5 py-0.5 rounded-md bg-success/5 text-success text-[8px] font-bold">+{a}</span>
+                                    ))}
+                                 </div>
+                              </div>
+                           </div>
+                           <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                             <span className="font-black text-primary">
+                                {formatCurrency(item.subtotal || 0)}
                              </span>
-                           )}
-                         </div>
-                      </div>
-                    ))}
-                  </div>
-               </section>
-
-                {data.packagingSupplies && data.packagingSupplies.filter((p: any) => p.quantity > 0).length > 0 && (
-                  <section className="mt-2 mb-2">
-                    <div className="flex items-center justify-between mb-3 ml-1">
-                      <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-indigo-500/80">Empaques / Desechables</h4>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {data.packagingSupplies.filter((p: any) => p.quantity > 0).map((supply: any, idx: number) => (
-                        <div key={supply.supplyId || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-indigo-50 bg-indigo-50/20 shadow-sm">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0">
-                              <ShoppingBag className="w-5 h-5 text-indigo-500" />
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-xs text-indigo-950 truncate">
-                                {supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque'}
-                              </span>
-                              <span className="text-[9px] text-indigo-400 font-medium">Empaque / Desechable</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100 flex-shrink-0">
-                            <span className="text-[10px] font-black text-indigo-900">Cant:</span>
-                            <span className="font-black text-indigo-950 text-xs">{supply.quantity}</span>
-                          </div>
+                             {item.quantity > 1 && (
+                               <span className="text-[9px] font-bold text-secondary italic opacity-60">
+                                 {formatCurrency(item.unitPrice || 0)} c/u
+                               </span>
+                             )}
+                             {itemCalc && (
+                               <div className="flex flex-col items-end gap-0.5 mt-1">
+                                 <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+                                   Costo: <span className="font-black">{formatCurrency(itemCalc.itemCost)}</span>
+                                 </span>
+                                 <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/50">
+                                   Ganancia: <span className="font-black">{formatCurrency(itemCalc.itemProfit)}</span>
+                                 </span>
+                               </div>
+                             )}
+                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {data.address && (
-                    <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm">
-                       <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
-                       <div className="flex items-start gap-2">
-                          <MapPin className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                          <p className="text-[10px] font-bold text-on-surface leading-tight">{data.address}</p>
-                       </div>
-                    </div>
-                  )}
-                  <div className="bg-primary rounded-3xl p-5 flex flex-col gap-1 shadow-lg shadow-primary/20 col-span-full sm:col-span-1 ml-auto w-full">
-                     <p className="text-[10px] text-white/50 font-black uppercase tracking-widest leading-none">Total Cobrado</p>
-                     <p className="text-2xl font-headline font-black text-white leading-none mt-1">{formatCurrency(data.total)}</p>
+                      );
+                    })}
                   </div>
-               </div>
+                </section>
+
+                 {data.packagingSupplies && data.packagingSupplies.filter((p: any) => p.quantity > 0).length > 0 && (
+                   <section className="mt-2 mb-2">
+                     <div className="flex items-center justify-between mb-3 ml-1">
+                       <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-indigo-500/80">Empaques / Desechables</h4>
+                     </div>
+                     <div className="flex flex-col gap-2">
+                       {data.packagingSupplies.filter((p: any) => p.quantity > 0).map((supply: any, idx: number) => (
+                         <div key={supply.supplyId || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-indigo-50 bg-indigo-50/20 shadow-sm">
+                           <div className="flex items-center gap-3 min-w-0 flex-1">
+                             <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0">
+                               <ShoppingBag className="w-5 h-5 text-indigo-500" />
+                             </div>
+                             <div className="flex flex-col min-w-0">
+                               <span className="font-bold text-xs text-indigo-950 truncate">
+                                 {supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque'}
+                               </span>
+                               <span className="text-[9px] text-indigo-400 font-medium">Empaque / Desechable</span>
+                             </div>
+                           </div>
+                           <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100 flex-shrink-0">
+                             <span className="text-[10px] font-black text-indigo-900">Cant:</span>
+                             <span className="font-black text-indigo-950 text-xs">{supply.quantity}</span>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   </section>
+                 )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                   {data.address && (
+                     <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-full">
+                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
+                        <div className="flex items-start gap-2">
+                           <MapPin className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                           <p className="text-[10px] font-bold text-on-surface leading-tight">{data.address}</p>
+                        </div>
+                     </div>
+                   )}
+                   <div className={cn(
+                     "bg-primary rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-primary/20",
+                     !saleMetrics && "col-span-full sm:col-span-1 ml-auto w-full"
+                   )}>
+                      <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Total Cobrado</p>
+                      <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(data.total)}</p>
+                   </div>
+                   {saleMetrics && (
+                     <>
+                       <div className="bg-amber-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-amber-600/20">
+                          <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Costo Producción</p>
+                          <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalCost)}</p>
+                       </div>
+                       <div className="bg-emerald-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-emerald-600/20">
+                          <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Ganancia Neta</p>
+                          <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalProfit)}</p>
+                       </div>
+                     </>
+                   )}
+                </div>
 
                {isOnlinePedido && (
                  <section>

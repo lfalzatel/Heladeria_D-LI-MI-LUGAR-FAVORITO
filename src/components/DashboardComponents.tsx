@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { cn, formatCurrency } from '../lib/utils';
 import { Plus, TrendingUp, ChevronLeft, ChevronRight, Banknote, CreditCard, Smartphone, Clock, DollarSign } from 'lucide-react';
+import { calculateSaleCostAndProfit } from '../utils/costCalculator';
 
 // ── UTILS ──
 const toDateS = (ts: any): Date | null => { 
@@ -249,7 +250,22 @@ export function TrendChart({ data, color = 'currentColor', label = 'Ventas' }: {
   );
 }
 
-export function SaleCard({ sale, onClick, index = 0 }: { key?: any, sale: any, onClick: () => void, index?: number }) {
+export function SaleCard({ 
+  sale, 
+  onClick, 
+  index = 0, 
+  products = [], 
+  supplies = [], 
+  profile 
+}: { 
+  key?: any; 
+  sale: any; 
+  onClick: () => void; 
+  index?: number;
+  products?: any[];
+  supplies?: any[];
+  profile?: any;
+}) {
   const d = toDateS(sale.createdAt || sale.timestamp || sale.date);
   
   // Format: "Lun 25 · 05:40 a. m."
@@ -261,6 +277,16 @@ export function SaleCard({ sale, onClick, index = 0 }: { key?: any, sale: any, o
   const isTable = !!sale.tableName && (sale.tableName.toLowerCase().includes('mesa') && sale.tableName !== 'Pedido Online' && sale.tableName !== 'Para Llevar');
   const isTakeaway = sale.tableName === 'Para Llevar';
   const isOnline = sale.type === 'online' || sale.tableName === 'Pedido Online';
+
+  const isAdminOrOwner = ['admin', 'propietario', 'administrador'].includes(profile?.role || '');
+
+  let saleCost = 0;
+  let saleProfit = 0;
+  if (isAdminOrOwner && products.length > 0 && supplies.length > 0) {
+    const calculated = calculateSaleCostAndProfit(sale, products, supplies);
+    saleCost = calculated.totalCost;
+    saleProfit = calculated.totalProfit;
+  }
   
   // Clean label logic
   let originLabel = '';
@@ -293,7 +319,7 @@ export function SaleCard({ sale, onClick, index = 0 }: { key?: any, sale: any, o
       className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all group animate-card-mix opacity-0"
       style={{ animationDelay: `${index * 0.08}s` }}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0">
           {pmIcon}
           {/* Subtle indicator if it has items */}
@@ -301,12 +327,14 @@ export function SaleCard({ sale, onClick, index = 0 }: { key?: any, sale: any, o
             <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-bl-sm" />
           )}
         </div>
-        <div className="text-left min-w-0 pr-2">
+        <div className="text-left min-w-0 pr-2 flex-1">
           <div className="flex flex-col">
-            <p className="font-black text-sm text-on-surface leading-none">{formatCurrency(sale.total)}</p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-black text-sm text-on-surface leading-none">{formatCurrency(sale.total)}</p>
+            </div>
             <div className="flex items-center gap-1.5 mt-1.5">
               <span className={cn(
-                "px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ring-1",
+                "px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ring-1 flex-shrink-0",
                 isTable ? "bg-blue-50 text-blue-500 ring-blue-500/20" : 
                 isTakeaway ? "bg-emerald-50 text-emerald-600 ring-emerald-500/20" :
                 (isOnline ? "bg-purple-50 text-purple-600 ring-purple-500/20" : "bg-primary/5 text-primary ring-primary/20")
@@ -321,14 +349,25 @@ export function SaleCard({ sale, onClick, index = 0 }: { key?: any, sale: any, o
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <span className="text-[9px] font-black text-secondary uppercase tracking-widest">{sale.paymentMethod || 'Venta'}</span>
             <span className="w-1 h-1 rounded-full bg-outline/40" />
             <span className="text-[9px] font-bold text-secondary/50 capitalize">{fullTime}</span>
           </div>
+
+          {isAdminOrOwner && (
+            <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-outline/10 text-[9px] flex-wrap">
+              <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">
+                Costo: <span className="font-black">{formatCurrency(saleCost)}</span>
+              </span>
+              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/50">
+                Ganancia: <span className="font-black">{formatCurrency(saleProfit)}</span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
-      <Plus className="w-4 h-4 text-secondary/30 group-hover:text-primary transition-colors" />
+      <Plus className="w-4 h-4 text-secondary/30 group-hover:text-primary transition-colors flex-shrink-0" />
     </button>
   );
 }
