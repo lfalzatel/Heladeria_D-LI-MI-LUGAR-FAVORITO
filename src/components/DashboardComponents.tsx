@@ -284,8 +284,8 @@ export function SaleCard({
   let saleProfit = 0;
   if (isAdminOrOwner && products.length > 0 && supplies.length > 0) {
     const calculated = calculateSaleCostAndProfit(sale, products, supplies);
-    saleCost = calculated.totalCost;
-    saleProfit = calculated.totalProfit;
+    saleCost = (calculated && !isNaN(calculated.totalCost)) ? calculated.totalCost : 0;
+    saleProfit = (calculated && !isNaN(calculated.totalProfit)) ? calculated.totalProfit : 0;
   }
   
   // Clean label logic

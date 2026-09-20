@@ -5,13 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, showDecimals = false): string {
+export function formatCurrency(amount: number | undefined | null, showDecimals = false): string {
+  const safeAmount = (amount == null || isNaN(Number(amount))) ? 0 : Number(amount);
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
     minimumFractionDigits: showDecimals ? 2 : 0,
     maximumFractionDigits: showDecimals ? 2 : 0,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
 export interface FirestoreErrorInfo {
