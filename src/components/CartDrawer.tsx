@@ -1399,6 +1399,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                   
                   toast.success('Cliente creado y asociado exitosamente ✓');
                   setShowCreateClientModal(false);
+                  setShowSelectClientModal(false);
                 } catch (err: any) {
                   console.error(err);
                   toast.error('Error al guardar cliente: ' + err.message);
@@ -1461,6 +1462,292 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
           </motion.div>
         </div>
       )}
+    </AnimatePresence>
+
+    {/* MODAL: SELECCIONAR CLIENTE */}
+    <AnimatePresence>
+      {showSelectClientModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSelectClientModal(false)}
+            className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative bg-white w-full max-w-sm rounded-[2rem] p-5 shadow-2xl flex flex-col gap-3 border border-outline/5 z-[310] max-h-[85vh]"
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-outline/5">
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5 text-primary" />
+                <h3 className="font-headline font-black text-lg text-on-surface">Asociar Cliente</h3>
+              </div>
+              <button 
+                onClick={() => setShowSelectClientModal(false)} 
+                className="p-1 rounded-full hover:bg-surface-container text-secondary transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Barra de búsqueda y botón nuevo cliente */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative flex items-center">
+                <Search className="w-4 h-4 text-secondary/60 absolute left-3 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o celular..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  autoFocus
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2 pl-9 pr-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewClientName(searchTerm.trim());
+                  setShowCreateClientModal(true);
+                }}
+                className="px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-black transition-all flex items-center gap-1 shrink-0 active:scale-95"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                + Nuevo
+              </button>
+            </div>
+
+            {/* Lista de clientes */}
+            <div className="overflow-y-auto max-h-[48vh] space-y-1.5 styled-scrollbar pr-1">
+              {clientes
+                .filter(c => 
+                  c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  (c.phone && c.phone.includes(searchTerm)) ||
+                  (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()))
+                )
+                .map(cliente => (
+                  <button
+                    key={cliente.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCliente(cliente);
+                      setShowSelectClientModal(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all active:scale-[0.99] cursor-pointer",
+                      selectedCliente?.id === cliente.id 
+                        ? "bg-primary/10 border-primary/40 text-primary" 
+                        : "bg-surface-container-lowest border-outline/10 hover:border-primary/30 hover:bg-surface-container-low text-on-surface"
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-xs truncate leading-tight">{cliente.name}</p>
+                      <p className="text-[10px] text-secondary/70 truncate mt-0.5">
+                        {cliente.phone || cliente.email || 'Sin contacto registrado'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 ml-2 bg-fuchsia-50 px-2 py-1 rounded-lg border border-fuchsia-100">
+                      <Star className="w-3 h-3 fill-fuchsia-500 text-fuchsia-500" />
+                      <span className="text-[10px] font-black text-fuchsia-700">{cliente.loyaltyPoints || 0} pts</span>
+                    </div>
+                  </button>
+                ))
+              }
+
+              {clientes.filter(c => 
+                c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                (c.phone && c.phone.includes(searchTerm)) ||
+                (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()))
+              ).length === 0 && (
+                <div className="text-center py-6 px-3">
+                  <p className="text-xs text-secondary font-medium">No se encontró ningún cliente con ese nombre.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewClientName(searchTerm.trim());
+                      setShowCreateClientModal(true);
+                    }}
+                    className="mt-3 px-3.5 py-2 bg-primary text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm active:scale-95"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Registrar "{searchTerm.trim() || 'Nuevo'}"
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+
+    {/* MODAL: NOTA DEL PEDIDO */}
+    <AnimatePresence>
+      {showNoteModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowNoteModal(false)}
+            className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative bg-white w-full max-w-sm rounded-[2rem] p-5 shadow-2xl flex flex-col gap-3 border border-outline/5 z-[310]"
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-outline/5">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-secondary" />
+                <h3 className="font-headline font-black text-lg text-on-surface">Nota del Pedido</h3>
+              </div>
+              <button 
+                onClick={() => setShowNoteModal(false)} 
+                className="p-1 rounded-full hover:bg-surface-container text-secondary transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black uppercase text-secondary tracking-wide">
+                Instrucciones especiales para cocina o despacho
+              </label>
+              <textarea
+                value={tempNoteText}
+                onChange={(e) => setTempNoteText(e.target.value)}
+                placeholder="Ej. Servir todo junto, sin pitillos, entregar rápido..."
+                rows={4}
+                autoFocus
+                className="w-full bg-surface-container-low border border-outline/10 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-3 text-xs font-medium text-on-surface outline-none resize-none transition-all leading-relaxed"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  updateNote(activeTable, '');
+                  setTempNoteText('');
+                  setShowNoteModal(false);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-outline/15 text-secondary font-bold text-xs hover:bg-surface-container-low hover:text-on-surface transition-all active:scale-[0.98]"
+              >
+                Quitar Nota
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updateNote(activeTable, tempNoteText.trim());
+                  setShowNoteModal(false);
+                }}
+                className="py-2.5 px-3 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs transition-all active:scale-[0.98] shadow-sm"
+              >
+                Guardar Nota
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+
+    {/* MODAL: ASIGNAR NOMBRE A QUIEN DEBE */}
+    <AnimatePresence>
+      {showDebeModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDebeModal(false)}
+            className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 border border-outline/5 z-[310]"
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-outline/5">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-orange-600" />
+                <h3 className="font-headline font-black text-lg text-on-surface">¿A quién se le fía?</h3>
+              </div>
+              <button 
+                onClick={() => setShowDebeModal(false)} 
+                className="p-1 rounded-full hover:bg-surface-container text-secondary transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-on-surface">
+                Escribe el nombre de quien debe este pedido:
+              </label>
+              <input
+                type="text"
+                value={deudorName}
+                onChange={(e) => setDeudorName(e.target.value)}
+                placeholder="Ej. Carlos Gómez / Vecino Tienda"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!deudorName.trim()) {
+                      toast.error('Por favor escribe el nombre de quien debe');
+                      return;
+                    }
+                    setShowDebeModal(false);
+                    toast.success('Nombre asignado');
+                  }
+                }}
+                className="w-full bg-surface-container-low border border-outline/10 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl py-2.5 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+              />
+              {selectedCliente && !deudorName.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setDeudorName(selectedCliente.name)}
+                  className="text-left text-[11px] text-orange-600 hover:text-orange-800 font-bold underline mt-1"
+                >
+                  Usar cliente asociado: {selectedCliente.name}
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              <button
+                type="button"
+                onClick={() => setShowDebeModal(false)}
+                className="py-3 px-4 rounded-xl border border-outline/10 text-on-surface font-bold text-xs hover:bg-surface-container-low transition-all active:scale-[0.98]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!deudorName.trim()) {
+                    toast.error('Por favor escribe el nombre de quien debe');
+                    return;
+                  }
+                  setShowDebeModal(false);
+                  toast.success('Nombre asignado');
+                }}
+                className="py-3 px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs transition-all active:scale-[0.98] shadow-sm flex items-center justify-center"
+              >
+                Guardar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+
+    <AnimatePresence>
       <DualTrajectoryBurst 
         trigger={showBurst} 
         targetAId="user-profile-capsule-target" 
