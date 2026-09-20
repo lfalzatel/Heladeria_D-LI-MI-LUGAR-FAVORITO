@@ -10,7 +10,7 @@ import { db } from '../lib/firebase';
 import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
 import { playEventSound } from '../lib/soundEffects';
-import { calculateSaleCostAndProfit, calculateItemCostAndProfit } from '../utils/costCalculator';
+import { calculateSaleCostAndProfit, calculateItemCostAndProfit, findMatchingSupply } from '../utils/costCalculator';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -1209,65 +1209,89 @@ export default function MovementDetailModal({
                   </div>
                 </section>
 
-                 {data.packagingSupplies && data.packagingSupplies.filter((p: any) => p.quantity > 0).length > 0 && (
-                   <section className="mt-2 mb-2">
-                     <div className="flex items-center justify-between mb-3 ml-1">
-                       <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-indigo-500/80">Empaques / Desechables</h4>
-                     </div>
-                     <div className="flex flex-col gap-2">
-                       {data.packagingSupplies.filter((p: any) => p.quantity > 0).map((supply: any, idx: number) => (
-                         <div key={supply.supplyId || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-indigo-50 bg-indigo-50/20 shadow-sm">
-                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                             <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0">
-                               <ShoppingBag className="w-5 h-5 text-indigo-500" />
-                             </div>
-                             <div className="flex flex-col min-w-0">
-                               <span className="font-bold text-xs text-indigo-950 truncate">
-                                 {supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque'}
-                               </span>
-                               <span className="text-[9px] text-indigo-400 font-medium">Empaque / Desechable</span>
-                             </div>
-                           </div>
-                           <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100 flex-shrink-0">
-                             <span className="text-[10px] font-black text-indigo-900">Cant:</span>
-                             <span className="font-black text-indigo-950 text-xs">{supply.quantity}</span>
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                   </section>
-                 )}
+                  {data.packagingSupplies && data.packagingSupplies.filter((p: any) => p.quantity > 0).length > 0 && (
+                    <section className="mt-2 mb-2">
+                      <div className="flex items-center justify-between mb-3 ml-1">
+                        <h4 className="font-headline font-black text-[10px] uppercase tracking-widest text-indigo-500/80">Empaques / Desechables Para Llevar</h4>
+                        {isAdminOrOwner && saleMetrics && saleMetrics.packagingCost > 0 && (
+                          <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200/60">
+                            Costo total empaques: {formatCurrency(saleMetrics.packagingCost)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {data.packagingSupplies.filter((p: any) => p.quantity > 0).map((supply: any, idx: number) => {
+                          const matchedSupply = findMatchingSupply(supply.name || supply.supplyId, activeSupplies);
+                          const packUnitCost = Number(matchedSupply?.lastPurchasePrice || supply.unitPrice || 0);
+                          const packTotalCost = packUnitCost * supply.quantity;
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
-                   {data.address && (
-                     <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-full">
-                        <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
-                        <div className="flex items-start gap-2">
-                           <MapPin className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                           <p className="text-[10px] font-bold text-on-surface leading-tight">{data.address}</p>
+                          return (
+                            <div key={supply.supplyId || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-indigo-50 bg-indigo-50/20 shadow-sm">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0">
+                                  <ShoppingBag className="w-5 h-5 text-indigo-500" />
+                                </div>
+                                <div className="flex flex-col min-w-0 pr-2">
+                                  <span className="font-bold text-xs text-indigo-950 truncate">
+                                    {supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque'}
+                                  </span>
+                                  <span className="text-[9px] text-indigo-400 font-medium">Empaque / Desechable</span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100">
+                                  <span className="text-[10px] font-black text-indigo-900">Cant:</span>
+                                  <span className="font-black text-indigo-950 text-xs">{supply.quantity}</span>
+                                </div>
+                                {isAdminOrOwner && packTotalCost > 0 && (
+                                  <span className="text-[9px] font-bold text-indigo-800 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/50">
+                                    Costo: <span className="font-black">{formatCurrency(packTotalCost)}</span>
+                                    {supply.quantity > 1 && <span className="opacity-70 font-normal"> ({formatCurrency(packUnitCost)} c/u)</span>}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                    {data.address && (
+                      <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-full">
+                         <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
+                         <div className="flex items-start gap-2">
+                            <MapPin className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                            <p className="text-[10px] font-bold text-on-surface leading-tight">{data.address}</p>
+                         </div>
+                      </div>
+                    )}
+                    <div className={cn(
+                      "bg-primary rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-primary/20",
+                      !saleMetrics && "col-span-full sm:col-span-1 ml-auto w-full"
+                    )}>
+                       <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Total Cobrado</p>
+                       <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(data.total)}</p>
+                    </div>
+                    {saleMetrics && (
+                      <>
+                        <div className="bg-amber-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-amber-600/20">
+                           <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Costo Producción</p>
+                           <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalCost)}</p>
+                           {saleMetrics.packagingCost > 0 && (
+                             <p className="text-[9px] text-amber-100 font-bold mt-0.5 leading-tight">
+                               Prod: {formatCurrency(saleMetrics.totalCost - saleMetrics.packagingCost)} + Emp: {formatCurrency(saleMetrics.packagingCost)}
+                             </p>
+                           )}
                         </div>
-                     </div>
-                   )}
-                   <div className={cn(
-                     "bg-primary rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-primary/20",
-                     !saleMetrics && "col-span-full sm:col-span-1 ml-auto w-full"
-                   )}>
-                      <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Total Cobrado</p>
-                      <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(data.total)}</p>
-                   </div>
-                   {saleMetrics && (
-                     <>
-                       <div className="bg-amber-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-amber-600/20">
-                          <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Costo Producción</p>
-                          <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalCost)}</p>
-                       </div>
-                       <div className="bg-emerald-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-emerald-600/20">
-                          <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Ganancia Neta</p>
-                          <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalProfit)}</p>
-                       </div>
-                     </>
-                   )}
-                </div>
+                        <div className="bg-emerald-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-emerald-600/20">
+                           <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Ganancia Neta</p>
+                           <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalProfit)}</p>
+                        </div>
+                      </>
+                    )}
+                 </div>
 
                {isOnlinePedido && (
                  <section>
