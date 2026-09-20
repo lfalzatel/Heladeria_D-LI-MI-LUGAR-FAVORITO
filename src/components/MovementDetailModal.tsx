@@ -1319,30 +1319,43 @@ export default function MovementDetailModal({
                  </section>
                )}
 
-               {(profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador') && (
-                 <div className="px-4 sm:px-8 mt-6 pb-4">
-                   <button 
-                     onClick={() => setConfirmAction('delete')}
-                     disabled={isDeleting}
-                     className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-bold text-[11px] uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                   >
-                     <AlertTriangle className="w-4 h-4" />
-                     {isDeleting ? 'Eliminando y Restaurando...' : 'Eliminar Venta Permanentemente'}
-                   </button>
-                 </div>
-               )}
+               {(() => {
+                 const canDelete = (profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador');
+                 const canEditPackaging = (data.status === 'entregado' || data.status === 'completed' || data.type === 'sale') && (data.isTakeout || data.tableName === 'Para Llevar');
 
-               {(data.status === 'entregado' || data.status === 'completed' || data.type === 'sale') && (data.isTakeout || data.tableName === 'Para Llevar') && (
-                 <div className="px-4 sm:px-8 mt-2 pb-4">
-                   <button 
-                     onClick={() => { setPackagingSearch(''); handleStartEditingPackaging(); }}
-                     className="w-full py-4 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-[11px] uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
-                   >
-                      <ShoppingBag className="w-4 h-4" />
-                      Modificar Empaques (Para Llevar)
-                    </button>
-                  </div>
-                )}
+                 if (!canDelete && !canEditPackaging) return null;
+
+                 return (
+                   <div className="grid grid-cols-2 gap-3 w-full mt-2 pb-2">
+                     {canDelete && (
+                       <button 
+                         onClick={() => setConfirmAction('delete')}
+                         disabled={isDeleting}
+                         className={cn(
+                           "py-3 px-3 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 font-headline font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] disabled:opacity-50 text-center",
+                           !canEditPackaging ? "col-span-2 py-3.5" : "col-span-1"
+                         )}
+                       >
+                         <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                         <span className="leading-tight">{isDeleting ? 'Eliminando...' : 'Eliminar Venta'}</span>
+                       </button>
+                     )}
+
+                     {canEditPackaging && (
+                       <button 
+                         onClick={() => { setPackagingSearch(''); handleStartEditingPackaging(); }}
+                         className={cn(
+                           "py-3 px-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 font-headline font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] text-center",
+                           !canDelete ? "col-span-2 py-3.5" : "col-span-1"
+                         )}
+                       >
+                         <ShoppingBag className="w-4 h-4 flex-shrink-0 text-indigo-600" />
+                         <span className="leading-tight">Modificar Empaques</span>
+                       </button>
+                     )}
+                   </div>
+                 );
+               })()}
                 </>
               )}
                 </motion.div>
