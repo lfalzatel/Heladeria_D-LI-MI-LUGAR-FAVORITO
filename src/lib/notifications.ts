@@ -1,5 +1,5 @@
 import { getMessaging, getToken, deleteToken, isSupported } from 'firebase/messaging';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { toast } from 'sonner';
 

@@ -1,5 +1,5 @@
 import { collection, getDocs, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { CartItem, Product } from '../types';
 
 /**
