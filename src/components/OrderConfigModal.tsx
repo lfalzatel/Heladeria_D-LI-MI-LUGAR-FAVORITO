@@ -491,10 +491,10 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-lg bg-surface flex flex-col h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl border border-white/20"
+            className="relative w-full max-w-lg bg-surface flex flex-col h-[92vh] sm:h-[90vh] rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden shadow-2xl border border-white/20"
           >
             <div 
-              className="relative h-[30%] sm:h-[35%] flex-shrink-0 bg-surface-container-low group cursor-pointer" 
+              className="relative h-[22%] sm:h-[28%] min-h-[110px] flex-shrink-0 bg-surface-container-low group cursor-pointer" 
               onClick={() => {
                 const elapsed = Date.now() - openTimeRef.current;
                 if (elapsed > 700 && product.imageUrl) {
@@ -518,7 +518,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                {/* Información sobre la Imagen */}
-               <div className="absolute bottom-4 left-6 right-6">
+               <div className="absolute bottom-3 sm:bottom-4 left-5 sm:left-6 right-5 sm:right-6">
                  <motion.div
                    initial={{ opacity: 0, y: 10 }}
                    animate={{ opacity: 1, y: 0 }}
@@ -527,7 +527,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                    <span className="inline-flex px-2 py-0.5 rounded-full bg-primary/90 text-white text-[8px] font-black uppercase tracking-[0.2em] w-fit shadow-lg backdrop-blur-md">
                      {product.category}
                    </span>
-                   <h2 className="font-brand font-black text-2xl sm:text-3xl text-white leading-tight drop-shadow-2xl">
+                   <h2 className="font-brand font-black text-xl sm:text-2xl md:text-3xl text-white leading-tight drop-shadow-2xl">
                      {product.name}
                    </h2>
                  </motion.div>
@@ -543,15 +543,15 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
             </div>
 
             {/* ── SECCIÓN CENTRAL: CONFIGURACIÓN (SCROLLABLE) ── */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar bg-surface-container-lowest/30">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-surface-container-lowest/30">
               
 
 
-              <div className="mb-6">
-                <div className="flex justify-between items-end mb-3 px-1">
+              <div className="mb-3.5 sm:mb-5">
+                <div className="flex justify-between items-end mb-2 px-1">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-black text-secondary uppercase tracking-[0.2em] mb-0.5">Paso {step} de {effectiveTotalSteps}</span>
-                    <h3 className="font-bold text-on-surface text-lg sm:text-xl">{getStepTitle()}</h3>
+                    <h3 className="font-bold text-on-surface text-base sm:text-lg">{getStepTitle()}</h3>
                   </div>
                   {effectiveCurrentStepType === 'flavors' && (
                     <div className={cn(
@@ -585,7 +585,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                   transition={{ duration: 0.2 }}
                 >
                   {effectiveCurrentStepType === 'variants' && (
-                    <div className="grid grid-cols-1 gap-2.5">
+                    <div className="grid grid-cols-1 gap-2">
                       {product.variants?.map(variant => {
                         const isStrictLoyaltyReward = initialItem?.isLoyaltyReward && !initialItem?.isOwnerConsumption;
                         const isBlocked = isStrictLoyaltyReward && selectedVariant?.label !== variant.label;
@@ -621,7 +621,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                             }
                           }}
                           className={cn(
-                            "relative flex items-center justify-between p-4 rounded-[1.5rem] transition-all border-2 text-left group",
+                            "relative flex items-center justify-between py-2.5 px-3.5 sm:py-3 sm:px-4 rounded-2xl transition-all border-2 text-left group",
                             selectedVariant?.label === variant.label
                               ? "bg-primary/5 border-primary shadow-sm scale-[1.01]"
                               : "bg-white border-outline/10 text-on-surface hover:bg-surface-container-low",
@@ -630,18 +630,18 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                         >
                           <div className="flex items-center gap-3">
                              <div className={cn(
-                               "w-11 h-11 rounded-xl flex items-center justify-center transition-all",
+                               "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all shrink-0",
                                selectedVariant?.label === variant.label ? "bg-primary text-white rotate-3" : "bg-surface-container text-secondary"
                              )}>
-                               <IceCream className="w-6 h-6" />
+                               <IceCream className="w-5 h-5" />
                              </div>
                              <div>
-                                <p className="font-black text-base tracking-tight">{variant.label}</p>
+                                <p className="font-black text-sm sm:text-base tracking-tight leading-snug">{variant.label}</p>
                                 {variant.scoops && <p className="text-[9px] font-bold text-secondary uppercase tracking-widest">{variant.scoops} {variant.scoops === 1 ? 'bola' : 'bolas'}</p>}
                              </div>
                           </div>
                           <div className="text-right pr-1">
-                            <p className="font-brand font-black text-xl text-primary">{formatCurrency(variant.price)}</p>
+                            <p className="font-brand font-black text-lg sm:text-xl text-primary">{formatCurrency(variant.price)}</p>
                           </div>
                         </button>
                         );
