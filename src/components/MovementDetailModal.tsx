@@ -1219,35 +1219,56 @@ export default function MovementDetailModal({
                           </span>
                         )}
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2.5">
                         {data.packagingSupplies.filter((p: any) => p.quantity > 0).map((supply: any, idx: number) => {
                           const matchedSupply = findMatchingSupply(supply.name || supply.supplyId, activeSupplies);
                           const packUnitCost = Number(matchedSupply?.lastPurchasePrice || supply.unitPrice || 0);
                           const packTotalCost = packUnitCost * supply.quantity;
+                          const hasRecordedCost = packUnitCost > 0;
+                          const fullName = supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque';
 
                           return (
-                            <div key={supply.supplyId || idx} className="flex justify-between items-center p-2.5 rounded-2xl border border-indigo-50 bg-indigo-50/20 shadow-sm">
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
-                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0">
-                                  <ShoppingBag className="w-5 h-5 text-indigo-500" />
+                            <div key={supply.supplyId || idx} className="flex flex-col p-3 rounded-2xl border border-indigo-100/70 bg-indigo-50/20 shadow-sm gap-2">
+                              <div className="flex items-start gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border border-indigo-100 flex-shrink-0 mt-0.5">
+                                  <ShoppingBag className="w-4 h-4 text-indigo-500" />
                                 </div>
-                                <div className="flex flex-col min-w-0 pr-2">
-                                  <span className="font-bold text-xs text-indigo-950 truncate">
-                                    {supply.name || allPackaging.find((p: any) => p.id === supply.supplyId)?.name || 'Insumo de empaque'}
-                                  </span>
-                                  <span className="text-[9px] text-indigo-400 font-medium">Empaque / Desechable</span>
+                                <div className="flex-1 min-w-0">
+                                  {/* Renglón 1: Nombre completo */}
+                                  <p className="font-black text-xs text-indigo-950 leading-snug">
+                                    {fullName}
+                                  </p>
+                                  {/* Renglón 2: Tipo de insumo */}
+                                  <p className="text-[10px] text-indigo-400 font-medium mt-0.5">
+                                    Empaque / Desechable
+                                  </p>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                <div className="flex items-center gap-1.5 bg-indigo-100/50 px-2.5 py-1 rounded-xl border border-indigo-100">
-                                  <span className="text-[10px] font-black text-indigo-900">Cant:</span>
-                                  <span className="font-black text-indigo-950 text-xs">{supply.quantity}</span>
+
+                              {/* Renglón 3: Cantidad, Costo y Alerta explícita si costo es cero */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-indigo-100/50 text-[11px]">
+                                <div className="flex items-center gap-1.5 bg-indigo-100/60 px-2.5 py-1 rounded-xl">
+                                  <span className="text-[10px] font-bold text-indigo-700">Cantidad:</span>
+                                  <span className="font-black text-indigo-950 text-xs">{supply.quantity} {supply.quantity === 1 ? 'unidad' : 'unidades'}</span>
                                 </div>
-                                {isAdminOrOwner && packTotalCost > 0 && (
-                                  <span className="text-[9px] font-bold text-indigo-800 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/50">
-                                    Costo: <span className="font-black">{formatCurrency(packTotalCost)}</span>
-                                    {supply.quantity > 1 && <span className="opacity-70 font-normal"> ({formatCurrency(packUnitCost)} c/u)</span>}
-                                  </span>
+
+                                {isAdminOrOwner && (
+                                  hasRecordedCost ? (
+                                    <div className="flex items-center gap-1.5 bg-indigo-50 px-2.5 py-1 rounded-xl border border-indigo-200/50">
+                                      <span className="text-[10px] font-bold text-indigo-700">Costo:</span>
+                                      <span className="font-black text-indigo-950 text-xs">{formatCurrency(packTotalCost)}</span>
+                                      {supply.quantity > 1 && (
+                                        <span className="text-[10px] text-indigo-600/70 font-medium">({formatCurrency(packUnitCost)} c/u)</span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 text-amber-800">
+                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                                      <span className="text-[10px] font-bold">
+                                        Costo: <span className="font-black">$0</span> — Insumo sin compra registrada
+                                      </span>
+                                    </div>
+                                  )
                                 )}
                               </div>
                             </div>
@@ -1280,8 +1301,8 @@ export default function MovementDetailModal({
                            <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Costo Producción</p>
                            <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalCost)}</p>
                            {saleMetrics.packagingCost > 0 && (
-                             <p className="text-[9px] text-amber-100 font-bold mt-0.5 leading-tight">
-                               Prod: {formatCurrency(saleMetrics.totalCost - saleMetrics.packagingCost)} + Emp: {formatCurrency(saleMetrics.packagingCost)}
+                             <p className="text-[10px] text-amber-100 font-bold mt-1 leading-tight">
+                               Productos: {formatCurrency(saleMetrics.totalCost - saleMetrics.packagingCost)} + Empaques: {formatCurrency(saleMetrics.packagingCost)}
                              </p>
                            )}
                         </div>
