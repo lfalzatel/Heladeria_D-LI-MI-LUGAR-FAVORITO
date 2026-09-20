@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star, AlertTriangle, UserPlus, Clock } from 'lucide-react';
+import { X, Trash2, Plus, Minus, Receipt, Smartphone, Banknote, CreditCard, Loader2, ShoppingBag, Pencil, CheckSquare, Check, Lock, Unlock, Send, User, Mail, Phone, CheckCircle2, Star, AlertTriangle, UserPlus, Clock, Search } from 'lucide-react';
 import { useTableCartStore } from '../stores/useTableCartStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { formatCurrency, cn } from '../lib/utils';
@@ -40,26 +40,11 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [clientes, setClientes] = useState<ClienteOption[]>([]);
   const [selectedCliente, setSelectedCliente] = useState<ClienteOption | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
   const [deudorName, setDeudorName] = useState('');
-  const clientSearchContainerRef = useRef<HTMLDivElement>(null);
-
-  // Close client dropdown on click outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (clientSearchContainerRef.current && !clientSearchContainerRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [showDropdown]);
+  const [showSelectClientModal, setShowSelectClientModal] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showDebeModal, setShowDebeModal] = useState(false);
+  const [tempNoteText, setTempNoteText] = useState('');
 
   const [successSale, setSuccessSale] = useState<any | null>(null);
   const [showBurst, setShowBurst] = useState(false);
@@ -621,133 +606,117 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               
               {cart?.items && cart.items.length > 0 && (
                 <>
-                  {/* Selector de Cliente para POS */}
-                  <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">
-                    <label className="block text-sm font-semibold text-on-surface mb-2 flex items-center gap-2">
-                      <User className="w-4 h-4 text-primary" />
-                      Asociar Cliente (Recibo Digital)
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1" ref={clientSearchContainerRef}>
-                        <input
-                          type="text"
-                          placeholder="Buscar cliente por nombre o correo..."
-                          value={selectedCliente ? selectedCliente.name : searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            if (selectedCliente) setSelectedCliente(null);
-                            setShowDropdown(true);
-                          }}
-                          onFocus={() => setShowDropdown(true)}
-                          className="w-full bg-surface-container-low border-none rounded-xl p-3 pr-9 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 font-bold"
-                        />
-                        {(selectedCliente || searchTerm || showDropdown) && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedCliente(null);
-                              setSearchTerm('');
-                              setShowDropdown(false);
-                            }}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-secondary hover:text-primary transition-all"
-                            title="Cerrar o limpiar búsqueda"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        {showDropdown && !selectedCliente && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white border border-outline/10 rounded-2xl shadow-xl max-h-48 overflow-y-auto z-[250] text-sm divide-y divide-outline/5">
-                            <div className="p-2 bg-surface-container-low/90 flex items-center justify-between sticky top-0 backdrop-blur-sm z-10">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-secondary">Clientes registrados</span>
-                              <button
-                                type="button"
-                                onClick={() => setShowDropdown(false)}
-                                className="text-[10px] font-bold text-primary hover:underline px-1.5 py-0.5"
-                              >
-                                Cerrar ✕
-                              </button>
-                            </div>
-                            {clientes
-                              .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase()))
-                              .map(c => (
-                                <button
-                                  key={c.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedCliente(c);
-                                    setShowDropdown(false);
-                                  }}
-                                  className="w-full text-left px-4 py-2.5 hover:bg-surface-container transition-colors cursor-pointer block"
-                                >
-                                  <div className="font-bold text-on-surface flex justify-between">
-                                    {c.name}
-                                    <span className="text-[10px] bg-fuchsia-50 text-fuchsia-500 px-1.5 py-0.5 rounded-full flex items-center gap-1"><Star className="w-3 h-3 fill-fuchsia-500" /> {c.loyaltyPoints || 0}</span>
-                                  </div>
-                                  <div className="text-[10px] text-secondary">
-                                    {c.email || 'Sin correo'} {c.phone ? `• ${c.phone}` : ''}
-                                  </div>
-                                </button>
-                              ))}
-                            {clientes.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
-                              <div className="p-3 text-center text-xs text-secondary opacity-60">No se encontraron clientes</div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
+                  {/* FILA COMPACTA: ASOCIAR CLIENTE & NOTA DEL PEDIDO */}
+                  <div className="grid grid-cols-2 gap-2 mt-3 mb-2">
+                    {/* Botón Asociar Cliente */}
+                    {!selectedCliente ? (
                       <button
                         type="button"
                         onClick={() => {
-                          setNewClientName('');
-                          setNewClientPhone('');
-                          setNewClientEmail('');
-                          setShowCreateClientModal(true);
+                          setSearchTerm('');
+                          setShowSelectClientModal(true);
                         }}
-                        className="w-11 h-11 flex items-center justify-center bg-primary hover:bg-primary-container text-white rounded-xl active:scale-95 transition-all shadow-md shadow-primary/10 flex-shrink-0"
-                        title="Crear nuevo cliente"
+                        className="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-all font-bold text-xs active:scale-[0.98] cursor-pointer shadow-xs"
                       >
-                        <UserPlus className="w-5 h-5" />
+                        <User className="w-4 h-4 text-primary shrink-0" />
+                        <span className="truncate">Asociar Cliente</span>
                       </button>
-                    </div>
-                    {selectedCliente && (
-                      <div className="mt-3 flex items-center justify-between p-3 bg-fuchsia-50/50 rounded-xl border border-fuchsia-200">
-                        <div>
-                          <p className="text-xs font-bold text-fuchsia-600 flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-fuchsia-500 animate-pulse" />
-                            Puntos Premium
-                          </p>
-                          <p className="text-sm font-black text-fuchsia-700">{selectedCliente.loyaltyPoints || 0} / 9</p>
-                        </div>
-                        {(selectedCliente.loyaltyPoints || 0) >= 9 && !cart.items.some(i => i.isLoyaltyReward) && (
-                          <button
-                            onClick={onRedeemLoyalty}
-                            className="px-3 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-black rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all"
-                          >
-                            ⭐ CANJEAR PREMIO
-                          </button>
-                        )}
-                        {cart.items.some(i => i.isLoyaltyReward) && (
-                          <span className="text-xs font-black text-orange-500 bg-orange-50 px-2 py-1 rounded-md">Premio en carrito</span>
-                        )}
+                    ) : (
+                      <div className="flex items-center justify-between p-2 rounded-2xl border-2 border-primary/40 bg-primary/5 text-primary shadow-xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchTerm('');
+                            setShowSelectClientModal(true);
+                          }}
+                          className="flex items-center gap-1.5 min-w-0 text-left flex-1 cursor-pointer"
+                        >
+                          <User className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-bold text-xs truncate leading-tight">{selectedCliente.name}</p>
+                            <p className="text-[9px] text-fuchsia-600 font-black flex items-center gap-0.5 mt-0.5">
+                              <Star className="w-2.5 h-2.5 fill-fuchsia-500" /> {selectedCliente.loyaltyPoints || 0} pts
+                            </p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCliente(null);
+                          }}
+                          className="w-6 h-6 rounded-full hover:bg-primary/20 flex items-center justify-center text-primary shrink-0 ml-1 cursor-pointer"
+                          title="Quitar cliente"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Botón Nota del Pedido */}
+                    {!cart.note ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTempNoteText(cart.note || '');
+                          setShowNoteModal(true);
+                        }}
+                        className="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed border-outline/20 bg-surface-container-lowest text-secondary hover:bg-surface-container hover:text-on-surface transition-all font-bold text-xs active:scale-[0.98] cursor-pointer shadow-xs"
+                      >
+                        <Pencil className="w-4 h-4 text-secondary shrink-0" />
+                        <span className="truncate">Nota del Pedido</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-between p-2 rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-900 shadow-xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTempNoteText(cart.note || '');
+                            setShowNoteModal(true);
+                          }}
+                          className="flex items-center gap-1.5 min-w-0 text-left flex-1 cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-bold text-xs truncate leading-tight">{cart.note}</p>
+                            <p className="text-[9px] text-amber-700 font-medium mt-0.5">Ver/Editar nota</p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateNote(activeTable, '');
+                          }}
+                          className="w-6 h-6 rounded-full hover:bg-amber-200 flex items-center justify-center text-amber-700 shrink-0 ml-1 cursor-pointer"
+                          title="Borrar nota"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     )}
                   </div>
 
-                  <div className="mt-2 mb-2 p-4 rounded-2xl bg-surface-container-lowest border border-outline/20">
-                    <label htmlFor="order-note" className="block text-sm font-semibold text-on-surface mb-2 flex items-center gap-2">
-                      <Pencil className="w-4 h-4 text-primary" />
-                      Nota general del pedido (opcional)
-                    </label>
-                  <textarea
-                    id="order-note"
-                    rows={2}
-                    placeholder="Escribe aquí cualquier nota adicional para toda la orden..."
-                    value={cart.note || ''}
-                    readOnly={cart?.isLocked}
-                    onChange={(e) => updateNote(activeTable, e.target.value)}
-                    className={cn("w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 resize-none transition-all", cart?.isLocked && "opacity-60 cursor-not-allowed")}
-                  />
-                </div>
+                  {/* Banner Premio Fidelidad (solo si aplica) */}
+                  {selectedCliente && (selectedCliente.loyaltyPoints || 0) >= 9 && !cart.items.some(i => i.isLoyaltyReward) && (
+                    <div className="flex items-center justify-between p-2.5 bg-fuchsia-50 rounded-2xl border border-fuchsia-200 mb-2">
+                      <div className="flex items-center gap-1.5 text-fuchsia-700">
+                        <Star className="w-4 h-4 fill-fuchsia-500 animate-pulse" />
+                        <span className="text-xs font-black">¡Premio disponible para canjear!</span>
+                      </div>
+                      <button
+                        onClick={onRedeemLoyalty}
+                        className="px-2.5 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black rounded-lg shadow-sm hover:scale-105 active:scale-95"
+                      >
+                        ⭐ Canjear
+                      </button>
+                    </div>
+                  )}
+                  {selectedCliente && cart.items.some(i => i.isLoyaltyReward) && (
+                    <div className="p-2 bg-orange-50 rounded-xl border border-orange-200 text-center mb-2">
+                      <span className="text-xs font-black text-orange-600">⭐ Premio de fidelidad incluido en carrito</span>
+                    </div>
+                  )}
 
 
               </>
@@ -813,7 +782,10 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                   <span className="text-[8px] font-bold uppercase tracking-wider truncate w-full text-center">Transf.</span>
                 </button>
                 <button 
-                  onClick={() => setPaymentMethod('credito')}
+                  onClick={() => {
+                    setPaymentMethod('credito');
+                    setShowDebeModal(true);
+                  }}
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 p-2 rounded-xl border-2 transition-all group",
                     paymentMethod === 'credito' ? "bg-primary/5 border-primary text-primary shadow-sm" : "border-outline/10 text-secondary hover:bg-surface-container hover:border-outline/20"
@@ -878,59 +850,34 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 )}
               </AnimatePresence>
 
-              {/* Crédito / Debe Direct Name Input */}
+              {/* Crédito / Debe Badge Compacto */}
               <AnimatePresence>
                 {paymentMethod === 'credito' && (
                   <motion.div 
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="p-3.5 bg-orange-500/10 border-2 border-orange-500/30 rounded-2xl flex flex-col gap-2 mt-2 overflow-hidden shadow-sm"
+                    className="p-2.5 px-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between mt-2 text-xs shadow-xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-orange-700">
-                        <Clock className="w-4 h-4 text-orange-600" />
-                        <span className="font-headline font-black text-xs uppercase tracking-wide">¿A quién se le fía? (Debe)</span>
-                      </div>
-                      <span className="text-[9px] font-bold text-orange-700/80 bg-orange-100 px-2 py-0.5 rounded-full">Solo se necesita el nombre</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Clock className="w-4 h-4 text-orange-600 shrink-0" />
+                      <span className="text-orange-800 font-bold truncate">
+                        {deudorName.trim() ? (
+                          <>Debe: <span className="font-black text-orange-950">{deudorName.trim()}</span></>
+                        ) : selectedCliente ? (
+                          <>Debe: <span className="font-black text-orange-950">{selectedCliente.name}</span></>
+                        ) : (
+                          <span className="text-orange-600 font-medium italic">Sin nombre asignado</span>
+                        )}
+                      </span>
                     </div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Escribe el nombre de quien debe..."
-                        value={selectedCliente ? selectedCliente.name : deudorName}
-                        onChange={(e) => {
-                          if (selectedCliente) setSelectedCliente(null);
-                          setDeudorName(e.target.value);
-                        }}
-                        className="w-full bg-white border border-orange-300/80 rounded-xl py-2.5 px-3 pr-8 text-xs font-bold text-on-surface placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 shadow-inner"
-                      />
-                      {(selectedCliente || deudorName) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedCliente(null);
-                            setDeudorName('');
-                          }}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-primary p-0.5"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    {selectedCliente ? (
-                      <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
-                        <Check className="w-3 h-3 text-emerald-600 stroke-[3]" /> Asociado a: <span className="underline">{selectedCliente.name}</span>
-                      </p>
-                    ) : deudorName.trim() ? (
-                      <p className="text-[10px] text-orange-900 font-medium">
-                        ✓ Quedará registrado a nombre de: <span className="font-black">{deudorName.trim()}</span>
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-orange-700/70 italic">
-                        * Escribe el nombre (ej: Don Juan, Vecina María) sin necesidad de pedir correo o teléfono.
-                      </p>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowDebeModal(true)}
+                      className="text-[10px] font-black uppercase text-orange-600 hover:text-orange-800 underline ml-2 shrink-0 cursor-pointer"
+                    >
+                      {deudorName.trim() || selectedCliente ? 'Cambiar' : 'Asignar Nombre'}
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

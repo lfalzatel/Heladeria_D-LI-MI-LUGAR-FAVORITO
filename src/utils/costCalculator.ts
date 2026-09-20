@@ -9,6 +9,82 @@ function safeNum(val: any, fallback = 0): number {
   return (typeof n === 'number' && !isNaN(n) && isFinite(n)) ? n : fallback;
 }
 
+function normalizeText(str?: string): string {
+  if (!str) return '';
+  return str.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Finds a matching supply by exact id, or by fuzzy normalized name if id is missing or unlinked.
+ */
+export function findMatchingSupply(ingNameOrId: string, supplies: Supply[]): Supply | undefined {
+  if (!ingNameOrId || !Array.isArray(supplies)) return undefined;
+
+  // 1. Direct ID match with price
+  const byId = supplies.find(s => s.id === ingNameOrId);
+  if (byId && byId.lastPurchasePrice != null && !isNaN(Number(byId.lastPurchasePrice)) && Number(byId.lastPurchasePrice) > 0) {
+    return byId;
+  }
+
+  const normIng = normalizeText(ingNameOrId);
+  if (!normIng) return byId;
+
+  // 2. Exact normalized name match
+  let found = supplies.find(s => normalizeText(s.name) === normIng);
+  if (found && found.lastPurchasePrice != null && Number(found.lastPurchasePrice) > 0) return found;
+
+  // 3. Singular/plural normalization
+  const ingNoS = normIng.replace(/\b(\w+)s\b/g, '$1');
+  found = supplies.find(s => {
+    const sNoS = normalizeText(s.name).replace(/\b(\w+)s\b/g, '$1');
+    return sNoS === ingNoS;
+  });
+  if (found && found.lastPurchasePrice != null && Number(found.lastPurchasePrice) > 0) return found;
+
+  // 4. Token & size number aware match
+  const ingTokens = new Set(ingNoS.split(' ').filter(w => w.length > 0));
+  const ingNumbers = [...ingTokens].filter(w => /^\d+$/.test(w));
+  let bestMatch: Supply | undefined = undefined;
+  let maxScore = 0;
+
+  for (const s of supplies) {
+    const sNoS = normalizeText(s.name).replace(/\b(\w+)s\b/g, '$1');
+    const sTokens = new Set(sNoS.split(' ').filter(w => w.length > 0));
+
+    // Category protection: lid vs cup
+    if (ingTokens.has('tapa') && !sTokens.has('tapa')) continue;
+    if (ingTokens.has('vaso') && !ingTokens.has('tapa') && sTokens.has('tapa')) continue;
+
+    // Number protection (e.g. 7, 10, 13, 16 onzas)
+    let numberMismatch = false;
+    for (const num of ingNumbers) {
+      if (!sTokens.has(num)) {
+        numberMismatch = true;
+        break;
+      }
+    }
+    if (numberMismatch) continue;
+
+    let score = 0;
+    ingTokens.forEach(t => {
+      if (t.length > 2 && sTokens.has(t)) score += 2;
+      else if (/^\d+$/.test(t) && sTokens.has(t)) score += 5;
+    });
+
+    if (score > maxScore) {
+      maxScore = score;
+      bestMatch = s;
+    }
+  }
+
+  return bestMatch || byId;
+}
+
 /**
  * Calculates the production cost of a recipe using supply prices.
  */
@@ -21,10 +97,15 @@ export function calculateRecipeCost(recipe: RecipeIngredient[] | undefined | nul
   });
 
   return recipe.reduce((acc, ing) => {
-    if (!ing?.supplyId) return acc;
-    const supply = suppliesMap.get(ing.supplyId);
-    if (!supply) return acc;
-    const unitCost = safeNum(supply.lastPurchasePrice, 0);
+    if (!ing) return acc;
+    let supply = ing.supplyId ? suppliesMap.get(ing.supplyId) : undefined;
+    
+    // Fallback inteligente por nombre si el ID no existe en supplies o no tiene precio
+    if ((!supply || !supply.lastPurchasePrice) && ing.name) {
+      supply = findMatchingSupply(ing.name, supplies) || supply;
+    }
+
+    const unitCost = safeNum(supply?.lastPurchasePrice, 0);
     const qty = safeNum(ing.quantity, 0);
     return acc + (unitCost * qty);
   }, 0);
@@ -184,9 +265,8 @@ export function calculateSaleCostAndProfit(
       const q = safeNum(p?.quantity, 0);
       if (q > 0) {
         let supply = p?.supplyId ? suppliesMap.get(p.supplyId) : undefined;
-        if (!supply && p?.name) {
-          const normName = String(p.name).toLowerCase().trim();
-          supply = supplies.find(s => s.name?.toLowerCase().trim() === normName);
+        if ((!supply || !supply.lastPurchasePrice) && (p?.name || p?.supplyId)) {
+          supply = findMatchingSupply(p?.name || p?.supplyId, supplies) || supply;
         }
         
         let costPerUnit = 0;
