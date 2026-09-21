@@ -178,8 +178,6 @@ export default function Dashboard() {
       setAbonos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
-    const unsubCart = initialize();
-
     return () => {
       unsubSales();
       unsubPedidos();
@@ -190,9 +188,8 @@ export default function Dashboard() {
       unsubCredit();
       unsubCreditSales();
       unsubAbonos();
-      unsubCart();
     };
-  }, [profile, initialize]);
+  }, [profile]);
 
   // All Activity unfiltered by date (for calendar colors)
   const allUnfilteredActivity = React.useMemo(() => {
