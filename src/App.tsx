@@ -35,7 +35,7 @@ export default function App() {
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    const CURRENT_VERSION = '1.0.53'; // Incrementa esto para forzar recarga en todos los clientes
+    const CURRENT_VERSION = '1.0.54'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
       // 1. Limpiar todos los almacenes de caché del navegador
@@ -167,7 +167,23 @@ export default function App() {
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
-      <Toaster position="bottom-center" richColors />
+      <Toaster 
+        position="top-center" 
+        richColors 
+        duration={2200}
+        visibleToasts={2}
+        closeButton={false}
+        toastOptions={{
+          style: {
+            top: 'env(safe-area-inset-top, 8px)',
+            borderRadius: '1rem',
+            padding: '10px 16px',
+            fontSize: '12px',
+            fontWeight: 700,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+          }
+        }}
+      />
       
       <AnimatePresence>
         {splashVisible && (
