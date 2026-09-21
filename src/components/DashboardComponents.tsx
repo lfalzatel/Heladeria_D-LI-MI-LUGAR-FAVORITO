@@ -313,28 +313,61 @@ export function SaleCard({
     credito: <Clock className="w-3.5 h-3.5 text-orange-600" />,
   }[(sale.paymentMethod || '').toLowerCase()] || <DollarSign className="w-3.5 h-3.5 text-secondary" />;
 
+  const isCredito = (sale.paymentMethod || '').toLowerCase() === 'credito';
+  const totalAbonado = sale.totalAbonado || 0;
+  const saldoPendiente = Math.max(0, (sale.total || 0) - totalAbonado);
+  const hasActiveDebt = isCredito && saldoPendiente > 0;
+  const isFullyPaidCredit = isCredito && saldoPendiente === 0;
+
   return (
     <button
       onClick={onClick}
-      className="w-full bg-white rounded-2xl border border-outline/10 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all group animate-card-mix opacity-0"
+      className={cn(
+        "w-full rounded-2xl border p-4 flex items-center justify-between hover:shadow-md transition-all group animate-card-mix opacity-0 text-left",
+        hasActiveDebt
+          ? "bg-gradient-to-r from-orange-50/70 via-amber-50/40 to-white border-orange-300 shadow-sm shadow-orange-100 ring-1 ring-orange-400/20 hover:border-orange-400"
+          : "bg-white border-outline/10 shadow-sm hover:border-primary/20"
+      )}
       style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0">
+        <div className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-colors",
+          hasActiveDebt ? "bg-orange-100 text-orange-600 ring-1 ring-orange-200" : "bg-surface-container"
+        )}>
           {pmIcon}
           {/* Subtle indicator if it has items */}
           {sale.items?.length > 0 && (
-            <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-bl-sm" />
+            <div className={cn(
+              "absolute top-0 right-0 w-1.5 h-1.5 rounded-bl-sm",
+              hasActiveDebt ? "bg-orange-500" : "bg-primary"
+            )} />
           )}
         </div>
         <div className="text-left min-w-0 pr-2 flex-1">
           <div className="flex flex-col">
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="font-black text-sm text-on-surface leading-none">{formatCurrency(sale.total)}</p>
+            <div className="flex items-baseline justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={cn("font-black text-sm leading-none", hasActiveDebt ? "text-orange-950" : "text-on-surface")}>
+                  {formatCurrency(sale.total)}
+                </p>
+                {hasActiveDebt && (
+                  <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-xs flex items-center gap-1">
+                    <Clock className="w-2.5 h-2.5 stroke-[2.5]" />
+                    DEBE: {formatCurrency(saldoPendiente)}
+                  </span>
+                )}
+                {isFullyPaidCredit && (
+                  <span className="px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700">
+                    CRÉDITO PAGADO
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1.5 mt-1.5">
               <span className={cn(
                 "px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ring-1 flex-shrink-0",
+                hasActiveDebt ? "bg-orange-100 text-orange-700 ring-orange-500/30" :
                 isTable ? "bg-blue-50 text-blue-500 ring-blue-500/20" : 
                 isTakeaway ? "bg-emerald-50 text-emerald-600 ring-emerald-500/20" :
                 (isOnline ? "bg-purple-50 text-purple-600 ring-purple-500/20" : "bg-primary/5 text-primary ring-primary/20")
@@ -343,6 +376,7 @@ export function SaleCard({
               </span>
               <span className={cn(
                 "text-[9px] font-black uppercase tracking-widest truncate max-w-[180px]",
+                hasActiveDebt ? "text-orange-800 font-extrabold" :
                 isTable ? "text-blue-600" : isTakeaway ? "text-emerald-600" : (isOnline ? "text-purple-600" : "text-primary/70")
               )}>
                 {originLabel}
@@ -350,7 +384,12 @@ export function SaleCard({
             </div>
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className="text-[9px] font-black text-secondary uppercase tracking-widest">{sale.paymentMethod || 'Venta'}</span>
+            <span className={cn(
+              "text-[9px] font-black uppercase tracking-widest",
+              hasActiveDebt ? "text-orange-600 font-extrabold" : "text-secondary"
+            )}>
+              {hasActiveDebt ? '⚠️ VENTA FIADA' : (sale.paymentMethod || 'Venta')}
+            </span>
             <span className="w-1 h-1 rounded-full bg-outline/40" />
             <span className="text-[9px] font-bold text-secondary/50 capitalize">{fullTime}</span>
           </div>
@@ -367,7 +406,10 @@ export function SaleCard({
           )}
         </div>
       </div>
-      <Plus className="w-4 h-4 text-secondary/30 group-hover:text-primary transition-colors flex-shrink-0" />
+      <Plus className={cn(
+        "w-4 h-4 transition-colors flex-shrink-0",
+        hasActiveDebt ? "text-orange-400 group-hover:text-orange-600" : "text-secondary/30 group-hover:text-primary"
+      )} />
     </button>
   );
 }

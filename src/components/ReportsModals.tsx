@@ -511,14 +511,23 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda,
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             className="absolute inset-0 bg-white z-10 flex flex-col rounded-[2.5rem] overflow-hidden"
           >
-            <div className="flex items-center gap-3 px-6 pt-5 pb-4 flex-shrink-0 border-b border-outline/10">
-              <button onClick={() => setSelectedClient(null)} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center cursor-pointer">
-                <ChevronLeft className="w-5 h-5 text-secondary" />
-              </button>
-              <div>
-                <h3 className="font-bold text-base text-on-surface">{selectedClient.name}</h3>
-                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Deuda Total: {formatCurrency(selectedClient.total)}</p>
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-outline/10">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setSelectedClient(null)} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center cursor-pointer hover:bg-surface-container-high transition-colors">
+                  <ChevronLeft className="w-5 h-5 text-secondary" />
+                </button>
+                <div>
+                  <h3 className="font-bold text-base text-on-surface">{selectedClient.name}</h3>
+                  <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Deuda Total: {formatCurrency(selectedClient.total)}</p>
+                </div>
               </div>
+              <button
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all active:scale-90"
+                title="Cerrar modal"
+              >
+                <X className="w-4 h-4 text-secondary" />
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2.5">
               {selectedClient.pedidos.map(p => {
@@ -570,7 +579,20 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda,
                 );
               })}
             </div>
-            <ModalFooter onClick={() => setSelectedClient(null)} label="← VOLVER" />
+            <div className="px-6 py-4 border-t border-outline/10 flex-shrink-0 rounded-b-[2.5rem] bg-white flex flex-col gap-2">
+              <button
+                onClick={onClose}
+                className="w-full py-3.5 text-xs font-black uppercase tracking-widest text-white bg-on-surface hover:bg-black rounded-2xl shadow-sm transition-all active:scale-[0.99] text-center"
+              >
+                CERRAR DETALLE
+              </button>
+              <button
+                onClick={() => setSelectedClient(null)}
+                className="w-full py-1.5 text-[10px] font-black uppercase tracking-widest text-secondary hover:text-on-surface transition-colors text-center"
+              >
+                ← VOLVER A CLIENTES
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
-import { useTableCartStore } from '../stores/useTableCartStore';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { 
   DollarSign, 
@@ -9,7 +8,6 @@ import {
   AlertCircle,
   Calendar,
   Download,
-  Table as TableIcon,
   ChevronRight,
   ChevronLeft,
   X,
@@ -52,13 +50,18 @@ import { useNavigate } from 'react-router-dom';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { carts, initialize } = useTableCartStore();
   const { setHeader, clearHeader } = useHeaderStore();
 
   const [dashboardFilter, setDashboardFilter] = useState<PeriodFilter>('today');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<Date>(new Date());
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [periodLimit, setPeriodLimit] = useState(30);
+
+  // Reset limit when filter changes
+  useEffect(() => {
+    setPeriodLimit(30);
+  }, [dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
   
   const [showCalendar, setShowCalendar] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
@@ -219,7 +222,20 @@ export default function Dashboard() {
       });
   }, [allUnfilteredActivity, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
 
-  // â”€â”€ COMPUTED METRICS â”€â”€
+  const isDailyView = dashboardFilter === 'today' || selectedDate !== null;
+
+  const displayedActivity = React.useMemo(() => {
+    if (isDailyView) {
+      // Día completo: se muestran todas las ventas sin recorte
+      return combinedActivity;
+    }
+    // Semana o Mes: tope inteligente configurable (por defecto 30)
+    return combinedActivity.slice(0, periodLimit);
+  }, [combinedActivity, isDailyView, periodLimit]);
+
+  const hasMoreRecords = !isDailyView && combinedActivity.length > displayedActivity.length;
+
+  // ── COMPUTED METRICS ──
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
 
   // Abonos for current period
@@ -568,12 +584,6 @@ export default function Dashboard() {
     }
   };
 
-  const tableStatus = [
-    { id: 'mesa1', label: 'M1', status: (carts['mesa1']?.items?.length || 0) > 0 ? 'Ocupada' : 'Libre' },
-    { id: 'mesa2', label: 'M2', status: (carts['mesa2']?.items?.length || 0) > 0 ? 'Ocupada' : 'Libre' },
-    { id: 'mesa3', label: 'M3', status: (carts['mesa3']?.items?.length || 0) > 0 ? 'Ocupada' : 'Libre' },
-  ];
-
   return (
     <>
       <div id="dashboard-pdf-container" className="p-3 sm:p-6 max-w-7xl mx-auto flex flex-col gap-4 w-full pb-32">
@@ -790,58 +800,56 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* RECENT SALES & TABLE STATUS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col">
-            <div className="flex items-center justify-between">
+        {/* RECENT MOVEMENTS */}
+        <div className="flex flex-col gap-3 w-full">
+          <div className="flex items-center justify-between">
+            <div>
               <h2 className="text-2xl font-black text-on-surface">Movimientos</h2>
-              <span className="text-xs font-bold text-secondary uppercase tracking-widest">{sales.length} REGS</span>
+              <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">
+                {isDailyView
+                  ? `Todas las ventas del día (${displayedActivity.length})`
+                  : `Ventas del período (${displayedActivity.length} de ${combinedActivity.length})`}
+              </p>
             </div>
-            <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
-              {combinedActivity.length > 0 ? (
-                combinedActivity.slice(0, 20).map((sale, i) => (
-                  <SaleCard 
-                    key={sale.id}
-                    sale={sale}
-                    onClick={() => setSelectedSale(sale)}
-                    index={i}
-                    products={products}
-                    supplies={supplies}
-                    profile={profile}
-                  />
-                ))
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white rounded-[2rem] border border-outline/10 shadow-sm">
-                  <DollarSign className="w-12 h-12 text-secondary/20 mb-4" />
-                  <p className="text-sm font-bold text-secondary">No hay movimientos</p>
-                </div>
-              )}
-            </div>
+            <span className="text-xs font-bold text-secondary uppercase tracking-widest bg-surface-container/60 px-2.5 py-1 rounded-xl">
+              {displayedActivity.length} {displayedActivity.length === 1 ? 'REG' : 'REGS'}
+            </span>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-[2rem] p-6 border border-outline/50 shadow-sm h-full">
-              <h4 className="font-headline font-bold text-sm text-on-surface mb-6 flex items-center justify-between">
-                 Estado de Mesas
-                 <ChevronRight className="w-4 h-4 text-secondary/40" />
-              </h4>
-              <div className="grid grid-cols-3 gap-3">
-                 {tableStatus.map(t => (
-                    <div key={t.id} className="flex flex-col items-center gap-2">
-                       <div className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
-                          t.status === 'Ocupada' ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-surface-container text-secondary/40"
-                       )}>
-                          <TableIcon className="w-5 h-5" />
-                       </div>
-                       <p className="text-[9px] font-bold text-on-surface">{t.label}</p>
-                       <p className={cn("text-[8px] font-black uppercase tracking-widest", t.status === 'Ocupada' ? "text-orange-600" : "text-success")}>
-                          {t.status}
-                       </p>
-                    </div>
-                 ))}
+          <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
+            {displayedActivity.length > 0 ? (
+              displayedActivity.map((sale, i) => (
+                <SaleCard 
+                  key={sale.id}
+                  sale={sale}
+                  onClick={() => setSelectedSale(sale)}
+                  index={i}
+                  products={products}
+                  supplies={supplies}
+                  profile={profile}
+                />
+              ))
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white rounded-[2rem] border border-outline/10 shadow-sm">
+                <DollarSign className="w-12 h-12 text-secondary/20 mb-4" />
+                <p className="text-sm font-bold text-secondary">No hay movimientos en este periodo</p>
               </div>
-            </div>
+            )}
+
+            {/* If week/month and there are more records beyond the limit */}
+            {hasMoreRecords && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-surface-container/50 border border-outline/10 rounded-2xl mt-1">
+                <p className="text-xs text-secondary font-medium text-center sm:text-left">
+                  Mostrando las <span className="font-bold text-on-surface">{displayedActivity.length}</span> ventas más recientes de <span className="font-bold text-on-surface">{combinedActivity.length}</span> en este período.
+                </p>
+                <button
+                  onClick={() => setPeriodLimit(prev => prev + 30)}
+                  className="px-4 py-2 bg-white hover:bg-primary hover:text-white text-primary border border-outline/10 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-xs active:scale-95"
+                >
+                  Cargar más ventas (+30)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
