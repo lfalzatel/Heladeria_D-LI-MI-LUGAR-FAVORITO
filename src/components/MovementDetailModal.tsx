@@ -465,7 +465,11 @@ export default function MovementDetailModal({
   const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
   const isSale = !isPedido;
   const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pendiente;
-  const isOnlinePedido = !!data.clienteId || !!data.pedidoId || data.type === 'online' || data.isDirectPedido || (Array.isArray(data.messages) && data.messages.length > 0) || (Array.isArray(data.chatMessages) && data.chatMessages.length > 0) || !!data.clienteName;
+  const isOnlinePedido = (data.type === 'online' || data.isDirectPedido || data.tableName === 'Pedido Online') && (
+    (Array.isArray(data.messages) && data.messages.length > 0) || 
+    (Array.isArray(data.chatMessages) && data.chatMessages.length > 0) ||
+    !!setChatMessage
+  );
   const isToday = data?.createdAt && new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toDateString() === new Date().toDateString();
   const canEditPayment = profile?.role === 'admin' || profile?.role === 'propietario' || profile?.role === 'administrador';
 
@@ -1516,11 +1520,11 @@ export default function MovementDetailModal({
               </div>
             )}
 
-            {!isOnlinePedido && (
-              <div className="p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem]">
+            {(!isOnlinePedido || activeTab !== 'chat' || !setChatMessage) && (
+              <div className="p-4 sm:p-6 bg-white border-t border-outline/10 rounded-b-[2.5rem] flex-shrink-0 z-20">
                 <button 
                   onClick={onClose}
-                  className="w-full py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-sm uppercase tracking-widestáshadow-xl active:scale-[0.98] transition-all"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl bg-on-surface text-white font-headline font-black text-xs sm:text-sm uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all hover:bg-black text-center"
                 >
                   Cerrar Detalle
                 </button>

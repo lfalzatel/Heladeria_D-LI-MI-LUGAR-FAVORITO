@@ -492,8 +492,6 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda,
   deudaByClient: { clienteId: string; name: string; total: number; pedidos: any[] }[];
   onSelectSale?: (sale: any) => void;
 }) {
-  const [selectedClient, setSelectedClient] = useState<typeof deudaByClient[0] | null>(null);
-
   const fmtDate = (p: any) => {
     const ts = p.createdAt || p.timestamp;
     if (!ts) return '';
@@ -501,102 +499,27 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda,
     return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
   };
 
+  const allDebts = React.useMemo(() => {
+    const list: any[] = [];
+    deudaByClient.forEach(client => {
+      if (client.pedidos && client.pedidos.length > 0) {
+        client.pedidos.forEach(p => {
+          list.push({ ...p, clienteName: p.clienteName || client.name });
+        });
+      }
+    });
+    return list.sort((a, b) => {
+      const getMs = (item: any) => {
+        const ts = item.createdAt || item.timestamp || item.date;
+        if (!ts) return 0;
+        return ts.toDate ? ts.toDate().getTime() : new Date(ts).getTime();
+      };
+      return getMs(b) - getMs(a);
+    });
+  }, [deudaByClient]);
+
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
-      {/* Level 2 */}
-      <AnimatePresence>
-        {selectedClient && (
-          <motion.div
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="absolute inset-0 bg-white z-10 flex flex-col rounded-[2.5rem] overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-outline/10">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedClient(null)} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center cursor-pointer hover:bg-surface-container-high transition-colors">
-                  <ChevronLeft className="w-5 h-5 text-secondary" />
-                </button>
-                <div>
-                  <h3 className="font-bold text-base text-on-surface">{selectedClient.name}</h3>
-                  <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Deuda Total: {formatCurrency(selectedClient.total)}</p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-all active:scale-90"
-                title="Cerrar modal"
-              >
-                <X className="w-4 h-4 text-secondary" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2.5">
-              {selectedClient.pedidos.map(p => {
-                const saldoPendiente = (p.total || 0) - (p.totalAbonado || 0);
-                return (
-                  <div 
-                    key={p.id} 
-                    onClick={() => {
-                      if (onSelectSale) {
-                        onSelectSale(p);
-                      }
-                    }}
-                    className={cn(
-                      "p-4 bg-surface-container-lowest rounded-2xl border border-outline/10 transition-all",
-                      onSelectSale && "hover:border-orange-300 hover:shadow-md cursor-pointer active:scale-[0.99] group"
-                    )}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="font-bold text-sm text-on-surface">Venta a Crédito #{p.id.slice(-6).toUpperCase()}</p>
-                        </div>
-                        <p className="text-[10px] text-secondary font-bold mt-0.5">{fmtDate(p)} {p.hour ? `• ${p.hour}` : ''}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-black text-orange-600">{formatCurrency(saldoPendiente)}</p>
-                        {p.totalAbonado > 0 && (
-                          <p className="text-[9px] text-emerald-600 font-bold">Abonado: {formatCurrency(p.totalAbonado)}</p>
-                        )}
-                      </div>
-                    </div>
-                    {p.items?.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {p.items.slice(0, 3).map((item: any, i: number) => (
-                          <span key={i} className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-bold text-secondary border border-outline/10">
-                            {item.productName} ×{item.quantity}
-                          </span>
-                        ))}
-                        {p.items.length > 3 && <span className="px-2 py-0.5 bg-primary/5 rounded-lg text-[9px] font-bold text-primary">+{p.items.length - 3} más</span>}
-                      </div>
-                    )}
-                    {onSelectSale && (
-                      <div className="mt-2.5 pt-2 border-t border-outline/10 flex items-center justify-between text-[10px] font-black text-orange-600 uppercase tracking-wider">
-                        <span>Ver detalle / Registrar Abono</span>
-                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="px-6 py-4 border-t border-outline/10 flex-shrink-0 rounded-b-[2.5rem] bg-white flex flex-col gap-2">
-              <button
-                onClick={onClose}
-                className="w-full py-3.5 text-xs font-black uppercase tracking-widest text-white bg-on-surface hover:bg-black rounded-2xl shadow-sm transition-all active:scale-[0.99] text-center"
-              >
-                CERRAR DETALLE
-              </button>
-              <button
-                onClick={() => setSelectedClient(null)}
-                className="w-full py-1.5 text-[10px] font-black uppercase tracking-widest text-secondary hover:text-on-surface transition-colors text-center"
-              >
-                ← VOLVER A CLIENTES
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <ModalHeader
         icon={<Clock className="w-6 h-6 text-orange-600" />}
         iconBg="bg-orange-50"
@@ -611,36 +534,48 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda,
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-2">
-        {deudaByClient.length === 0 ? (
+        {allDebts.length === 0 ? (
           <div className="py-12 flex flex-col items-center opacity-30">
             <Clock className="w-10 h-10 mb-2" />
             <p className="text-xs font-bold uppercase tracking-widest">Sin deudas registradas</p>
           </div>
-        ) : deudaByClient.map(client => (
-          <button
-            key={client.clienteId}
-            onClick={() => setSelectedClient(client)}
-            className="w-full p-4 bg-white rounded-2xl border border-outline/10 shadow-sm hover:border-orange-200 hover:shadow-md transition-all text-left group"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 font-black text-base">
-                  {client.name.charAt(0).toUpperCase()}
+        ) : allDebts.map(p => {
+          const pendiente = Math.max(0, (p.total || 0) - (p.totalAbonado || 0));
+          return (
+            <div
+              key={p.id}
+              onClick={() => {
+                if (onSelectSale) {
+                  onSelectSale(p);
+                }
+              }}
+              className="w-full p-4 bg-white rounded-2xl border border-outline/10 shadow-sm hover:border-orange-300 hover:shadow-md transition-all text-left cursor-pointer group active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 font-black text-base flex-shrink-0">
+                    {(p.clienteName || 'C').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-on-surface truncate">{p.clienteName || 'Cliente'}</p>
+                    <p className="text-[10px] text-secondary font-bold">{fmtDate(p)} {p.hour ? `• ${p.hour}` : ''}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-sm text-on-surface">{client.name}</p>
-                  <p className="text-[9px] text-secondary font-bold">{client.pedidos.length} pedido{client.pedidos.length !== 1 ? 's' : ''}</p>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="text-right">
+                    <p className="font-black text-orange-600">{formatCurrency(pendiente)}</p>
+                    {p.totalAbonado > 0 && (
+                      <p className="text-[9px] text-emerald-600 font-bold">Abonado: {formatCurrency(p.totalAbonado)}</p>
+                    )}
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-secondary/40 group-hover:text-primary transition-colors" />
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="font-black text-orange-600">{formatCurrency(client.total)}</p>
-                <ArrowRight className="w-4 h-4 text-secondary/40 group-hover:text-primary transition-colors" />
               </div>
             </div>
-          </button>
-        ))}
+          );
+        })}
       </div>
-      <ModalFooter onClick={onClose} />
+      <ModalFooter onClick={onClose} label="CERRAR DETALLE" />
     </ModalWrapper>
   );
 }
