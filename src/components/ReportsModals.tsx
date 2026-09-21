@@ -487,9 +487,10 @@ export function RankingModal({ isOpen, onClose, filter, ranking }: {
 }
 
 // ── 5. DEUDA CLIENTES MODAL ──
-export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda }: {
+export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda, onSelectSale }: {
   isOpen: boolean; onClose: () => void; totalDeuda: number;
   deudaByClient: { clienteId: string; name: string; total: number; pedidos: any[] }[];
+  onSelectSale?: (sale: any) => void;
 }) {
   const [selectedClient, setSelectedClient] = useState<typeof deudaByClient[0] | null>(null);
 
@@ -511,36 +512,63 @@ export function DeudaClientesModal({ isOpen, onClose, deudaByClient, totalDeuda 
             className="absolute inset-0 bg-white z-10 flex flex-col rounded-[2.5rem] overflow-hidden"
           >
             <div className="flex items-center gap-3 px-6 pt-5 pb-4 flex-shrink-0 border-b border-outline/10">
-              <button onClick={() => setSelectedClient(null)} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center">
+              <button onClick={() => setSelectedClient(null)} className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center cursor-pointer">
                 <ChevronLeft className="w-5 h-5 text-secondary" />
               </button>
               <div>
                 <h3 className="font-bold text-base text-on-surface">{selectedClient.name}</h3>
-                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Deuda: {formatCurrency(selectedClient.total)}</p>
+                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Deuda Total: {formatCurrency(selectedClient.total)}</p>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2">
-              {selectedClient.pedidos.map(p => (
-                <div key={p.id} className="p-4 bg-surface-container-lowest rounded-2xl border border-outline/10">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-bold text-sm text-on-surface">Pedido a Crédito</p>
-                      <p className="text-[10px] text-secondary font-bold">{fmtDate(p)}</p>
+            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2.5">
+              {selectedClient.pedidos.map(p => {
+                const saldoPendiente = (p.total || 0) - (p.totalAbonado || 0);
+                return (
+                  <div 
+                    key={p.id} 
+                    onClick={() => {
+                      if (onSelectSale) {
+                        onSelectSale(p);
+                      }
+                    }}
+                    className={cn(
+                      "p-4 bg-surface-container-lowest rounded-2xl border border-outline/10 transition-all",
+                      onSelectSale && "hover:border-orange-300 hover:shadow-md cursor-pointer active:scale-[0.99] group"
+                    )}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold text-sm text-on-surface">Venta a Crédito #{p.id.slice(-6).toUpperCase()}</p>
+                        </div>
+                        <p className="text-[10px] text-secondary font-bold mt-0.5">{fmtDate(p)} {p.hour ? `• ${p.hour}` : ''}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-orange-600">{formatCurrency(saldoPendiente)}</p>
+                        {p.totalAbonado > 0 && (
+                          <p className="text-[9px] text-emerald-600 font-bold">Abonado: {formatCurrency(p.totalAbonado)}</p>
+                        )}
+                      </div>
                     </div>
-                    <p className="font-black text-orange-600">{formatCurrency(p.total)}</p>
+                    {p.items?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {p.items.slice(0, 3).map((item: any, i: number) => (
+                          <span key={i} className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-bold text-secondary border border-outline/10">
+                            {item.productName} ×{item.quantity}
+                          </span>
+                        ))}
+                        {p.items.length > 3 && <span className="px-2 py-0.5 bg-primary/5 rounded-lg text-[9px] font-bold text-primary">+{p.items.length - 3} más</span>}
+                      </div>
+                    )}
+                    {onSelectSale && (
+                      <div className="mt-2.5 pt-2 border-t border-outline/10 flex items-center justify-between text-[10px] font-black text-orange-600 uppercase tracking-wider">
+                        <span>Ver detalle / Registrar Abono</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+                    )}
                   </div>
-                  {p.items?.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {p.items.slice(0, 3).map((item: any, i: number) => (
-                        <span key={i} className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-bold text-secondary border border-outline/10">
-                          {item.productName} ×{item.quantity}
-                        </span>
-                      ))}
-                      {p.items.length > 3 && <span className="px-2 py-0.5 bg-primary/5 rounded-lg text-[9px] font-bold text-primary">+{p.items.length - 3} más</span>}
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
             <ModalFooter onClick={() => setSelectedClient(null)} label="← VOLVER" />
           </motion.div>

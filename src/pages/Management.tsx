@@ -205,21 +205,32 @@ export default function Management() {
   const [allCreditPedidos, setAllCreditPedidos] = useState<any[]>([]);
 
   const clientDebtMap = useMemo(() => {
-    const map: Record<string, { totalDebt: number; totalPaid: number; pending: number }> = {};
+    const map: Record<string, { totalDebt: number; totalPaid: number; pending: number; name?: string; phone?: string; email?: string }> = {};
     
     const processDoc = (doc: any) => {
-      const cid = doc.clienteId;
+      const name = doc.clienteName?.trim();
+      const cid = doc.clienteId || (name ? `deudor_${name.toLowerCase()}` : null);
       if (!cid) return;
       const total = doc.total || 0;
       const paid = doc.totalAbonado || 0;
       const pending = total - paid;
       
       if (!map[cid]) {
-        map[cid] = { totalDebt: 0, totalPaid: 0, pending: 0 };
+        map[cid] = { 
+          totalDebt: 0, 
+          totalPaid: 0, 
+          pending: 0, 
+          name: name || 'Cliente', 
+          phone: doc.clientePhone || '',
+          email: doc.clienteEmail || ''
+        };
       }
       map[cid].totalDebt += total;
       map[cid].totalPaid += paid;
       map[cid].pending += pending;
+      if (!map[cid].name && name) map[cid].name = name;
+      if (!map[cid].phone && doc.clientePhone) map[cid].phone = doc.clientePhone;
+      if (!map[cid].email && doc.clienteEmail) map[cid].email = doc.clienteEmail;
     };
 
     allCreditSales.forEach(processDoc);
@@ -417,7 +428,10 @@ export default function Management() {
         setUserSales(merged);
       };
 
-      const qP = query(collection(db, 'pedidos'), where('clienteId', '==', selectedUserForHistory.uid));
+      const isByName = selectedUserForHistory.isUnregistered || selectedUserForHistory.uid?.startsWith('deudor_');
+      const qP = isByName
+        ? query(collection(db, 'pedidos'), where('clienteName', '==', selectedUserForHistory.name))
+        : query(collection(db, 'pedidos'), where('clienteId', '==', selectedUserForHistory.uid));
       const unsubP = onSnapshot(qP, (snap) => {
         pedidosRaw = snap.docs.map((d) => {
           const item = d.data();
@@ -434,7 +448,9 @@ export default function Management() {
         setIsLoadingHistory(false);
       }, (err) => { console.error('History pedidos error:', err); setIsLoadingHistory(false); });
 
-      const qS = query(collection(db, 'sales'), where('clienteId', '==', selectedUserForHistory.uid));
+      const qS = isByName
+        ? query(collection(db, 'sales'), where('clienteName', '==', selectedUserForHistory.name))
+        : query(collection(db, 'sales'), where('clienteId', '==', selectedUserForHistory.uid));
       const unsubS = onSnapshot(qS, (snap) => {
         salesRaw = snap.docs.map((d) => {
           const item = d.data();
@@ -1790,108 +1806,137 @@ export default function Management() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {users
-                    .filter((u) => {
-                      if (currentUser?.role === 'propietario' && u.role === 'admin') return false;
-                      const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
-                      const isStaff = ['admin', 'propietario', 'vendedor'].includes(u.role);
-                      const matchesTab = 
-                        personasSubTab === 'equipo' 
-                          ? isStaff 
-                          : personasSubTab === 'clientes' 
-                            ? u.role === 'cliente'
-                            : u.role === 'cliente' && (clientDebtMap[u.uid]?.pending || 0) > 0;
-                      return matchesSearch && matchesTab;
-                    })
-                    .sort((a, b) => {
-                      if (personasSubTab === 'deudores') {
-                        const debtA = clientDebtMap[a.uid]?.pending || 0;
-                        const debtB = clientDebtMap[b.uid]?.pending || 0;
-                        return debtB - debtA;
-                      }
-                      return 0; // Maintain alphabetical order otherwise
-                    })
-                    .map((user, i) => (
-                      <motion.div
-                        layout
-                        key={user.uid}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        onClick={() => setSelectedUserForHistory(user)}
-                        className="bg-white rounded-3xl p-4 border border-outline/10 shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all hover:shadow-md cursor-pointer"
-                      >
-                        <div className="relative shrink-0">
-                          <div className="w-14 h-14 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-primary font-black text-xl relative">
-                            <span className="absolute inset-0 flex items-center justify-center">{user.name[0].toUpperCase()}</span>
-                            {user.imageUrl && (
-                              <img 
-                                src={user.imageUrl} 
-                                alt={user.name} 
-                                className="absolute inset-0 w-full h-full object-cover" 
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                              />
-                            )}
-                          </div>
-                        </div>
+                {(() => {
+                  const userMap = new Map(users.map(u => [u.uid, u]));
+                  const personasToRender: any[] = personasSubTab === 'deudores'
+                    ? (() => {
+                        const list: any[] = [];
+                        Object.entries(clientDebtMap).forEach(([cid, info]) => {
+                          if (info.pending <= 0) return;
+                          if (userMap.has(cid)) {
+                            list.push(userMap.get(cid));
+                          } else {
+                            list.push({
+                              uid: cid,
+                              name: info.name || 'Cliente sin registrar',
+                              role: 'cliente',
+                              email: info.email || '',
+                              phone: info.phone || '',
+                              isUnregistered: true
+                            });
+                          }
+                        });
+                        return list;
+                      })()
+                    : users;
 
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-headline font-black text-sm text-on-surface uppercase truncate tracking-tight">{user.name}</h3>
-                          <div className="flex flex-col gap-1 mt-1">
-                            <div className="flex items-center gap-2">
-                              <span className={cn('text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border',
-                                user.role === 'admin' ? 'bg-red-50 text-red-600 border-red-100' :
-                                user.role === 'propietario' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                                user.role === 'cliente' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                'bg-emerald-50 text-emerald-600 border-emerald-100')}>
-                                {user.role === 'cliente' ? 'CLIENTE' : user.role}
-                              </span>
-                              {user.phone && (
-                                <div className="flex items-center gap-1 text-secondary/60">
-                                  <Phone className="w-2.5 h-2.5" />
-                                  <span className="text-[9px] font-bold">{user.phone}</span>
-                                </div>
-                              )}
-                            </div>
-                            <p className="text-[9px] text-secondary/40 font-medium truncate">{user.email}</p>
-                            {personasSubTab === 'deudores' && clientDebtMap[user.uid] && (
-                              <div className="mt-1 flex items-center gap-1.5">
-                                <span className="text-[9px] font-black uppercase text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-md">
-                                  Debe: {formatCurrency(clientDebtMap[user.uid].pending)}
-                                </span>
-                                <span className="text-[8px] font-bold text-secondary/60">
-                                  (Abonado: {formatCurrency(clientDebtMap[user.uid].totalPaid)})
-                                </span>
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {personasToRender
+                        .filter((u) => {
+                          if (currentUser?.role === 'propietario' && u.role === 'admin') return false;
+                          const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
+                            (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase())) || 
+                            (u.phone && u.phone.includes(userSearch));
+                          const isStaff = ['admin', 'propietario', 'vendedor'].includes(u.role);
+                          const matchesTab = 
+                            personasSubTab === 'equipo' 
+                              ? isStaff 
+                              : personasSubTab === 'clientes' 
+                                ? u.role === 'cliente'
+                                : (clientDebtMap[u.uid]?.pending || 0) > 0;
+                          return matchesSearch && matchesTab;
+                        })
+                        .sort((a, b) => {
+                          if (personasSubTab === 'deudores') {
+                            const debtA = clientDebtMap[a.uid]?.pending || 0;
+                            const debtB = clientDebtMap[b.uid]?.pending || 0;
+                            return debtB - debtA;
+                          }
+                          return 0; // Maintain alphabetical order otherwise
+                        })
+                        .map((user, i) => (
+                          <motion.div
+                            layout
+                            key={user.uid}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            onClick={() => setSelectedUserForHistory(user)}
+                            className="bg-white rounded-3xl p-4 border border-outline/10 shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all hover:shadow-md cursor-pointer"
+                          >
+                            <div className="relative shrink-0">
+                              <div className="w-14 h-14 rounded-2xl bg-surface-container overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-primary font-black text-xl relative">
+                                <span className="absolute inset-0 flex items-center justify-center">{user.name[0].toUpperCase()}</span>
+                                {user.imageUrl && (
+                                  <img 
+                                    src={user.imageUrl} 
+                                    alt={user.name} 
+                                    className="absolute inset-0 w-full h-full object-cover" 
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                  />
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </div>
+                            </div>
 
-                        <div className="flex flex-col gap-2 shrink-0">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditUser(user);
-                            }} 
-                            className="w-8 h-8 rounded-xl bg-surface-container text-secondary flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-outline/10"
-                            title="Editar usuario"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedUserForHistory(user);
-                            }} 
-                            className="w-8 h-8 rounded-xl bg-on-surface text-white flex items-center justify-center hover:bg-primary transition-all shadow-sm"
-                            title="Ver historial de actividad"
-                          >
-                            <History className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-headline font-black text-sm text-on-surface uppercase truncate tracking-tight">{user.name}</h3>
+                              <div className="flex flex-col gap-1 mt-1">
+                                <div className="flex items-center gap-2">
+                                  <span className={cn('text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border',
+                                    user.role === 'admin' ? 'bg-red-50 text-red-600 border-red-100' :
+                                    user.role === 'propietario' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                    user.role === 'cliente' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                    'bg-emerald-50 text-emerald-600 border-emerald-100')}>
+                                    {user.role === 'cliente' ? 'CLIENTE' : user.role}
+                                  </span>
+                                  {user.phone && (
+                                    <div className="flex items-center gap-1 text-secondary/60">
+                                      <Phone className="w-2.5 h-2.5" />
+                                      <span className="text-[9px] font-bold">{user.phone}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-[9px] text-secondary/40 font-medium truncate">{user.email}</p>
+                                {personasSubTab === 'deudores' && clientDebtMap[user.uid] && (
+                                  <div className="mt-1 flex items-center gap-1.5">
+                                    <span className="text-[9px] font-black uppercase text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-md">
+                                      Debe: {formatCurrency(clientDebtMap[user.uid].pending)}
+                                    </span>
+                                    <span className="text-[8px] font-bold text-secondary/60">
+                                      (Abonado: {formatCurrency(clientDebtMap[user.uid].totalPaid)})
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2 shrink-0">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditUser(user);
+                                }} 
+                                className="w-8 h-8 rounded-xl bg-surface-container text-secondary flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-outline/10"
+                                title="Editar usuario"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedUserForHistory(user);
+                                }} 
+                                className="w-8 h-8 rounded-xl bg-on-surface text-white flex items-center justify-center hover:bg-primary transition-all shadow-sm"
+                                title="Ver historial de actividad"
+                              >
+                                <History className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </motion.div>
+                        ))}
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
 

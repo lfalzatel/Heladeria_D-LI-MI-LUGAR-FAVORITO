@@ -910,6 +910,10 @@ export default function Dashboard() {
         onClose={close}
         deudaByClient={deudaByClient}
         totalDeuda={totalDeuda}
+        onSelectSale={(sale) => {
+          close();
+          setSelectedSale(sale);
+        }}
       />
       <PremiosModal
         isOpen={openModal === 'premios'}

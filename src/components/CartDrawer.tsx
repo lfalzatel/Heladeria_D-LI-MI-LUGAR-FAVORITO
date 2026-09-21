@@ -41,6 +41,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
   const [selectedCliente, setSelectedCliente] = useState<ClienteOption | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [deudorName, setDeudorName] = useState('');
+  const [deudorPhone, setDeudorPhone] = useState('');
+  const [deudorEmail, setDeudorEmail] = useState('');
   const [showSelectClientModal, setShowSelectClientModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showDebeModal, setShowDebeModal] = useState(false);
@@ -220,17 +222,46 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         note: cart.note?.trim() || null,
       };
 
-      if (selectedCliente) {
-        saleData.clienteId = selectedCliente.id;
-        saleData.clienteName = selectedCliente.name;
-        saleData.clienteEmail = selectedCliente.email;
-        saleData.clientePhone = selectedCliente.phone || '';
-      } else if (paymentMethod === 'credito' && finalClienteName) {
-        saleData.clienteId = null;
-        saleData.clienteName = finalClienteName;
-        saleData.clienteEmail = '';
-        saleData.clientePhone = '';
+      let finalClienteId = selectedCliente?.id || null;
+      let finalClientePhone = selectedCliente?.phone || deudorPhone.trim() || '';
+      let finalClienteEmail = selectedCliente?.email || deudorEmail.trim() || '';
+
+      if (paymentMethod === 'credito' && !finalClienteId && finalClienteName) {
+        // Verificar si ya existe en la lista de clientes (por nombre o teléfono)
+        const normName = finalClienteName.toLowerCase().trim();
+        const existing = clientes.find(c => 
+          c.name.toLowerCase().trim() === normName || 
+          (finalClientePhone && c.phone && c.phone.trim() === finalClientePhone)
+        );
+
+        if (existing) {
+          finalClienteId = existing.id;
+          if (!finalClientePhone && existing.phone) finalClientePhone = existing.phone;
+          if (!finalClienteEmail && existing.email) finalClienteEmail = existing.email;
+        } else {
+          // Crear automáticamente el registro en la colección 'users' para que persista como deudor y cliente
+          try {
+            const newClientData = {
+              name: finalClienteName,
+              phone: finalClientePhone || null,
+              email: finalClienteEmail || null,
+              role: 'cliente',
+              loyaltyPoints: 0,
+              createdAt: serverTimestamp()
+            };
+            const clientDocRef = await addDoc(collection(db, 'users'), newClientData);
+            finalClienteId = clientDocRef.id;
+            setClientes(prev => [{ id: clientDocRef.id, ...newClientData, phone: finalClientePhone, email: finalClienteEmail }, ...prev]);
+          } catch (e) {
+            console.error('Error al registrar deudor en users:', e);
+          }
+        }
       }
+
+      saleData.clienteId = finalClienteId;
+      saleData.clienteName = finalClienteName;
+      saleData.clienteEmail = finalClienteEmail;
+      saleData.clientePhone = finalClientePhone;
 
       const docRef = await addDoc(collection(db, 'sales'), saleData);
       
@@ -307,6 +338,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       setSelectedCliente(null);
       setSearchTerm('');
       setDeudorName('');
+      setDeudorPhone('');
+      setDeudorEmail('');
       
       // Activar modal de éxito con los datos finales
       setSuccessSale(completedSale);
@@ -1039,6 +1072,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               setSelectedCliente(null);
               setSearchTerm('');
               setDeudorName('');
+              setDeudorPhone('');
+              setDeudorEmail('');
               setManualPhone('');
               setManualEmail('');
               onClose();
@@ -1227,6 +1262,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                 setSelectedCliente(null);
                 setSearchTerm('');
                 setDeudorName('');
+                setDeudorPhone('');
+                setDeudorEmail('');
                 setManualPhone('');
                 setManualEmail('');
                 onClose();
@@ -1685,38 +1722,61 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               </button>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-on-surface">
-                Escribe el nombre de quien debe este pedido:
-              </label>
-              <input
-                type="text"
-                value={deudorName}
-                onChange={(e) => setDeudorName(e.target.value)}
-                placeholder="Ej. Carlos Gómez / Vecino Tienda"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (!deudorName.trim()) {
-                      toast.error('Por favor escribe el nombre de quien debe');
-                      return;
-                    }
-                    setShowDebeModal(false);
-                    toast.success('Nombre asignado');
-                  }
-                }}
-                className="w-full bg-surface-container-low border border-outline/10 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl py-2.5 px-3 text-xs font-bold text-on-surface outline-none transition-all"
-              />
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">
+                  Nombre de quien debe *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={deudorName}
+                  onChange={(e) => setDeudorName(e.target.value)}
+                  placeholder="Ej. Carlos Gómez / Vecino Tienda"
+                  autoFocus
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl py-2 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
+
               {selectedCliente && !deudorName.trim() && (
                 <button
                   type="button"
-                  onClick={() => setDeudorName(selectedCliente.name)}
-                  className="text-left text-[11px] text-orange-600 hover:text-orange-800 font-bold underline mt-1"
+                  onClick={() => {
+                    setDeudorName(selectedCliente.name);
+                    if (selectedCliente.phone) setDeudorPhone(selectedCliente.phone);
+                    if (selectedCliente.email) setDeudorEmail(selectedCliente.email);
+                  }}
+                  className="text-left text-[11px] text-orange-600 hover:text-orange-800 font-bold underline -mt-1"
                 >
-                  Usar cliente asociado: {selectedCliente.name}
+                  Usar datos del cliente: {selectedCliente.name}
                 </button>
               )}
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">
+                  Teléfono / WhatsApp <span className="normal-case font-normal text-secondary/70">(Opcional)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={deudorPhone}
+                  onChange={(e) => setDeudorPhone(e.target.value)}
+                  placeholder="Ej. 300 123 4567"
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl py-2 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase text-secondary tracking-wide">
+                  Correo Electrónico <span className="normal-case font-normal text-secondary/70">(Opcional)</span>
+                </label>
+                <input
+                  type="email"
+                  value={deudorEmail}
+                  onChange={(e) => setDeudorEmail(e.target.value)}
+                  placeholder="Ej. cliente@correo.com"
+                  className="w-full bg-surface-container-low border border-outline/10 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl py-2 px-3 text-xs font-bold text-on-surface outline-none transition-all"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mt-1">

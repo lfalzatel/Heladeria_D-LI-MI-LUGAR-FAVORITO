@@ -173,12 +173,9 @@ export default function MovementDetailModal({
     }
   }, [triggerAbonoOpen, data]);
 
-  // Load packaging supply names when modal opens (for name resolution in the list)
+  // Load packaging supplies unconditionally when modal opens (for name & price resolution)
   React.useEffect(() => {
-    if (!data || !data.packagingSupplies?.length) return;
-    // Only fetch if any supply is missing its name
-    const needsLookup = data.packagingSupplies.some((p: any) => !p.name);
-    if (!needsLookup && allPackaging.length > 0) return;
+    if (!isOpen) return;
     const fetchPackaging = async () => {
       try {
         const q = query(collection(db, 'supplies'), where('category', '==', 'Desechables'));
@@ -186,11 +183,11 @@ export default function MovementDetailModal({
         const packs: any[] = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter((s: any) => s.status !== 'inactivo');
         setAllPackaging(packs.sort((a: any, b: any) => a.name.localeCompare(b.name)));
       } catch (e) {
-        console.error('Error loading packaging names:', e);
+        console.error('Error loading packaging names and prices:', e);
       }
     };
     fetchPackaging();
-  }, [data?.id]);
+  }, [isOpen, data?.id]);
 
   // Marcar automáticamente mensajes como leídos al abrir el modal
   React.useEffect(() => {
@@ -1278,41 +1275,70 @@ export default function MovementDetailModal({
                     </section>
                   )}
 
-                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
-                    {data.address && (
-                      <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-full">
-                         <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
-                         <div className="flex items-start gap-2">
-                            <MapPin className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                            <p className="text-[10px] font-bold text-on-surface leading-tight">{data.address}</p>
-                         </div>
-                      </div>
-                    )}
-                    <div className={cn(
-                      "bg-primary rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-primary/20",
-                      !saleMetrics && "col-span-full sm:col-span-1 ml-auto w-full"
-                    )}>
-                       <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Total Cobrado</p>
-                       <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(data.total)}</p>
-                    </div>
-                    {saleMetrics && (
-                      <>
-                        <div className="bg-amber-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-amber-600/20">
-                           <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Costo Producción</p>
-                           <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalCost)}</p>
-                           {saleMetrics.packagingCost > 0 && (
-                             <p className="text-[10px] text-amber-100 font-bold mt-1 leading-tight">
-                               Productos: {formatCurrency(saleMetrics.totalCost - saleMetrics.packagingCost)} + Empaques: {formatCurrency(saleMetrics.packagingCost)}
-                             </p>
-                           )}
+                 {(() => {
+                   const packagingCost = saleMetrics ? (saleMetrics.packagingCost || 0) : 0;
+                   const prodCostOnly = saleMetrics ? Math.max(0, saleMetrics.totalCost - packagingCost) : 0;
+                   const hasPackagingSupplies = (data.packagingSupplies && data.packagingSupplies.filter((p: any) => p.quantity > 0).length > 0);
+                   const showPackagingCard = saleMetrics && (packagingCost > 0 || hasPackagingSupplies);
+                   const netProfit = saleMetrics ? Math.max(0, Number(data.total || 0) - prodCostOnly - packagingCost) : 0;
+
+                   return (
+                     <div className={cn(
+                       "grid gap-2.5 sm:gap-3 w-full",
+                       showPackagingCard ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"
+                     )}>
+                        {data.address && (
+                          <div className="bg-surface-container/30 rounded-3xl p-4 flex flex-col gap-1 border border-outline/5 shadow-sm col-span-full">
+                             <p className="text-[9px] text-secondary font-black uppercase tracking-widest">Entrega en</p>
+                             <div className="flex items-start gap-2">
+                                <MapPin className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                                <p className="text-[10px] font-bold text-on-surface leading-tight">{data.address}</p>
+                             </div>
+                          </div>
+                        )}
+
+                        {/* Tarjeta 1: Total Cobrado */}
+                        <div className="bg-primary rounded-3xl p-3.5 sm:p-4 flex flex-col gap-1 shadow-lg shadow-primary/20">
+                           <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Total Cobrado</p>
+                           <p className="text-lg sm:text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(data.total)}</p>
+                           <p className="text-[8px] text-white/60 font-bold mt-0.5 leading-none">Cobrado al cliente</p>
                         </div>
-                        <div className="bg-emerald-600 rounded-3xl p-4 flex flex-col gap-1 shadow-lg shadow-emerald-600/20">
-                           <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Ganancia Neta</p>
-                           <p className="text-xl font-headline font-black text-white leading-none mt-1">{formatCurrency(saleMetrics.totalProfit)}</p>
-                        </div>
-                      </>
-                    )}
-                 </div>
+
+                        {saleMetrics && (
+                          <>
+                            {/* Tarjeta 2: Costo Producción */}
+                            <div className="bg-amber-600 rounded-3xl p-3.5 sm:p-4 flex flex-col gap-1 shadow-lg shadow-amber-600/20">
+                               <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Costo Producción</p>
+                               <p className="text-lg sm:text-xl font-headline font-black text-white leading-none mt-1">
+                                 {formatCurrency(showPackagingCard ? prodCostOnly : saleMetrics.totalCost)}
+                                </p>
+                               <p className="text-[8px] text-amber-100/80 font-bold mt-0.5 leading-none">Helados / Ingredientes</p>
+                            </div>
+
+                            {/* Tarjeta 3: Costo Empaques / Desechables (Solo si aplica) */}
+                            {showPackagingCard && (
+                              <div className="bg-indigo-600 rounded-3xl p-3.5 sm:p-4 flex flex-col gap-1 shadow-lg shadow-indigo-600/20">
+                                 <p className="text-[9px] text-white/80 font-black uppercase tracking-widest leading-none">Costo Empaques</p>
+                                 <p className="text-lg sm:text-xl font-headline font-black text-white leading-none mt-1">
+                                   {formatCurrency(packagingCost)}
+                                 </p>
+                                 <p className="text-[8px] text-indigo-100 font-bold mt-0.5 leading-none">Descontado de ganancia</p>
+                              </div>
+                            )}
+
+                            {/* Tarjeta 4: Ganancia Neta */}
+                            <div className="bg-emerald-600 rounded-3xl p-3.5 sm:p-4 flex flex-col gap-1 shadow-lg shadow-emerald-600/20">
+                               <p className="text-[9px] text-white/70 font-black uppercase tracking-widest leading-none">Ganancia Neta</p>
+                               <p className="text-lg sm:text-xl font-headline font-black text-white leading-none mt-1">
+                                 {formatCurrency(showPackagingCard ? netProfit : saleMetrics.totalProfit)}
+                               </p>
+                               <p className="text-[8px] text-emerald-100/80 font-bold mt-0.5 leading-none">Total − Todos los Costos</p>
+                            </div>
+                          </>
+                        )}
+                     </div>
+                   );
+                 })()}
 
                {isOnlinePedido && (
                  <section>
