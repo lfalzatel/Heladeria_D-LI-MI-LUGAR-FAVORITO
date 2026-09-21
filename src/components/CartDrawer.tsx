@@ -1380,19 +1380,19 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
     {/* Modal para Crear Cliente Nuevo Express */}
     <AnimatePresence>
       {showCreateClientModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[350] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowCreateClientModal(false)}
-            className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-on-surface/50 backdrop-blur-sm z-[350]"
           />
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 border border-outline/5 z-[310]"
+            className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 border border-outline/5 z-[360]"
           >
             <div className="flex justify-between items-center pb-2 border-b border-outline/5">
               <div className="flex items-center gap-2">
