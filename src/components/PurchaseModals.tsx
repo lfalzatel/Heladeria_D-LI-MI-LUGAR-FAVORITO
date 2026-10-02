@@ -306,22 +306,56 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
   const total = items.reduce((acc, i) => acc + i.cost, 0); // Costo ya es el total por item
   const costPerPortion = (item: PurchaseItem) => item.portions > 0 && item.cost > 0 ? item.cost / item.portions : 0;
 
-  const handleConfirm = async () => {
+  const handleFinalConfirm = async () => {
+    if (items.length === 0 || total === 0) return;
+    if (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total)) return;
+
+    // Advertencia de cantidades sospechosamente bajas en gramos o mililitros (ej: <= 25 g o ml)
+    const suspiciousItems = items.filter(item => {
+      const isWeight = (item.unit || '').toLowerCase() === 'g' || (item.unit || '').toLowerCase() === 'gramos';
+      const isLiquid = (item.unit || '').toLowerCase() === 'ml' || (item.unit || '').toLowerCase() === 'mililitros';
+      const mode = unitModes[item.supplyId] || 'base';
+      return (isWeight || isLiquid) && mode === 'base' && item.quantity > 0 && item.quantity <= 25;
+    });
+
+    if (suspiciousItems.length > 0) {
+      const list = suspiciousItems.map(it => {
+        const isW = (it.unit || '').toLowerCase() === 'g' || (it.unit || '').toLowerCase() === 'gramos';
+        const unitName = isW ? 'Kilos' : 'Litros';
+        return `• ${it.name}: ${it.quantity} ${it.unit} (¿Quisiste ingresar ${it.quantity} ${unitName} = ${it.quantity * 1000} ${it.unit}?)`;
+      }).join('\n');
+
+      const ok = window.confirm(
+        `⚠️ ADVERTENCIA DE CANTIDAD:\n\nDetectamos insumos con cantidades sospechosamente bajas:\n\n${list}\n\n¿Estás seguro de que deseas registrar solo esos gramos/mililitros y NO Kilos o Litros?\n\n• Si compraste KILOS o LITROS: pulsa CANCELAR y cambia a [Kg] o [L] (o toca la advertencia amarilla en el ítem).\n• Si realmente compraste esa cantidad exacta en gramos/ml: pulsa ACEPTAR.`
+      );
+      if (!ok) return;
+    }
+
     const finalProvider = provider.trim() === '' ? 'Desconocido' : provider;
-    if (items.length === 0) return;
     setSaving(true);
     try { 
-      await onConfirm(finalProvider, items, paymentMethod); 
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        zIndex: 9999
-      });
+      await onConfirm(
+        finalProvider, 
+        items, 
+        paymentMethod, 
+        paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined, 
+        date
+      ); 
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          zIndex: 9999
+        });
+      } catch (e) {
+        // Confetti optional
+      }
       reset(); 
       onClose(); 
+    } finally { 
+      setSaving(false); 
     }
-    finally { setSaving(false); }
   };
 
   return (
@@ -539,16 +573,30 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                                       <Plus className="w-3 h-3" />
                                     </button>
                                   </div>
-                                  {isKiloOrLiter ? (
+                                  {(!isKiloOrLiter && item.quantity > 0 && item.quantity <= 25) ? (
+                                    <div 
+                                      onClick={() => {
+                                        setUnitModes(prev => ({ ...prev, [item.supplyId]: 'kilo' }));
+                                        updateItem(item.supplyId, 'quantity', item.quantity * 1000);
+                                      }}
+                                      className="mt-1.5 p-1.5 bg-amber-50 border border-amber-300 rounded-xl cursor-pointer hover:bg-amber-100 transition-all flex items-start gap-1"
+                                      title="Toca para convertir a Kilos"
+                                    >
+                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                                      <p className="text-[8px] text-amber-800 font-bold leading-tight">
+                                        ¿Solo <span className="font-black text-amber-950">{item.quantity} {item.unit}</span>? ¿Quisiste decir <span className="underline font-black text-primary">{item.quantity} {isWeight ? 'Kg' : 'L'} ({item.quantity * 1000} {item.unit})</span>? Toca para corregir.
+                                      </p>
+                                    </div>
+                                  ) : isKiloOrLiter ? (
                                     <p className="text-[8px] text-emerald-600 font-bold leading-tight mt-1">
-                                      = {item.quantity} {item.unit} en inventario
+                                      ✓ {parseFloat((item.quantity / 1000).toFixed(3))} {isWeight ? 'Kg' : 'L'} = <span className="font-black">{item.quantity} {item.unit}</span> en inventario
                                     </p>
                                   ) : isWeight ? (
-                                    <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">
+                                    <p className="text-[8px] text-secondary font-bold leading-tight mt-1">
                                       Ej: 500g = 500 (o activa Kg)
                                     </p>
                                   ) : isLiquid ? (
-                                    <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">
+                                    <p className="text-[8px] text-secondary font-bold leading-tight mt-1">
                                       Ej: 1000ml = 1000 (o activa L)
                                     </p>
                                   ) : null}
@@ -635,8 +683,11 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border border-outline/30 text-on-surface font-black text-xs uppercase tracking-widest hover:bg-surface-container transition-all flex items-center justify-center gap-2">
                       <ChevronLeft className="w-4 h-4" /> Editar Selección
                     </button>
-                    <button onClick={() => onConfirm(provider || 'Desconocido', items, paymentMethod, paymentMethod === 'Mixto' ? { efectivo: splitEfectivo, transferencia: total - splitEfectivo } : undefined, date).then(() => {setStep(1); setItems([]); setPaymentMethod('Efectivo'); setSplitEfectivo(0); setDate(getTodayString()); onClose();}).finally(() => setSaving(false))} disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
-                      className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
+                    <button 
+                      onClick={handleFinalConfirm} 
+                      disabled={saving || items.length === 0 || total === 0 || (paymentMethod === 'Mixto' && (splitEfectivo < 0 || splitEfectivo > total))}
+                      className="flex-[2] py-3.5 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30"
+                    >
                       <CheckCircle2 className="w-4 h-4" /> {saving ? 'Guardando...' : (purchaseToEdit ? 'Guardar Cambios' : 'Confirmar y Abastecer')}
                     </button>
                   </div>
