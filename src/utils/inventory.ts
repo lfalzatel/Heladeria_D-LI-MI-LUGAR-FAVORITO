@@ -78,6 +78,8 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
          const notesNorm = (item.notes || '').toLowerCase().trim();
          const fruitWords = ['fresa', 'mango', 'durazno', 'manzana', 'banano', 'uva', 'papaya', 'kiwi', 'pina', 'piña', 'maracuya', 'mora', 'guanabana', 'lulo', 'cereza'];
 
+         const recipeSupplyIdsInItem = new Set<string>();
+
          for (const rItem of activeRecipe) {
              if (rItem.supplyId && rItem.quantity > 0) {
                  // Check if it's a real supply
@@ -117,14 +119,15 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
 
                       const deductedUnits = rItem.quantity * item.quantity;
                       deductions[rItem.supplyId] = (deductions[rItem.supplyId] || 0) + deductedUnits;
+                      recipeSupplyIdsInItem.add(rItem.supplyId);
                  }
              }
          }
       }
 
       // 2.2 DESCUENTOS DINÁMICOS (Sabores, Frutas, Salsas, Toppings elegidos por el cliente)
-      const dynamicChoices: {name: string, type: string}[] = [];
-      const addChoice = (list: string[] | undefined, type: string) => {
+      const dynamicChoices: {name: string, type: string, isExtra?: boolean}[] = [];
+      const addChoice = (list: string[] | undefined, type: string, isExtra = false) => {
          (list || []).forEach(choice => {
              const lower = choice.toLowerCase();
              if (lower.includes('adición fruta') || lower.includes('adición helado') || lower.includes('adición de salsa')) return;
@@ -132,33 +135,47 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
              let multiplier = 1;
              const match = choice.match(/\(x(\d+)\)/i);
              if (match) multiplier = parseInt(match[1]);
-             for(let i=0; i<multiplier; i++) dynamicChoices.push({ name: cleanName, type });
+             for(let i=0; i<multiplier; i++) dynamicChoices.push({ name: cleanName, type, isExtra });
          });
       };
 
-      addChoice(item.flavors, 'flavor');
-      addChoice(item.fruitChoices, 'fruit');
-      addChoice(item.includedSauces, 'sauce');
-      addChoice(item.extraSauces, 'sauce');
-      addChoice(item.additions, 'addition');
+      addChoice(item.flavors, 'flavor', false);
+      addChoice(item.fruitChoices, 'fruit', false);
+      addChoice(item.includedSauces, 'sauce', false);
+      addChoice(item.extraSauces, 'sauce', true);
+      addChoice(item.additions, 'addition', true);
       if ((item as any).baseChoice) {
-        addChoice([(item as any).baseChoice], 'base');
+        addChoice([(item as any).baseChoice], 'base', false);
       }
 
       for (const choice of dynamicChoices) {
           const choiceName = choice.name;
+
+          // Si el cliente eligió "Sin Helado", no descontar nada de helados
+          if (choice.type === 'flavor' && (choiceName === 'sin helado' || choiceName.includes('sin helado'))) {
+              continue;
+          }
+
           let supply = suppliesMap[choiceName];
           
-          // Si el usuario eligió un SABOR de helado llamado igual a una Base física (ej. "Brownie"),
-          // no debemos restar del insumo físico de galleta/base Brownie.
-          if (choice.type === 'flavor' && supply?.category === 'Bases') {
-             supply = null;
+          // REGLA CRÍTICA DE AISLAMIENTO DE SABORES DE HELADO:
+          // Si el usuario eligió un SABOR de helado (ej. "Arequipe", "Brownie", "Fresa", "Mora", "Chocolate", "Maracuyá"):
+          // Solo puede descontar de insumos que pertenezcan a la categoría de Helados / Helado base.
+          // NUNCA debe descontar de Lácteos (ej. tarro de dulce de leche Arequipe), Bases (ej. torta Brownie), Frutas (ej. Fresa, Mora), Toppings ni Salsas.
+          if (choice.type === 'flavor') {
+             const cat = (supply?.category || '').toLowerCase();
+             if (!cat.includes('helad')) {
+                supply = null;
+             }
           }
 
           if (!supply && choice.type === 'flavor') {
              const possibleNames = [`helado de ${choiceName}`, `helado ${choiceName}`, `${choiceName} helado`, `helado sabor ${choiceName}`];
              for (const p of possibleNames) {
-                 if (suppliesMap[p] && suppliesMap[p].category !== 'Bases') { supply = suppliesMap[p]; break; }
+                 if (suppliesMap[p] && (suppliesMap[p].category || '').toLowerCase().includes('helad')) {
+                     supply = suppliesMap[p];
+                     break;
+                 }
              }
              if (!supply && suppliesMap['helado']) {
                  supply = suppliesMap['helado'];
@@ -170,6 +187,14 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
           }
 
           if (supply) {
+              // PREVENIR DOBLE DEDUCCIÓN:
+              // Si este insumo ya fue descontado por la receta estática base del producto
+              // (ej: el Arequipe de la Oblea Tradicional) y la salsa elegida es la incluida por defecto (no un extra/adición),
+              // NO se vuelve a descontar.
+              if (choice.type === 'sauce' && !choice.isExtra && recipeSupplyIdsInItem.has(supply.id)) {
+                  continue;
+              }
+
               let deductionAmount = 0;
               const productName = (product?.name || '').toLowerCase();
               const supplyUnit = (supply.unit || '').toLowerCase();
