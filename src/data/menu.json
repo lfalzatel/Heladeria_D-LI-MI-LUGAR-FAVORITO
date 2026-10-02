@@ -586,10 +586,10 @@
           "name": "Vasos 7 ONZ"
         },
         {
-          "unit": "Paquete",
-          "name": "Tapas Vaso 7 ONZ",
+          "unit": "und",
+          "name": "Tapas 7 ONZ",
           "quantity": 1,
-          "supplyId": "fkh6KRUxrTbiEpjWxvE0"
+          "supplyId": "e7oncW38cWwihqNLgWk0"
         }
       ],
       "requiresFruitChoice": false,
@@ -2539,9 +2539,9 @@
             },
             {
               "quantity": 1,
-              "unit": "Paquete",
-              "supplyId": "JVAojvhljv0XSwKnpJDR",
-              "name": "Tapa Recipiente Oblea Cuchareable"
+              "unit": "und",
+              "supplyId": "u8tJN4bht1ogp30rBeUX",
+              "name": "Tapa oblea cuchareable"
             },
             {
               "unit": "und",
@@ -2594,10 +2594,10 @@
               "supplyId": "GTEgX4UYAWNrMtXo7wye"
             },
             {
-              "name": "Tapa Recipiente Oblea Cuchareable",
-              "supplyId": "JVAojvhljv0XSwKnpJDR",
+              "name": "Tapa oblea cuchareable",
+              "supplyId": "u8tJN4bht1ogp30rBeUX",
               "quantity": 1,
-              "unit": "Paquete"
+              "unit": "und"
             },
             {
               "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
@@ -2654,10 +2654,10 @@
           "name": "Recipiente oblea cuchareable"
         },
         {
-          "supplyId": "JVAojvhljv0XSwKnpJDR",
-          "name": "Tapa Recipiente Oblea Cuchareable",
+          "supplyId": "u8tJN4bht1ogp30rBeUX",
+          "name": "Tapa oblea cuchareable",
           "quantity": 1,
-          "unit": "Paquete"
+          "unit": "und"
         },
         {
           "name": "Cuchara Pequeña",
@@ -2872,10 +2872,10 @@
           "supplyId": "po8wRQbsZTpCFAV6j6LO"
         },
         {
-          "unit": "Paquete",
+          "unit": "und",
           "quantity": 1,
-          "supplyId": "fkh6KRUxrTbiEpjWxvE0",
-          "name": "Tapas Vaso 7 ONZ"
+          "supplyId": "e7oncW38cWwihqNLgWk0",
+          "name": "Tapas 7 ONZ"
         }
       ],
       "requiresFruitChoice": false,
@@ -2956,10 +2956,10 @@
           "name": "Vasos 7 ONZ"
         },
         {
-          "name": "Tapas Vaso 7 ONZ",
+          "name": "Tapas 7 ONZ",
           "quantity": 1,
-          "supplyId": "fkh6KRUxrTbiEpjWxvE0",
-          "unit": "Paquete"
+          "supplyId": "e7oncW38cWwihqNLgWk0",
+          "unit": "und"
         }
       ],
       "imageUrl": "/Images/products/tinto.png",
@@ -2997,8 +2997,8 @@
             {
               "unit": "und",
               "quantity": 1,
-              "supplyId": "1aeTwgz5tOMxdLSQ3aGV",
-              "name": "Tapas vasos 7 ONZ"
+              "supplyId": "e7oncW38cWwihqNLgWk0",
+              "name": "Tapas 7 ONZ"
             },
             {
               "name": "Cuchara Peque�a",
@@ -3043,8 +3043,8 @@
               "supplyId": "FXmLB3gV5ar51UbPnZgp"
             },
             {
-              "name": "Tapas vasos 10 ONZ",
-              "supplyId": "s2XVzIPeFC3sW9yCqkLi",
+              "name": "Tapas 10 ONZ",
+              "supplyId": "Xe3cWRrPgyYuKPqEQQ6r",
               "unit": "und",
               "quantity": 1
             },
@@ -3175,10 +3175,10 @@
           "quantity": 1
         },
         {
-          "unit": "por",
+          "unit": "und",
           "quantity": 1,
-          "name": "Tapas Vaso 13, 14 y 16 ONZ",
-          "supplyId": "Mfh6bESEfhfADxYf613O"
+          "name": "Tapas 16 ONZ",
+          "supplyId": "C06U5nqFkCEYYLZXz3fP"
         },
         {
           "supplyId": "W7tXHvoU7mFmfAc8x2Dv",
@@ -3253,10 +3253,10 @@
               "supplyId": "VckYsY5I7V64eSh8uXsz"
             },
             {
-              "name": "Tapas Vaso 13, 14 y 16 ONZ",
-              "supplyId": "Mfh6bESEfhfADxYf613O",
+              "name": "Tapas 16 ONZ",
+              "supplyId": "C06U5nqFkCEYYLZXz3fP",
               "quantity": 1,
-              "unit": "por"
+              "unit": "und"
             },
             {
               "unit": "por",
@@ -3318,10 +3318,10 @@
               "unit": "por"
             },
             {
-              "name": "Tapas Vaso 13, 14 y 16 ONZ",
-              "supplyId": "Mfh6bESEfhfADxYf613O",
+              "name": "Tapas 16 ONZ",
+              "supplyId": "C06U5nqFkCEYYLZXz3fP",
               "quantity": 1,
-              "unit": "por"
+              "unit": "und"
             },
             {
               "quantity": 1,
@@ -3385,10 +3385,10 @@
               "unit": "por"
             },
             {
-              "name": "Tapas Vaso 13, 14 y 16 ONZ",
-              "supplyId": "Mfh6bESEfhfADxYf613O",
+              "name": "Tapas 16 ONZ",
+              "supplyId": "C06U5nqFkCEYYLZXz3fP",
               "quantity": 1,
-              "unit": "por"
+              "unit": "und"
             },
             {
               "unit": "por",

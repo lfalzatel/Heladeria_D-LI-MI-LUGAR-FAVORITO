@@ -191,6 +191,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia' | 'Mixto'>('Efectivo');
   const [splitEfectivo, setSplitEfectivo] = useState(0);
   const [date, setDate] = useState<string>(getTodayString());
+  const [unitModes, setUnitModes] = useState<Record<string, 'base' | 'kilo'>>({});
   
   const { providers } = useProvidersStore();
   const [isCreatingProvider, setIsCreatingProvider] = useState(false);
@@ -213,12 +214,12 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
         setSelected(itemSet);
         setItems(purchaseToEdit.items.map((i: any) => ({ ...i })));
       } else {
-        setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString());
+        setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); setUnitModes({});
       }
     }
   }, [isOpen, purchaseToEdit]);
 
-  const reset = () => { setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); };
+  const reset = () => { setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); setUnitModes({}); };
   const handleClose = () => { reset(); onClose(); };
 
   // Sort: critical stock first, then alphabetically (solo insumos físicos reales)
@@ -474,14 +475,86 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
                         <div className="grid grid-cols-2 gap-2 mb-2">
                           {/* Quantity */}
                           <div>
-                            <p className="text-[9px] text-secondary font-black uppercase tracking-widest mb-1">Cant. total comprada ({item.unit})</p>
-                            <div className="flex items-center gap-1.5">
-                              <button onClick={() => updateItem(item.supplyId, 'quantity', Math.max(0, item.quantity - 10))} className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center"><Minus className="w-3 h-3" /></button>
-                              <input type="number" value={item.quantity || ''} onChange={e => updateItem(item.supplyId, 'quantity', parseFloat(e.target.value) || 0)} className="font-black text-base w-12 text-center bg-transparent outline-none border-b border-outline/20" />
-                              <button onClick={() => updateItem(item.supplyId, 'quantity', item.quantity + 10)} className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center"><Plus className="w-3 h-3" /></button>
-                            </div>
-                            {item.unit === 'g' && <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">Ej: Si compras 1 bolsa de 500g, ingresa 500.</p>}
-                            {item.unit === 'ml' && <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">Ej: Si compras 1 botella de 1000ml, ingresa 1000.</p>}
+                            {(() => {
+                              const isWeight = (item.unit || '').toLowerCase() === 'g' || (item.unit || '').toLowerCase() === 'gramos';
+                              const isLiquid = (item.unit || '').toLowerCase() === 'ml' || (item.unit || '').toLowerCase() === 'mililitros';
+                              const isConvertible = isWeight || isLiquid;
+                              const mode = unitModes[item.supplyId] || 'base';
+                              const isKiloOrLiter = mode === 'kilo';
+
+                              return (
+                                <>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <p className="text-[9px] text-secondary font-black uppercase tracking-widest">
+                                      Cant. ({isKiloOrLiter ? (isWeight ? 'Kg' : 'Litros') : item.unit})
+                                    </p>
+                                    {isConvertible && (
+                                      <div className="flex items-center bg-surface-container rounded-lg p-0.5 border border-outline/10 text-[9px] font-black">
+                                        <button
+                                          type="button"
+                                          onClick={() => setUnitModes(prev => ({ ...prev, [item.supplyId]: 'base' }))}
+                                          className={cn("px-1.5 py-0.5 rounded-md transition-all", !isKiloOrLiter ? "bg-primary text-white shadow-xs" : "text-secondary hover:text-on-surface")}
+                                        >
+                                          {isWeight ? 'g' : 'ml'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setUnitModes(prev => ({ ...prev, [item.supplyId]: 'kilo' }))}
+                                          className={cn("px-1.5 py-0.5 rounded-md transition-all", isKiloOrLiter ? "bg-primary text-white shadow-xs" : "text-secondary hover:text-on-surface")}
+                                        >
+                                          {isWeight ? 'Kg' : 'L'}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        const step = isKiloOrLiter ? 1000 : 10;
+                                        updateItem(item.supplyId, 'quantity', Math.max(0, item.quantity - step));
+                                      }} 
+                                      className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center hover:bg-outline/20 transition-colors"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </button>
+                                    <input 
+                                      type="number" 
+                                      step={isKiloOrLiter ? "0.1" : "1"}
+                                      value={isKiloOrLiter ? (item.quantity > 0 ? parseFloat((item.quantity / 1000).toFixed(3)) : '') : (item.quantity || '')} 
+                                      onChange={e => {
+                                        const val = parseFloat(e.target.value) || 0;
+                                        updateItem(item.supplyId, 'quantity', isKiloOrLiter ? val * 1000 : val);
+                                      }} 
+                                      className="font-black text-base w-14 text-center bg-transparent outline-none border-b border-outline/20" 
+                                    />
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        const step = isKiloOrLiter ? 1000 : 10;
+                                        updateItem(item.supplyId, 'quantity', item.quantity + step);
+                                      }} 
+                                      className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center hover:bg-outline/20 transition-colors"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                  {isKiloOrLiter ? (
+                                    <p className="text-[8px] text-emerald-600 font-bold leading-tight mt-1">
+                                      = {item.quantity} {item.unit} en inventario
+                                    </p>
+                                  ) : isWeight ? (
+                                    <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">
+                                      Ej: 500g = 500 (o activa Kg)
+                                    </p>
+                                  ) : isLiquid ? (
+                                    <p className="text-[8px] text-orange-500 font-bold leading-tight mt-1">
+                                      Ej: 1000ml = 1000 (o activa L)
+                                    </p>
+                                  ) : null}
+                                </>
+                              );
+                            })()}
                           </div>
                           {/* Cost */}
                           <div>
