@@ -35,7 +35,7 @@ export default function App() {
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    const CURRENT_VERSION = '1.0.62'; // Incrementa esto para forzar recarga en todos los clientes
+    const CURRENT_VERSION = '1.0.63'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
       // 1. Limpiar todos los almacenes de caché del navegador
@@ -242,9 +242,15 @@ export default function App() {
         <Route path="/admin/supplies" element={<Navigate to="/admin/management?tab=operacion" replace />} />
 
         <Route path="/login" element={user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin'} /> : <Login />} />
-        <Route path="/menu" element={<Menu />} />
+        <Route path="/menu" element={<Navigate to="/cliente/compras" replace />} />
         
-        {/* Rutas Protegidas con Layout Global */}
+        {/* Rutas Públicas de Clientes / Carta Digital (accesible con o sin login) */}
+        <Route element={<MainLayout />}>
+          <Route path="/cliente/compras" element={<ClientCompras />} />
+          <Route path="/cliente/pedidos" element={<ClientPedidos />} />
+        </Route>
+
+        {/* Rutas Protegidas de Administración y Ventas */}
         <Route element={user && profile ? <MainLayout /> : (authLoading ? null : <Navigate to="/login" />)}>
           <Route path="/pos" element={<POS />} />
           
@@ -269,11 +275,6 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
 
-          {/* Client routes */}
-          <Route path="/cliente/compras" element={
-            profile?.role === 'cliente' ? <ClientCompras /> : <Navigate to="/login" />
-          } />
-          <Route path="/cliente/pedidos" element={<ClientPedidos />} />
           <Route path="/cliente/historial" element={
             (profile?.role === 'cliente' || ['admin', 'propietario', 'vendedor'].includes(profile?.role || ''))
               ? <ClientHistorial />
@@ -282,7 +283,7 @@ export default function App() {
         </Route>
 
         <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
-        <Route path="/" element={<Navigate to={user && profile ? (profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard') : '/login'} />} />
+        <Route path="/" element={<Navigate to={user && profile ? (profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard') : '/cliente/compras'} />} />
       </Routes>
     </Router>
   );

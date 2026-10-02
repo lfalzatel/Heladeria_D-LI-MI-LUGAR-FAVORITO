@@ -302,6 +302,19 @@ export default function UserMenu() {
     label: ALL_THEME_ITEMS[id]?.label || id
   }));
 
+  if (!user && !profile) {
+    return (
+      <button
+        onClick={() => navigate('/login')}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-black shadow-md hover:opacity-90 active:scale-95 transition-all"
+        title="Iniciar Sesión"
+      >
+        <User className="w-3.5 h-3.5" />
+        <span className="text-[11px] font-bold">Ingresar</span>
+      </button>
+    );
+  }
+
   return (
     <div className="relative" ref={menuRef}>
       {/* Compact trigger — avatar + first name + role dot + chevron */}

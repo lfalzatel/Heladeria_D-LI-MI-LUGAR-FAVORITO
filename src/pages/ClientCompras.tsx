@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Product, ProductVariant, CartItem } from '../types';
 import { useCategoriesStore } from '../stores/useCategoriesStore';
@@ -10,7 +11,8 @@ import {
   ShoppingCart, X, Plus, Minus, Search, IceCream, 
   Utensils, GlassWater, CupSoda, Package, MapPin,
   Navigation, Banknote, Smartphone, CreditCard, Hash,
-  CheckCircle2, ChevronRight, Trash2, Edit2, Phone
+  CheckCircle2, ChevronRight, Trash2, Edit2, Phone,
+  MessageCircle, User, ExternalLink
 } from 'lucide-react';
 import { useHeaderStore } from '../stores/useHeaderStore';
 import { HeaderSearch } from '../components/AppHeader';
@@ -33,6 +35,7 @@ const PAYMENT_OPTIONS = [
 ];
 
 export default function ClientCompras() {
+  const navigate = useNavigate();
   const { profile, updateProfile } = useAuthStore();
   const { activeCategories } = useCategoriesStore();
   const { setHeader, clearHeader } = useHeaderStore();
@@ -48,12 +51,22 @@ export default function ClientCompras() {
   const [detailsProduct, setDetailsProduct] = useState<Product | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
-  const [address, setAddress] = useState('');
+  const [customerName, setCustomerName] = useState(profile?.name || '');
+  const [address, setAddress] = useState(profile?.address || '');
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
   const [phone, setPhone] = useState(profile?.phone || '');
   const [checkoutStep, setCheckoutStep] = useState(1); // 1: Resumen, 2: Datos de entrega
+
+  // Modal de confirmación y envío por WhatsApp (con botón grande, cero bloqueos)
+  const [orderSuccessData, setOrderSuccessData] = useState<{
+    id: string;
+    customerName: string;
+    total: number;
+    waUrl: string;
+  } | null>(null);
 
   // Modal del pedido recién creado
   const [newOrderData, setNewOrderData]   = useState<any>(null);
@@ -61,6 +74,14 @@ export default function ClientCompras() {
   const [chatMessage,  setChatMessage]    = useState('');
   const [sendingChat,  setSendingChat]    = useState(false);
   const [burstTrigger, setBurstTrigger]   = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      if (!customerName) setCustomerName(profile.name || '');
+      if (!phone) setPhone(profile.phone || '');
+      if (!address) setAddress(profile.address || '');
+    }
+  }, [profile]);
 
   useEffect(() => {
     localStorage.setItem('dli_heladeria_cart', JSON.stringify(cart));
@@ -219,207 +240,213 @@ export default function ClientCompras() {
 
   const getGPS = () => {
     if (!navigator.geolocation) {
-      toast.error('Tu navegador no soporta geolocalización');
-      return;
-    }
-
-    if (!window.isSecureContext) {
-      toast.error('El GPS requiere una conexión segura (HTTPS)');
+      toast.error('Tu dispositivo no soporta geolocalización');
       return;
     }
 
     setGpsLoading(true);
-    const timeoutId = setTimeout(() => {
-       if (gpsLoading) {
-         setGpsLoading(false);
-         toast.error('Tiempo de espera agotado al obtener ubicación');
-       }
-    }, 12000);
-
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        clearTimeout(timeoutId);
+        const { latitude, longitude } = pos.coords;
+        setGpsCoords({ lat: latitude, lng: longitude });
+
+        // Intentar autocompletar sugerencia de calle/barrio si la dirección está vacía
         try {
-          const { latitude, longitude } = pos.coords;
-          // Use a shorter timeout for reverse geocoding
           const controller = new AbortController();
-          const signalTimeout = setTimeout(() => controller.abort(), 5000);
-          
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, { signal: controller.signal });
+          const signalTimeout = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1`,
+            { signal: controller.signal }
+          );
           clearTimeout(signalTimeout);
-          const data = await res.json();
-          setAddress(data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-          toast.success('Ubicación detectada');
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.address) {
+              const road = data.address.road || data.address.pedestrian || data.address.neighbourhood || '';
+              const sub = data.address.suburb || data.address.village || data.address.city || '';
+              const shortAddr = [road, sub].filter(Boolean).join(', ');
+              if (shortAddr && !address.trim()) {
+                setAddress(shortAddr);
+              }
+            }
+          }
         } catch (err) {
-          console.error('GPS Fetch Error:', err);
-          setAddress(`Lat: ${pos.coords.latitude.toFixed(5)}, Lon: ${pos.coords.longitude.toFixed(5)}`);
-          toast.warning('Se obtuvo coordenadas pero no la dirección exacta');
+          // Si falla OSM, las coordenadas exactas ya están guardadas
         } finally {
           setGpsLoading(false);
         }
+
+        toast.success('📍 Ubicación GPS fijada con éxito', {
+          description: 'Se incluirá el enlace exacto de Google Maps en tu pedido.'
+        });
       },
-      (err) => { 
-        clearTimeout(timeoutId);
-        console.error('GPS Error:', err);
+      (err) => {
         setGpsLoading(false);
         if (err.code === 1) {
-          toast.error('Permiso de ubicación denegado. Por favor actívalo en tu navegador.');
-        } else if (err.code === 2) toast.error('Ubicación no disponible');
-        else if (err.code === 3) toast.error('Tiempo de espera agotado');
-        else toast.error('Error al obtener GPS');
+          toast.error('Permiso de ubicación denegado. Escribe tu dirección a mano.');
+        } else {
+          toast.warning('No se pudo obtener el GPS. Puedes escribir tu dirección normalmente.');
+        }
       },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
   const handlePlaceOrder = async () => {
-    if (!address.trim()) { toast.error('Ingresa una dirección de entrega'); return; }
-    if (cart.length === 0) { toast.error('Agrega al menos un producto'); return; }
-    if (!profile) return;
+    const finalName = customerName.trim() || profile?.name || '';
+    const finalPhone = phone.trim();
+    const finalAddress = address.trim();
+
+    if (!finalName) {
+      toast.error('Por favor escribe tu nombre');
+      return;
+    }
+    if (!finalPhone) {
+      toast.error('Por favor escribe tu número de teléfono / WhatsApp');
+      return;
+    }
+    if (!finalAddress && !gpsCoords) {
+      toast.error('Por favor ingresa tu dirección de entrega o fija tu GPS');
+      return;
+    }
+    if (cart.length === 0) {
+      toast.error('Agrega al menos un producto al carrito');
+      return;
+    }
 
     setPlacing(true);
     try {
-      const isTransfer = paymentMethod === 'transferencia';
+      // 1. Obtener o generar identificador de cliente (con anonymous auth si no ha iniciado sesión)
+      let currentUid = profile?.uid;
+      if (!currentUid) {
+        try {
+          const { signInAnonymously } = await import('firebase/auth');
+          const cred = await signInAnonymously(auth);
+          currentUid = cred.user.uid;
+        } catch (authErr) {
+          console.warn('Anonymous auth no disponible, usando identificador temporal:', authErr);
+          currentUid = 'guest_' + Date.now();
+        }
+      }
 
+      const isTransfer = paymentMethod === 'transferencia';
       const initialMessages = isTransfer ? [{
         from: 'system',
         fromName: "D'LI - Lugar Favorito",
-        text: `¡Hola ${profile.name}! 🍦 Recibimos tu pedido. Para comenzar a prepararlo necesitamos que realices la transferencia a:\n\n📱 Nequi: 300 119 8206\n💰 Total a pagar: $${cartTotal.toLocaleString()}\n\n🛵 *Nota:* El valor del envío a domicilio no está incluido en este total y se cancela por separado al recibir tu pedido.\n\nUna vez realizada, por favor adjunta el comprobante aquí usando el botón del clip 📎.`,
+        text: `¡Hola ${finalName}! 🍦 Recibimos tu pedido. Para comenzar a prepararlo necesitamos que realices la transferencia a:\n\n📱 Nequi: 300 119 8206\n💰 Total a pagar: $${cartTotal.toLocaleString()}\n\n🛵 *Nota:* El valor del envío a domicilio no está incluido en este total y se cancela por separado al recibir tu pedido.\n\nUna vez realizada, por favor adjunta el comprobante aquí usando el botón del clip 📎.`,
         timestamp: Date.now(),
       }] : [];
 
-      const docRef = await addDoc(collection(db, 'pedidos'), {
-        clienteId: profile.uid,
-        clienteName: profile.name,
-        items: cart,
-        total: cartTotal,
-        paymentMethod,
-        address: address.trim(),
-        phone: phone.trim(),
-        note: note.trim(),
-        status: 'pendiente',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        messages: initialMessages,
-      });
+      // 2. Enlace de Google Maps a partir de las coordenadas GPS
+      const mapsLink = gpsCoords 
+        ? `https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lng}`
+        : null;
 
-      // Construir mensaje estructurado para WhatsApp +57 301 1198206
-      const itemsListText = cart.map(i => 
-        `• ${i.quantity}x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} - $${(i.price * i.quantity).toLocaleString('es-CO')}`
-      ).join('\n');
+      // 3. Formateo enriquecido de los productos para WhatsApp
+      const itemsListText = cart.map(i => {
+        let line = `• ${i.quantity}x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''}`;
+        if (i.flavors && i.flavors.length > 0) {
+          line += `\n   🍦 Sabores: ${i.flavors.join(', ')}`;
+        }
+        if (i.fruitChoices && i.fruitChoices.length > 0) {
+          line += `\n   🍓 Frutas: ${i.fruitChoices.join(', ')}`;
+        }
+        if (i.includedSauces && i.includedSauces.length > 0) {
+          line += `\n   🍯 Salsas: ${i.includedSauces.join(', ')}`;
+        }
+        const additions = (i.additions || []).filter((a: string) => 
+          !a.toLowerCase().includes('adición fruta') && 
+          !a.toLowerCase().includes('adición helado') &&
+          !a.toLowerCase().includes('adición salsa')
+        );
+        if (additions.length > 0) {
+          line += `\n   ✨ Adiciones: ${additions.join(', ')}`;
+        }
+        line += `\n   Subtotal: $${(i.subtotal || i.price * i.quantity).toLocaleString('es-CO')}`;
+        return line;
+      }).join('\n\n');
 
+      // 4. Mensaje estructurado para WhatsApp
       const waText = `¡Hola D'LI Heladería! 🍦 Acabo de realizar un pedido desde la app:\n\n` +
-        `🆔 *Pedido:* #${docRef.id.slice(-6).toUpperCase()}\n` +
-        `👤 *Cliente:* ${profile.name}\n` +
-        `📱 *Teléfono:* ${phone.trim()}\n` +
-        `📍 *Dirección:* ${address.trim()}\n` +
+        `👤 *Cliente:* ${finalName}\n` +
+        `📱 *Teléfono:* ${finalPhone}\n` +
+        `📍 *Dirección:* ${finalAddress || 'Ubicación GPS adjunta'}\n` +
+        (mapsLink ? `🗺️ *Ubicación GPS (Google Maps):*\n${mapsLink}\n` : '') +
         `💳 *Método de Pago:* ${paymentMethod === 'transferencia' ? 'Transferencia Nequi' : 'Efectivo contraentrega'}\n` +
-        (note.trim() ? `📝 *Nota:* ${note.trim()}\n` : '') +
+        (note.trim() ? `📝 *Indicaciones:* ${note.trim()}\n` : '') +
         `\n🛒 *Productos:*\n${itemsListText}\n\n` +
-        `💰 *Total:* $${cartTotal.toLocaleString('es-CO')}\n\n` +
-        `¡Quedo atento a la confirmación! 🙌`;
+        `💰 *Total a Pagar:* $${cartTotal.toLocaleString('es-CO')}\n\n` +
+        `¡Quedo atento a la confirmación para el despacho! 🙌`;
 
       const cleanWaPhone = '573011198206';
       const waUrl = `https://api.whatsapp.com/send?phone=${cleanWaPhone}&text=${encodeURIComponent(waText)}`;
 
-      // Construir objeto local para abrir el modal inmediatamente
-      const pedidoLocal = {
-        id: docRef.id,
-        clienteId: profile.uid,
-        clienteName: profile.name,
-        items: cart,
-        total: cartTotal,
-        paymentMethod,
-        address: address.trim(),
-        phone: phone.trim(),
-        note: note.trim(),
-        status: 'pendiente',
-        createdAt: new Date(),
-        messages: initialMessages,
-        waUrl: waUrl
-      };
-      setNewOrderData(pedidoLocal);
-      setNewOrderOpen(true);
+      // 5. Guardar en Firestore (dentro de try/catch para que NUNCA bloquee el WhatsApp del cliente)
+      let docId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      try {
+        const docRef = await addDoc(collection(db, 'pedidos'), {
+          clienteId: currentUid,
+          clienteName: finalName,
+          items: cart,
+          total: cartTotal,
+          paymentMethod,
+          address: finalAddress,
+          phone: finalPhone,
+          gpsCoords: gpsCoords || null,
+          mapsUrl: mapsLink || null,
+          note: note.trim(),
+          status: 'pendiente',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          messages: initialMessages,
+          isGuest: !profile || (profile as any).isAnonymous,
+        });
+        docId = docRef.id.slice(-6).toUpperCase();
+      } catch (dbErr) {
+        console.warn('Advertencia al guardar pedido en Firestore (continuando con WhatsApp):', dbErr);
+      }
 
-      // Abrir WhatsApp automáticamente hacia el +57 301 1198206
-      setTimeout(() => {
+      // 6. Si el usuario está registrado, actualizar su teléfono y dirección guardada y puntos
+      if (profile && profile.uid && !profile.uid.startsWith('guest_')) {
         try {
-          window.open(waUrl, '_blank');
-        } catch (e) {
-          console.warn('Auto-open WhatsApp bloqueado por el navegador:', e);
-        }
-      }, 500);
+          await updateProfile({
+            address: finalAddress,
+            phone: finalPhone
+          });
+        } catch (e) {}
 
-      // Actualizar el perfil del usuario con la última dirección y teléfono
-      if (profile) {
-        await updateProfile({
-          address: address.trim(),
-          phone: phone.trim()
-        });
+        try {
+          await updateDoc(doc(db, 'users', profile.uid), {
+            loyaltyPoints: increment(1)
+          });
+        } catch (e) {}
       }
 
-      // Actualizar conteo de ventas de productos (Opcional, puede fallar por permisos en el cliente)
+      // 7. Confeti y sonido
       try {
-        const updatePromises = cart.map(item => 
-          updateDoc(doc(db, 'products', item.productId), {
-            salesCount: increment(item.quantity)
-          })
-        );
-        await Promise.all(updatePromises);
-      } catch (err) {
-        console.warn('No se pudo actualizar salesCount (probablemente falta de permisos), pero el pedido fue enviado.', err);
-      }
-
-      // Incrementar puntos de fidelidad en el perfil del cliente
-      try {
-        const currentPoints = profile?.loyaltyPoints || 0;
-        const newPoints = currentPoints + 1;
-
-        await updateDoc(doc(db, 'users', profile.uid), {
-          loyaltyPoints: increment(1)
+        confetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.6 },
+          colors: ['#d946ef', '#f59e0b', '#fbbf24', '#fcd34d', '#c026d3'],
+          disableForReducedMotion: true
         });
+        playEventSound('new_order');
+      } catch (e) {}
 
-        if (newPoints >= 9 && currentPoints < 9) {
-          notifyAdmins(
-            "🎉 ¡Fidelidad completada!",
-            `El cliente ${profile.name || 'Invitado'} ha alcanzado los ${newPoints} puntos y ya puede reclamar su premio.`
-          );
-        }
-      } catch (err) {
-        console.warn('Error al incrementar puntos de fidelidad:', err);
-      }
-
-      // Animación de confeti de estrella (Fucsia/Dorado)
-      const colors = ['#d946ef', '#f59e0b', '#fbbf24', '#fcd34d', '#c026d3'];
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.6 },
-        colors: colors,
-        disableForReducedMotion: true
+      // 8. Activar el Modal de Éxito con el botón de WhatsApp directo
+      setOrderSuccessData({
+        id: docId,
+        customerName: finalName,
+        total: cartTotal,
+        waUrl: waUrl,
       });
 
-      // Reproducir sonido de nuevo pedido configurado
-      playEventSound('new_order');
-
-      toast.success('¡Ganaste 1 Punto Premium! ⭐ Revisa tu perfil.', {
-        description: '¡Tu pedido fue enviado exitosamente!',
-        duration: 8000,
-      });
-
-      notifyAdmins(
-        "🆕 Nuevo pedido online",
-        `De ${profile.name} por $${cartTotal.toLocaleString()} - ${paymentMethod}`
-      );
-      clearCart();
       setShowCheckout(false);
-      setAddress('');
-      setNote('');
-      setPaymentMethod('efectivo');
-      setBurstTrigger(true);
+      setCheckoutStep(1);
     } catch (err: any) {
       console.error('Order Submission Error:', err);
-      toast.error(`Error al enviar: ${err.message || 'Error desconocido'}`);
+      toast.error(`Error al procesar pedido: ${err.message || 'Error desconocido'}`);
     } finally {
       setPlacing(false);
     }
@@ -453,6 +480,31 @@ export default function ClientCompras() {
 
   return (
     <main className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-5 pt-2">
+        {/* Banner para clientes invitados sin cuenta */}
+        {!profile && (
+          <div className="bg-gradient-to-r from-primary/10 via-amber-50 to-primary/5 border border-primary/20 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center text-lg flex-shrink-0">
+                🍦
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-on-surface">
+                  ¡Haz tu pedido a domicilio sin necesidad de registro!
+                </p>
+                <p className="text-[11px] text-secondary">
+                  Si deseas acumular estrellas y beneficios, puedes <button onClick={() => navigate('/login')} className="text-primary font-bold underline hover:text-primary-dark">iniciar sesión</button>.
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/login')}
+              className="hidden sm:flex px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-dark transition-colors shadow-sm flex-shrink-0"
+            >
+              Ingresar
+            </button>
+          </div>
+        )}
+
         {/* Toolbar: Buscador (38%) + Categorías desplazables en 1 misma fila */}
         <section className="flex items-center gap-2 mb-1">
           {/* Buscador ~38% */}
@@ -912,20 +964,93 @@ export default function ClientCompras() {
                     </section>
 
                     <section>
-                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-2">Ubicación</h4>
+                       <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-2">Datos de Entrega</h4>
                        <div className="flex flex-col gap-3">
+                          {/* Nombre de quien recibe */}
                           <div className="relative">
-                            <Phone className="absolute top-3 left-4 w-5 h-5 text-secondary/40" />
-                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Número de teléfono..." className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" />
+                            <User className="absolute top-3.5 left-4 w-5 h-5 text-secondary/40" />
+                            <input 
+                              type="text" 
+                              value={customerName} 
+                              onChange={e => setCustomerName(e.target.value)} 
+                              placeholder="Nombre de quien recibe *" 
+                              className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" 
+                            />
                           </div>
+
+                          {/* Teléfono / WhatsApp */}
                           <div className="relative">
-                            <MapPin className="absolute top-3 left-4 w-5 h-5 text-secondary/40" />
-                            <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Dirección de entrega..." rows={2} className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-14 text-sm font-bold text-on-surface outline-none resize-none" />
-                            <button onClick={getGPS} disabled={gpsLoading} className="absolute top-2.5 right-3.5 w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg">
-                               {gpsLoading ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Navigation className="w-4 h-4" />}
+                            <Phone className="absolute top-3.5 left-4 w-5 h-5 text-secondary/40" />
+                            <input 
+                              type="tel" 
+                              value={phone} 
+                              onChange={e => setPhone(e.target.value)} 
+                              placeholder="Teléfono / WhatsApp de contacto *" 
+                              className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-on-surface outline-none" 
+                            />
+                          </div>
+
+                          {/* Dirección de entrega escrita */}
+                          <div className="relative">
+                            <MapPin className="absolute top-3.5 left-4 w-5 h-5 text-secondary/40" />
+                            <textarea 
+                              value={address} 
+                              onChange={e => setAddress(e.target.value)} 
+                              placeholder="Dirección, barrio o punto de referencia..." 
+                              rows={2} 
+                              className="w-full bg-surface-container-lowest border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-on-surface outline-none resize-none" 
+                            />
+                          </div>
+
+                          {/* Botón GPS estilo CargoFlow ($0 costo) */}
+                          <div className="flex flex-col gap-1.5">
+                            <button 
+                              type="button" 
+                              onClick={getGPS} 
+                              disabled={gpsLoading} 
+                              className={cn(
+                                "w-full py-2.5 px-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition-all",
+                                gpsCoords 
+                                  ? "bg-emerald-50 border-emerald-300 text-emerald-800" 
+                                  : "bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary"
+                              )}
+                            >
+                              {gpsLoading ? (
+                                <div className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                              ) : (
+                                <Navigation className={cn("w-4 h-4", gpsCoords ? "text-emerald-600 fill-emerald-600" : "text-primary")} />
+                              )}
+                              <span>
+                                {gpsLoading 
+                                  ? 'Obteniendo coordenadas GPS...' 
+                                  : gpsCoords 
+                                    ? `📍 GPS fijado (${gpsCoords.lat.toFixed(4)}, ${gpsCoords.lng.toFixed(4)}) - Actualizar` 
+                                    : '📍 Usar mi ubicación GPS actual ($0 costo)'
+                                }
+                              </span>
                             </button>
+                            {gpsCoords && (
+                              <div className="flex justify-between items-center px-1">
+                                <span className="text-[10px] text-emerald-700 font-bold">✓ Coordenadas listas para Google Maps</span>
+                                <button 
+                                  type="button" 
+                                  onClick={() => setGpsCoords(null)} 
+                                  className="text-[10px] text-red-500 hover:text-red-700 underline font-bold"
+                                >
+                                  Quitar GPS
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Indicaciones adicionales..." rows={2} className="w-full bg-surface-container rounded-2xl p-3 text-xs font-bold text-on-surface outline-none resize-none" />
+
+                          {/* Indicaciones adicionales */}
+                          <textarea 
+                            value={note} 
+                            onChange={e => setNote(e.target.value)} 
+                            placeholder="Indicaciones adicionales (ej: timbre 201, casa blanca rejas negras)..." 
+                            rows={2} 
+                            className="w-full bg-surface-container rounded-2xl p-3 text-xs font-bold text-on-surface outline-none resize-none border border-outline/10 focus:border-primary" 
+                          />
                        </div>
                     </section>
                   </>
@@ -938,7 +1063,7 @@ export default function ClientCompras() {
                     <button 
                       onClick={() => setCheckoutStep(2)} 
                       disabled={cart.length === 0}
-                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widestáshadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-20 hover:bg-primary-dark transition-all"
                     >
                       Continuar con el pedido <ChevronRight className="w-5 h-5" />
                     </button>
@@ -953,17 +1078,18 @@ export default function ClientCompras() {
                   <>
                     <button 
                       onClick={handlePlaceOrder} 
-                      disabled={!address.trim() || cart.length === 0 || placing} 
-                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widestáshadow-xl flex items-center justify-center gap-3 disabled:opacity-20"
+                      disabled={!customerName.trim() || phone.trim().length < 7 || (!address.trim() && !gpsCoords) || cart.length === 0 || placing} 
+                      className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary-dark transition-all"
                     >
                       {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> Confirmar Pedido </>}
                     </button>
+
                     <div className="flex justify-between items-center mt-1">
                       <button 
                         onClick={() => setCheckoutStep(1)} 
                         className="text-[10px] text-secondary font-black uppercase tracking-widest hover:text-primary transition-colors"
                       >
-                        Volver
+                        Volver al carrito
                       </button>
                       <button 
                         onClick={() => { setShowCheckout(false); setCheckoutStep(1); }} 
@@ -972,10 +1098,84 @@ export default function ClientCompras() {
                         Cancelar
                       </button>
                     </div>
-                    {!address.trim() && cart.length > 0 && <p className="text-center text-[10px] text-primary font-black uppercase tracking-widest mt-1 animate-pulse">Falta tu dirección de entrega</p>}
+
+                    {/* Mensajes de validación claros para el cliente */}
+                    {!customerName.trim() && (
+                      <p className="text-center text-[11px] text-amber-600 font-bold">⚠️ Ingresa el nombre de quien recibe</p>
+                    )}
+                    {customerName.trim() && phone.trim().length < 7 && (
+                      <p className="text-center text-[11px] text-amber-600 font-bold">⚠️ Ingresa un número de teléfono de contacto</p>
+                    )}
+                    {customerName.trim() && phone.trim().length >= 7 && !address.trim() && !gpsCoords && (
+                      <p className="text-center text-[11px] text-primary font-bold animate-pulse">⚠️ Escribe tu dirección o presiona "Usar mi ubicación GPS"</p>
+                    )}
                   </>
                 )}
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Pedido Exitoso con botón directo a WhatsApp ($0 bloqueos) */}
+      <AnimatePresence>
+        {orderSuccessData && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-outline/10 flex flex-col items-center gap-4 relative"
+            >
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl shadow-inner">
+                🎉
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-black tracking-widest text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+                  Pedido #{orderSuccessData.id} Registrado
+                </span>
+                <h3 className="font-brand font-black text-2xl text-on-surface mt-2.5">
+                  ¡Listo, {orderSuccessData.customerName}!
+                </h3>
+                <p className="text-xs text-secondary mt-1">
+                  Tu pedido por <strong className="text-on-surface font-black">{formatCurrency(orderSuccessData.total)}</strong> ha sido registrado en el sistema.
+                </p>
+              </div>
+
+              <div className="w-full bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-left text-xs text-emerald-900 flex flex-col gap-1.5">
+                <p className="font-black text-sm flex items-center gap-2 text-emerald-800">
+                  <span>📲</span> Paso Final: Enviar por WhatsApp
+                </p>
+                <p className="text-[11px] leading-relaxed text-emerald-700">
+                  Haz clic en el botón verde a continuación para abrir WhatsApp y enviar tu pedido a la heladería para iniciar la preparación inmediata.
+                </p>
+              </div>
+
+              <a
+                href={orderSuccessData.waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  setTimeout(() => {
+                    setOrderSuccessData(null);
+                    clearCart();
+                  }, 500);
+                }}
+                className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2.5 transition-all text-center"
+              >
+                <MessageCircle className="w-5 h-5" />
+                ENVIAR PEDIDO POR WHATSAPP
+              </a>
+
+              <button
+                onClick={() => {
+                  setOrderSuccessData(null);
+                  clearCart();
+                }}
+                className="text-xs text-secondary hover:text-on-surface font-bold py-1 transition-colors"
+              >
+                Cerrar y seguir viendo el menú
+              </button>
             </motion.div>
           </div>
         )}
