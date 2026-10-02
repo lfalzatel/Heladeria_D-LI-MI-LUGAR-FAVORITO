@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   X, DollarSign, CreditCard, TrendingUp, TrendingDown, Trophy, Clock,
   AlertTriangle, ShoppingCart, ArrowRight, Box, Banknote,
-  Smartphone, ChevronLeft, ShoppingBag, Edit3, ChevronRight
+  Smartphone, ChevronLeft, ShoppingBag, ChevronRight
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -630,14 +630,9 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
                     <p className="font-bold text-sm text-on-surface leading-tight break-words group-hover:text-primary transition-colors">
                       {s.name}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[9px] font-black text-secondary uppercase tracking-widest">
-                        {s.category || 'Insumo'}
-                      </span>
-                      <span className="text-[9px] font-bold text-primary flex items-center gap-0.5 opacity-80 group-hover:opacity-100">
-                        <Edit3 className="w-2.5 h-2.5" /> Ajustar stock
-                      </span>
-                    </div>
+                    <p className="text-[9px] font-black text-secondary uppercase tracking-widest mt-1">
+                      {s.category || 'Insumo'}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className={cn(
