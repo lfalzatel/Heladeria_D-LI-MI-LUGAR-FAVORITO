@@ -17,6 +17,7 @@ import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
+import { attachCostSnapshotToSale } from '../utils/costCalculator';
 import { playEventSound } from '../lib/soundEffects';
 
 interface Pedido {
@@ -117,6 +118,8 @@ export default function ClientPedidos() {
             customerName: pedido.clienteName || profile.name // Para saber quién lo marcó como entregado
           };
           
+          await attachCostSnapshotToSale(saleData);
+
           const saleDocRef = await addDoc(collection(db, 'sales'), saleData);
           
           // Fetch client email to send the receipt

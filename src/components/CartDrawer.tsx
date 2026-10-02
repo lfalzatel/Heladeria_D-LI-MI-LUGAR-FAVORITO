@@ -14,6 +14,7 @@ import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
 import html2canvas from 'html2canvas';
 import { playEventSound } from '../lib/soundEffects';
 import DualTrajectoryBurst from './DualTrajectoryBurst';
+import { attachCostSnapshotToSale } from '../utils/costCalculator';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -262,6 +263,8 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
       saleData.clienteName = finalClienteName;
       saleData.clienteEmail = finalClienteEmail;
       saleData.clientePhone = finalClientePhone;
+
+      await attachCostSnapshotToSale(saleData);
 
       const docRef = await addDoc(collection(db, 'sales'), saleData);
       

@@ -353,12 +353,27 @@ export default function MovementDetailModal({
 
       const isPedido = data.isDirectPedido || (data.type === 'online' && data.status !== 'entregado');
       const collectionName = isPedido ? 'pedidos' : 'sales';
-      await updateDoc(doc(db, collectionName, data.id), {
+
+      const newMetrics = calculateSaleCostAndProfit({
+        ...data,
+        productionCost: undefined,
+        profit: undefined,
+        packagingCost: undefined,
         packagingSupplies: newPacks
+      }, activeProducts, activeSupplies);
+
+      await updateDoc(doc(db, collectionName, data.id), {
+        packagingSupplies: newPacks,
+        productionCost: newMetrics.totalCost,
+        profit: newMetrics.totalProfit,
+        packagingCost: newMetrics.packagingCost
       });
       
       toast.success('Empaques actualizados y stock ajustado');
       data.packagingSupplies = newPacks; // update local for UI
+      data.productionCost = newMetrics.totalCost;
+      data.profit = newMetrics.totalProfit;
+      data.packagingCost = newMetrics.packagingCost;
       setIsEditingPackaging(false);
     } catch (e) {
       console.error(e);

@@ -41,6 +41,8 @@ interface HistoryMovementCardProps {
   supplies?: any[];
   profile?: any;
   packagingSupplies?: any[];
+  productionCost?: number;
+  profit?: number;
 }
 
 export default function HistoryMovementCard({ 
@@ -59,7 +61,9 @@ export default function HistoryMovementCard({
   products = [],
   supplies = [],
   profile,
-  packagingSupplies = []
+  packagingSupplies = [],
+  productionCost,
+  profit
 }: HistoryMovementCardProps) {
   const cfg = STATUS_CONFIG[status.toLowerCase()] || STATUS_CONFIG.pendiente;
   const paymentKey = paymentMethod?.toLowerCase() || 'efectivo';
@@ -71,10 +75,15 @@ export default function HistoryMovementCard({
   const isAdminOrOwner = ['admin', 'propietario', 'administrador'].includes(profile?.role || '');
   let costVal = 0;
   let profitVal = 0;
-  if (isAdminOrOwner && products.length > 0 && supplies.length > 0) {
-    const res = calculateSaleCostAndProfit({ total, items: items || [], packagingSupplies }, products, supplies);
-    costVal = res.totalCost;
-    profitVal = res.totalProfit;
+  if (isAdminOrOwner) {
+    if (productionCost != null && !isNaN(Number(productionCost))) {
+      costVal = Number(productionCost);
+      profitVal = (profit != null && !isNaN(Number(profit))) ? Number(profit) : (total - costVal);
+    } else if (products.length > 0 && supplies.length > 0) {
+      const res = calculateSaleCostAndProfit({ total, items: items || [], packagingSupplies }, products, supplies);
+      costVal = res.totalCost;
+      profitVal = res.totalProfit;
+    }
   }
 
   return (

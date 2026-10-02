@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Truck } from 'lucide-react';
 import { notifyAdmins, notifyUser, playNotificationSound } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
+import { attachCostSnapshotToSale } from '../utils/costCalculator';
 import MovementDetailModal from './MovementDetailModal';
 
 interface PedidoMessage {
@@ -283,6 +284,8 @@ export default function NotificationBell() {
             clienteName: pedido.clienteName || null
           };
           
+          await attachCostSnapshotToSale(saleData);
+
           const saleDocRef = await addDoc(collection(db, 'sales'), saleData);
           
           // Fetch client email to send the receipt

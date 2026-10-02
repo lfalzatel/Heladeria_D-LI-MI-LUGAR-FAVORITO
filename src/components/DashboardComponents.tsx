@@ -282,10 +282,15 @@ export function SaleCard({
 
   let saleCost = 0;
   let saleProfit = 0;
-  if (isAdminOrOwner && products.length > 0 && supplies.length > 0) {
-    const calculated = calculateSaleCostAndProfit(sale, products, supplies);
-    saleCost = (calculated && !isNaN(calculated.totalCost)) ? calculated.totalCost : 0;
-    saleProfit = (calculated && !isNaN(calculated.totalProfit)) ? calculated.totalProfit : 0;
+  if (isAdminOrOwner) {
+    if (sale.productionCost != null && !isNaN(Number(sale.productionCost))) {
+      saleCost = Number(sale.productionCost);
+      saleProfit = (sale.profit != null && !isNaN(Number(sale.profit))) ? Number(sale.profit) : (Number(sale.total || 0) - saleCost);
+    } else if (products.length > 0 && supplies.length > 0) {
+      const calculated = calculateSaleCostAndProfit(sale, products, supplies);
+      saleCost = (calculated && !isNaN(calculated.totalCost)) ? calculated.totalCost : 0;
+      saleProfit = (calculated && !isNaN(calculated.totalProfit)) ? calculated.totalProfit : 0;
+    }
   }
   
   // Clean label logic

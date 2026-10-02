@@ -62,13 +62,59 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
              }
          }
 
-         // Acumular la receta estática
+         // Acumular la receta estática (respetando exclusiones reales del cliente)
+         const selectedFruits = [
+           ...(Array.isArray(item.fruitChoices) ? item.fruitChoices : []),
+           ...(Array.isArray((item as any).includedFruits) ? (item as any).includedFruits : [])
+         ].map(f => f.toLowerCase().trim()).filter(Boolean);
+
+         const flavorsList = (item.flavors || []).map(f => f.toLowerCase().trim());
+         const hasSinHelado = flavorsList.some(f => f === 'sin helado');
+         const allSauces = [
+           ...(Array.isArray((item as any).includedSauces) ? (item as any).includedSauces : []),
+           ...(Array.isArray((item as any).extraSauces) ? (item as any).extraSauces : [])
+         ].map(s => s.toLowerCase().trim());
+         const hasSinSalsa = allSauces.some(s => s === 'sin salsa');
+         const notesNorm = (item.notes || '').toLowerCase().trim();
+         const fruitWords = ['fresa', 'mango', 'durazno', 'manzana', 'banano', 'uva', 'papaya', 'kiwi', 'pina', 'piña', 'maracuya', 'mora', 'guanabana', 'lulo', 'cereza'];
+
          for (const rItem of activeRecipe) {
              if (rItem.supplyId && rItem.quantity > 0) {
                  // Check if it's a real supply
                  const supplyInfo = suppliesMap[rItem.supplyId] || Object.values(suppliesMap).find(s => s.id === rItem.supplyId);
                  if (supplyInfo && !supplyInfo.isVirtual) {
-                      const lowerUnit = (supplyInfo.unit || '').toLowerCase();
+                      const rItemNorm = (rItem.name || '').toLowerCase().trim();
+                      const supplyCat = (supplyInfo.category || '').toLowerCase().trim();
+
+                      // 1. Exclusión de Helado si el cliente eligió 'Sin Helado'
+                      if (hasSinHelado && (rItemNorm.includes('helado') || supplyCat.includes('helado'))) {
+                        continue;
+                      }
+
+                      // 2. Exclusión de Salsa si el cliente eligió 'Sin Salsa'
+                      if (hasSinSalsa && (rItemNorm.includes('salsa') || supplyCat.includes('salsa'))) {
+                        continue;
+                      }
+
+                      // 3. Exclusiones en Notas (ej: "sin queso", "sin lechera", "sin crema")
+                      if (notesNorm && (
+                        notesNorm.includes(`sin ${rItemNorm}`) || 
+                        notesNorm.includes(`no ${rItemNorm}`) || 
+                        notesNorm.includes(`s/${rItemNorm}`) ||
+                        (supplyInfo.name && notesNorm.includes(`sin ${supplyInfo.name.toLowerCase()}`))
+                      )) {
+                        continue;
+                      }
+
+                      // 4. Frutas: si el cliente seleccionó frutas específicas
+                      const isFruit = supplyCat.includes('fruta') || supplyCat.includes('pulpa') || fruitWords.some(fw => rItemNorm.includes(fw));
+                      if (selectedFruits.length > 0 && isFruit) {
+                        const isChosen = selectedFruits.some(sf => sf.includes(rItemNorm) || rItemNorm.includes(sf));
+                        if (!isChosen) {
+                          continue; // No descontar del inventario porque el cliente no comió esta fruta
+                        }
+                      }
+
                       const deductedUnits = rItem.quantity * item.quantity;
                       deductions[rItem.supplyId] = (deductions[rItem.supplyId] || 0) + deductedUnits;
                  }

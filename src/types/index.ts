@@ -69,6 +69,10 @@ export interface CartItem {
   prepared?: boolean;
   isLoyaltyReward?: boolean;
   isOwnerConsumption?: boolean;
+  unitCost?: number;
+  itemCost?: number;
+  itemProfit?: number;
+  productionCost?: number;
 }
 
 export interface Sale {
@@ -76,6 +80,9 @@ export interface Sale {
   tableNumber: number | null;
   items: CartItem[];
   total: number;
+  productionCost?: number;
+  profit?: number;
+  packagingCost?: number;
   paymentMethod: 'Efectivo' | 'Transferencia' | 'Tarjeta';
   cashReceived?: number;
   change?: number;

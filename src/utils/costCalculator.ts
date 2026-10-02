@@ -1,4 +1,6 @@
 import { Product, Supply, RecipeIngredient } from '../types';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 /**
  * Safely parses any value to a finite number, returning fallback if null/undefined/NaN.
@@ -85,16 +87,49 @@ export function findMatchingSupply(ingNameOrId: string, supplies: Supply[]): Sup
   return bestMatch || byId;
 }
 
+const KNOWN_FRUITS = [
+  'fresa', 'mango', 'durazno', 'manzana', 'banano', 'uva', 'papaya',
+  'kiwi', 'pina', 'piña', 'maracuya', 'maracuyá', 'mora', 'guanabana',
+  'guanábana', 'lulo', 'cereza', 'arandano', 'arándano'
+];
+
+export function isFruitSupplyOrName(name: string, supply?: Supply): boolean {
+  const normName = normalizeText(name);
+  const normCategory = normalizeText(supply?.category);
+  if (normCategory.includes('fruta') || normCategory.includes('pulpa')) return true;
+  return KNOWN_FRUITS.some(f => normName.includes(f));
+}
+
+export interface CustomizationOptions {
+  fruitChoices?: string[];
+  flavors?: string[];
+  includedSauces?: string[];
+  extraSauces?: string[];
+  notes?: string;
+}
+
 /**
- * Calculates the production cost of a recipe using supply prices.
+ * Calculates the production cost of a recipe using supply prices,
+ * adapting dynamically to customer exclusions (unselected fruits, "sin helado", "sin salsa", notes).
  */
-export function calculateRecipeCost(recipe: RecipeIngredient[] | undefined | null, supplies: Supply[]): number {
+export function calculateRecipeCost(
+  recipe: RecipeIngredient[] | undefined | null,
+  supplies: Supply[],
+  options?: CustomizationOptions
+): number {
   if (!recipe || !Array.isArray(recipe) || recipe.length === 0) return 0;
   
   const suppliesMap = new Map<string, Supply>();
   supplies.forEach(s => {
     if (s?.id) suppliesMap.set(s.id, s);
   });
+
+  const selectedFruits = (options?.fruitChoices || []).map(f => normalizeText(f)).filter(Boolean);
+  const flavorsList = (options?.flavors || []).map(f => normalizeText(f));
+  const hasSinHelado = flavorsList.some(f => f === 'sin helado');
+  const allSauces = [...(options?.includedSauces || []), ...(options?.extraSauces || [])].map(s => normalizeText(s));
+  const hasSinSalsa = allSauces.some(s => s === 'sin salsa');
+  const notesText = normalizeText(options?.notes);
 
   return recipe.reduce((acc, ing) => {
     if (!ing) return acc;
@@ -103,6 +138,40 @@ export function calculateRecipeCost(recipe: RecipeIngredient[] | undefined | nul
     // Fallback inteligente por nombre si el ID no existe en supplies o no tiene precio
     if ((!supply || !supply.lastPurchasePrice) && ing.name) {
       supply = findMatchingSupply(ing.name, supplies) || supply;
+    }
+
+    const ingNorm = normalizeText(ing.name);
+    const catNorm = normalizeText(supply?.category);
+
+    // 1. Exclusión si el cliente eligió 'Sin Helado'
+    if (hasSinHelado && (ingNorm.includes('helado') || catNorm.includes('helado'))) {
+      return acc;
+    }
+
+    // 2. Exclusión si el cliente eligió 'Sin Salsa'
+    if (hasSinSalsa && (ingNorm.includes('salsa') || catNorm.includes('salsa'))) {
+      return acc;
+    }
+
+    // 3. Exclusiones en notas (ej: "sin queso", "sin lechera", "sin crema", "sin barquillo")
+    if (notesText) {
+      if (
+        notesText.includes(`sin ${ingNorm}`) || 
+        notesText.includes(`no ${ingNorm}`) || 
+        notesText.includes(`s ${ingNorm}`) ||
+        (supply?.name && notesText.includes(`sin ${normalizeText(supply.name)}`))
+      ) {
+        return acc;
+      }
+    }
+
+    // 4. Frutas: si el cliente seleccionó frutas específicas y este ingrediente es una fruta
+    if (selectedFruits.length > 0 && isFruitSupplyOrName(ing.name, supply)) {
+      const isSelected = selectedFruits.some(sf => sf.includes(ingNorm) || ingNorm.includes(sf));
+      if (!isSelected) {
+        // La fruta no fue seleccionada por el cliente en esta orden
+        return acc;
+      }
     }
 
     const unitCost = safeNum(supply?.lastPurchasePrice, 0);
@@ -142,6 +211,15 @@ export function calculateItemCostAndProfit(
   }
   const unitPrice = quantity > 0 ? subtotal / quantity : 0;
 
+  // 0. Si el ítem ya tiene congelado un snapshot de costo válido, respetarlo
+  if (item.unitCost != null && !isNaN(Number(item.unitCost)) && Number(item.unitCost) > 0) {
+    const unitCost = Number(item.unitCost);
+    const itemCost = item.itemCost != null ? Number(item.itemCost) : (item.productionCost != null ? Number(item.productionCost) : unitCost * quantity);
+    const unitProfit = item.unitProfit != null ? Number(item.unitProfit) : unitPrice - unitCost;
+    const itemProfit = item.itemProfit != null ? Number(item.itemProfit) : subtotal - itemCost;
+    return { unitCost, itemCost, unitProfit, itemProfit };
+  }
+
   // 1. Find product
   let product: Product | undefined;
   if (item.productId) {
@@ -152,6 +230,14 @@ export function calculateItemCostAndProfit(
     product = products.find(p => p.name?.toLowerCase().trim() === normName);
   }
 
+  const options: CustomizationOptions = {
+    fruitChoices: Array.isArray(item.fruitChoices) ? item.fruitChoices : (Array.isArray(item.includedFruits) ? item.includedFruits : []),
+    flavors: Array.isArray(item.flavors) ? item.flavors : [],
+    includedSauces: Array.isArray(item.includedSauces) ? item.includedSauces : [],
+    extraSauces: Array.isArray(item.extraSauces) ? item.extraSauces : [],
+    notes: item.notes || ''
+  };
+
   let baseUnitCost = 0;
 
   if (product) {
@@ -160,12 +246,12 @@ export function calculateItemCostAndProfit(
       const normVariant = String(item.variantLabel).toLowerCase().trim();
       const variant = product.variants.find(v => v.label?.toLowerCase().trim() === normVariant);
       if (variant?.recipe && variant.recipe.length > 0) {
-        baseUnitCost = calculateRecipeCost(variant.recipe, supplies);
+        baseUnitCost = calculateRecipeCost(variant.recipe, supplies, options);
       } else if (product.recipe && product.recipe.length > 0) {
-        baseUnitCost = calculateRecipeCost(product.recipe, supplies);
+        baseUnitCost = calculateRecipeCost(product.recipe, supplies, options);
       }
     } else if (product.recipe && product.recipe.length > 0) {
-      baseUnitCost = calculateRecipeCost(product.recipe, supplies);
+      baseUnitCost = calculateRecipeCost(product.recipe, supplies, options);
     }
   }
 
@@ -180,7 +266,7 @@ export function calculateItemCostAndProfit(
       if (!addId) return;
       const addProduct = products.find(p => p.id === addId);
       if (addProduct?.recipe && addProduct.recipe.length > 0) {
-        additionsUnitCost += calculateRecipeCost(addProduct.recipe, supplies);
+        additionsUnitCost += calculateRecipeCost(addProduct.recipe, supplies, options);
       } else {
         const addSupply = supplies.find(s => s.id === addId);
         if (addSupply) {
@@ -194,7 +280,7 @@ export function calculateItemCostAndProfit(
       const cleanName = String(addName).replace(/^\+/, '').toLowerCase().trim();
       const addProduct = products.find(p => p.name?.toLowerCase().trim() === cleanName);
       if (addProduct?.recipe && addProduct.recipe.length > 0) {
-        additionsUnitCost += calculateRecipeCost(addProduct.recipe, supplies);
+        additionsUnitCost += calculateRecipeCost(addProduct.recipe, supplies, options);
       } else {
         const addSupply = supplies.find(s => s.name?.toLowerCase().trim() === cleanName);
         if (addSupply) {
@@ -281,14 +367,60 @@ export function calculateSaleCostAndProfit(
     });
   }
 
-  const totalCost = Math.max(0, safeNum(itemsTotalCost + packagingCost, 0));
+  const frozenCost = (sale.productionCost != null && !isNaN(Number(sale.productionCost))) ? Number(sale.productionCost) : null;
+  const frozenProfit = (sale.profit != null && !isNaN(Number(sale.profit))) ? Number(sale.profit) : null;
+  const frozenPackaging = (sale.packagingCost != null && !isNaN(Number(sale.packagingCost))) ? Number(sale.packagingCost) : null;
+
+  const totalCost = frozenCost !== null ? frozenCost : Math.max(0, safeNum(itemsTotalCost + packagingCost, 0));
   const saleTotal = safeNum(sale.total, 0);
-  const totalProfit = safeNum(saleTotal - totalCost, 0);
+  const totalProfit = frozenProfit !== null ? frozenProfit : safeNum(saleTotal - totalCost, 0);
+  const finalPackagingCost = frozenPackaging !== null ? frozenPackaging : safeNum(packagingCost, 0);
 
   return {
     totalCost,
     totalProfit,
     itemsBreakdown,
-    packagingCost: safeNum(packagingCost, 0)
+    packagingCost: finalPackagingCost
   };
+}
+
+/**
+ * Calculates and attaches an immutable historical cost snapshot to a sale object
+ * before persisting to Firestore.
+ */
+export async function attachCostSnapshotToSale(saleData: any): Promise<any> {
+  try {
+    const [productsSnap, suppliesSnap] = await Promise.all([
+      getDocs(collection(db, 'products')),
+      getDocs(collection(db, 'supplies'))
+    ]);
+    const allProducts = productsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+    const allSupplies = suppliesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Supply));
+    
+    const costMetrics = calculateSaleCostAndProfit({
+      total: saleData.total,
+      items: saleData.items || [],
+      packagingSupplies: saleData.packagingSupplies || []
+    }, allProducts, allSupplies);
+
+    saleData.productionCost = costMetrics.totalCost;
+    saleData.profit = costMetrics.totalProfit;
+    saleData.packagingCost = costMetrics.packagingCost;
+
+    if (Array.isArray(saleData.items)) {
+      saleData.items = saleData.items.map(item => {
+        const itemRes = calculateItemCostAndProfit(item, allProducts, allSupplies);
+        return {
+          ...item,
+          unitCost: itemRes.unitCost,
+          itemCost: itemRes.itemCost,
+          itemProfit: itemRes.itemProfit,
+          productionCost: itemRes.itemCost
+        };
+      });
+    }
+  } catch (err) {
+    console.warn('Error attaching cost snapshot to sale:', err);
+  }
+  return saleData;
 }
