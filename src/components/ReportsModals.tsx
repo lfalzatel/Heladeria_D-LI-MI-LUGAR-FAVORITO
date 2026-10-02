@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   X, DollarSign, CreditCard, TrendingUp, TrendingDown, Trophy, Clock,
   AlertTriangle, ShoppingCart, ArrowRight, Box, Banknote,
-  Smartphone, ChevronLeft, ShoppingBag
+  Smartphone, ChevronLeft, ShoppingBag, Edit3, ChevronRight
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -595,36 +595,64 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
         subtitle={`${items.length} PRODUCTOS CON NIVEL CRÍTICO`}
         onClose={onClose}
       />
-      <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-2">
+      <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-2.5">
         {items.length === 0 ? (
           <div className="py-12 flex flex-col items-center opacity-30">
             <Box className="w-10 h-10 mb-2" />
             <p className="text-xs font-bold uppercase tracking-widest">¡Todo el stock en niveles normales!</p>
           </div>
-        ) : items.map(s => {
-          const isCero = s.currentStock === 0;
-          return (
-            <div key={s.id} className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-outline/10 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {s.imageUrl ? (
-                  <img src={s.imageUrl} alt={s.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Box className="w-6 h-6 text-secondary/40" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm text-on-surface truncate">{s.name}</p>
-                <span className="text-[9px] font-black text-secondary uppercase tracking-widest">{s.category || 'Insumo'}</span>
-              </div>
-              <div className={cn(
-                'flex items-center gap-1 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest',
-                isCero ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
-              )}>
-                Stock: {parseFloat(Number(s.currentStock || 0).toFixed(2))}
-              </div>
-            </div>
-          );
-        })}
+        ) : (
+          <>
+            <p className="text-[10px] text-secondary font-bold px-1">
+              Toca cualquier insumo para ir directamente a su inventario y ajustar la cantidad:
+            </p>
+            {items.map(s => {
+              const isCero = s.currentStock === 0;
+              const isNeg = (s.currentStock || 0) < 0;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    onClose();
+                    navigate(`/admin/management?tab=inventario&subtab=insumos&insumostab=catalogo&search=${encodeURIComponent(s.name)}&editSupplyId=${s.id}`);
+                  }}
+                  className="w-full text-left flex items-center gap-3 p-3.5 bg-white hover:bg-orange-50/40 active:scale-[0.99] rounded-2xl border border-outline/10 hover:border-orange-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer"
+                  title="Toca para ir a editar este insumo"
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-surface-container flex items-center justify-center flex-shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+                    {s.imageUrl ? (
+                      <img src={s.imageUrl} alt={s.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Box className="w-5 h-5 text-secondary/40" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 pr-1">
+                    <p className="font-bold text-sm text-on-surface leading-tight break-words group-hover:text-primary transition-colors">
+                      {s.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[9px] font-black text-secondary uppercase tracking-widest">
+                        {s.category || 'Insumo'}
+                      </span>
+                      <span className="text-[9px] font-bold text-primary flex items-center gap-0.5 opacity-80 group-hover:opacity-100">
+                        <Edit3 className="w-2.5 h-2.5" /> Ajustar stock
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className={cn(
+                      'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider',
+                      isNeg || isCero ? 'bg-red-50 text-red-600 border border-red-200/60' : 'bg-amber-50 text-amber-600 border border-amber-200/60'
+                    )}>
+                      Stock: {parseFloat(Number(s.currentStock || 0).toFixed(2))} {s.unit ? s.unit : ''}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-secondary/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </button>
+              );
+            })}
+          </>
+        )}
       </div>
       <div className="px-6 py-4 border-t border-outline/10 flex gap-3 flex-shrink-0 rounded-b-[2.5rem] bg-white">
         <button
@@ -634,8 +662,8 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
           Cerrar
         </button>
         <button
-          onClick={() => { onClose(); navigate('/admin/management?tab=operacion'); }}
-          className="flex-1 py-3 rounded-2xl bg-on-surface text-white text-xs font-black uppercase tracking-widestáshadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+          onClick={() => { onClose(); navigate('/admin/management?tab=operacion&subtab=compras'); }}
+          className="flex-1 py-3 rounded-2xl bg-on-surface text-white text-xs font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all"
         >
           <ShoppingCart className="w-4 h-4" /> Ir a Comprar
         </button>

@@ -188,6 +188,28 @@ export default function Management() {
   const [supplySearch, setSupplySearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
+  // Auto-navegación desde Stock Crítico u otras pantallas con filtros o edición directa
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const insumoTab = params.get('insumostab');
+    if (insumoTab && (insumoTab === 'catalogo' || insumoTab === 'compras')) {
+      setInsumosSubTab(insumoTab);
+    }
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSupplySearch(searchParam);
+    }
+    const editSupplyId = params.get('editSupplyId');
+    if (editSupplyId && supplies.length > 0) {
+      const found = supplies.find(s => s.id === editSupplyId);
+      if (found) {
+        setInsumosSubTab('catalogo');
+        setSupplyToEdit(found);
+        setIsSupplyModalOpen(true);
+      }
+    }
+  }, [location.search, supplies]);
+
   // Ã¢â€â‚¬Ã¢â€â‚¬ Productos State (from Inventory.tsx) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [products, setProducts] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState('');
