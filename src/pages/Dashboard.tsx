@@ -313,8 +313,8 @@ export default function Dashboard() {
   const ranking = Object.values(productMap).sort((a, b) => b.units - a.units).slice(0, 10);
   const starProduct = ranking[0];
 
-  // Critical stock
-  const criticalSupplies = supplies.filter(s => s.currentStock <= s.minLimit);
+  // Critical stock (solo insumos físicos reales, excluir insumos virtuales)
+  const criticalSupplies = supplies.filter(s => !s.isVirtual && s.currentStock <= s.minLimit);
 
   // Deuda by client (all-time)
   const deudaMap: Record<string, { clienteId: string; name: string; total: number; pedidos: any[] }> = {};

@@ -980,7 +980,7 @@ export default function Management() {
   const totalUnits = filtered.reduce((a, p) => a + (p.items?.length || 0), 0);
   const activeDays = new Set(filtered.map((p) => { const d = p.createdAt?.toDate?.() || (p.createdAt ? new Date(p.createdAt) : null); return d?.toDateString(); }).filter(Boolean)).size;
   const avgPerPurchase = filtered.length > 0 ? periodTotal / filtered.length : 0;
-  const criticalSupplies = supplies.filter((s: any) => (s.currentStock || 0) <= (s.minLimit || 0));
+  const criticalSupplies = supplies.filter((s: any) => !s.isVirtual && (s.currentStock || 0) <= (s.minLimit || 0));
   const lowStock = criticalSupplies.length;
 
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {};

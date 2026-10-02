@@ -585,7 +585,7 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
   isOpen: boolean; onClose: () => void; criticalSupplies: any[];
 }) {
   const navigate = useNavigate();
-  const items = criticalSupplies || [];
+  const items = (criticalSupplies || []).filter(s => !s.isVirtual);
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
       <ModalHeader

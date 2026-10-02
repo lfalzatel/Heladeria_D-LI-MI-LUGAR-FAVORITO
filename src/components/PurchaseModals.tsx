@@ -221,8 +221,8 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
   const reset = () => { setStep(1); setProvider(''); setPaymentMethod('Efectivo'); setSelected(new Set()); setItems([]); setSaving(false); setSearchTerm(''); setDate(getTodayString()); };
   const handleClose = () => { reset(); onClose(); };
 
-  // Sort: critical stock first, then alphabetically
-  const sortedSupplies = [...supplies].sort((a, b) => {
+  // Sort: critical stock first, then alphabetically (solo insumos físicos reales)
+  const sortedSupplies = supplies.filter(s => !s.isVirtual).sort((a, b) => {
     const aLow = a.currentStock <= a.minLimit;
     const bLow = b.currentStock <= b.minLimit;
     if (aLow && !bLow) return -1;
