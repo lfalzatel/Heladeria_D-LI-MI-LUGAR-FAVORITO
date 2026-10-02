@@ -189,9 +189,9 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
           if (supply) {
               // PREVENIR DOBLE DEDUCCIÓN:
               // Si este insumo ya fue descontado por la receta estática base del producto
-              // (ej: el Arequipe de la Oblea Tradicional) y la salsa elegida es la incluida por defecto (no un extra/adición),
-              // NO se vuelve a descontar.
-              if (choice.type === 'sauce' && !choice.isExtra && recipeSupplyIdsInItem.has(supply.id)) {
+              // (ej: salsas incluidas como el Arequipe en Oblea Tradicional, o frutas elegidas en Ensalada de Frutas)
+              // y NO es un extra/adición pagada, NO se vuelve a descontar dinámicamente.
+              if ((choice.type === 'sauce' || choice.type === 'fruit') && !choice.isExtra && recipeSupplyIdsInItem.has(supply.id)) {
                   continue;
               }
 
@@ -239,7 +239,7 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
               else if (choiceName === 'lechera' || choiceName === 'lecherita') { 
                   // assumed amounts in grams/ml
                   if (productName.includes('cuchareable')) deductionAmount = 50;
-                  else if (productName.includes('oblea') || (productName.includes('frutas') && productName.includes('crema'))) deductionAmount = 100;
+                  else if (productName.includes('oblea') || (productName.includes('frutas') && productName.includes('crema'))) deductionAmount = 30;
                   else if (productName.includes('copa')) deductionAmount = 30;
                   else if (productName.includes('salpicón') || productName.includes('salpicon')) deductionAmount = 20;
                   else if (productName.includes('ensalada')) deductionAmount = 35;

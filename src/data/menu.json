@@ -2522,8 +2522,8 @@
             {
               "supplyId": "Vlive457m1cTaOBLepUT",
               "name": "Crema de Leche Oblea Cuchareable",
-              "quantity": 500,
-              "unit": "kg"
+              "quantity": 50,
+              "unit": "g"
             },
             {
               "quantity": 40,
@@ -2548,12 +2548,6 @@
               "quantity": 1,
               "name": "Cuchara Pequeña",
               "supplyId": "xW74Gmt0srs3pUu5Y4Xi"
-            },
-            {
-              "quantity": 80,
-              "unit": "porción",
-              "name": "Crema de Leche Ensaladas",
-              "supplyId": "DeIL9YPHY4wn2r6xLjDE"
             }
           ],
           "label": "Sin helado"
@@ -2584,8 +2578,8 @@
             {
               "name": "Crema de Leche Oblea Cuchareable",
               "supplyId": "Vlive457m1cTaOBLepUT",
-              "quantity": 500,
-              "unit": "kg"
+              "quantity": 50,
+              "unit": "g"
             },
             {
               "quantity": 40,
@@ -2610,12 +2604,6 @@
               "name": "Cuchara Pequeña",
               "quantity": 1,
               "unit": "und"
-            },
-            {
-              "quantity": 200,
-              "unit": "porción",
-              "supplyId": "DeIL9YPHY4wn2r6xLjDE",
-              "name": "Crema de Leche Ensaladas"
             },
             {
               "quantity": 80,
@@ -2648,8 +2636,8 @@
           "unit": "Bloque"
         },
         {
-          "unit": "kg",
-          "quantity": 500,
+          "unit": "g",
+          "quantity": 50,
           "supplyId": "Vlive457m1cTaOBLepUT",
           "name": "Crema de Leche Oblea Cuchareable"
         },
@@ -2676,12 +2664,6 @@
           "supplyId": "xW74Gmt0srs3pUu5Y4Xi",
           "unit": "und",
           "quantity": 1
-        },
-        {
-          "unit": "porción",
-          "quantity": 200,
-          "supplyId": "DeIL9YPHY4wn2r6xLjDE",
-          "name": "Crema de Leche Ensaladas"
         }
       ],
       "ingredients": [
