@@ -505,6 +505,32 @@ export default function ClientCompras() {
           </div>
         )}
 
+        {/* Banner de alerta para Administradores / Vendedores */}
+        {profile && ['admin', 'propietario', 'vendedor'].includes(profile.role) && (
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg flex-shrink-0">
+                🏪
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-amber-950">
+                  Estás en la Carta de Clientes (Domicilios)
+                </p>
+                <p className="text-[11px] text-amber-800">
+                  Para registrar ventas en mostrador, para llevar o mesas del local, usa el Punto de Venta.
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/pos')}
+              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold hover:bg-amber-700 transition-colors shadow-sm flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
+            >
+              <span>Ir a Vender (POS)</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Toolbar: Buscador (38%) + Categorías desplazables en 1 misma fila */}
         <section className="flex items-center gap-2 mb-1">
           {/* Buscador ~38% */}
@@ -827,11 +853,29 @@ export default function ClientCompras() {
                     setShowCheckout(false);
                     setCheckoutStep(1);
                   }} 
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90"
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all active:scale-90 cursor-pointer"
                 >
                   <X className="w-5 h-5 text-secondary" />
                 </button>
               </div>
+
+              {/* Aviso para Staff si está en el Checkout de Clientes */}
+              {profile && ['admin', 'propietario', 'vendedor'].includes(profile.role) && (
+                <div className="mx-6 mt-3 bg-amber-50 border border-amber-300 rounded-2xl p-2.5 flex items-center justify-between gap-2 text-xs text-amber-950">
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>⚠️</span> Vista Domicilios. ¿Venta en el local?
+                  </span>
+                  <button
+                    onClick={() => {
+                      setShowCheckout(false);
+                      navigate('/pos');
+                    }}
+                    className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer flex-shrink-0"
+                  >
+                    Ir a Vender (POS)
+                  </button>
+                </div>
+              )}
 
               <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-4">
                 {checkoutStep === 1 ? (
