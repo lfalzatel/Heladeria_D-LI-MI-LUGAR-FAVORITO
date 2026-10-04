@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { listenToForegroundMessages, requestNotificationPermission } from './lib/notifications';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { useAuthStore } from './stores/useAuthStore';
 import { useFlavorsStore, useSplashStore } from './stores/useFlavorsStore';
 import { useCategoriesStore } from './stores/useCategoriesStore';
@@ -32,10 +32,25 @@ export default function App() {
   const { isVisible: splashVisible, message: splashMessage, progress: splashProgress, hideSplash } = useSplashStore();
 
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const sessionToastShownRef = useRef(false);
+
+  // ── Toast único de bienvenida / sesión activa post-splash ───────────────
+  useEffect(() => {
+    if (!splashVisible && !authLoading && user && profile && !sessionToastShownRef.current) {
+      sessionToastShownRef.current = true;
+      const roleLabel = profile.role === 'admin' ? 'Administrador' :
+                        profile.role === 'propietario' ? 'Propietario' :
+                        profile.role === 'vendedor' ? 'Vendedor' : 'Cliente';
+      toast.success(`Sesión iniciada como ${profile.name || 'Usuario'} (${roleLabel})`, {
+        id: 'auth-welcome-toast',
+        duration: 3500,
+      });
+    }
+  }, [splashVisible, authLoading, user, profile]);
 
   // ── Force Update Logic ──────────────────────────────────────────────────
   useEffect(() => {
-    const CURRENT_VERSION = '1.0.64'; // Incrementa esto para forzar recarga en todos los clientes
+    const CURRENT_VERSION = '1.0.65'; // Incrementa esto para forzar recarga en todos los clientes
     const savedVersion = localStorage.getItem('app_version');
     if (savedVersion !== CURRENT_VERSION) {
       // 1. Limpiar todos los almacenes de caché del navegador
@@ -241,7 +256,7 @@ export default function App() {
         <Route path="/admin/inventory" element={<Navigate to="/admin/management?tab=inventario" replace />} />
         <Route path="/admin/supplies" element={<Navigate to="/admin/management?tab=operacion" replace />} />
 
-        <Route path="/login" element={user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin'} /> : <Login />} />
+        <Route path="/login" element={authLoading ? null : (user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard'} replace /> : <Login />)} />
         <Route path="/menu" element={<Navigate to="/cliente/compras" replace />} />
         
         {/* Rutas Públicas de Clientes / Carta Digital (accesible con o sin login) */}
@@ -282,8 +297,20 @@ export default function App() {
           } />
         </Route>
 
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
-        <Route path="/" element={<Navigate to={user && profile ? (profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard') : '/cliente/compras'} />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/" element={
+          authLoading ? null : (
+            <Navigate to={
+              user && profile ? (
+                profile.role === 'cliente' 
+                  ? '/cliente/compras' 
+                  : profile.role === 'vendedor' 
+                    ? '/pos' 
+                    : '/admin/dashboard'
+              ) : '/cliente/compras'
+            } replace />
+          )
+        } />
       </Routes>
     </Router>
   );

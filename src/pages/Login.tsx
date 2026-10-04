@@ -60,7 +60,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user && profile) {
-      navigate(profile.role === 'vendedor' ? '/pos' : '/admin/dashboard');
+      navigate(profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard');
       return;
     }
 
