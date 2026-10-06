@@ -188,6 +188,8 @@ export default function Management() {
   const [supplySearch, setSupplySearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
+  const [openedFromStockModal, setOpenedFromStockModal] = useState(false);
+
   // Auto-navegación desde Stock Crítico u otras pantallas con filtros o edición directa
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -198,6 +200,10 @@ export default function Management() {
     const searchParam = params.get('search');
     if (searchParam) {
       setSupplySearch(searchParam);
+    }
+    const fromStock = params.get('fromStock');
+    if (fromStock === 'true') {
+      setOpenedFromStockModal(true);
     }
     const editSupplyId = params.get('editSupplyId');
     if (editSupplyId && supplies.length > 0) {
@@ -695,7 +701,20 @@ export default function Management() {
       toast.success('Insumo actualizado exitosamente');
     } else {
       await addDoc(collection(db, 'supplies'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-      toast.success('Nuevo insumo registrado en el catÃƒ¡logo base');
+      toast.success('Nuevo insumo registrado en el catálogo base');
+    }
+
+    if (openedFromStockModal) {
+      setSupplySearch('');
+      const p = new URLSearchParams(location.search);
+      p.delete('search');
+      p.delete('editSupplyId');
+      p.delete('fromStock');
+      navigate(`${location.pathname}?${p.toString()}`, { replace: true });
+      setOpenedFromStockModal(false);
+      setTimeout(() => {
+        setIsStockModalOpen(true);
+      }, 300);
     }
   };
 
@@ -1334,8 +1353,8 @@ export default function Management() {
                   {inventarioSubTab === 'insumos' && (
                     <motion.div key="insumos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        {/* Buscador ~35% */}
-                        <div className="w-[38%] min-w-[110px] max-w-[220px] flex items-center bg-white rounded-xl px-2.5 py-2 border border-outline/30 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs flex-shrink-0">
+                        {/* Buscador */}
+                        <div className="flex-1 min-w-0 flex items-center bg-white rounded-xl px-2.5 py-2 border border-outline/30 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs">
                           <Search className="w-3.5 h-3.5 text-secondary/50 mr-1.5 flex-shrink-0" />
                           <input 
                             type="text" 
@@ -1351,10 +1370,34 @@ export default function Management() {
                           )}
                         </div>
 
-                        {/* Botón Acción + Añadir Insumo ~62% */}
-                        <button onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
-                          className="flex-1 py-2 px-3 bg-on-surface text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 hover:opacity-95 active:scale-[0.98] transition-all">
-                          <Plus className="w-4 h-4 stroke-[2.5] flex-shrink-0" /> <span className="truncate">Añadir Insumo</span>
+                        {/* Botón Acción + Añadir */}
+                        <button 
+                          onClick={() => { setSupplyToEdit(null); setIsSupplyModalOpen(true); }}
+                          className="py-2 px-3 bg-on-surface text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-1 hover:opacity-95 active:scale-[0.98] transition-all flex-shrink-0 cursor-pointer"
+                          title="Añadir nuevo insumo"
+                        >
+                          <Plus className="w-4 h-4 stroke-[2.5] flex-shrink-0" /> 
+                          <span>Añadir</span>
+                        </button>
+
+                        {/* Botón Alerta Stock Crítico */}
+                        <button
+                          onClick={() => setIsStockModalOpen(true)}
+                          className={cn(
+                            "py-2 px-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] flex-shrink-0 cursor-pointer",
+                            lowStock > 0 
+                              ? "bg-orange-500 text-white shadow-orange-500/20 hover:bg-orange-600" 
+                              : "bg-surface-container/80 text-secondary border border-outline/10 hover:bg-surface-container"
+                          )}
+                          title="Ver insumos con stock crítico"
+                        >
+                          <AlertTriangle className={cn("w-3.5 h-3.5 flex-shrink-0", lowStock > 0 && "animate-pulse")} />
+                          <span className="hidden sm:inline">Stock</span> Crítico
+                          {lowStock > 0 && (
+                            <span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
+                              {lowStock}
+                            </span>
+                          )}
                         </button>
                       </div>
 
@@ -2307,7 +2350,22 @@ export default function Management() {
 
         <SupplyFormModal
           isOpen={isSupplyModalOpen}
-          onClose={() => setIsSupplyModalOpen(false)}
+          onClose={() => {
+            setIsSupplyModalOpen(false);
+            setSupplyToEdit(null);
+            if (openedFromStockModal) {
+              setSupplySearch('');
+              const p = new URLSearchParams(location.search);
+              p.delete('search');
+              p.delete('editSupplyId');
+              p.delete('fromStock');
+              navigate(`${location.pathname}?${p.toString()}`, { replace: true });
+              setOpenedFromStockModal(false);
+              setTimeout(() => {
+                setIsStockModalOpen(true);
+              }, 300);
+            }
+          }}
           supplyToEdit={supplyToEdit}
           existingCategories={Object.keys(groupedSupplies)}
           onSave={handleSaveSupply}

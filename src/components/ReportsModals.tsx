@@ -614,7 +614,7 @@ export function StockCriticoModal({ isOpen, onClose, criticalSupplies }: {
                   key={s.id}
                   onClick={() => {
                     onClose();
-                    navigate(`/admin/management?tab=inventario&subtab=insumos&insumostab=catalogo&search=${encodeURIComponent(s.name)}&editSupplyId=${s.id}`);
+                    navigate(`/admin/management?tab=inventario&subtab=insumos&insumostab=catalogo&search=${encodeURIComponent(s.name)}&editSupplyId=${s.id}&fromStock=true`);
                   }}
                   className="w-full text-left flex items-center gap-3 p-3.5 bg-white hover:bg-orange-50/40 active:scale-[0.99] rounded-2xl border border-outline/10 hover:border-orange-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer"
                   title="Toca para ir a editar este insumo"
