@@ -314,8 +314,29 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
               </p>
             )}
 
-            {/* VIRTUAL SUPPLY TOGGLE (Ancho completo para evitar recortes y mantener explicación clara) */}
             <div className="flex flex-col gap-2.5 pt-1">
+              {/* COSTO PROMEDIO / ESTÁNDAR (Con explicación pedagógica completa) */}
+              <div className={`flex flex-col gap-1.5 p-3.5 rounded-2xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
+                <label className={`text-[10px] font-black uppercase tracking-widest ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
+                  {isVirtual ? `Costo Estándar por ${unit} (Referencia para recetas)` : `Costo Promedio Histórico por ${unit}`}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  placeholder="0"
+                  value={virtualPrice}
+                  onChange={(e) => setVirtualPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                  className={`w-full px-3.5 h-10 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-sm ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
+                />
+                <p className={`text-[10px] leading-relaxed mt-0.5 font-medium ${isVirtual ? 'text-amber-700/90' : 'text-secondary/80'}`}>
+                  {isVirtual 
+                    ? `Ingresa el precio promedio de 1 ${unit} de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.`
+                    : `Este costo se actualiza automáticamente al registrar compras. Si cambiaste la unidad (ej. de Litro a mL), puedes corregir este costo manualmente. Actualmente equivale a $${virtualPrice || 0} por 1 ${unit}.`}
+                </p>
+              </div>
+
+              {/* VIRTUAL SUPPLY TOGGLE (Debajo de Costo Promedio) */}
               <button
                 type="button"
                 onClick={() => setIsVirtual(v => !v)}
@@ -340,27 +361,6 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
                   <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${ isVirtual ? 'translate-x-5' : 'translate-x-0' }`} />
                 </div>
               </button>
-
-              {/* COSTO PROMEDIO / ESTÁNDAR (Con explicación pedagógica completa) */}
-              <div className={`flex flex-col gap-1.5 p-3.5 rounded-2xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
-                <label className={`text-[10px] font-black uppercase tracking-widest ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
-                  {isVirtual ? `Costo Estándar por ${unit} (Referencia para recetas)` : `Costo Promedio Histórico por ${unit}`}
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step="any"
-                  placeholder="0"
-                  value={virtualPrice}
-                  onChange={(e) => setVirtualPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                  className={`w-full px-3.5 h-10 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-sm ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
-                />
-                <p className={`text-[10px] leading-relaxed mt-0.5 font-medium ${isVirtual ? 'text-amber-700/90' : 'text-secondary/80'}`}>
-                  {isVirtual 
-                    ? `Ingresa el precio promedio de 1 ${unit} de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.`
-                    : `Este costo se actualiza automáticamente al registrar compras. Si cambiaste la unidad (ej. de Litro a mL), puedes corregir este costo manualmente. Actualmente equivale a $${virtualPrice || 0} por 1 ${unit}.`}
-                </p>
-              </div>
             </div>
 
           </form>
