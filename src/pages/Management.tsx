@@ -2765,20 +2765,27 @@ export default function Management() {
         {/* Edit User Modal */}
         <AnimatePresence>
           {isEditModalOpen && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-black">Editar Perfil</h2>
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.95, opacity: 0 }} 
+                className="relative w-full max-w-lg bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden p-5 sm:p-6 flex flex-col max-h-[92vh]"
+              >
+                {/* Header */}
+                <div className="flex justify-between items-center mb-3 shrink-0">
+                  <h2 className="text-xl font-black text-on-surface">Editar Perfil</h2>
                   <button onClick={() => setIsEditModalOpen(false)} className="p-2 rounded-full hover:bg-surface-container text-secondary transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 
+                {/* User Info Badge */}
                 {selectedUserForEdit && (
-                  <div className="flex items-center gap-4 p-4 bg-surface-container-low rounded-2xl mb-6 border border-outline/10">
-                    <div className="w-14 h-14 rounded-full bg-surface-container border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 text-primary font-black relative">
-                      <span className="absolute inset-0 flex items-center justify-center text-xl">{selectedUserForEdit.name.charAt(0).toUpperCase()}</span>
+                  <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-3.5 border border-outline/10 shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-surface-container border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 text-primary font-black relative">
+                      <span className="absolute inset-0 flex items-center justify-center text-lg">{selectedUserForEdit.name.charAt(0).toUpperCase()}</span>
                       {selectedUserForEdit.imageUrl && (
                         <img 
                           src={selectedUserForEdit.imageUrl} 
@@ -2789,81 +2796,95 @@ export default function Management() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-on-surface truncate">{selectedUserForEdit.name}</p>
-                      <div className="flex items-center gap-1 text-xs text-secondary truncate">
-                        <Mail className="w-3 h-3" />
-                        <span>{selectedUserForEdit.email}</span>
+                      <p className="font-bold text-sm text-on-surface truncate">{selectedUserForEdit.name}</p>
+                      <div className="flex items-center gap-1.5 text-xs text-secondary truncate">
+                        <Mail className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                        <span className="truncate">{selectedUserForEdit.email}</span>
                       </div>
                     </div>
                   </div>
                 )}
                 
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Nombre Completo</label>
-                    <input 
-                      type="text" 
-                      value={editFormData.name} 
-                      onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
-                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                    />
-                  </div>
-
-                  {['admin', 'administrador', 'propietario'].includes(currentUser?.role?.toLowerCase() || '') && (
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Rol</label>
-                      <select
-                        value={editFormData.role}
-                        onChange={e => setEditFormData({ ...editFormData, role: e.target.value as any })}
-                        className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                      >
-                        <option value="cliente">Cliente</option>
-                        <option value="vendedor">Vendedor</option>
-                        <option value="admin">Administrador</option>
-                        {['admin', 'propietario'].includes(currentUser?.role || '') && <option value="propietario">Propietario</option>}
-                      </select>
+                {/* Inputs: 2-column responsive grid */}
+                <div className="overflow-y-auto pr-1 flex-1 hide-scrollbar">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Nombre Completo - Full Width */}
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Nombre Completo *</label>
+                      <input 
+                        type="text" 
+                        value={editFormData.name} 
+                        onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
+                        className="w-full h-11 bg-surface-container rounded-xl px-3.5 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all text-on-surface"
+                      />
                     </div>
-                  )}
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Cédula</label>
-                    <input 
-                      type="text" 
-                      value={editFormData.cedula} 
-                      onChange={e => setEditFormData({ ...editFormData, cedula: e.target.value })}
-                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                    />
-                  </div>
+                    {/* Rol (Solo si tiene permisos) */}
+                    {['admin', 'administrador', 'propietario'].includes(currentUser?.role?.toLowerCase() || '') ? (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Rol</label>
+                        <select
+                          value={editFormData.role}
+                          onChange={e => setEditFormData({ ...editFormData, role: e.target.value as any })}
+                          className="w-full h-11 bg-surface-container rounded-xl px-3 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all text-on-surface"
+                        >
+                          <option value="cliente">Cliente</option>
+                          <option value="vendedor">Vendedor</option>
+                          <option value="admin">Administrador</option>
+                          {['admin', 'propietario'].includes(currentUser?.role || '') && <option value="propietario">Propietario</option>}
+                        </select>
+                      </div>
+                    ) : null}
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Teléfono</label>
-                    <input 
-                      type="tel" 
-                      value={editFormData.phone} 
-                      onChange={e => setEditFormData({ ...editFormData, phone: e.target.value })}
-                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                    />
-                  </div>
+                    {/* Cédula */}
+                    <div className={cn("space-y-1", !['admin', 'administrador', 'propietario'].includes(currentUser?.role?.toLowerCase() || '') && "sm:col-span-2")}>
+                      <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Cédula</label>
+                      <input 
+                        type="text" 
+                        value={editFormData.cedula} 
+                        onChange={e => setEditFormData({ ...editFormData, cedula: e.target.value })}
+                        className="w-full h-11 bg-surface-container rounded-xl px-3.5 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all text-on-surface"
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Dirección</label>
-                    <input 
-                      type="text" 
-                      value={editFormData.address} 
-                      onChange={e => setEditFormData({ ...editFormData, address: e.target.value })}
-                      className="w-full h-12 bg-surface-container rounded-xl px-4 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                    />
+                    {/* Teléfono */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Teléfono</label>
+                      <input 
+                        type="tel" 
+                        value={editFormData.phone} 
+                        onChange={e => setEditFormData({ ...editFormData, phone: e.target.value })}
+                        className="w-full h-11 bg-surface-container rounded-xl px-3.5 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all text-on-surface"
+                      />
+                    </div>
+
+                    {/* Dirección */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Dirección</label>
+                      <input 
+                        type="text" 
+                        value={editFormData.address} 
+                        onChange={e => setEditFormData({ ...editFormData, address: e.target.value })}
+                        className="w-full h-11 bg-surface-container rounded-xl px-3.5 font-bold text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all text-on-surface"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3 mt-8">
-                  <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 rounded-2xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-surface-container-high transition-all">
+                {/* Footer Buttons - Always Visible */}
+                <div className="flex gap-2.5 pt-3.5 mt-3 border-t border-outline/10 shrink-0">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsEditModalOpen(false)} 
+                    className="flex-1 py-3.5 rounded-xl bg-surface-container text-secondary font-black text-[10px] uppercase tracking-widest hover:bg-surface-container-high transition-all"
+                  >
                     Cancelar
                   </button>
                   <button 
+                    type="button" 
                     onClick={handleUpdateUser} 
                     disabled={isSavingUser || !editFormData.name.trim()}
-                    className="flex-1 py-4 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widestáshadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
+                    className="flex-1 py-3.5 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100"
                   >
                     <Save className="w-4 h-4" />
                     {isSavingUser ? 'Guardando...' : 'Guardar Cambios'}
