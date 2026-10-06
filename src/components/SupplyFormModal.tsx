@@ -314,50 +314,54 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
               </p>
             )}
 
-            {/* VIRTUAL SUPPLY TOGGLE */}
-            <div className="flex flex-col gap-3 pt-1">
+            {/* Fila 4: Insumo Virtual y Costo Histórico (2 Columnas en la misma línea) */}
+            <div className="grid grid-cols-2 gap-2.5 pt-1 items-stretch">
+              {/* Columna Izquierda: Toggle Insumo Virtual */}
               <button
                 type="button"
                 onClick={() => setIsVirtual(v => !v)}
-                className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
+                className={`flex flex-col justify-between p-3 rounded-2xl border-2 transition-all text-left ${
                   isVirtual
                     ? 'bg-amber-50 border-amber-400 text-amber-700'
                     : 'bg-surface-container border-outline/10 text-on-surface/50'
                 }`}
               >
-                <Ghost className={`w-5 h-5 shrink-0 transition-colors ${ isVirtual ? 'text-amber-500' : 'text-on-surface/30' }`} />
-                <div className="text-left flex-1 min-w-0">
-                  <p className={`text-xs font-black ${ isVirtual ? 'text-amber-700' : 'text-on-surface/60' }`}>
-                    {isVirtual ? '👻 Insumo Virtual Activado' : 'Marcar como Insumo Virtual'}
-                  </p>
-                  <p className={`text-[9px] leading-snug line-clamp-1 ${ isVirtual ? 'text-amber-600' : 'text-on-surface/40' }`}>
-                    {isVirtual
-                      ? 'Insumo organizativo (ej. Salsa, Fruta). No descuenta stock en ventas.'
-                      : 'Activa si es solo una etiqueta organizativa en recetas y no existe físicamente.'}
-                  </p>
+                <div className="flex items-center justify-between w-full mb-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Ghost className={`w-4 h-4 shrink-0 transition-colors ${ isVirtual ? 'text-amber-500' : 'text-on-surface/30' }`} />
+                    <span className={`text-[11px] font-black leading-tight truncate ${ isVirtual ? 'text-amber-700' : 'text-on-surface/70' }`}>
+                      Insumo Virtual
+                    </span>
+                  </div>
+                  <div className={`w-8 h-4 rounded-full transition-all shrink-0 ${ isVirtual ? 'bg-amber-400' : 'bg-outline/20' }`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${ isVirtual ? 'translate-x-4' : 'translate-x-0' }`} />
+                  </div>
                 </div>
-                <div className={`ml-auto w-10 h-5 rounded-full transition-all shrink-0 ${ isVirtual ? 'bg-amber-400' : 'bg-outline/20' }`}>
-                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${ isVirtual ? 'translate-x-5' : 'translate-x-0' }`} />
-                </div>
+                <p className={`text-[9px] leading-tight line-clamp-2 ${ isVirtual ? 'text-amber-600 font-semibold' : 'text-on-surface/40' }`}>
+                  {isVirtual
+                    ? '👻 Activo: no descuenta stock en ventas'
+                    : 'Solo organizativo en recetas (sin stock físico)'}
+                </p>
               </button>
 
-              <div className={`flex flex-col gap-1.5 p-3.5 rounded-2xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
-                <label className={`text-[10px] font-black uppercase tracking-widest ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
-                  {isVirtual ? `Costo Estándar por ${unit} (Referencia)` : `Costo Promedio Histórico por ${unit}`}
+              {/* Columna Derecha: Costo Promedio / Referencia */}
+              <div className={`flex flex-col justify-between p-3 rounded-2xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
+                <label className={`text-[10px] font-black uppercase tracking-widest leading-tight truncate ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
+                  {isVirtual ? `Costo Ref. (${unit})` : `Costo (${unit})`}
                 </label>
                 <input
                   type="number"
                   min={0}
                   step="any"
-                  placeholder="Ej. 77000"
+                  placeholder="0"
                   value={virtualPrice}
                   onChange={(e) => setVirtualPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                  className={`w-full px-3.5 h-11 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-sm ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
+                  className={`w-full px-3 h-9 my-1 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-sm ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
                 />
-                <p className={`text-[9px] font-bold ${isVirtual ? 'text-amber-700/80' : 'text-secondary/70'}`}>
+                <p className={`text-[9px] font-bold truncate ${isVirtual ? 'text-amber-700/80' : 'text-secondary/70'}`}>
                   {isVirtual 
-                    ? `Precio promedio de 1 ${unit} para costear recetas sin compras directas.`
-                    : `Se actualiza con compras. Actualmente equivale a $${virtualPrice} por 1 ${unit}.`}
+                    ? `Para costear recetas`
+                    : `Equivale a $${virtualPrice || 0}/${unit}`}
                 </p>
               </div>
             </div>
