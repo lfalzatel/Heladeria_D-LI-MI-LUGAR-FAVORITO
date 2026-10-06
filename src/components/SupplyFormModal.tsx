@@ -189,148 +189,160 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
-          <form id="supply-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto px-5 py-4 pb-24">
+          <form id="supply-form" onSubmit={handleSubmit} className="flex flex-col gap-3.5">
             
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Nombre del Insumo *</label>
+            {/* Fila 1: Nombre del Insumo */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-secondary"> Nombre del Insumo *</label>
               <input
                 type="text"
                 required
                 placeholder="Ej. Vasos 7 Onzas"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
+                className="w-full px-3.5 h-11 bg-surface-container rounded-xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-sm"
               />
             </div>
             
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Categoría *</label>
-              <select
-                value={category}
-                onChange={(e) => {
-                  if (e.target.value === 'NEW_CATEGORY') {
-                    setCategory('NEW_CATEGORY');
-                    setIsCustomCategory(true);
-                  } else {
-                    setCategory(e.target.value);
-                    setIsCustomCategory(false);
-                  }
-                }}
-                className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
-              >
-                {mergedCategories.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-                <option value="NEW_CATEGORY">+ Nueva categoría...</option>
-              </select>
+            {/* Fila 2: Categoría + Unidad de Compra (2 Columnas) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-secondary"> Categoría *</label>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    if (e.target.value === 'NEW_CATEGORY') {
+                      setCategory('NEW_CATEGORY');
+                      setIsCustomCategory(true);
+                    } else {
+                      setCategory(e.target.value);
+                      setIsCustomCategory(false);
+                    }
+                  }}
+                  className="w-full px-3 h-11 bg-surface-container rounded-xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-sm appearance-none"
+                >
+                  {mergedCategories.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                  <option value="NEW_CATEGORY">+ Nueva categoría...</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-secondary"> Unidad de Compra *</label>
+                <select
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  className="w-full px-3 h-11 bg-surface-container rounded-xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-sm appearance-none"
+                >
+                  {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
             </div>
 
             {isCustomCategory && (
-              <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-primary"> Nombre de la Nueva Categoría *</label>
+              <div className="flex flex-col gap-1.5 -mt-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary"> Nombre de la Nueva Categoría *</label>
                 <input
                   type="text"
                   required
                   placeholder="Ej. Bases, Galletas..."
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full px-4 h-14 bg-primary/5 rounded-2xl border border-primary/20 outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-primary"
+                  className="w-full px-3.5 h-11 bg-primary/5 rounded-xl border border-primary/20 outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-primary text-sm"
                 />
               </div>
             )}
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-secondary"> Unidad de Compra *</label>
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface appearance-none"
-              >
-                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
+            {/* Fila 3: Límite Crítico + Stock Actual (2 Columnas) */}
+            <div className="grid grid-cols-2 gap-3 items-start">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-secondary" title="Alerta naranja cuando llegue a este número">
+                    Límite Crítico *
+                  </label>
+                  {['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa', 'Lata'].includes(unit) && (
+                    <select
+                      value={minLimitUnit}
+                      onChange={(e) => setMinLimitUnit(e.target.value)}
+                      className="bg-surface-container px-1 py-0.5 rounded-lg text-[9px] font-bold text-secondary outline-none border border-outline/10"
+                    >
+                      <option value="base">{unit}s</option>
+                      <option value="internal">Unds</option>
+                    </select>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  step="any"
+                  value={minLimit}
+                  onChange={(e) => setMinLimit(Number(e.target.value))}
+                  className="w-full px-3.5 h-11 bg-surface-container rounded-xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface text-sm"
+                />
+              </div>
 
-
-
-            <div className="grid grid-cols-2 gap-4 items-end">
-               <div className="flex flex-col gap-2">
-                 <label className="text-[11px] font-black uppercase tracking-widest text-secondary" title="Alerta naranja cuando llegue a este número"> Límite Crítico *</label>
-                 <input
-                   type="number"
-                   required
-                   min={0}
-                   step="any"
-                   value={minLimit}
-                   onChange={(e) => setMinLimit(Number(e.target.value))}
-                   className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-on-surface"
-                 />
-               </div>
-               {['Paquete', 'Caja', 'Pouch', 'Rollo', 'Bolsa', 'Lata'].includes(unit) ? (
-                 <div className="flex flex-col gap-2">
-                   {/* Empty label to match height of Límite Crítico label */}
-                   <label className="text-[11px] font-black uppercase tracking-widest text-transparent select-none hidden sm:block">&nbsp;</label>
-                   <select
-                     value={minLimitUnit}
-                     onChange={(e) => setMinLimitUnit(e.target.value)}
-                     className="w-full px-4 h-14 bg-surface-container rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary text-sm font-bold text-secondary"
-                   >
-                     <option value="base">{unit}s</option>
-                     <option value="internal">Unidades</option>
-                   </select>
-                 </div>
-               ) : (
-                 <div className="hidden sm:block"></div>
-               )}
+              {!isVirtual ? (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary">
+                    Stock Actual ({unit}) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    step="any"
+                    value={currentStock}
+                    onChange={(e) => setCurrentStock(e.target.value)}
+                    className="w-full px-3.5 h-11 bg-primary/5 rounded-xl border border-primary/20 outline-none focus:ring-2 focus:ring-primary transition-all font-black text-sm text-primary"
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5 justify-center h-full pt-4">
+                  <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-2 rounded-xl border border-amber-200 text-center">
+                    Insumo virtual (sin stock)
+                  </span>
+                </div>
+              )}
             </div>
 
             {!isVirtual && (
-              <div className="flex flex-col gap-2 bg-primary/5 p-4 rounded-3xl border border-primary/20">
-                 <label className="text-[11px] font-black uppercase tracking-widest text-primary"> Ajuste Manual de Stock</label>
-                 <input
-                   type="number"
-                   required
-                   min={0}
-                   step="any"
-                   value={currentStock}
-                   onChange={(e) => setCurrentStock(e.target.value)}
-                   className="w-full px-4 h-14 bg-white rounded-xl border border-outline/20 outline-none focus:ring-2 focus:ring-primary transition-all font-black text-lg text-primary"
-                 />
-                 <p className="text-xs text-primary/70 mt-1">
-                   Actualmente hay registro de <strong className="font-black">{currentStock} {unit}</strong> en tienda. Usa las Compras diarias para sumar inventario o corrígelo gratis aquí si hay un desfase en conteo.
-                 </p>
-              </div>
+              <p className="text-[10px] text-secondary/70 -mt-1 font-medium">
+                Hay registro de <strong className="font-bold text-primary">{currentStock} {unit}</strong> en tienda. Usa Compras para sumar inventario o corrígelo aquí si hay desfase.
+              </p>
             )}
 
             {/* VIRTUAL SUPPLY TOGGLE */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => setIsVirtual(v => !v)}
-                className={`w-full flex items-center gap-4 p-4 rounded-3xl border-2 transition-all ${
+                className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
                   isVirtual
                     ? 'bg-amber-50 border-amber-400 text-amber-700'
                     : 'bg-surface-container border-outline/10 text-on-surface/50'
                 }`}
               >
-                <Ghost className={`w-6 h-6 shrink-0 transition-colors ${ isVirtual ? 'text-amber-500' : 'text-on-surface/30' }`} />
-                <div className="text-left">
-                  <p className={`text-sm font-black ${ isVirtual ? 'text-amber-700' : 'text-on-surface/50' }`}>
+                <Ghost className={`w-5 h-5 shrink-0 transition-colors ${ isVirtual ? 'text-amber-500' : 'text-on-surface/30' }`} />
+                <div className="text-left flex-1 min-w-0">
+                  <p className={`text-xs font-black ${ isVirtual ? 'text-amber-700' : 'text-on-surface/60' }`}>
                     {isVirtual ? '👻 Insumo Virtual Activado' : 'Marcar como Insumo Virtual'}
                   </p>
-                  <p className={`text-[10px] leading-snug ${ isVirtual ? 'text-amber-600' : 'text-on-surface/30' }`}>
+                  <p className={`text-[9px] leading-snug line-clamp-1 ${ isVirtual ? 'text-amber-600' : 'text-on-surface/40' }`}>
                     {isVirtual
-                      ? 'Este insumo es solo organizativo (ej. "Salsa", "Fruta"). No se descontará del inventario en ninguna venta.'
-                      : 'Activa si este insumo es solo una etiqueta organizativa en recetas y no existe físicamente.'}
+                      ? 'Insumo organizativo (ej. Salsa, Fruta). No descuenta stock en ventas.'
+                      : 'Activa si es solo una etiqueta organizativa en recetas y no existe físicamente.'}
                   </p>
                 </div>
-                <div className={`ml-auto w-12 h-6 rounded-full transition-all shrink-0 ${ isVirtual ? 'bg-amber-400' : 'bg-outline/20' }`}>
-                  <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${ isVirtual ? 'translate-x-6' : 'translate-x-0' }`} />
+                <div className={`ml-auto w-10 h-5 rounded-full transition-all shrink-0 ${ isVirtual ? 'bg-amber-400' : 'bg-outline/20' }`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${ isVirtual ? 'translate-x-5' : 'translate-x-0' }`} />
                 </div>
               </button>
 
-              <div className={`flex flex-col gap-2 p-4 rounded-3xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
-                <label className={`text-[11px] font-black uppercase tracking-widest ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
+              <div className={`flex flex-col gap-1.5 p-3.5 rounded-2xl border ${isVirtual ? 'bg-amber-50 border-amber-200' : 'bg-surface-container border-outline/10'}`}>
+                <label className={`text-[10px] font-black uppercase tracking-widest ${isVirtual ? 'text-amber-700' : 'text-primary'}`}>
                   {isVirtual ? `Costo Estándar por ${unit} (Referencia)` : `Costo Promedio Histórico por ${unit}`}
                 </label>
                 <input
@@ -340,12 +352,12 @@ export default function SupplyFormModal({ isOpen, onClose, supplyToEdit, existin
                   placeholder="Ej. 77000"
                   value={virtualPrice}
                   onChange={(e) => setVirtualPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                  className={`w-full px-4 h-14 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-lg ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
+                  className={`w-full px-3.5 h-11 bg-white rounded-xl border outline-none focus:ring-2 transition-all font-black text-sm ${isVirtual ? 'border-amber-200 focus:ring-amber-500 text-amber-700' : 'border-outline/10 focus:ring-primary text-on-surface'}`}
                 />
-                <p className={`text-[10px] mt-1 font-bold ${isVirtual ? 'text-amber-700/80' : 'text-secondary'}`}>
+                <p className={`text-[9px] font-bold ${isVirtual ? 'text-amber-700/80' : 'text-secondary/70'}`}>
                   {isVirtual 
-                    ? `Ingresa el precio promedio de 1 ${unit} de este insumo. Este valor se usará para calcular el costo en las recetas, ya que los insumos virtuales no se compran directamente.`
-                    : `Este costo se actualiza automáticamente al registrar compras. Si cambiaste la unidad (ej. de Litro a mL), puedes corregir este costo y el stock manualmente. Actualmente equivale a $${virtualPrice} por 1 ${unit}.`}
+                    ? `Precio promedio de 1 ${unit} para costear recetas sin compras directas.`
+                    : `Se actualiza con compras. Actualmente equivale a $${virtualPrice} por 1 ${unit}.`}
                 </p>
               </div>
             </div>
