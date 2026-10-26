@@ -79,10 +79,13 @@ function ModalFooter({ label = 'CERRAR DETALLE', onClick }: { label?: string; on
 }
 
 // ── 1. INGRESOS MODAL ──
-export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, transferencia, totalAbonos }: {
+export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, transferencia, totalAbonos, abonosOtrosDias = [] }: {
   isOpen: boolean; onClose: () => void; filter: string;
   efectivo: number; tarjeta: number; transferencia: number; totalAbonos?: number;
+  abonosOtrosDias?: { id: string; clienteName: string; monto: number; paymentMethod: string; saleDate: Date | null; paidDate: Date | null }[];
 }) {
+  const fmtDay = (d: Date | null) => d ? d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+  const totalOtrosDias = abonosOtrosDias.reduce((s, a) => s + (a.monto || 0), 0);
   const rows = [
     { icon: <Banknote className="w-5 h-5 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Efectivo', value: efectivo },
     { icon: <CreditCard className="w-5 h-5 text-blue-600" />, bg: 'bg-blue-50', label: 'Tarjeta / Datáfono', value: tarjeta },
@@ -100,7 +103,7 @@ export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, tran
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
         {totalAbonos !== undefined && totalAbonos > 0 && (
           <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
-            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Abonos a Crédito Incluidos</p>
+            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Abonos de fiados de este periodo (incluidos)</p>
             <p className="font-black text-emerald-700 text-xs">+ {formatCurrency(totalAbonos)}</p>
           </div>
         )}
@@ -113,6 +116,29 @@ export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, tran
             <p className="font-black text-on-surface">{formatCurrency(row.value)}</p>
           </div>
         ))}
+
+        {abonosOtrosDias.length > 0 && (
+          <div className="mt-1 p-3 bg-sky-50 border border-sky-100 rounded-2xl flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Abonos recibidos de fiados anteriores</p>
+              <p className="font-black text-sky-700 text-xs">{formatCurrency(totalOtrosDias)}</p>
+            </div>
+            <p className="text-[10px] text-sky-800/80 font-medium">
+              Solo registro: NO se suman aquí, ya están contabilizados en el día del fiado.
+            </p>
+            {abonosOtrosDias.map(a => (
+              <div key={a.id} className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-sky-100">
+                <div>
+                  <p className="text-xs font-bold text-on-surface">{a.clienteName}</p>
+                  <p className="text-[9px] text-secondary font-medium">
+                    Fiado: {fmtDay(a.saleDate)} · Pagó: {fmtDay(a.paidDate)} · {a.paymentMethod}
+                  </p>
+                </div>
+                <p className="font-black text-sky-700 text-xs">{formatCurrency(a.monto)}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <ModalFooter onClick={onClose} />
     </ModalWrapper>

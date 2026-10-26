@@ -287,6 +287,13 @@ export default function MovementDetailModal({
       
       const chosenDate = abonoFecha || new Date().toISOString().split('T')[0];
 
+      // Fecha (local) de la venta fiada original: el abono se contabiliza ese día
+      const saleRaw = data.createdAt || data.timestamp || data.date;
+      const saleDateObj = saleRaw?.toDate ? saleRaw.toDate() : (saleRaw ? new Date(saleRaw) : null);
+      const saleDate = saleDateObj && !isNaN(saleDateObj.getTime())
+        ? `${saleDateObj.getFullYear()}-${String(saleDateObj.getMonth() + 1).padStart(2, '0')}-${String(saleDateObj.getDate()).padStart(2, '0')}`
+        : null;
+
       // Save abono document
       await addDoc(collection(db, 'abonos'), {
         clienteId: data.clienteId || null,
@@ -298,6 +305,7 @@ export default function MovementDetailModal({
         splitDetails,
         createdAt: serverTimestamp(),
         date: chosenDate,
+        saleDate,
         hour: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
       });
 

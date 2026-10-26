@@ -235,13 +235,56 @@ export default function Dashboard() {
   // ── COMPUTED METRICS ──
   const ingresosSales = combinedActivity.filter(s => (s.paymentMethod || '').toLowerCase() !== 'credito');
 
-  // Abonos for current period
+  // ── ABONOS ──
+  // Regla del negocio: un abono se contabiliza en el DÍA DEL FIADO (venta original),
+  // no en el día en que el cliente paga. El día del pago solo queda como registro informativo.
+  const creditById = React.useMemo(() => {
+    const map = new Map<string, any>();
+    creditPedidos.forEach(p => map.set(p.id, p));
+    return map;
+  }, [creditPedidos]);
+
+  const getAbonoPaidDate = (a: any): Date | null => toDateS(a.timestamp || a.createdAt);
+
+  const getAbonoSaleDate = (a: any): Date | null => {
+    // 1) Fecha real de la venta fiada (sirve también para abonos antiguos)
+    const sale = a.pedidoId ? creditById.get(a.pedidoId) : null;
+    const fromSale = sale ? toDateS(sale.createdAt || sale.timestamp || sale.date) : null;
+    if (fromSale && !isNaN(fromSale.getTime())) return fromSale;
+    // 2) Fecha guardada en el abono (YYYY-MM-DD, hora local)
+    if (typeof a.saleDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(a.saleDate)) {
+      const [y, m, d] = a.saleDate.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0);
+    }
+    // 3) Último recurso: fecha del pago
+    return getAbonoPaidDate(a);
+  };
+
+  // Abonos que SUMAN al periodo: los de fiados hechos en este periodo
   const abonosPeriod = React.useMemo(() => {
-    return abonos.filter(a => {
-      const timestamp = a.timestamp || a.createdAt;
-      return isInPeriod(timestamp, dashboardFilter, selectedDate, selectedMonth, selectedWeek);
-    });
-  }, [abonos, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
+    return abonos.filter(a =>
+      isInPeriod(getAbonoSaleDate(a), dashboardFilter, selectedDate, selectedMonth, selectedWeek)
+    );
+  }, [abonos, creditById, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
+
+  // Abonos RECIBIDOS en este periodo de fiados de otros días (solo informativo, NO suman)
+  const abonosRecibidosOtrosDias = React.useMemo(() => {
+    return abonos
+      .filter(a => {
+        const paid = getAbonoPaidDate(a);
+        const sale = getAbonoSaleDate(a);
+        return isInPeriod(paid, dashboardFilter, selectedDate, selectedMonth, selectedWeek)
+          && !isInPeriod(sale, dashboardFilter, selectedDate, selectedMonth, selectedWeek);
+      })
+      .map(a => ({
+        id: a.id,
+        clienteName: a.clienteName || 'Cliente',
+        monto: a.monto || 0,
+        paymentMethod: a.paymentMethod || 'Efectivo',
+        saleDate: getAbonoSaleDate(a),
+        paidDate: getAbonoPaidDate(a),
+      }));
+  }, [abonos, creditById, dashboardFilter, selectedDate, selectedMonth, selectedWeek]);
 
   const totalAbonosPeriod = abonosPeriod.reduce((s, a) => s + (a.monto || 0), 0);
   const totalIngresos = ingresosSales.reduce((s, x) => s + (x.total || 0), 0) + totalAbonosPeriod;
@@ -270,7 +313,10 @@ export default function Dashboard() {
 
   abonosPeriod.forEach(a => {
     const pm = (a.paymentMethod || '').toLowerCase();
-    if (['transfer', 'transferencia', 'digital', 'nequi', 'daviplata'].includes(pm)) {
+    if (pm === 'mixto' && a.splitDetails) {
+      efectivo += (a.splitDetails.efectivo || 0);
+      transferencia += (a.splitDetails.transferencia || 0);
+    } else if (['transfer', 'transferencia', 'digital', 'nequi', 'daviplata'].includes(pm)) {
       transferencia += (a.monto || 0);
     } else {
       efectivo += (a.monto || 0);
@@ -783,6 +829,31 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* ABONOS RECIBIDOS DE FIADOS DE OTROS DÍAS (informativo, no suma) */}
+        {abonosRecibidosOtrosDias.length > 0 && (
+          <button
+            onClick={() => open('ingresos')}
+            className="w-full text-left p-4 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-between gap-3 hover:bg-sky-100/70 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-sky-600 shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-sky-900">
+                  Abonos recibidos de fiados anteriores ({abonosRecibidosOtrosDias.length})
+                </p>
+                <p className="text-[10px] font-bold text-sky-700/80 uppercase tracking-wider">
+                  Solo registro · ya contabilizados en el día del fiado
+                </p>
+              </div>
+            </div>
+            <p className="font-black text-sky-700 text-sm whitespace-nowrap">
+              {formatCurrency(abonosRecibidosOtrosDias.reduce((s, a) => s + a.monto, 0))}
+            </p>
+          </button>
+        )}
+
         {/* CHARTS (Admin Only) */}
         {profile?.role !== 'vendedor' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -869,6 +940,7 @@ export default function Dashboard() {
         tarjeta={tarjeta}
         transferencia={transferencia}
         totalAbonos={totalAbonosPeriod}
+        abonosOtrosDias={abonosRecibidosOtrosDias}
       />
       <VentasCreditoModal
         isOpen={openModal === 'credito'}
