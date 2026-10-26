@@ -79,10 +79,12 @@ function ModalFooter({ label = 'CERRAR DETALLE', onClick }: { label?: string; on
 }
 
 // ── 1. INGRESOS MODAL ──
-export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, transferencia, totalAbonos, abonosOtrosDias = [] }: {
+export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, transferencia, totalAbonos, abonosOtrosDias = [], totalIngresos, ventaTotal, deudaPendiente = 0, deudores = [] }: {
   isOpen: boolean; onClose: () => void; filter: string;
   efectivo: number; tarjeta: number; transferencia: number; totalAbonos?: number;
   abonosOtrosDias?: { id: string; clienteName: string; monto: number; paymentMethod: string; saleDate: Date | null; paidDate: Date | null }[];
+  totalIngresos?: number; ventaTotal?: number; deudaPendiente?: number;
+  deudores?: { name: string; monto: number }[];
 }) {
   const fmtDay = (d: Date | null) => d ? d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
   const totalOtrosDias = abonosOtrosDias.reduce((s, a) => s + (a.monto || 0), 0);
@@ -101,6 +103,33 @@ export function IngresosModal({ isOpen, onClose, filter, efectivo, tarjeta, tran
         onClose={onClose}
       />
       <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3">
+        {ventaTotal !== undefined && (
+          <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <p className="font-black text-blue-900 text-sm">Venta total</p>
+              <p className="font-black text-blue-800">{formatCurrency(ventaTotal)}</p>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <p className="font-bold text-emerald-700">Ingresos (cobrado)</p>
+              <p className="font-black text-emerald-700">{formatCurrency(totalIngresos ?? (efectivo + tarjeta + transferencia))}</p>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <p className="font-bold text-orange-700">Deuda (fiado pendiente)</p>
+              <p className="font-black text-orange-700">{formatCurrency(deudaPendiente)}</p>
+            </div>
+            {deudores.length > 0 && (
+              <div className="mt-1 pt-2 border-t border-blue-100 flex flex-col gap-1.5">
+                <p className="text-[9px] font-black uppercase text-secondary/70 tracking-widest">Quién debe</p>
+                {deudores.map(d => (
+                  <div key={d.name} className="flex items-center justify-between p-2 bg-white rounded-xl border border-orange-100">
+                    <p className="text-xs font-bold text-on-surface">{d.name}</p>
+                    <p className="font-black text-orange-700 text-xs">{formatCurrency(d.monto)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {totalAbonos !== undefined && totalAbonos > 0 && (
           <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
             <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Abonos de fiados de este periodo (incluidos)</p>

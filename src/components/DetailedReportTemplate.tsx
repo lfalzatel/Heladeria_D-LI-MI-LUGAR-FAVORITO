@@ -53,6 +53,16 @@ export const DetailedReportTemplate: React.FC<ReportTemplateProps> = ({
         <h3 className="text-lg font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">--- RESUMEN FINANCIERO ---</h3>
         <table className="w-full text-left border-collapse">
           <tbody>
+            <tr className={metrics.totalCredito > 0 ? 'bg-blue-50' : 'border-b border-slate-200 bg-blue-50'}>
+              <td className="py-2 font-bold text-blue-800">Venta Total (cobrado + fiado)</td>
+              <td className="py-2 text-right font-bold text-blue-800">{formatMoney((metrics.totalIngresos || 0) + (metrics.totalCredito || 0))}</td>
+            </tr>
+            {metrics.totalCredito > 0 && (
+              <tr className="border-b border-slate-200 bg-orange-50 text-sm">
+                <td className="py-1 pl-4 pb-2 text-orange-700">- Se deben (fiado pendiente por cobrar)</td>
+                <td className="py-1 pb-2 text-right font-semibold text-orange-700">{formatMoney(metrics.totalCredito)}</td>
+              </tr>
+            )}
             <tr className="border-b border-slate-200">
               <td className="py-2 font-semibold">Ingresos Totales</td>
               <td className="py-2 text-right font-bold text-green-600">{formatMoney(metrics.totalIngresos)}</td>
@@ -70,10 +80,6 @@ export const DetailedReportTemplate: React.FC<ReportTemplateProps> = ({
               <td className="py-1 pb-2 text-right">{formatMoney(metrics.transferencia)}</td>
             </tr>
             
-            <tr className="border-b border-slate-200 bg-orange-50">
-              <td className="py-2 text-orange-700">Ventas a Crédito (No sumadas a caja)</td>
-              <td className="py-2 text-right font-semibold text-orange-700">{formatMoney(metrics.totalCredito)}</td>
-            </tr>
             <tr className="border-b border-slate-200 bg-red-50">
               <td className="py-2 text-red-700">Gastos en Compras (Mercancía)</td>
               <td className="py-2 text-right font-semibold text-red-700">{formatMoney(metrics.totalCompras)}</td>

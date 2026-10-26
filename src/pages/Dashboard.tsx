@@ -327,6 +327,23 @@ export default function Dashboard() {
   const creditPedidosPeriod = creditPedidos.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCredito = creditPedidosPeriod.reduce((s, p) => s + Math.max(0, (p.total || 0) - (p.totalAbonado || 0)), 0);
 
+  // Venta total = lo cobrado + lo que quedó fiado (pendiente) en este periodo
+  const ventaTotal = totalIngresos + totalCredito;
+
+  // Quién debe y cuánto (fiados de este periodo con saldo pendiente)
+  const deudoresPeriodo = (() => {
+    const map: Record<string, { name: string; monto: number }> = {};
+    creditPedidosPeriod.forEach(p => {
+      const pend = Math.max(0, (p.total || 0) - (p.totalAbonado || 0));
+      if (pend <= 0) return;
+      const name = p.clienteName || p.userName || p.customerName || 'Cliente';
+      const k = p.clienteId || name.toLowerCase();
+      if (!map[k]) map[k] = { name, monto: 0 };
+      map[k].monto += pend;
+    });
+    return Object.values(map).sort((a, b) => b.monto - a.monto);
+  })();
+
   // Supply purchases for current period
   const purchasesPeriod = purchases.filter(p => isInPeriod(p.createdAt, dashboardFilter, selectedDate, selectedMonth, selectedWeek));
   const totalCompras = purchasesPeriod.reduce((s, p) => s + (p.total || 0), 0);
@@ -941,6 +958,10 @@ export default function Dashboard() {
         transferencia={transferencia}
         totalAbonos={totalAbonosPeriod}
         abonosOtrosDias={abonosRecibidosOtrosDias}
+        totalIngresos={totalIngresos}
+        ventaTotal={ventaTotal}
+        deudaPendiente={totalCredito}
+        deudores={deudoresPeriodo}
       />
       <VentasCreditoModal
         isOpen={openModal === 'credito'}

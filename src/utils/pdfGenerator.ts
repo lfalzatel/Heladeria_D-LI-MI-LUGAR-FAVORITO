@@ -52,6 +52,8 @@ export async function generateDetailedPDF(
     let startY = 52;
 
     // --- RESUMEN FINANCIERO ---
+    const deudaPendiente = metrics.totalCredito || 0;
+    const ventaTotal = (metrics.totalIngresos || 0) + deudaPendiente;
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.text('--- RESUMEN FINANCIERO ---', 15, startY);
@@ -66,26 +68,25 @@ export async function generateDetailedPDF(
         1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
       },
       body: [
+        ['Venta Total (cobrado + fiado)', formatMoney(ventaTotal)],
+        ...(deudaPendiente > 0 ? [['  - Se deben (fiado pendiente por cobrar)', formatMoney(deudaPendiente)]] : []),
         ['Ingresos Totales', formatMoney(metrics.totalIngresos)],
         ['  - Efectivo', formatMoney(metrics.efectivo)],
         ['  - Tarjeta/Datafono', formatMoney(metrics.tarjeta)],
         ['  - Transferencia/Nequi', formatMoney(metrics.transferencia)],
-        ['Ventas a Crédito (No sumadas a caja)', formatMoney(metrics.totalCredito)],
         ['Gastos en Compras (Mercancía)', formatMoney(metrics.totalCompras)],
         ...(metrics.totalGastosOperativos !== undefined ? [['Gastos Operativos (Fijos/Var.)', formatMoney(metrics.totalGastosOperativos)]] : []),
         ['Ganancia Neta (Caja - Compras - Gastos)', formatMoney(metrics.gananciaNeta)],
         ...(metrics.totalPremiosFidelidad !== undefined ? [['Premios Fidelidad Entregados', `${metrics.totalPremiosFidelidad} uds`]] : [])
       ],
       didParseCell: function(data) {
-        if (data.row.index === 0) data.cell.styles.textColor = [22, 163, 74]; // green-600
-        if (data.row.index === 4) data.cell.styles.textColor = [194, 65, 12]; // orange-700
-        if (data.row.index === 5) data.cell.styles.textColor = [185, 28, 28]; // red-700
-        const isGastoOp = metrics.totalGastosOperativos !== undefined;
-        if (isGastoOp && data.row.index === 6) data.cell.styles.textColor = [185, 28, 28]; // red-700
-        const gananciaIdx = isGastoOp ? 7 : 6;
-        if (data.row.index === gananciaIdx) data.cell.styles.textColor = [219, 39, 119]; // pink-600
-        const premiosIdx = isGastoOp ? 8 : 7;
-        if (data.row.index === premiosIdx) data.cell.styles.textColor = [192, 38, 211]; // fuchsia-600
+        const label = String((data.row.raw as any[])?.[0] ?? '');
+        if (label.startsWith('Venta Total')) data.cell.styles.textColor = [30, 64, 175]; // blue-800
+        else if (label.includes('Se deben')) data.cell.styles.textColor = [194, 65, 12]; // orange-700
+        else if (label === 'Ingresos Totales') data.cell.styles.textColor = [22, 163, 74]; // green-600
+        else if (label.startsWith('Gastos')) data.cell.styles.textColor = [185, 28, 28]; // red-700
+        else if (label.startsWith('Ganancia Neta')) data.cell.styles.textColor = [219, 39, 119]; // pink-600
+        else if (label.startsWith('Premios')) data.cell.styles.textColor = [192, 38, 211]; // fuchsia-600
       }
     });
 
