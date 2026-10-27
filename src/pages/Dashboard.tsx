@@ -593,7 +593,11 @@ export default function Dashboard() {
          return;
       }
 
-      const textSummary = `📊 *Reporte General D'LI*\n📅 *Periodo:* ${dateStr}\n👤 *Generado por:* ${sellerName}\n💰 *Ingresos:* $${totalIngresos.toLocaleString()}\n💵 *Ganancia Neta:* $${gananciaNeta.toLocaleString()}`;
+      const lineasDeuda = totalCredito > 0
+        ? `\n📝 *Se deben (fiado):* $${totalCredito.toLocaleString()}` +
+          deudoresPeriodo.map(d => `\n   • ${d.name}: $${d.monto.toLocaleString()}`).join('')
+        : '';
+      const textSummary = `📊 *Reporte General D'LI*\n📅 *Periodo:* ${dateStr}\n👤 *Generado por:* ${sellerName}\n🧾 *Venta total:* $${ventaTotal.toLocaleString()}\n💰 *Ingresos (cobrado):* $${totalIngresos.toLocaleString()}${lineasDeuda}\n💵 *Ganancia Neta:* $${gananciaNeta.toLocaleString()}`;
 
       // 0. Intentar Capacitor Share Nativo
       let shared = false;

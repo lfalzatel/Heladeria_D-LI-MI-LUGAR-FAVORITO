@@ -508,6 +508,12 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                               {f}
                             </span>
                           ))}
+                          {/* Adiciones de helado junto a los sabores (solo visual; la aclaración se mantiene abajo) */}
+                          {(item.extraFlavors || []).filter(f => !(item.includedFlavors || item.flavors || []).includes(f)).map((f, i) => (
+                            <span key={`xf-${i}`} className="text-[10px] bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-black italic border border-primary/10">
+                              {f}
+                            </span>
+                          ))}
                           {(item.includedFruits || item.fruitChoices || []).filter(f => f !== item.baseChoice).map((f, i) => (
                             <button 
                               key={i} 
@@ -517,8 +523,24 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
                               {f}
                             </button>
                           ))}
+                          {/* Adiciones de fruta junto a las frutas (solo visual) */}
+                          {(item.extraFruits || []).filter(f => f !== item.baseChoice && !(item.includedFruits || item.fruitChoices || []).includes(f)).map((f, i) => (
+                            <button
+                              key={`xfr-${i}`}
+                              onClick={() => !item.locked && onEdit?.(item, 4)}
+                              className={cn("text-[10px] bg-success/5 text-success px-1.5 py-0.5 rounded-md font-black border border-success/10 transition-colors", !item.locked ? "hover:bg-success/10 cursor-pointer" : "cursor-default")}
+                            >
+                              {f}
+                            </button>
+                          ))}
                           {(item.includedSauces || []).map((s, i) => (
                             <span key={i} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
+                              {s}
+                            </span>
+                          ))}
+                          {/* Adiciones de salsa junto a las salsas (solo visual) */}
+                          {(item.extraSauces || []).filter(s => !(item.includedSauces || []).includes(s)).map((s, i) => (
+                            <span key={`xs-${i}`} className="text-[10px] bg-orange-500/5 text-orange-600 px-1.5 py-0.5 rounded-md font-black border border-orange-500/10">
                               {s}
                             </span>
                           ))}
