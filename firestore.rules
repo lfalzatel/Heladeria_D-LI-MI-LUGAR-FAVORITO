@@ -89,18 +89,19 @@ service cloud.firestore {
     }
 
     // Products & Flavors & Categories: Catalog
+    // Carta pública: lectura sin cuenta (catálogo para invitados y QR de mesas)
     match /products/{productId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isStaff(); // Cambiado de true a seguro en producción
     }
 
     match /categories/{categoryId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isStaff(); // Cambiado de true a seguro en producción
     }
 
     match /icecreamFlavors/{flavorId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isStaff(); // Cambiado de true a seguro en producción
     }
 

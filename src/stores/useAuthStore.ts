@@ -43,6 +43,13 @@ export const useAuthStore = create<AuthState>((set, get) => {
           unsubscribeProfile = null;
         }
 
+        // La sesión anónima solo existe para que Firestore acepte pedidos de invitados:
+        // en la interfaz se trata como invitado (sin perfil), así puede seguir ingresando con Google
+        if (user?.isAnonymous) {
+          set({ user: null, profile: null, isLoading: false });
+          return;
+        }
+
         set({ user, isLoading: true });
 
         if (user) {

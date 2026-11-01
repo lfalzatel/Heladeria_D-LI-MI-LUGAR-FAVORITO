@@ -1,4 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { compressImage } from '../utils/imageCompressor';
+
+// El catálogo se descarga completo (también desde el QR de las mesas): cada foto debe quedar liviana
+const MAX_IMAGE_CHARS = 120_000;
 
 export function ProductImageUploader({ 
   currentUrl, 
@@ -16,40 +20,19 @@ export function ProductImageUploader({
     
     setUploading(true);
     try {
-      // Comprimir antes de subir
-      const compressed = await compressImage(file, 800);
-      
-      // Subir a Firebase Storage
-      const { getStorage, ref, uploadBytes, getDownloadURL } = 
-        await import('firebase/storage');
-      const storage = getStorage();
-      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, compressed);
-      const url = await getDownloadURL(storageRef);
-      
-      onUpload(url);
+      // Se guarda como texto (Base64) dentro del producto: no requiere Firebase Storage (plan de pago)
+      let dataUrl = await compressImage(file, 600, 600, 0.6);
+      if (dataUrl.length > MAX_IMAGE_CHARS) {
+        dataUrl = await compressImage(file, 480, 480, 0.5);
+      }
+
+      onUpload(dataUrl);
     } catch (error) {
       console.error("Error al subir la imagen:", error);
       alert("Error al subir la imagen. Inténtalo de nuevo.");
     } finally {
       setUploading(false);
     }
-  };
-
-  // Comprimir imagen antes de subir (evita gastar quota de Storage)
-  const compressImage = (file: File, maxWidth: number): Promise<Blob> => {
-    return new Promise(resolve => {
-      const canvas = document.createElement('canvas');
-      const img = new Image();
-      img.onload = () => {
-        const ratio = Math.min(maxWidth / img.width, 1);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(blob => resolve(blob!), 'image/webp', 0.82);
-      };
-      img.src = URL.createObjectURL(file);
-    });
   };
 
   return (
