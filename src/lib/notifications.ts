@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { toast } from 'sonner';
 
 // IMPORTANTE: Debes configurar VITE_FIREBASE_VAPID_KEY en tu .env o en Vercel
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "BD23yi5wkKcpl9rTRkvb4ownj-yxzeDF9w69eC7F2J6wNHWJTTy1qA90VU_hjS17VYW2nGX_2YJreL9ayxvaKak"; 
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "BAfv6xHhu99pF7qRwOecFCzaPms9p81VB2SSljQVSJ2t0PRWNAWDWLVc0gXcpFFxdj1b3_G5ACmf0cboGgyQEII"; 
 
 export async function requestNotificationPermission(userId: string) {
   try {

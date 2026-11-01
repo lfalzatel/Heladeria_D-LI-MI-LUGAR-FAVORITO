@@ -2,12 +2,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyAd8eXIrpn396YOsQwr4M99PaMRBlbse88",
-  authDomain: "ruta-comun-4fcaf.firebaseapp.com",
-  projectId: "ruta-comun-4fcaf",
-  storageBucket: "ruta-comun-4fcaf.firebasestorage.app",
-  messagingSenderId: "764541288248",
-  appId: "1:764541288248:web:266038ea513e8c13b98bcd"
+  apiKey: "AIzaSyDVYozERk9Khh0X7M59n17T_TbGtv7pbpE",
+  authDomain: "dli-heladeria.firebaseapp.com",
+  projectId: "dli-heladeria",
+  storageBucket: "dli-heladeria.firebasestorage.app",
+  messagingSenderId: "338918621589",
+  appId: "1:338918621589:web:d21ece1519c38f5ad0f69c"
 });
 
 const messaging = firebase.messaging();

@@ -8,3 +8,6 @@ coverage/
 .env*
 !.env.example
 *backup*.json
+
+# Claves privadas de cuentas de servicio de Firebase
+*firebase-adminsdk*.json

@@ -26,6 +26,7 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
     }
 
+    // Admins de D'LI
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'lfalzatel@gmail.com' || 
@@ -49,12 +50,14 @@ service cloud.firestore {
     // VALIDATION BLUEPRINTS
     // ==========================================
 
+    // AJUSTADO: Hacemos que el correo (email) sea opcional para permitir creación Express sin email
     function isValidUser(data) {
-      return data.email is string &&
+      return (!('email' in data) || data.email is string) &&
              data.name is string && data.name.size() <= 100 &&
              data.role in ['admin', 'propietario', 'vendedor', 'cliente'];
     }
 
+    // AJUSTADO: Se añade 'credito' (Debe) a los métodos de pago válidos
     function isValidSale(data) {
       return data.items is list && data.items.size() > 0 &&
              data.total is number && data.total >= 0 &&
@@ -88,23 +91,23 @@ service cloud.firestore {
     // Products & Flavors & Categories: Catalog
     match /products/{productId} {
       allow read: if isSignedIn();
-      allow write: if true; // TEMPORAL PARA SCRIPT
+      allow write: if isStaff(); // Cambiado de true a seguro en producción
     }
 
     match /categories/{categoryId} {
       allow read: if isSignedIn();
-      allow write: if true; // TEMPORAL PARA SCRIPT
+      allow write: if isStaff(); // Cambiado de true a seguro en producción
     }
 
     match /icecreamFlavors/{flavorId} {
       allow read: if isSignedIn();
-      allow write: if true; // TEMPORAL PARA SCRIPT
+      allow write: if isStaff(); // Cambiado de true a seguro en producción
     }
 
     // Tables: Live states
     match /tables/{tableId} {
       allow read: if isSignedIn();
-      allow write: if true; // TEMPORAL PARA SCRIPT
+      allow write: if isStaff(); // Asegurado para el personal de ventas
     }
 
     // Sales: Transaction records (Institucionales/Mesa)
@@ -112,6 +115,13 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
       allow create: if isSignedIn() && isValidSale(incoming());
+      allow update, delete: if isAdmin() || isPropietario();
+    }
+
+    // NUEVO: Reglas para la colección de Abonos
+    match /abonos/{abonoId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff();
       allow update, delete: if isAdmin() || isPropietario();
     }
 

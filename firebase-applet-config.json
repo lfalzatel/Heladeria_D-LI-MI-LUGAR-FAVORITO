@@ -1,10 +1,10 @@
 {
-  "projectId": "ruta-comun-4fcaf",
-  "appId": "1:764541288248:web:266038ea513e8c13b98bcd",
-  "apiKey": "AIzaSyAd8eXIrpn396YOsQwr4M99PaMRBlbse88",
-  "authDomain": "ruta-comun-4fcaf.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-6f1959c7-566e-4af7-8d09-d16862fcdcea",
-  "storageBucket": "ruta-comun-4fcaf.firebasestorage.app",
-  "messagingSenderId": "764541288248",
-  "measurementId": "G-YTDW2RDJRT"
+  "projectId": "dli-heladeria",
+  "appId": "1:338918621589:web:d21ece1519c38f5ad0f69c",
+  "apiKey": "AIzaSyDVYozERk9Khh0X7M59n17T_TbGtv7pbpE",
+  "authDomain": "dli-heladeria.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "dli-heladeria.firebasestorage.app",
+  "messagingSenderId": "338918621589",
+  "measurementId": "G-KJMY8NRT5C"
 }
