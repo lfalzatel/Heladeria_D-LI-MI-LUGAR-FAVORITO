@@ -178,7 +178,11 @@ export default function MovementDetailModal({
       setMovementAbonos([]);
       return;
     }
-    const qAbonos = query(collection(db, 'abonos'), where('pedidoId', '==', data.id));
+    // Un cliente solo puede leer sus propios abonos (reglas): su consulta debe filtrar por clienteId
+    const viewerIsStaff = ['admin', 'propietario', 'vendedor'].includes(profile?.role || '');
+    const qAbonos = viewerIsStaff || !profile?.uid
+      ? query(collection(db, 'abonos'), where('pedidoId', '==', data.id))
+      : query(collection(db, 'abonos'), where('pedidoId', '==', data.id), where('clienteId', '==', profile.uid));
     const unsub = onSnapshot(qAbonos, (snap) => {
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       list.sort((a: any, b: any) => {
@@ -187,9 +191,12 @@ export default function MovementDetailModal({
         return db.localeCompare(da);
       });
       setMovementAbonos(list);
+    }, (err) => {
+      console.error('Error cargando abonos:', err);
+      setMovementAbonos([]);
     });
     return () => unsub();
-  }, [isOpen, data?.id]);
+  }, [isOpen, data?.id, profile?.uid, profile?.role]);
 
   React.useEffect(() => {
     if (triggerAbonoOpen && data) {
