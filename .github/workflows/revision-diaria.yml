@@ -1,0 +1,31 @@
+# Revisión de la app publicada: que cargue y que los datos privados sigan protegidos.
+# Corre todos los días a las 7:00 a. m. (hora de Colombia) y unos minutos después de cada publicación.
+# Si algo falla, GitHub envía un correo.
+name: Revisión diaria de la app
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # 12:00 UTC = 7:00 a. m. en Colombia
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  produccion:
+    name: App publicada
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Tras un push, Vercel tarda un par de minutos en publicar la nueva versión
+      - name: Esperar la publicación en Vercel
+        if: github.event_name == 'push'
+        run: sleep 180
+
+      - name: Revisar la app publicada
+        run: node tests/smoke-produccion.mjs
