@@ -19,6 +19,7 @@ import Management from './pages/Management';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import ClientCompras from './pages/ClientCompras';
+import MesaEntry from './pages/MesaEntry';
 import Menu from './pages/Menu';
 import ClientPedidos from './pages/ClientPedidos';
 import ClientHistorial from './pages/ClientHistorial';
@@ -258,6 +259,7 @@ export default function App() {
 
         <Route path="/login" element={authLoading ? null : (user && profile ? <Navigate to={profile.role === 'cliente' ? '/cliente/compras' : profile.role === 'vendedor' ? '/pos' : '/admin/dashboard'} replace /> : <Login />)} />
         <Route path="/menu" element={<Navigate to="/cliente/compras" replace />} />
+        <Route path="/mesa/:tableId" element={<MesaEntry />} />
         
         {/* Rutas Públicas de Clientes / Carta Digital (accesible con o sin login) */}
         <Route element={<MainLayout />}>

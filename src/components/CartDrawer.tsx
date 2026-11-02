@@ -179,7 +179,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
         soldBy: profile.uid, // Required by Firestore rules
         status: 'completed', // Required by Firestore rules
         tableId: activeTable,
-        tableName: cart.isTakeout ? 'Para Llevar' : (activeTable === 'directa' ? 'Venta Directa' : `Mesa ${activeTable.replace('mesa', '')}`),
+        tableName: cart.isTakeout ? 'Para Llevar' : (activeTable === 'directa' ? 'Venta Directa' : (useTableCartStore.getState().tableMeta[activeTable]?.label || `Mesa ${activeTable.replace('mesa', '')}`)),
         timestamp: (() => {
           if (cart.openedAt) {
             const d = new Date(cart.openedAt);
@@ -388,7 +388,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               <div>
                 <h2 className="text-2xl font-bold text-on-surface">Tu Carrito</h2>
                 <p className="text-secondary text-sm font-medium mt-1">
-                  {activeTable === 'paraLlevar' ? 'Pedido para llevar' : `Mesa ${activeTable.replace('mesa', '')}`}
+                  {activeTable === 'paraLlevar' ? 'Pedido para llevar' : (useTableCartStore.getState().tableMeta[activeTable]?.label || `Mesa ${activeTable.replace('mesa', '')}`)}
                 </p>
               </div>
               <div className="flex items-center gap-3">

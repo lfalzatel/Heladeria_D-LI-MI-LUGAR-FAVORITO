@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { doc, onSnapshot, updateDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import type { TableMeta } from '../lib/tableOrders';
 
 export interface CartItem {
   id: string;
@@ -34,6 +35,8 @@ interface TableCartState {
   carts: {
     [tableKey: string]: TableCart;
   };
+  // Mesas creadas desde Gestión → Operación → Mesas (nombre, orden, activa, clave del QR)
+  tableMeta: { [tableId: string]: TableMeta };
   activeTable: string;
   isInitialized: boolean;
   initialize: () => () => void;
@@ -67,12 +70,14 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
     'mesa2': { ...initialTableCart },
     'mesa3': { ...initialTableCart },
   },
+  tableMeta: {},
   activeTable: 'directa',
   isInitialized: false,
 
   initialize: () => {
     const unsubscribe = onSnapshot(collection(db, 'tables'), (snapshot) => {
       const newCarts = { ...get().carts };
+      const tableMeta: { [tableId: string]: TableMeta } = {};
       snapshot.forEach((doc) => {
         const data = doc.data();
         if (data.currentCart) {
@@ -80,8 +85,17 @@ export const useTableCartStore = create<TableCartState>()((set, get) => ({
         } else {
           newCarts[doc.id] = { ...initialTableCart };
         }
+        if (data.type === 'table' && doc.id.startsWith('mesa')) {
+          tableMeta[doc.id] = {
+            id: doc.id,
+            label: data.label || `Mesa ${doc.id.replace('mesa', '')}`,
+            order: data.order ?? (parseInt(doc.id.replace('mesa', ''), 10) || 99),
+            active: data.active === true,
+            qrKey: data.qrKey,
+          };
+        }
       });
-      set({ carts: newCarts, isInitialized: true });
+      set({ carts: newCarts, tableMeta, isInitialized: true });
     }, (error) => {
       console.error("Cart sync error:", error);
     });

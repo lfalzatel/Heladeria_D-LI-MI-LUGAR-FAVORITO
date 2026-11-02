@@ -24,6 +24,8 @@ import { toast } from 'sonner';
 import { notifyAdmins } from '../lib/notifications';
 import { playEventSound } from '../lib/soundEffects';
 import confetti from 'canvas-confetti';
+import MesaClientPanel from '../components/MesaClientPanel';
+import { TableSession, getTableSession, sendTableRequest } from '../lib/tableOrders';
 
 const CONSTANT_CATEGORIES = [
   { id: 'all',       label: 'Todos',     icon: <Package className="w-4 h-4" /> }
@@ -59,6 +61,10 @@ export default function ClientCompras() {
   const [placing, setPlacing] = useState(false);
   const [phone, setPhone] = useState(profile?.phone || '');
   const [checkoutStep, setCheckoutStep] = useState(1); // 1: Resumen, 2: Datos de entrega
+  // Modo mesa: el cliente entró por el QR de una mesa (pedido en el local, no domicilio)
+  const [mesa, setMesa] = useState<TableSession | null>(() => getTableSession());
+  const [mesaRefresh, setMesaRefresh] = useState(0);
+  const [isTakeout, setIsTakeout] = useState(false);
 
   // Modal de confirmación y envío por WhatsApp (con botón grande, cero bloqueos)
   const [orderSuccessData, setOrderSuccessData] = useState<{
@@ -452,6 +458,29 @@ export default function ClientCompras() {
     }
   };
 
+  const handlePlaceTableOrder = async () => {
+    if (!mesa || cart.length === 0) return;
+    setPlacing(true);
+    try {
+      const name = customerName.trim() || profile?.name || '';
+      await sendTableRequest({ session: mesa, kind: 'pedido', customerName: name, items: cart, isTakeout, note });
+      notifyAdmins(`🛒 ${mesa.label}`, `${name || 'Un cliente'} pidió ${cartCount} producto(s) por ${formatCurrency(cartTotal)}`).catch(() => {});
+      clearCart();
+      setNote('');
+      setShowCheckout(false);
+      setCheckoutStep(1);
+      setMesaRefresh(n => n + 1);
+      try { playEventSound('new_order'); } catch (e) {}
+      toast.success('¡Pedido enviado! 🍦', { description: 'Te avisamos aquí cuando lo reciban. Pagas en caja.' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      console.error('Error enviando pedido de mesa:', err);
+      toast.error('No pudimos enviar tu pedido', { description: 'El QR puede estar desactualizado. Escanéalo de nuevo o pide en caja.' });
+    } finally {
+      setPlacing(false);
+    }
+  };
+
   const handleSendChat = async () => {
     if (!chatMessage.trim() || !newOrderData?.id || !profile) return;
     setSendingChat(true);
@@ -480,8 +509,12 @@ export default function ClientCompras() {
 
   return (
     <main className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-5 pt-2">
+        {mesa && (
+          <MesaClientPanel session={mesa} customerName={customerName.trim() || profile?.name || ''} refreshKey={mesaRefresh} onLeave={() => setMesa(null)} />
+        )}
+
         {/* Banner para clientes invitados sin cuenta */}
-        {!profile && (
+        {!profile && !mesa && (
           <div className="bg-gradient-to-r from-primary/10 via-amber-50 to-primary/5 border border-primary/20 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center text-lg flex-shrink-0">
@@ -845,7 +878,7 @@ export default function ClientCompras() {
                     {checkoutStep === 1 ? 'Mi Lista de Compra' : 'Finalizar Pedido'}
                   </h3>
                   <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mt-0.5">
-                    {checkoutStep === 1 ? 'Confirma tu selección' : 'Confirma tu entrega y pago'}
+                    {checkoutStep === 1 ? 'Confirma tu selección' : mesa ? `Pedido para la ${mesa.label}` : 'Confirma tu entrega y pago'}
                   </p>
                 </div>
                 <button 
@@ -995,6 +1028,39 @@ export default function ClientCompras() {
                       <ShoppingCart className="w-8 h-8 text-white/10 rotate-12" />
                     </div>
 
+                    {mesa ? (
+                      <section className="flex flex-col gap-3">
+                        <div className="rounded-2xl bg-primary/5 border border-primary/20 p-3 text-xs font-bold text-on-surface">
+                          🍦 Pedido para la <span className="text-primary">{mesa.label}</span>. Lo pagas en caja cuando quieras.
+                        </div>
+                        <div className="relative">
+                          <User className="absolute top-3.5 left-4 w-5 h-5 text-secondary/40" />
+                          <input
+                            type="text"
+                            value={customerName}
+                            onChange={e => setCustomerName(e.target.value)}
+                            placeholder="¿Cómo te llamamos? (opcional)"
+                            className="w-full bg-surface-container border-2 border-outline/10 focus:border-primary rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-on-surface outline-none"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[{ v: false, label: '🍽️ Comer aquí' }, { v: true, label: '🛍️ Para llevar' }].map(opt => (
+                            <button key={opt.label} type="button" onClick={() => setIsTakeout(opt.v)}
+                              className={cn("py-3 rounded-2xl border-2 text-xs font-black transition-all", isTakeout === opt.v ? "bg-primary/5 border-primary text-primary" : "border-outline/10 text-secondary")}>
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          value={note}
+                          onChange={e => setNote(e.target.value)}
+                          placeholder="¿Algo más? (ej: sin salsa, en dos platos)..."
+                          rows={2}
+                          className="w-full bg-surface-container rounded-2xl p-3 text-xs font-bold text-on-surface outline-none resize-none border border-outline/10 focus:border-primary"
+                        />
+                      </section>
+                    ) : (
+                    <>
                     <section>
                        <h4 className="font-headline font-bold text-sm uppercase tracking-widest text-on-surface mb-2">Forma de Pago</h4>
                        <div className="grid grid-cols-2 gap-3">
@@ -1093,10 +1159,12 @@ export default function ClientCompras() {
                             onChange={e => setNote(e.target.value)} 
                             placeholder="Indicaciones adicionales (ej: timbre 201, casa blanca rejas negras)..." 
                             rows={2} 
-                            className="w-full bg-surface-container rounded-2xl p-3 text-xs font-bold text-on-surface outline-none resize-none border border-outline/10 focus:border-primary" 
+                            className="w-full bg-surface-container rounded-2xl p-3 text-xs font-bold text-on-surface outline-none resize-none border border-outline/10 focus:border-primary"
                           />
                        </div>
                     </section>
+                    </>
+                    )}
                   </>
                 )}
               </div>
@@ -1121,11 +1189,11 @@ export default function ClientCompras() {
                 ) : (
                   <>
                     <button 
-                      onClick={handlePlaceOrder} 
-                      disabled={!customerName.trim() || phone.trim().length < 7 || (!address.trim() && !gpsCoords) || cart.length === 0 || placing} 
+                      onClick={mesa ? handlePlaceTableOrder : handlePlaceOrder}
+                      disabled={mesa ? (cart.length === 0 || placing) : (!customerName.trim() || phone.trim().length < 7 || (!address.trim() && !gpsCoords) || cart.length === 0 || placing)}
                       className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary-dark transition-all"
                     >
-                      {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> Confirmar Pedido </>}
+                      {placing ? <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" /> : <> <CheckCircle2 className="w-6 h-6" /> {mesa ? 'Enviar a la mesa' : 'Confirmar Pedido'} </>}
                     </button>
 
                     <div className="flex justify-between items-center mt-1">
@@ -1144,13 +1212,13 @@ export default function ClientCompras() {
                     </div>
 
                     {/* Mensajes de validación claros para el cliente */}
-                    {!customerName.trim() && (
+                    {!mesa && !customerName.trim() && (
                       <p className="text-center text-[11px] text-amber-600 font-bold">⚠️ Ingresa el nombre de quien recibe</p>
                     )}
-                    {customerName.trim() && phone.trim().length < 7 && (
+                    {!mesa && customerName.trim() && phone.trim().length < 7 && (
                       <p className="text-center text-[11px] text-amber-600 font-bold">⚠️ Ingresa un número de teléfono de contacto</p>
                     )}
-                    {customerName.trim() && phone.trim().length >= 7 && !address.trim() && !gpsCoords && (
+                    {!mesa && customerName.trim() && phone.trim().length >= 7 && !address.trim() && !gpsCoords && (
                       <p className="text-center text-[11px] text-primary font-bold animate-pulse">⚠️ Escribe tu dirección o presiona "Usar mi ubicación GPS"</p>
                     )}
                   </>

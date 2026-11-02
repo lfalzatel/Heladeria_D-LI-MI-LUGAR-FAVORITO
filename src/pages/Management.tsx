@@ -54,6 +54,7 @@ import {
   Star,
   TrendingUp
 } from 'lucide-react';
+import TablesManager from '../components/TablesManager';
 import { formatCurrency, cn, getAssetUrl } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -2020,7 +2021,7 @@ export default function Management() {
                 <div className="flex items-center justify-between gap-2 w-full">
                   {/* Operación Sub-tabs */}
                   <div className="flex gap-1.5 bg-surface-container p-1 rounded-2xl flex-1 max-w-xs sm:max-w-sm">
-                    {(['compras', 'gastos'] as OperacionSubTab[]).map(tab => (
+                    {(['compras', 'gastos', 'mesas'] as OperacionSubTab[]).map(tab => (
                       <button
                         key={tab}
                         onClick={() => {
@@ -2040,7 +2041,7 @@ export default function Management() {
                   </div>
 
                   {/* Actions Icons (Calendar & Download) */}
-                  <div className="flex items-center gap-2 relative flex-shrink-0">
+                  <div className={cn("flex items-center gap-2 relative flex-shrink-0", operacionSubTab === 'mesas' && 'hidden')}>
                     <button 
                       onClick={() => setShowPurchaseCalendar(true)}
                       className="w-9 h-9 sm:w-10 sm:h-10 bg-white text-secondary rounded-full flex items-center justify-center border border-outline/20 hover:text-primary hover:border-primary/50 transition-all shadow-sm active:scale-95"
@@ -2086,6 +2087,7 @@ export default function Management() {
                   </div>
                 </div>
 
+                  {operacionSubTab !== 'mesas' && (<>
                   {/* Header Actions & Date Filter */}
                   {selectedDate ? (
                     <div className="flex items-center justify-between bg-primary/10 rounded-2xl p-3 w-full border border-primary/20">
@@ -2199,6 +2201,10 @@ export default function Management() {
                       </button>
                     </div>
                   )}
+
+                  </>)}
+
+                {operacionSubTab === 'mesas' && <TablesManager />}
 
                 {operacionSubTab === 'compras' && (
                   <>

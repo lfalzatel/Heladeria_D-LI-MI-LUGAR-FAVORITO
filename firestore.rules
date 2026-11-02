@@ -107,21 +107,40 @@ service cloud.firestore {
 
     // Tables: Live states
     match /tables/{tableId} {
-      allow read: if isSignedIn();
+      allow read: if isStaff(); // Solo personal: contiene las claves de los QR de mesa
       allow write: if isStaff(); // Asegurado para el personal de ventas
+    }
+
+    // Pedidos desde la mesa por QR: el cliente solo puede crear con la clave vigente de una mesa activa;
+    // el personal los acepta y los pasa al carrito de la mesa
+    match /tableRequests/{requestId} {
+      function tableDoc() {
+        return get(/databases/$(database)/documents/tables/$(incoming().tableId)).data;
+      }
+      allow create: if isSignedIn()
+        && incoming().clienteId == request.auth.uid
+        && incoming().status == 'pendiente'
+        && incoming().kind in ['pedido', 'llamada']
+        && incoming().tableId is string && isValidId(incoming().tableId)
+        && exists(/databases/$(database)/documents/tables/$(incoming().tableId))
+        && tableDoc().get('active', false) == true
+        && tableDoc().get('qrKey', '') == incoming().key
+        && incoming().items is list && incoming().items.size() <= 30;
+      allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isStaff());
+      allow update, delete: if isStaff();
     }
 
     // Sales: Transaction records (Institucionales/Mesa)
     match /sales/{saleId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get: if isStaff() || (isSignedIn() && resource.data.get('clienteId', '') == request.auth.uid); // Cliente: solo sus compras
+      allow list: if isStaff() || (isSignedIn() && resource.data.get('clienteId', '') == request.auth.uid);
       allow create: if isSignedIn() && isValidSale(incoming());
       allow update, delete: if isAdmin() || isPropietario();
     }
 
     // NUEVO: Reglas para la colección de Abonos
     match /abonos/{abonoId} {
-      allow read: if isSignedIn();
+      allow read: if isStaff() || (isSignedIn() && resource.data.get('clienteId', '') == request.auth.uid);
       allow create: if isStaff();
       allow update, delete: if isAdmin() || isPropietario();
     }
@@ -141,7 +160,7 @@ service cloud.firestore {
 
     // Supplies: Inventory
     match /supplies/{id} {
-      allow read: if isSignedIn();
+      allow read: if isStaff(); // Costos internos
       allow write: if isStaff();
     }
 
@@ -156,7 +175,7 @@ service cloud.firestore {
     }
 
     match /providers/{id} {
-      allow read: if isSignedIn();
+      allow read: if isStaff();
       allow write: if isStaff();
     }
 
@@ -169,7 +188,7 @@ service cloud.firestore {
     }
 
     match /expenseCategories/{categoryId} {
-      allow read: if isSignedIn();
+      allow read: if isStaff();
       allow write: if isStaff();
     }
   }

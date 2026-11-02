@@ -23,11 +23,17 @@ import CartDrawer from '../components/CartDrawer';
 import ProductDetailsCarousel from '../components/ProductDetailsCarousel';
 import { toast } from 'sonner';
 import { useLocation } from 'react-router-dom';
+import TableRequestsPanel from '../components/TableRequestsPanel';
+import { TableRequest, listenOpenTableRequests, createTable, sortTables } from '../lib/tableOrders';
+import { playNotificationSound } from '../lib/notifications';
 
 export default function POS() {
   const location = useLocation();
   const { profile } = useAuthStore();
-  const { activeTable, setActiveTable, carts, addItem, removeItem, updateQuantity, initialize } = useTableCartStore();
+  const { activeTable, setActiveTable, carts, tableMeta, addItem, removeItem, updateQuantity, initialize } = useTableCartStore();
+  const canManageTables = profile?.role === 'admin' || profile?.role === 'propietario';
+  const [tableRequests, setTableRequests] = useState<TableRequest[]>([]);
+  const seenRequestIds = React.useRef<Set<string> | null>(null);
   const { activeCategories } = useCategoriesStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,22 +46,41 @@ export default function POS() {
   const [editingStep, setEditingStep] = useState<number | undefined>(undefined);
   const [showFidelityTargetModal, setShowFidelityTargetModal] = useState(false);
   const [isOwnerConsumptionMode, setIsOwnerConsumptionMode] = useState(false);
-  const [extraTables, setExtraTables] = useState<number>(0);
+  const [creatingTable, setCreatingTable] = useState(false);
 
-  // Sync extra tables with active carts from Firebase
+  // Pedidos y llamados que llegan por el QR de las mesas: aviso con sonido cuando llega uno nuevo
   useEffect(() => {
-    const activeMesaNumbers = Object.keys(carts)
-      .filter(key => key.startsWith('mesa') && carts[key].items && carts[key].items.length > 0)
-      .map(key => parseInt(key.replace('mesa', ''), 10))
-      .filter(num => !isNaN(num) && num > 3);
-    
-    if (activeMesaNumbers.length > 0) {
-      const maxMesa = Math.max(...activeMesaNumbers);
-      if (maxMesa - 3 > extraTables) {
-        setExtraTables(maxMesa - 3);
+    if (!profile) return;
+    return listenOpenTableRequests(reqs => {
+      setTableRequests(reqs);
+      const pendingIds = reqs.filter(r => r.status === 'pendiente').map(r => r.id);
+      if (seenRequestIds.current) {
+        const fresh = reqs.filter(r => r.status === 'pendiente' && !seenRequestIds.current!.has(r.id));
+        if (fresh.length > 0) {
+          playNotificationSound();
+          const r = fresh[0];
+          toast(r.kind === 'llamada' ? `🔔 ${r.tableLabel}: ${r.customerName || 'un cliente'} te está llamando` : `🛒 ${r.tableLabel}: ${r.customerName || 'un cliente'} hizo un pedido`, {
+            action: { label: 'Ver', onClick: () => setActiveTable(r.tableId) },
+            duration: 8000,
+          });
+        }
       }
+      seenRequestIds.current = new Set(pendingIds);
+    });
+  }, [profile, setActiveTable]);
+
+  const handleCreateTable = async () => {
+    setCreatingTable(true);
+    try {
+      const meta = await createTable(Object.values(tableMeta));
+      setActiveTable(meta.id);
+      toast.success(`${meta.label} creada. Su QR está en Gestión → Operación → Mesas`);
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo crear la mesa');
+    } finally {
+      setCreatingTable(false);
     }
-  }, [carts, extraTables]);
+  };
 
   const handleEdit = (item: CartItem, step?: number) => {
     const product = products.find(p => p.id === item.productId);
@@ -141,19 +166,19 @@ export default function POS() {
     { id: 'premio-fidelidad', label: '⭐ Premio Fidelidad' },
   ];
 
-  const baseTables = [
-    { id: 'directa', label: 'Venta Directa', type: 'delivery' },
-    { id: 'mesa1', label: 'Mesa 1', type: 'table' },
-    { id: 'mesa2', label: 'Mesa 2', type: 'table' },
-    { id: 'mesa3', label: 'Mesa 3', type: 'table' },
-  ];
-
+  // Las mesas se administran en Gestión → Operación → Mesas; mientras carga se muestran las 3 de siempre
+  const managedTables = sortTables(Object.values(tableMeta));
   const tables = [
-    ...baseTables,
-    ...Array.from({ length: extraTables }).map((_, i) => ({
-      id: `mesa${i + 4}`, label: `Mesa ${i + 4}`, type: 'table'
-    }))
+    { id: 'directa', label: 'Venta Directa', type: 'delivery' },
+    ...(managedTables.length > 0
+      ? managedTables.map(t => ({ id: t.id, label: t.label, type: 'table' }))
+      : [1, 2, 3].map(n => ({ id: `mesa${n}`, label: `Mesa ${n}`, type: 'table' }))),
   ];
+  const pendingByTable = tableRequests.reduce<Record<string, number>>((acc, r) => {
+    if (r.status === 'pendiente') acc[r.tableId] = (acc[r.tableId] || 0) + 1;
+    return acc;
+  }, {});
+  const activeTableRequests = tableRequests.filter(r => r.tableId === activeTable);
 
   const filteredProducts = products
     .filter(p => {
@@ -298,22 +323,29 @@ export default function POS() {
                         {table.type === 'delivery' ? '' : table.label.replace('Mesa ', '')}
                      </span>
                   </div>
+                  {pendingByTable[table.id] > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white animate-bounce" title="Pedidos por QR sin aceptar">
+                      {pendingByTable[table.id]}
+                    </span>
+                  )}
                 </button>
               );
             })}
             
-            <button 
-              className="flex-shrink-0 w-9 h-9 sm:h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/40 hover:bg-primary/5 hover:text-primary transition-all border border-dashed border-outline/40"
-              onClick={() => {
-                setExtraTables(prev => prev + 1);
-                toast.success(`Mesa ${extraTables + 4} agregada temporalmente`);
-              }}
-              title="Agregar Mesa"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            {canManageTables && (
+              <button
+                className="flex-shrink-0 w-9 h-9 sm:h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary/40 hover:bg-primary/5 hover:text-primary transition-all border border-dashed border-outline/40 disabled:opacity-40"
+                onClick={handleCreateTable}
+                disabled={creatingTable}
+                title="Crear mesa (con su QR)"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </section>
+
+        {profile && <TableRequestsPanel requests={activeTableRequests} staffUid={profile.uid} />}
 
         {/* Toolbar Unificado: Buscador (~35%) + Categorías */}
         <section id="toolbar-section" className="flex items-center gap-2 px-1">
