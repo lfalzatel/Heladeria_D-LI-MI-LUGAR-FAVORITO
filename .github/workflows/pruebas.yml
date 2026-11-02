@@ -1,0 +1,35 @@
+# Pruebas automáticas de las reglas de seguridad de Firestore.
+# Corren en cada push contra el emulador de Firebase (sin tocar datos reales).
+# Si fallan, GitHub envía un correo a quien hizo el push.
+name: Pruebas de seguridad
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  reglas-firestore:
+    name: Reglas de Firestore
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # El emulador de Firestore necesita Java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: Correr pruebas de reglas contra el emulador
+        run: npx --yes firebase-tools@15.34.1 emulators:exec --only firestore --project demo-dli-heladeria "npx vitest run --config tests/vitest.config.ts"
