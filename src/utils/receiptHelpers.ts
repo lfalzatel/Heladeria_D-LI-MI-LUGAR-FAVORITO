@@ -94,8 +94,9 @@ export function formatReceiptText(sale: ReceiptData): string {
 
     // Adiciones extra
     const additionsList: string[] = [];
-    if (item.extraFrutas && item.extraFrutas.length > 0) {
-      additionsList.push(`Fruta [${item.extraFrutas.join(', ')}]`);
+    // La app guarda las frutas adicionales en `extraFruits` (antes se buscaba `extraFrutas` y nunca salían)
+    if (item.extraFruits && item.extraFruits.length > 0) {
+      additionsList.push(`Fruta [${item.extraFruits.join(', ')}]`);
     }
     if (item.extraFlavors && item.extraFlavors.length > 0) {
       additionsList.push(`Helado [${item.extraFlavors.join(', ')}]`);

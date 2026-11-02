@@ -217,11 +217,17 @@ export function sortTables(metas: TableMeta[]) {
   return metas.filter(t => t.active).sort((a, b) => a.order - b.order);
 }
 
-/** Crea la siguiente mesa (Mesa N) con su clave de QR; reactiva números libres */
-export async function createTable(existing: TableMeta[]): Promise<TableMeta> {
+/** Número de la siguiente mesa: el primero libre entre las activas (reutiliza el de una eliminada) */
+export function nextTableNumber(existing: TableMeta[]): number {
   const used = new Set(existing.filter(t => t.active).map(t => t.id));
   let n = 1;
   while (used.has(`mesa${n}`)) n++;
+  return n;
+}
+
+/** Crea la siguiente mesa (Mesa N) con su clave de QR; reactiva números libres */
+export async function createTable(existing: TableMeta[]): Promise<TableMeta> {
+  const n = nextTableNumber(existing);
   const meta: TableMeta = { id: `mesa${n}`, label: `Mesa ${n}`, order: n, active: true, qrKey: newQrKey() };
   await setDoc(doc(db, 'tables', meta.id), {
     label: meta.label, type: 'table', order: meta.order, active: true, qrKey: meta.qrKey,

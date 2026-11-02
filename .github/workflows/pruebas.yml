@@ -1,7 +1,7 @@
-# Pruebas automáticas de las reglas de seguridad de Firestore.
+# Pruebas automáticas: cálculos de dinero (npm test) y reglas de seguridad de Firestore.
 # Corren en cada push contra el emulador de Firebase (sin tocar datos reales).
 # Si fallan, GitHub envía un correo a quien hizo el push.
-name: Pruebas de seguridad
+name: Pruebas automáticas
 
 on:
   push:
@@ -30,6 +30,9 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci --no-audit --no-fund
+
+      - name: Pruebas de cálculos (costos, ganancias, recibos, mesas)
+        run: npm test
 
       - name: Correr pruebas de reglas contra el emulador
         run: npx --yes firebase-tools@15.34.1 emulators:exec --only firestore --project demo-dli-heladeria "npx vitest run --config tests/vitest.config.ts"
