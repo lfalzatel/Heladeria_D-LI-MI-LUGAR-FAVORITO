@@ -2,5 +2,15 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "hosting-redirect",
+    "redirects": [
+      {
+        "regex": "^/(.*)$",
+        "destination": "https://heladeria-d-li-mi-lugar-favorito.vercel.app/:1",
+        "type": 302
+      }
+    ]
   }
 }
