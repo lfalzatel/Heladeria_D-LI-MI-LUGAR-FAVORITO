@@ -1017,6 +1017,7 @@ export default function ClientHistorial() {
                         amount,
                         category: finalCategory,
                         date: date,
+                        origen: 'personal',
                         createdAt: serverTimestamp()
                       });
                     }

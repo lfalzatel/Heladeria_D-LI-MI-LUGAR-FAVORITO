@@ -43,6 +43,7 @@ import {
 } from '../components/ReportsModals';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { parseLocalDate } from '../utils/dates';
+import { isBusinessExpense } from '../utils/expenses';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 
 import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
@@ -139,7 +140,8 @@ export default function Dashboard() {
 
     // Listen to GASTOS
     const unsubGastos = onSnapshot(query(collection(db, 'gastos'), orderBy('date', 'desc'), limit(1000)), snap => {
-      setGastosOperativos(snap.docs.map(d => {
+      // Solo gastos del negocio: los personales de clientes ("Mis Gastos") no son de la heladería
+      setGastosOperativos(snap.docs.filter(d => isBusinessExpense(d.data())).map(d => {
         const data = d.data();
         return {
           id: d.id,
