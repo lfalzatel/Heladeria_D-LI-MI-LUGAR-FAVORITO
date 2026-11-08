@@ -13,6 +13,8 @@ import { deductInventory } from '../utils/inventory';
 import { attachCostSnapshotToSale } from '../utils/costCalculator';
 import MovementDetailModal from './MovementDetailModal';
 import { localDateStr } from '../utils/dates';
+import { toSalePaymentMethod } from '../utils/payments';
+import { awardDeliveredOrderPoint } from '../lib/loyalty';
 
 interface PedidoMessage {
   id: string;
@@ -276,7 +278,7 @@ export default function NotificationBell() {
             status: 'completed',
             timestamp: serverTimestamp(),
             createdAt: serverTimestamp(),
-            paymentMethod: pedido.paymentMethod || 'Efectivo',
+            paymentMethod: toSalePaymentMethod(pedido.paymentMethod),
             date: localDateStr(now),
             hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
@@ -288,6 +290,7 @@ export default function NotificationBell() {
           await attachCostSnapshotToSale(saleData);
 
           const saleDocRef = await addDoc(collection(db, 'sales'), saleData);
+          await awardDeliveredOrderPoint(pedido.clienteId);
           
           // Fetch client email to send the receipt
           let clientEmail = '';

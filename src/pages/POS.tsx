@@ -424,6 +424,7 @@ export default function POS() {
                   onClick={() => setSelectedProduct(product)}
                   onDetailClick={() => setDetailsProduct(product)}
                   isOwnerConsumptionMode={isOwnerConsumptionMode}
+                  onOwnerConsumed={() => setIsOwnerConsumptionMode(false)}
                 />
               </motion.div>
             ))
@@ -563,7 +564,7 @@ export default function POS() {
   );
 }
 
-function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }: { product: Product, onClick: () => void, onDetailClick?: () => void, isOwnerConsumptionMode?: boolean }) {
+function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode, onOwnerConsumed }: { product: Product, onClick: () => void, onDetailClick?: () => void, isOwnerConsumptionMode?: boolean, onOwnerConsumed?: () => void }) {
   const { activeTable, carts, addItem, updateQuantity, removeItem } = useTableCartStore();
   const [imgError, setImgError] = useState(false);
   
@@ -603,7 +604,8 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
           isOwnerConsumption: isOwnerConsumptionMode
         };
         addItem(activeTable, item);
-        setIsOwnerConsumptionMode(false);
+        // Apaga el modo autoconsumo después de un producto a $0
+        if (isOwnerConsumptionMode) onOwnerConsumed?.();
         toast.success(`${product.name} agregado`);
       }
     }
@@ -633,7 +635,8 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode }
              isOwnerConsumption: isOwnerConsumptionMode
            };
            addItem(activeTable, item);
-           setIsOwnerConsumptionMode(false);
+           // Apaga el modo autoconsumo después de un producto a $0
+        if (isOwnerConsumptionMode) onOwnerConsumed?.();
         }
       } else if (delta === -1 && unlockedItem) {
         if (unlockedItem.quantity === 1) {

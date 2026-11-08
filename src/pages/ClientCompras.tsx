@@ -420,12 +420,7 @@ export default function ClientCompras() {
             phone: finalPhone
           });
         } catch (e) {}
-
-        try {
-          await updateDoc(doc(db, 'users', profile.uid), {
-            loyaltyPoints: increment(1)
-          });
-        } catch (e) {}
+        // La estrella se suma cuando el personal marca el pedido como entregado (lib/loyalty.ts)
       }
 
       // 7. Confeti y sonido

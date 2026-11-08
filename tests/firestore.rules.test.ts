@@ -14,6 +14,7 @@ import {
 import {
   doc, getDoc, getDocs, setDoc, addDoc, updateDoc, collection, query, where, serverTimestamp,
 } from 'firebase/firestore';
+import { toSalePaymentMethod } from '../src/utils/payments';
 
 let env: RulesTestEnvironment;
 
@@ -215,5 +216,53 @@ describe('Usuarios y roles', () => {
 
   it('la propietaria no puede crear administradores', async () => {
     await assertFails(updateDoc(doc(db.propietaria(), 'users', CLIENT), { role: 'admin' }));
+  });
+
+  it('nadie puede crearse a sí mismo como personal (ni con el QR anónimo)', async () => {
+    for (const role of ['propietario', 'vendedor', 'admin']) {
+      await assertFails(setDoc(doc(db.anonimo(), 'users', ANON), { name: 'Intruso', role }));
+    }
+    await assertFails(setDoc(doc(db.anonimo(), 'users', ANON), { name: 'Intruso', role: 'cliente', loyaltyPoints: 50 }));
+    await assertSucceeds(setDoc(doc(db.anonimo(), 'users', ANON), { name: 'Nuevo cliente', role: 'cliente' }));
+  });
+
+  it('el cliente guarda su teléfono, dirección y notificaciones, pero no sus estrellas', async () => {
+    const c = db.cliente();
+    await assertSucceeds(updateDoc(doc(c, 'users', CLIENT), { phone: '3001234567', address: 'Calle 1' }));
+    await assertSucceeds(setDoc(doc(c, 'users', CLIENT), { fcmTokens: ['token-1'] }, { merge: true }));
+    await assertFails(updateDoc(doc(c, 'users', CLIENT), { loyaltyPoints: 99 }));
+    await assertFails(updateDoc(doc(c, 'users', OTHER_CLIENT), { phone: '1' }));
+  });
+
+  it('el vendedor ve la lista de clientes y solo les suma estrellas', async () => {
+    const v = db.vendedor();
+    await assertSucceeds(getDocs(query(collection(v, 'users'), where('role', '==', 'cliente'))));
+    await assertFails(getDocs(query(collection(db.cliente(), 'users'), where('role', '==', 'cliente'))));
+    await assertSucceeds(updateDoc(doc(v, 'users', CLIENT), { loyaltyPoints: 1 }));
+    await assertFails(updateDoc(doc(v, 'users', CLIENT), { name: 'Otro nombre' }));
+    await assertFails(updateDoc(doc(v, 'users', OWNER), { loyaltyPoints: 1 }));
+  });
+
+  it('el personal crea clientes rápidos sin correo, pero no otros vendedores', async () => {
+    const v = db.vendedor();
+    await assertSucceeds(addDoc(collection(v, 'users'), { name: 'Doña Rosa', role: 'cliente', email: null, phone: null, loyaltyPoints: 0 }));
+    await assertFails(addDoc(collection(v, 'users'), { name: 'Otro', role: 'vendedor' }));
+  });
+});
+
+describe('Ventas del personal', () => {
+  const venta = (paymentMethod: string) => ({ items: [{ productName: 'Cono' }], total: 4500, paymentMethod, status: 'completed', soldBy: SELLER });
+
+  it('el pedido a domicilio entregado se registra como venta con el método convertido', async () => {
+    await assertSucceeds(addDoc(collection(db.vendedor(), 'sales'), venta(toSalePaymentMethod('efectivo'))));
+    await assertSucceeds(addDoc(collection(db.vendedor(), 'sales'), venta(toSalePaymentMethod('datafono'))));
+    await assertFails(addDoc(collection(db.vendedor(), 'sales'), venta('efectivo')));
+  });
+
+  it('el vendedor registra abonos a un fiado pero no cambia el valor de la venta', async () => {
+    await assertSucceeds(updateDoc(doc(db.vendedor(), 'sales', 'venta-cliente'), { totalAbonado: 2000 }));
+    await assertFails(updateDoc(doc(db.vendedor(), 'sales', 'venta-cliente'), { total: 0 }));
+    await assertFails(updateDoc(doc(db.cliente(), 'sales', 'venta-cliente'), { totalAbonado: 4500 }));
+    await assertSucceeds(updateDoc(doc(db.propietaria(), 'sales', 'venta-cliente'), { total: 5000 }));
   });
 });

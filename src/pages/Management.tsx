@@ -89,6 +89,7 @@ import { useExpenseCategoriesStore } from '../stores/useExpenseCategoriesStore';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 import { shareFileNative } from '../utils/nativeShareHelper';
 import { localDateStr, parseLocalDate } from '../utils/dates';
+import { toSalePaymentMethod } from '../utils/payments';
 import { isBusinessExpense } from '../utils/expenses';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -803,7 +804,7 @@ export default function Management() {
         if (!saleDoc) {
           const pedidoDate = pedido.date || (pedido.createdAt?.toDate ? localDateStr(pedido.createdAt.toDate()) : localDateStr());
           const pedidoHour = pedido.hour || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--');
-          await addDoc(collection(db, 'sales'), { items: pedido.items, total: pedido.total, sellerId: currentUser.uid, sellerName: currentUser.name, soldBy: currentUser.uid, tableName: '', clienteName: cName, status: 'entregado', timestamp: pedido.createdAt || serverTimestamp(), createdAt: pedido.createdAt || serverTimestamp(), paymentMethod: pedido.paymentMethod || 'Efectivo', date: pedidoDate, hour: pedidoHour, pedidoId: pedido.id, type: 'online' });
+          await addDoc(collection(db, 'sales'), { items: pedido.items, total: pedido.total, sellerId: currentUser.uid, sellerName: currentUser.name, soldBy: currentUser.uid, tableName: '', clienteName: cName, status: 'completed', timestamp: pedido.createdAt || serverTimestamp(), createdAt: pedido.createdAt || serverTimestamp(), paymentMethod: toSalePaymentMethod(pedido.paymentMethod), date: pedidoDate, hour: pedidoHour, pedidoId: pedido.id, type: 'online' });
           repairedCount++;
         } else {
           const cur = saleDoc.data();

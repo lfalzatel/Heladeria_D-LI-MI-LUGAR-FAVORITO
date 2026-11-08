@@ -52,7 +52,7 @@ service cloud.firestore {
 
     // AJUSTADO: Hacemos que el correo (email) sea opcional para permitir creación Express sin email
     function isValidUser(data) {
-      return (!('email' in data) || data.email is string) &&
+      return (!('email' in data) || data.email == null || data.email is string) &&
              data.name is string && data.name.size() <= 100 &&
              data.role in ['admin', 'propietario', 'vendedor', 'cliente'];
     }
@@ -79,13 +79,24 @@ service cloud.firestore {
 
     // Users: Profiles
     match /users/{userId} {
+      function changedKeys() {
+        return incoming().diff(existing()).affectedKeys();
+      }
       allow get: if isSignedIn();
-      allow list: if isAdmin() || isPropietario();
-      allow create: if isSignedIn() && isValidUser(incoming()); 
-      allow update: if (isOwner(userId) || isAdmin() || isPropietario()) && (
-        isAdmin() || 
-        (isPropietario() && existing().role != 'admin' && (!incoming().diff(existing()).affectedKeys().hasAny(['role']) || incoming().role != 'admin'))
+      // El personal (también vendedores) necesita la lista de clientes para asignar ventas, fiados y estrellas
+      allow list: if isStaff();
+      // Nadie puede crearse a sí mismo como personal: los perfiles nuevos son 'cliente'.
+      // Solo admin y propietaria crean perfiles con otro rol.
+      allow create: if isSignedIn() && isValidUser(incoming()) && (
+        isAdmin() || isPropietario() ||
+        (incoming().role == 'cliente' && incoming().get('loyaltyPoints', 0) == 0 && (isOwner(userId) || isStaff()))
       );
+      allow update: if isAdmin()
+        || (isPropietario() && existing().role != 'admin' && (!changedKeys().hasAny(['role']) || incoming().role != 'admin'))
+        // Cada quien edita su perfil (teléfono, dirección, notificaciones), pero no su rol ni sus estrellas
+        || (isOwner(userId) && !changedKeys().hasAny(['role', 'loyaltyPoints']))
+        // Vendedores: solo las estrellas de los clientes
+        || (isStaff() && existing().get('role', '') == 'cliente' && changedKeys().hasOnly(['loyaltyPoints']));
     }
 
     // Products & Flavors & Categories: Catalog
@@ -135,7 +146,10 @@ service cloud.firestore {
       allow get: if isStaff() || (isSignedIn() && resource.data.get('clienteId', '') == request.auth.uid); // Cliente: solo sus compras
       allow list: if isStaff() || (isSignedIn() && resource.data.get('clienteId', '') == request.auth.uid);
       allow create: if isSignedIn() && isValidSale(incoming());
-      allow update, delete: if isAdmin() || isPropietario();
+      allow update: if isAdmin() || isPropietario()
+        // Vendedores: registrar abonos a un fiado y ajustar empaques, sin tocar el valor de la venta
+        || (isStaff() && incoming().diff(existing()).affectedKeys().hasOnly(['totalAbonado', 'packagingSupplies', 'productionCost', 'profit', 'packagingCost']));
+      allow delete: if isAdmin() || isPropietario();
     }
 
     // NUEVO: Reglas para la colección de Abonos
