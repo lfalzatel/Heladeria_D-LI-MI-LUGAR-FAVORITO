@@ -106,11 +106,15 @@ export default function App() {
 
   const hasRequestedNotifs = useRef(false);
 
+  // Carta pública: categorías y sabores se cargan siempre, también para invitados y QR de mesa
+  useEffect(() => {
+    initFlavors();
+    initCategories();
+  }, [initFlavors, initCategories]);
+
   // Re-initialize flavors and handle notifications
   useEffect(() => {
     if (user && profile) {
-      initFlavors();
-      initCategories();
       const unsubProviders = useProvidersStore.getState().subscribe();
       
       if (!hasRequestedNotifs.current && 'Notification' in window) {

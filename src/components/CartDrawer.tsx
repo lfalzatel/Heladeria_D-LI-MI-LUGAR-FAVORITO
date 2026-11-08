@@ -12,6 +12,7 @@ import { notifyAdmins } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import { generateWhatsAppReceiptLink } from '../utils/receiptHelpers';
 import html2canvas from 'html2canvas';
+import { toBlob as htmlToBlob } from 'html-to-image';
 import { playEventSound } from '../lib/soundEffects';
 import DualTrajectoryBurst from './DualTrajectoryBurst';
 import { attachCostSnapshotToSale } from '../utils/costCalculator';

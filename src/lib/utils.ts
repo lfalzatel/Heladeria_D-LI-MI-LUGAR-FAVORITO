@@ -71,10 +71,6 @@ export function getAssetUrl(path: string | undefined | null): string {
   
   const result = `${finalBase}${cleanPath}`;
   
-  // Log para que veas en la consola (F12) qué ruta se está pidiendo
-  if (isVercel && !path.includes('icon')) {
-    console.log(`[AssetDebug] Original: ${path} -> Final: ${result}`);
-  }
   
   return result;
 }

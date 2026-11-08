@@ -1,3 +1,4 @@
+import CategoryLabel from '../components/CategoryLabel';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, arrayUnion, setDoc } from 'firebase/firestore';
@@ -698,7 +699,7 @@ export default function ClientCompras() {
 
                   {/* Category Badge */}
                   <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-[8px] font-black text-white uppercase tracking-wider truncate max-w-[80%]">
-                    {product.category}
+                    <CategoryLabel id={product.category} />
                   </span>
 
                   {totalQuantity > 0 && (

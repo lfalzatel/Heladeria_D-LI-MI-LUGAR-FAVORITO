@@ -1,3 +1,4 @@
+import CategoryLabel from '../components/CategoryLabel';
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -706,7 +707,7 @@ function ProductCard({ product, onClick, onDetailClick, isOwnerConsumptionMode, 
 
         {/* Category Tag */}
         <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-[7.5px] font-black text-white uppercase tracking-widest truncate max-w-[80%] z-10">
-          {product.category}
+          <CategoryLabel id={product.category} />
         </span>
 
         {/* Quantity Badge */}

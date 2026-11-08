@@ -1,3 +1,4 @@
+import CategoryLabel from './CategoryLabel';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronRight, ChevronLeft, Check, IceCream, Droplets, Plus, GlassWater, Ban } from 'lucide-react';
@@ -525,7 +526,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                    className="flex flex-col gap-0.5"
                  >
                    <span className="inline-flex px-2 py-0.5 rounded-full bg-primary/90 text-white text-[8px] font-black uppercase tracking-[0.2em] w-fit shadow-lg backdrop-blur-md">
-                     {product.category}
+                     <CategoryLabel id={product.category} />
                    </span>
                    <h2 className="font-brand font-black text-xl sm:text-2xl md:text-3xl text-white leading-tight drop-shadow-2xl">
                      {product.name}
@@ -1308,7 +1309,7 @@ export default function OrderConfigModal({ product, isOpen, onClose, onAdd, init
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-4 left-5">
                   <span className="px-2 py-0.5 rounded-full bg-primary/90 text-white text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
-                    {product.category}
+                    <CategoryLabel id={product.category} />
                   </span>
                   <h2 className="font-brand font-black text-2xl text-white drop-shadow-lg mt-1 leading-tight">
                     {product.name}

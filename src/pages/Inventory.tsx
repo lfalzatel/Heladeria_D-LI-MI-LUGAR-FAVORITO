@@ -1,3 +1,4 @@
+import CategoryLabel from '../components/CategoryLabel';
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -334,7 +335,7 @@ export default function Inventory() {
 
                 <h4 className="font-headline font-bold text-lg text-on-surface leading-snug mb-1">{product.name}</h4>
                 <p className="text-[10px] text-secondary font-black uppercase tracking-[0.2em] mb-4">
-                  Categoría: <span className="text-on-surface">{product.category}</span>
+                  Categoría: <span className="text-on-surface"><CategoryLabel id={product.category} /></span>
                 </p>
 
                 <div className="space-y-2 mb-6">

@@ -1,3 +1,4 @@
+import CategoryLabel from '../components/CategoryLabel';
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   collection, 
@@ -1666,7 +1667,7 @@ export default function Management() {
                                 <div className="flex-1 min-w-0">
                                   <h4 className="font-headline font-black text-lg text-on-surface leading-tight mb-1 truncate">{product.name}</h4>
                                   <p className="text-[9px] text-secondary font-black uppercase tracking-widest truncate">
-                                    {product.category}
+                                    <CategoryLabel id={product.category} />
                                   </p>
                                   <div className="mt-3">
                                     <button
