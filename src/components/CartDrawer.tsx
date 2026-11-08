@@ -15,6 +15,7 @@ import html2canvas from 'html2canvas';
 import { playEventSound } from '../lib/soundEffects';
 import DualTrajectoryBurst from './DualTrajectoryBurst';
 import { attachCostSnapshotToSale } from '../utils/costCalculator';
+import { localDateStr } from '../utils/dates';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -208,7 +209,7 @@ export default function CartDrawer({ isOpen, onClose, onEdit, onRedeemLoyalty }:
               return `${year}-${month}-${day}`;
             }
           }
-          return new Date().toISOString().split('T')[0];
+          return localDateStr();
         })(),
         hour: (() => {
           if (cart.openedAt) {

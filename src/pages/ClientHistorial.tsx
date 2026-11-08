@@ -49,6 +49,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
+import { localDateStr, parseLocalDate } from '../utils/dates';
 
 export default function ClientHistorial() {
   const navigate = useNavigate();
@@ -135,7 +136,7 @@ export default function ClientHistorial() {
     const unsubscribe = onSnapshot(gastosQ, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const item = doc.data();
-        const dateObj = item.date ? (item.date.toDate ? item.date.toDate() : new Date(item.date)) : new Date();
+        const dateObj = parseLocalDate(item.date);
         return {
           id: doc.id,
           ...item,
@@ -978,7 +979,7 @@ export default function ClientHistorial() {
                     <input
                       name="date"
                       type="date"
-                      defaultValue={gastoToEdit?.date || new Date().toISOString().split('T')[0]}
+                      defaultValue={gastoToEdit?.date ? localDateStr(parseLocalDate(gastoToEdit.date)) : localDateStr()}
                       required
                       className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-outline/10"
                     />

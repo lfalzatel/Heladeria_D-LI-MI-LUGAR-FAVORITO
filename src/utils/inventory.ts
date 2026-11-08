@@ -1,6 +1,7 @@
 import { collection, getDocs, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { CartItem, Product } from '../types';
+import { localDateStr } from './dates';
 
 /**
  * Deduce insumos del inventario basándose en el carrito
@@ -50,7 +51,12 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
          }
       }
       const product = productsCache[item.productId];
-      
+
+      // Insumos que ya descuenta la receta base de este producto. Se declara aquí (fuera del `if`)
+      // porque también se usa en los descuentos dinámicos de abajo: declarada dentro del `if`
+      // lanzaba un error que se tragaba el catch y ninguna venta descontaba inventario.
+      const recipeSupplyIdsInItem = new Set<string>();
+
       if (product) {
          let activeRecipe = product.recipe || [];
          
@@ -78,7 +84,6 @@ async function processInventory(cartItems: CartItem[], packagingSupplies?: {supp
          const notesNorm = (item.notes || '').toLowerCase().trim();
          const fruitWords = ['fresa', 'mango', 'durazno', 'manzana', 'banano', 'uva', 'papaya', 'kiwi', 'pina', 'piña', 'maracuya', 'mora', 'guanabana', 'lulo', 'cereza'];
 
-         const recipeSupplyIdsInItem = new Set<string>();
 
          for (const rItem of activeRecipe) {
              if (rItem.supplyId && rItem.quantity > 0) {
@@ -341,7 +346,7 @@ export async function processWeeklyBagsDeduction() {
     const dayOfWeek = today.getDay(); // 0 = Domingo, 1 = Lunes, 6 = Sábado
     if (dayOfWeek !== 1 && dayOfWeek !== 6) return;
 
-    const dateStr = today.toISOString().split('T')[0];
+    const dateStr = localDateStr(today);
     
     if (localStorage.getItem('bags_deducted_date') === dateStr) return;
 

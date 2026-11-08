@@ -19,6 +19,7 @@ import { notifyAdmins, notifyUser } from '../lib/notifications';
 import { deductInventory } from '../utils/inventory';
 import { attachCostSnapshotToSale } from '../utils/costCalculator';
 import { playEventSound } from '../lib/soundEffects';
+import { localDateStr } from '../utils/dates';
 
 interface Pedido {
   id: string;
@@ -109,7 +110,7 @@ export default function ClientPedidos() {
             timestamp: serverTimestamp(),
             createdAt: serverTimestamp(),
             paymentMethod: pedido.paymentMethod || 'Efectivo',
-            date: now.toISOString().split('T')[0],
+            date: localDateStr(now),
             hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
             type: 'online',

@@ -12,6 +12,7 @@ import { notifyAdmins, notifyUser, playNotificationSound } from '../lib/notifica
 import { deductInventory } from '../utils/inventory';
 import { attachCostSnapshotToSale } from '../utils/costCalculator';
 import MovementDetailModal from './MovementDetailModal';
+import { localDateStr } from '../utils/dates';
 
 interface PedidoMessage {
   id: string;
@@ -276,7 +277,7 @@ export default function NotificationBell() {
             timestamp: serverTimestamp(),
             createdAt: serverTimestamp(),
             paymentMethod: pedido.paymentMethod || 'Efectivo',
-            date: now.toISOString().split('T')[0],
+            date: localDateStr(now),
             hour: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
             pedidoId: pedido.id,
             type: 'online',

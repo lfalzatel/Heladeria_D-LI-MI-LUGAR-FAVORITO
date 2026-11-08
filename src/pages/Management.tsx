@@ -88,6 +88,7 @@ import { ExpenseCategoryManager } from '../components/ExpenseCategoryManager';
 import { useExpenseCategoriesStore } from '../stores/useExpenseCategoriesStore';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 import { shareFileNative } from '../utils/nativeShareHelper';
+import { localDateStr, parseLocalDate } from '../utils/dates';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
@@ -387,7 +388,7 @@ export default function Management() {
       (snap) => {
         setGastos(snap.docs.map(d => {
           const item = d.data();
-          return { id: d.id, ...item, dateObj: item.date?.toDate ? item.date.toDate() : new Date(item.date) };
+          return { id: d.id, ...item, dateObj: parseLocalDate(item.date) };
         }));
       }
     );
@@ -798,7 +799,7 @@ export default function Management() {
         const cName = pedido.clienteName || pedido.nombre || pedido.userName || 'Cliente Online';
         const saleDoc = salesSnap.docs.find((d) => d.data().pedidoId === pedido.id);
         if (!saleDoc) {
-          const pedidoDate = pedido.date || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+          const pedidoDate = pedido.date || (pedido.createdAt?.toDate ? localDateStr(pedido.createdAt.toDate()) : localDateStr());
           const pedidoHour = pedido.hour || (pedido.createdAt?.toDate ? pedido.createdAt.toDate().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--');
           await addDoc(collection(db, 'sales'), { items: pedido.items, total: pedido.total, sellerId: currentUser.uid, sellerName: currentUser.name, soldBy: currentUser.uid, tableName: '', clienteName: cName, status: 'entregado', timestamp: pedido.createdAt || serverTimestamp(), createdAt: pedido.createdAt || serverTimestamp(), paymentMethod: pedido.paymentMethod || 'Efectivo', date: pedidoDate, hour: pedidoHour, pedidoId: pedido.id, type: 'online' });
           repairedCount++;
@@ -898,7 +899,7 @@ export default function Management() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dli_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `dli_backup_${localDateStr()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

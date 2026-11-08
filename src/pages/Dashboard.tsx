@@ -42,6 +42,7 @@ import {
   PremiosModal
 } from '../components/ReportsModals';
 import MovementDetailModal from '../components/MovementDetailModal';
+import { parseLocalDate } from '../utils/dates';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 
 import { PeriodFilter, PERIOD_LABELS, toDateS, isInPeriod, getWeekBoundaries } from '../lib/dateUtils';
@@ -143,7 +144,7 @@ export default function Dashboard() {
         return {
           id: d.id,
           ...data,
-          dateObj: data.date?.toDate ? data.date.toDate() : new Date(data.date)
+          dateObj: parseLocalDate(data.date)
         };
       }));
     });

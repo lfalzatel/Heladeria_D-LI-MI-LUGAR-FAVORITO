@@ -11,6 +11,7 @@ import { restoreInventory } from '../utils/inventory';
 import { toast } from 'sonner';
 import { playEventSound } from '../lib/soundEffects';
 import { calculateSaleCostAndProfit, calculateItemCostAndProfit, findMatchingSupply } from '../utils/costCalculator';
+import { localDateStr } from '../utils/dates';
 
 function formatDateTime(ts: any) {
   if (!ts) return { date: 'Reciente', time: '—' };
@@ -143,7 +144,7 @@ export default function MovementDetailModal({
   const [showAbonoForm, setShowAbonoForm] = useState(false);
   const [abonoMonto, setAbonoMonto] = useState('');
   const [abonoMetodo, setAbonoMetodo] = useState<'Efectivo' | 'Transferencia' | 'Mixto'>('Efectivo');
-  const [abonoFecha, setAbonoFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [abonoFecha, setAbonoFecha] = useState(localDateStr());
   const [splitAbono, setSplitAbono] = useState({ efectivo: '', transferencia: '' });
   const [isSavingAbono, setIsSavingAbono] = useState(false);
 
@@ -203,7 +204,7 @@ export default function MovementDetailModal({
       const pending = data.total - (data.totalAbonado || 0);
       setAbonoMonto(pending.toString());
       setAbonoMetodo('Efectivo');
-      setAbonoFecha(new Date().toISOString().split('T')[0]);
+      setAbonoFecha(localDateStr());
       setShowAbonoForm(true);
     } else {
       setShowAbonoForm(false);
@@ -292,7 +293,7 @@ export default function MovementDetailModal({
         splitDetails = { efectivo: ef, transferencia: tr };
       }
       
-      const chosenDate = abonoFecha || new Date().toISOString().split('T')[0];
+      const chosenDate = abonoFecha || localDateStr();
 
       // Fecha (local) de la venta fiada original: el abono se contabiliza ese día
       const saleRaw = data.createdAt || data.timestamp || data.date;
@@ -1155,7 +1156,7 @@ export default function MovementDetailModal({
                                 onClick={() => {
                                   setAbonoMonto((data.total - (data.totalAbonado || 0)).toString());
                                   setAbonoMetodo('Efectivo');
-                                  setAbonoFecha(new Date().toISOString().split('T')[0]);
+                                  setAbonoFecha(localDateStr());
                                   setShowAbonoForm(true);
                                 }}
                                 className="w-full mt-1.5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-500/10 active:scale-[0.98] flex items-center justify-center gap-1.5"
@@ -1187,7 +1188,7 @@ export default function MovementDetailModal({
                                           <button
                                             onClick={() => {
                                               setEditingAbono(abono);
-                                              setEditAbonoDate(abono.date || new Date().toISOString().split('T')[0]);
+                                              setEditAbonoDate(abono.date || localDateStr());
                                               setEditAbonoMethod(abono.paymentMethod || 'Efectivo');
                                               setEditAbonoMonto(String(abono.monto || ''));
                                             }}
