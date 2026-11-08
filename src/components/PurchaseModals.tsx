@@ -704,7 +704,7 @@ export function PurchaseModal({ isOpen, onClose, supplies, onConfirm, purchaseTo
         <div className="absolute inset-0 bg-on-surface/60 backdrop-blur-md" onClick={() => setIsCreatingProvider(false)} />
         <div className="relative bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
           <h3 className="font-black text-lg text-on-surface mb-4">Nuevo Proveedor</h3>
-          <p className="text-sm text-secondary mb-4">Agrega un proveedor a tu lista. Lo podrÃƒ¡s seleccionar enseguida.</p>
+          <p className="text-sm text-secondary mb-4">Agrega un proveedor a tu lista. Lo podrás seleccionar enseguida.</p>
           <div className="mb-6">
             <label className="text-[11px] font-black uppercase tracking-widest text-secondary block mb-1">Nombre</label>
             <input id="newProviderName" type="text" autoFocus className="w-full h-12 px-4 rounded-xl border border-outline/20 outline-none focus:border-primary focus:ring-1" placeholder="Ej. Distribuidora XYZ" />

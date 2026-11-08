@@ -334,8 +334,8 @@ export default function Management() {
             onClick={async () => {
               const { notifyAdmins } = await import('../lib/notifications');
               toast.promise(
-                notifyAdmins('Ã°Å¸â€â€ Prueba de Sistema', `NotificaciÃƒÂ³n enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
-                { loading: 'Enviando...', success: 'Ã‚¡NotificaciÃƒÂ³n enviada!', error: 'Error al enviar' }
+                notifyAdmins('🔔 Prueba de Sistema', `Notificación enviada por ${currentUser?.name || 'Admin'} a las ${new Date().toLocaleTimeString()}`, { type: 'test' }),
+                { loading: 'Enviando...', success: '¡Notificación enviada!', error: 'Error al enviar' }
               );
             }}
             className="p-2 sm:px-3 sm:py-2 bg-surface-container text-on-surface rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all shadow-sm border border-outline/20"
@@ -539,9 +539,9 @@ export default function Management() {
       await updateDoc(doc(db, 'pedidos', selectedSaleDetail.id), { messages });
       setChatMessage('');
       if (isStaff) {
-        await notifyUser(selectedSaleDetail.clienteId, 'Ã°Å¸â€™Â¬ Nuevo mensaje de la Heladería', `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id });
+        await notifyUser(selectedSaleDetail.clienteId, '💬 Nuevo mensaje de la Heladería', `Sobre tu pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id });
       } else {
-        await notifyAdmins(`Ã°Å¸â€™Â¬ Mensaje de ${currentUser?.name || 'Cliente'}`, `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id, fromName: currentUser?.name });
+        await notifyAdmins(`💬 Mensaje de ${currentUser?.name || 'Cliente'}`, `Pedido #${selectedSaleDetail.id.slice(-6).toUpperCase()}: "${chatMessage.trim()}"`, { type: 'chat_message', pedidoId: selectedSaleDetail.id, fromName: currentUser?.name });
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -561,7 +561,7 @@ export default function Management() {
     setIsSavingUser(true);
     try {
       await updateDoc(doc(db, 'users', selectedUserForEdit.uid), { ...editFormData, updatedAt: serverTimestamp() });
-      toast.success('InformaciÃƒÂ³n de usuario actualizada');
+      toast.success('Información de usuario actualizada');
       setIsEditModalOpen(false);
     } catch {
       toast.error('Error al actualizar usuario');
@@ -761,11 +761,11 @@ export default function Management() {
   };
 
   const handleFullSeed = async () => {
-    if (!window.confirm('Ã‚¿EstÃƒ¡s seguro? Esto borrarÃƒ¡ todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
+    if (!window.confirm('¿Estás seguro? Esto borrará todos los productos, sabores e insumos actuales para recargarlos desde el archivo base.')) return;
     setSyncAction('seed');
     try {
       await seedDatabase();
-      toast.success('Ã‚¡Catálogo recargado completamente!');
+      toast.success('¡Catálogo recargado completamente!');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -778,7 +778,7 @@ export default function Management() {
     try {
       setSyncAction('images');
       const count = await syncProductImages();
-      toast.success(`Ã‚¡Se actualizaron ${count} imÃƒ¡genes correctamente!`);
+      toast.success(`¡Se actualizaron ${count} imágenes correctamente!`);
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error: ' + error.message);
@@ -814,7 +814,7 @@ export default function Management() {
           }
         }
       }
-      repairedCount > 0 ? toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`) : toast.info('Todo el historial de ventas estÃƒ¡ sincronizado correctamente.');
+      repairedCount > 0 ? toast.success(`Proceso terminado: ${repairedCount} registros actualizados/reparados.`) : toast.info('Todo el historial de ventas está sincronizado correctamente.');
       setIsSyncModalOpen(false);
     } catch (error: any) {
       toast.error('Error al reparar historial: ' + error.message);
@@ -824,7 +824,7 @@ export default function Management() {
   };
 
   const handleRecalculatePoints = async () => {
-    if (!window.confirm('Esto revisarÃƒ¡ todas las compras anteriores y asignarÃƒ¡ puntos y niveles a los clientes que no los hayan recibido. Ã‚¿Continuar?')) return;
+    if (!window.confirm('Esto revisará todas las compras anteriores y asignará puntos y niveles a los clientes que no los hayan recibido. ¿Continuar?')) return;
     try {
       setSyncAction('points');
       const usersSnap = await getDocs(collection(db, 'users'));
@@ -841,7 +841,7 @@ export default function Management() {
 
         let points = 0;
         
-        // Ventas fÃƒÂ­sicas
+        // Ventas físicas
         salesSnap.docs.forEach(sale => {
           const s = sale.data();
           if (s.clienteId === uid && s.type !== 'online') {
@@ -878,7 +878,7 @@ export default function Management() {
       console.error(error);
       toast.error('Error al recalcular puntos: ' + error.message);
     } finally {
-      setIsSyncing(false);
+      setSyncAction(null);
     }
   };
 
@@ -893,7 +893,7 @@ export default function Management() {
           const snap = await getDocs(collection(db, col));
           data[col] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (e) {
-          console.warn(`No se pudo respaldar la colecciÃƒÂ³n ${col}:`, e);
+          console.warn(`No se pudo respaldar la colección ${col}:`, e);
           // Continue to the next collection even if one fails
         }
       }
@@ -937,7 +937,7 @@ export default function Management() {
       }
 
       if (addedCount > 0) {
-        toast.success(`Ã‚¡Se aÃƒÂ±adieron ${addedCount} insumos faltantes correctamente!`);
+        toast.success(`¡Se añadieron ${addedCount} insumos faltantes correctamente!`);
       } else {
         toast.info('Todos los insumos ya existen en el sistema.');
       }
@@ -951,7 +951,7 @@ export default function Management() {
   };
 
   const handleDeleteSupply = async (supplyId: string) => {
-    if (window.confirm('Ã‚¿EstÃƒ¡s seguro de eliminar este insumo?')) {
+    if (window.confirm('¿Estás seguro de eliminar este insumo?')) {
       try {
         await deleteDoc(doc(db, 'supplies', supplyId));
       } catch (error) {
@@ -1137,7 +1137,7 @@ export default function Management() {
         }, 100);
       }
     } catch (e) {
-      toast.error('OcurrióƒÂ³ un error al procesar el reporte de compras');
+      toast.error('Ocurrió un error al procesar el reporte de compras');
       setIsPurchasePreviewModalOpen(false);
       setIsGeneratingPurchasePDF(false);
     }
@@ -1165,7 +1165,7 @@ export default function Management() {
           toast.error('Error al generar el PDF de gastos');
         }
       } catch (e) {
-        toast.error('OcurrióƒÂ³ un error al procesar el PDF de gastos');
+        toast.error('Ocurrió un error al procesar el PDF de gastos');
       } finally {
         setIsGeneratingPurchasePDF(false);
       }
@@ -1184,7 +1184,7 @@ export default function Management() {
           }
         }, 100);
       } catch (e) {
-        toast.error('OcurrióƒÂ³ un error al procesar la imagen de gastos');
+        toast.error('Ocurrió un error al procesar la imagen de gastos');
         setIsGeneratingPurchasePDF(false);
       }
     }
@@ -1582,7 +1582,7 @@ export default function Management() {
                           <div className="py-24 flex flex-col items-center justify-center opacity-40 bg-white rounded-[2rem] border border-dashed border-outline/50">
                             <Search className="w-16 h-16 mb-4 text-secondary" />
                             <p className="text-lg font-bold text-on-surface">No se encontraron insumos</p>
-                            <p className="text-xs text-secondary mt-1">Prueba con otra bÃƒÂºsqueda</p>
+                            <p className="text-xs text-secondary mt-1">Prueba con otra búsqueda</p>
                           </div>
                         )}
                       </div>

@@ -82,7 +82,8 @@ service cloud.firestore {
       function changedKeys() {
         return incoming().diff(existing()).affectedKeys();
       }
-      allow get: if isSignedIn();
+      // Cada quien ve su perfil; el personal ve los de todos (para notificar y enviar recibos)
+      allow get: if isOwner(userId) || isStaff();
       // El personal (también vendedores) necesita la lista de clientes para asignar ventas, fiados y estrellas
       allow list: if isStaff();
       // Nadie puede crearse a sí mismo como personal: los perfiles nuevos son 'cliente'.
@@ -168,7 +169,12 @@ service cloud.firestore {
     match /pedidos/{pedidoId} {
       allow read: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isStaff());
       allow create: if isSignedIn() && request.resource.data.clienteId == request.auth.uid;
-      allow update: if isSignedIn() && (resource.data.clienteId == request.auth.uid || isStaff());
+      // El cliente solo puede escribir en el chat de su pedido o cancelarlo mientras está pendiente
+      allow update: if isStaff() || (isSignedIn() && resource.data.clienteId == request.auth.uid && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['messages', 'chatMessages', 'updatedAt'])
+        || (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+            && existing().status == 'pendiente' && incoming().status == 'cancelado')
+      ));
       allow delete: if isStaff();
     }
 

@@ -72,6 +72,8 @@ beforeEach(async () => {
     await setDoc(doc(f, 'providers', 'prov1'), { name: 'Proveedor' });
     await setDoc(doc(f, 'expenseCategories', 'arriendo'), { name: 'Arriendo' });
     await setDoc(doc(f, 'tableRequests', 'pedido-otro'), tableRequest({ clienteId: OTHER_CLIENT }));
+    await setDoc(doc(f, 'pedidos', 'domicilio-pendiente'), { clienteId: CLIENT, status: 'pendiente', total: 10000, items: [] });
+    await setDoc(doc(f, 'pedidos', 'domicilio-aceptado'), { clienteId: CLIENT, status: 'aceptado', total: 10000, items: [] });
   });
 });
 
@@ -264,5 +266,33 @@ describe('Ventas del personal', () => {
     await assertFails(updateDoc(doc(db.vendedor(), 'sales', 'venta-cliente'), { total: 0 }));
     await assertFails(updateDoc(doc(db.cliente(), 'sales', 'venta-cliente'), { totalAbonado: 4500 }));
     await assertSucceeds(updateDoc(doc(db.propietaria(), 'sales', 'venta-cliente'), { total: 5000 }));
+  });
+});
+
+describe('Privacidad de perfiles', () => {
+  it('cada quien ve su perfil, el personal ve todos y nadie más ve los ajenos', async () => {
+    await assertSucceeds(getDoc(doc(db.cliente(), 'users', CLIENT)));
+    await assertFails(getDoc(doc(db.cliente(), 'users', OWNER)));
+    await assertFails(getDoc(doc(db.anonimo(), 'users', CLIENT)));
+    await assertSucceeds(getDoc(doc(db.vendedor(), 'users', CLIENT)));
+  });
+});
+
+describe('Pedidos a domicilio', () => {
+  it('el cliente escribe en el chat y cancela mientras está pendiente', async () => {
+    const c = db.cliente();
+    await assertSucceeds(updateDoc(doc(c, 'pedidos', 'domicilio-pendiente'), { messages: [{ text: 'Hola' }], updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(c, 'pedidos', 'domicilio-pendiente'), { status: 'cancelado', updatedAt: serverTimestamp() }));
+  });
+
+  it('el cliente no cambia el total, ni se marca entregado, ni cancela un pedido ya aceptado', async () => {
+    const c = db.cliente();
+    await assertFails(updateDoc(doc(c, 'pedidos', 'domicilio-pendiente'), { total: 1 }));
+    await assertFails(updateDoc(doc(c, 'pedidos', 'domicilio-pendiente'), { status: 'entregado' }));
+    await assertFails(updateDoc(doc(c, 'pedidos', 'domicilio-aceptado'), { status: 'cancelado' }));
+  });
+
+  it('el personal sí cambia el estado del pedido', async () => {
+    await assertSucceeds(updateDoc(doc(db.vendedor(), 'pedidos', 'domicilio-pendiente'), { status: 'aceptado' }));
   });
 });

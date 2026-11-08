@@ -101,14 +101,28 @@ export default function Dashboard() {
   const [previewData, setPreviewData] = useState<any>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
+  // Ventas: se cargan desde el mes anterior al periodo más antiguo que se está mirando.
+  // (Antes se cargaban solo las últimas 1000 y los meses viejos salían incompletos.)
+  const salesFromMs = React.useMemo(() => {
+    const dates = [new Date(), selectedMonth, selectedWeek, selectedDate].filter(Boolean) as Date[];
+    const oldest = new Date(Math.min(...dates.map(d => d.getTime())));
+    return new Date(oldest.getFullYear(), oldest.getMonth() - 1, 1).getTime();
+  }, [selectedMonth, selectedWeek, selectedDate]);
+
   useEffect(() => {
     if (!profile) return;
-    
-    // Listen to SALES
-    const qSales = query(collection(db, 'sales'), orderBy('timestamp', 'desc'), limit(1000));
-    const unsubSales = onSnapshot(qSales, snap => {
+    const qSales = query(
+      collection(db, 'sales'),
+      where('timestamp', '>=', Timestamp.fromMillis(salesFromMs)),
+      orderBy('timestamp', 'desc')
+    );
+    return onSnapshot(qSales, snap => {
       setSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    }, err => console.error('Error cargando ventas:', err));
+  }, [profile, salesFromMs]);
+
+  useEffect(() => {
+    if (!profile) return;
 
     // Listen to DELIVERED PEDIDOS
     const qPedidos = query(
@@ -182,7 +196,6 @@ export default function Dashboard() {
     });
 
     return () => {
-      unsubSales();
       unsubPedidos();
       unsubSupplies();
       unsubProducts();
