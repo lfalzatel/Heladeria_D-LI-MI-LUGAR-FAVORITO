@@ -187,6 +187,18 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
     }
 
+    // Ingresos personales del cliente (Mis Gastos → saldo). Solo los ve y modifica su dueño.
+    match /ingresos/{ingresoId} {
+      function validIngreso(data) {
+        return data.userId == request.auth.uid
+          && data.amount is number && data.amount > 0
+          && data.date is string && data.date.size() == 10;
+      }
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && validIngreso(incoming());
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && validIngreso(incoming());
+    }
+
     match /expenseCategories/{categoryId} {
       allow read: if isStaff();
       allow write: if isStaff();

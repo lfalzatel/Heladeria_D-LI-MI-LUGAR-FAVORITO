@@ -175,6 +175,38 @@ describe('Pedidos por QR de mesa', () => {
   });
 });
 
+describe('Ingresos personales del cliente', () => {
+  const ingreso = (over: Record<string, unknown> = {}) => ({ userId: CLIENT, amount: 500000, category: 'Salario', description: 'Quincena', date: '2026-11-07', ...over });
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async ctx => {
+      await setDoc(doc(ctx.firestore(), 'ingresos', 'ing-cliente'), ingreso());
+    });
+  });
+
+  it('el cliente registra, ve, edita y borra sus ingresos', async () => {
+    const c = db.cliente();
+    await assertSucceeds(addDoc(collection(c, 'ingresos'), ingreso()));
+    await assertSucceeds(getDocs(query(collection(c, 'ingresos'), where('userId', '==', CLIENT))));
+    await assertSucceeds(updateDoc(doc(c, 'ingresos', 'ing-cliente'), { amount: 600000 }));
+  });
+
+  it('nadie más ve los ingresos de un cliente, ni el personal', async () => {
+    await assertFails(getDoc(doc(db.anonimo(), 'ingresos', 'ing-cliente')));
+    await assertFails(getDoc(doc(db.vendedor(), 'ingresos', 'ing-cliente')));
+    await assertFails(getDocs(collection(db.propietaria(), 'ingresos')));
+  });
+
+  it('no se puede registrar a nombre de otro ni montos inválidos', async () => {
+    const c = db.cliente();
+    await assertFails(addDoc(collection(c, 'ingresos'), ingreso({ userId: OTHER_CLIENT })));
+    await assertFails(addDoc(collection(c, 'ingresos'), ingreso({ amount: 0 })));
+    await assertFails(addDoc(collection(c, 'ingresos'), ingreso({ amount: '500000' })));
+    await assertFails(addDoc(collection(c, 'ingresos'), ingreso({ date: '7/11/2026' })));
+    await assertFails(updateDoc(doc(c, 'ingresos', 'ing-cliente'), { userId: OTHER_CLIENT }));
+  });
+});
+
 describe('Usuarios y roles', () => {
   it('un cliente no puede darse permisos de administrador', async () => {
     await assertFails(updateDoc(doc(db.cliente(), 'users', CLIENT), { role: 'admin' }));

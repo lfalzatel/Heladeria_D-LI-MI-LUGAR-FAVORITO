@@ -50,6 +50,8 @@ import OrderCard from '../components/OrderCard';
 import MovementDetailModal from '../components/MovementDetailModal';
 import { notifyAdmins, notifyUser } from '../lib/notifications';
 import { localDateStr, parseLocalDate } from '../utils/dates';
+import IngresoModal, { Ingreso } from '../components/IngresoModal';
+import { Wallet } from 'lucide-react';
 
 export default function ClientHistorial() {
   const navigate = useNavigate();
@@ -86,6 +88,9 @@ export default function ClientHistorial() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedExpenseDetail, setSelectedExpenseDetail] = useState<any | null>(null);
+  // Ingresos personales del cliente: el saldo es ingresos − gastos (incluidas sus compras en la heladería)
+  const [incomes, setIncomes] = useState<Ingreso[]>([]);
+  const [ingresoModal, setIngresoModal] = useState<{ open: boolean; ingreso: Ingreso | null }>({ open: false, ingreso: null });
   const [gastoToEdit, setGastoToEdit] = useState<any | null>(null);
   const [gastoCategory, setGastoCategory] = useState<string>('Facturas');
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -148,7 +153,21 @@ export default function ClientHistorial() {
       console.error("Error fetching expenses:", error);
     });
 
-    return () => unsubscribe();
+    const unsubIncomes = onSnapshot(
+      query(collection(db, 'ingresos'), where('userId', '==', profile.uid)),
+      (snapshot) => {
+        setIncomes(snapshot.docs.map(d => {
+          const item = d.data() as Omit<Ingreso, 'id'>;
+          return { ...item, id: d.id, dateObj: parseLocalDate(item.date) };
+        }));
+      },
+      (error) => console.error("Error fetching incomes:", error)
+    );
+
+    return () => {
+      unsubscribe();
+      unsubIncomes();
+    };
   }, [profile, activeTab]);
 
   useEffect(() => {
@@ -316,7 +335,17 @@ export default function ClientHistorial() {
       date: g.dateObj,
       raw: g
     })),
-    ...userSales.map(p => ({
+    ...incomes.map(i => ({
+      id: i.id,
+      type: 'ingreso',
+      description: i.description || i.category,
+      amount: i.amount,
+      category: i.category,
+      date: i.dateObj || parseLocalDate(i.date),
+      raw: i
+    })),
+    // Los pedidos rechazados o cancelados no se pagaron: no cuentan como gasto
+    ...userSales.filter(p => !['rechazado', 'cancelado', 'cancelled'].includes(p.status)).map(p => ({
       id: p.id,
       type: 'pedido',
       description: `Pedido #${p.id.slice(-6).toUpperCase()}`,
@@ -369,7 +398,9 @@ export default function ClientHistorial() {
     }
   });
 
-  const totalSum = filteredActivities.reduce((acc, act) => acc + act.amount, 0);
+  const totalIncome = filteredActivities.filter(a => a.type === 'ingreso').reduce((acc, act) => acc + act.amount, 0);
+  const totalSum = filteredActivities.filter(a => a.type !== 'ingreso').reduce((acc, act) => acc + act.amount, 0);
+  const balance = totalIncome - totalSum;
 
   const formatMonth = (date: Date) => {
     const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -411,10 +442,14 @@ export default function ClientHistorial() {
                 {/* Header Card */}
                 <div className="bg-[#0B1528] text-white rounded-[1.5rem] p-5 mb-5 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
-                  <div className="relative z-10 flex justify-between items-center">
+                  <div className="relative z-10 flex justify-between items-start">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Tus Gastos</p>
-                      <p className="text-3xl font-headline font-black">${totalSum.toLocaleString('es-CO')}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">
+                        Saldo {selectedDateFilter ? 'del día' : `de ${formatMonth(selectedMonth).split(' de ')[0]}`}
+                      </p>
+                      <p className={cn("text-3xl font-headline font-black", balance < 0 ? "text-red-400" : "text-white")}>
+                        {balance < 0 ? '-' : ''}${Math.abs(balance).toLocaleString('es-CO')}
+                      </p>
                     </div>
                     {profile?.uid && (
                       <div className="bg-[#14213d] rounded-lg px-3 py-1.5 flex items-center gap-2 border border-white/5">
@@ -422,6 +457,16 @@ export default function ClientHistorial() {
                         <span className="font-bold text-xs text-white">{profile.uid.slice(-6).toUpperCase()}</span>
                       </div>
                     )}
+                  </div>
+                  <div className="relative z-10 grid grid-cols-2 gap-3 mt-4">
+                    <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Ingresos</p>
+                      <p className="text-base font-headline font-black">+${totalIncome.toLocaleString('es-CO')}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-primary">Gastos</p>
+                      <p className="text-base font-headline font-black">-${totalSum.toLocaleString('es-CO')}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -473,17 +518,26 @@ export default function ClientHistorial() {
                     </button>
                   </div>
                   
-                  <button
-                    onClick={() => {
-                      setGastoToEdit(null);
-                      setGastoCategory('Facturas');
-                      setIsGastoModalOpen(true);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-full text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Registrar Gasto
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setIngresoModal({ open: true, ingreso: null })}
+                      className="flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-3 rounded-full text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Registrar Ingreso
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGastoToEdit(null);
+                        setGastoCategory('Facturas');
+                        setIsGastoModalOpen(true);
+                      }}
+                      className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-full text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Registrar Gasto
+                    </button>
+                  </div>
                 </div>
 
                 {/* CALENDARIO DE CALOR COLLAPSIBLE */}
@@ -609,11 +663,33 @@ export default function ClientHistorial() {
                 {filteredActivities.length === 0 ? (
                   <div className="text-center py-16 opacity-30">
                      <Receipt className="w-12 h-12 mx-auto mb-4" />
-                     <p className="uppercase font-black text-[10px] tracking-widest">No hay gastos o compras registradas</p>
+                     <p className="uppercase font-black text-[10px] tracking-widest">No hay movimientos registrados</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {filteredActivities.map((activity) => {
+                      if (activity.type === 'ingreso') {
+                        return (
+                          <div
+                            key={activity.id}
+                            onClick={() => setIngresoModal({ open: true, ingreso: activity.raw as Ingreso })}
+                            className="bg-white rounded-[2rem] p-4 sm:p-5 flex items-center gap-3 border border-emerald-100 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                              <Wallet className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                              <p className="font-black text-on-surface text-sm leading-tight truncate">{activity.description}</p>
+                              <p className="text-[10px] text-secondary/60 font-bold mt-1">
+                                Ingreso · {activity.category} · {activity.date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                              </p>
+                            </div>
+                            <p className="font-brand font-black text-emerald-600 text-lg leading-none flex-shrink-0">
+                              +${activity.amount.toLocaleString('es-CO')}
+                            </p>
+                          </div>
+                        );
+                      }
                       if (activity.type === 'pedido') {
                         const pedidoObj = activity.raw;
                         const singleItem = pedidoObj.items?.length === 1 ? pedidoObj.items[0] : null;
@@ -1146,7 +1222,17 @@ export default function ClientHistorial() {
           )}
         </AnimatePresence>
 
-        <MovementDetailModal 
+        <AnimatePresence>
+          {ingresoModal.open && profile?.uid && (
+            <IngresoModal
+              userId={profile.uid}
+              ingreso={ingresoModal.ingreso}
+              onClose={() => setIngresoModal({ open: false, ingreso: null })}
+            />
+          )}
+        </AnimatePresence>
+
+        <MovementDetailModal
           isOpen={!!selectedSaleDetail}
           onClose={() => setSelectedSaleDetail(null)}
           data={selectedSaleDetail}
